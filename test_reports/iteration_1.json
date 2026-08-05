@@ -1,0 +1,31 @@
+{
+  "summary": "First-finish smoke test of Sconti Roma. Backend: all critical endpoints work (public discounts/zones/categories, auth login/register client+merchant, /auth/me with Bearer, subscription mock, redemption create + verify happy path + 400 already-used + 404 wrong-merchant + 402 no-sub, merchant stats). Frontend: landing page loads, login form works via testids login-email/login-password, /discounts renders 6 seeded discounts with working search (pizza -> 1), zone & category filters visible, discount detail redeem-btn produces qr-dialog with redemption-code for subscribed client, merchant navbar shows role-specific links (Dashboard/Il mio sconto/Scansiona/Esci), /merchant/scan verifies invalid code and shows scan-error 'Codice non valido / Codice non trovato'.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "GET /api/discounts returns 6 seeded discounts with enriched merchant + percent_off (75%)",
+    "GET /api/zones (12 zones) and /api/categories (10 categories)",
+    "GET /api/discounts/{id} returns enriched discount payload",
+    "POST /api/auth/register (client and merchant) returns access_token + user with role fields",
+    "POST /api/auth/login for cliente@scontiroma.it, trattoria@scontiroma.it, gym@scontiroma.it",
+    "GET /api/auth/me with Bearer returns user",
+    "POST /api/subscription/subscribe {monthly, 4242} => status=active; /subscription/me active=true",
+    "POST /api/redemptions/create/{id} returns unique code (EPNPCX8Z)",
+    "POST /api/redemptions/verify by correct merchant (gym) => 200 redeemed",
+    "Verify same code twice => 400 'Codice già utilizzato'",
+    "Verify code with different merchant (trattoria) => 404 'Codice non trovato'",
+    "Redeem without subscription (fresh user) => 402 'Serve un abbonamento attivo'",
+    "GET /api/merchants/me/stats returns {total, redeemed, pending}",
+    "Frontend landing-page renders",
+    "Client login via UI, discounts page shows 'results-count' 6 sconti trovati",
+    "search-input 'pizza' narrows to 1 sconti",
+    "filter-zone, filter-category, search-input testids present",
+    "Discount detail redeem-btn opens qr-dialog and shows redemption-code",
+    "Merchant login lands on /merchant/dashboard; /merchant/scan works; invalid code triggers scan-error"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Payment is intentionally MOCKED (/api/subscription/subscribe always succeeds). All spec'd testids observed: landing-page, login-email, login-password, discount-card-{id}, redeem-btn, qr-dialog, redemption-code, filter-zone, filter-category, search-input, results-count, scan-code-input, scan-verify-btn, scan-error."
+}
