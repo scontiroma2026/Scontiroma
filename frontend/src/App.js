@@ -13,6 +13,11 @@ import ClientDashboard from "@/pages/ClientDashboard";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantDiscount from "@/pages/MerchantDiscount";
 import MerchantScan from "@/pages/MerchantScan";
+import PreviewGallery from "@/pages/PreviewGallery";
+import PreviewA from "@/pages/previews/PreviewA";
+import PreviewB from "@/pages/previews/PreviewB";
+import PreviewC from "@/pages/previews/PreviewC";
+import PreviewD from "@/pages/previews/PreviewD";
 import "@/App.css";
 
 function App() {
@@ -32,6 +37,11 @@ function App() {
             <Route path="/merchant/dashboard" element={<ProtectedRoute role="merchant"><MerchantDashboard /></ProtectedRoute>} />
             <Route path="/merchant/discount" element={<ProtectedRoute role="merchant"><MerchantDiscount /></ProtectedRoute>} />
             <Route path="/merchant/scan" element={<ProtectedRoute role="merchant"><MerchantScan /></ProtectedRoute>} />
+            <Route path="/preview" element={<PreviewGallery />} />
+            <Route path="/preview/a" element={<PreviewA />} />
+            <Route path="/preview/b" element={<PreviewB />} />
+            <Route path="/preview/c" element={<PreviewC />} />
+            <Route path="/preview/d" element={<PreviewD />} />
           </Routes>
           <Toaster position="top-center" richColors />
         </AuthProvider>
