@@ -26,10 +26,10 @@ export default function Login() {
 
   return (
     <main data-testid="login-page" className="mx-auto max-w-md px-6 py-16">
-      <Card className="border-warm bg-white p-8">
+      <Card className="border-warm bg-[#141414] border border-white/10 p-8">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Bentornato</div>
         <h1 className="mt-2 font-serif text-4xl">Accedi</h1>
-        <p className="mt-2 text-sm text-espresso/70">Entra e riprendi lo sconto dove l'avevi lasciato.</p>
+        <p className="mt-2 text-sm text-white/70">Entra e riprendi lo sconto dove l'avevi lasciato.</p>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
@@ -58,19 +58,19 @@ export default function Login() {
               autoComplete="current-password"
             />
           </div>
-          <Button data-testid="login-submit" type="submit" disabled={loading} className="w-full bg-terracotta text-white hover:bg-terracotta/90">
+          <Button data-testid="login-submit" type="submit" disabled={loading} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Accesso…" : "Accedi"}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-espresso/70">
+        <p className="mt-6 text-center text-sm text-white/70">
           Non hai un account?{" "}
           <Link to="/register" className="text-terracotta hover:underline">
             Registrati
           </Link>
         </p>
 
-        <div className="mt-6 rounded-md border border-warm bg-parchment p-3 text-xs text-espresso/70">
+        <div className="mt-6 rounded-md border border-warm bg-white/5 p-3 text-xs text-white/70">
           <strong>Demo:</strong> cliente@scontiroma.it / cliente123 · trattoria@scontiroma.it / merchant123
         </div>
       </Card>

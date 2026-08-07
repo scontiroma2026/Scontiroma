@@ -66,10 +66,10 @@ export default function MerchantDiscount() {
       <div className="mb-8">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Il tuo sconto</div>
         <h1 className="mt-2 font-serif text-5xl">{existing ? "Modifica offerta" : "Crea la tua offerta"}</h1>
-        <p className="mt-2 text-espresso/70">Un solo sconto per commerciante. Sceglilo bene: sarà la tua vetrina.</p>
+        <p className="mt-2 text-white/70">Un solo sconto per commerciante. Sceglilo bene: sarà la tua vetrina.</p>
       </div>
 
-      <Card className="border-warm bg-white p-8">
+      <Card className="border-warm bg-[#141414] border border-white/10 p-8">
         <form onSubmit={submit} className="space-y-5">
           <div>
             <Label>Titolo offerta</Label>
@@ -97,10 +97,10 @@ export default function MerchantDiscount() {
             <Label>Termini e condizioni</Label>
             <Textarea data-testid="disc-terms" value={form.terms} onChange={upd("terms")} className="mt-1" rows={2} placeholder="Es. Valido dal lunedì al giovedì" />
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-warm bg-parchment p-4">
+          <div className="flex items-center justify-between rounded-lg border border-warm bg-white/5 p-4">
             <div>
-              <div className="font-medium text-espresso">Offerta attiva</div>
-              <div className="text-xs text-espresso/60">Se disattivata, non appare nel catalogo</div>
+              <div className="font-medium text-white">Offerta attiva</div>
+              <div className="text-xs text-white/60">Se disattivata, non appare nel catalogo</div>
             </div>
             <Switch
               data-testid="disc-active"
@@ -108,7 +108,7 @@ export default function MerchantDiscount() {
               onCheckedChange={(v) => setForm({ ...form, active: v })}
             />
           </div>
-          <Button data-testid="disc-submit" type="submit" disabled={loading} size="lg" className="w-full bg-terracotta text-white hover:bg-terracotta/90">
+          <Button data-testid="disc-submit" type="submit" disabled={loading} size="lg" className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Salvataggio…" : existing ? "Aggiorna offerta" : "Pubblica offerta"}
           </Button>
         </form>

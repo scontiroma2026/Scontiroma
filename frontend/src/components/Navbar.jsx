@@ -29,13 +29,13 @@ export default function Navbar() {
     : [{ to: "/discounts", label: "Esplora sconti" }];
 
   return (
-    <header data-testid="navbar" className="sticky top-0 z-40 w-full border-b border-warm bg-cream/85 backdrop-blur-md">
+    <header data-testid="navbar" className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/70 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to="/" data-testid="brand-link" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-terracotta text-white font-serif text-lg">S</div>
+          <div className="grad-fucsia-viola flex h-10 w-10 items-center justify-center rounded-2xl text-white font-serif text-lg glow-fucsia">S</div>
           <div className="flex flex-col leading-tight">
-            <span className="font-serif text-xl font-semibold tracking-tight text-espresso">Sconti Roma</span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-gold">Assaggia la città</span>
+            <span className="font-serif text-xl tracking-tight text-white">Sconti Roma</span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-ciano">Roma è tua</span>
           </div>
         </Link>
 
@@ -46,7 +46,7 @@ export default function Navbar() {
               to={l.to}
               data-testid={`nav-${l.label.toLowerCase().replace(/\s+/g,'-')}`}
               className={({ isActive }) =>
-                `text-sm transition-colors ${isActive ? "text-terracotta" : "text-espresso/80 hover:text-terracotta"}`
+                `text-sm transition-colors ${isActive ? "text-fucsia" : "text-white/70 hover:text-fucsia"}`
               }
             >
               {l.label}
@@ -57,8 +57,8 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              <span className="flex items-center gap-2 rounded-full bg-parchment px-3 py-1.5 text-xs text-espresso">
-                {isMerchant ? <Store size={14} /> : <User size={14} />}
+              <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white">
+                {isMerchant ? <Store size={14} className="text-ciano" /> : <User size={14} className="text-fucsia" />}
                 {user.name || user.email}
               </span>
               <Button
@@ -66,7 +66,7 @@ export default function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-espresso hover:bg-parchment"
+                className="text-white hover:bg-white/10"
               >
                 <LogOut size={16} className="mr-1.5" /> Esci
               </Button>
@@ -78,7 +78,7 @@ export default function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => nav("/login")}
-                className="text-espresso hover:bg-parchment"
+                className="text-white hover:bg-white/10"
               >
                 Accedi
               </Button>
@@ -86,7 +86,7 @@ export default function Navbar() {
                 data-testid="register-btn"
                 size="sm"
                 onClick={() => nav("/register")}
-                className="bg-terracotta text-white hover:bg-terracotta/90"
+                className="grad-fucsia-viola text-white hover:scale-105 transition rounded-full glow-fucsia"
               >
                 Iscriviti <ShoppingBag size={14} className="ml-1.5" />
               </Button>

@@ -49,16 +49,16 @@ export default function Register() {
 
   return (
     <main data-testid="register-page" className="mx-auto max-w-lg px-6 py-16">
-      <Card className="border-warm bg-white p-8">
+      <Card className="border-warm bg-[#141414] border border-white/10 p-8">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Nuovo qui?</div>
         <h1 className="mt-2 font-serif text-4xl">Crea il tuo account</h1>
 
-        <div className="mt-6 grid grid-cols-2 gap-2 rounded-lg bg-parchment p-1">
+        <div className="mt-6 grid grid-cols-2 gap-2 rounded-lg bg-white/5 p-1">
           <button
             type="button"
             data-testid="role-client"
             onClick={() => setRole("client")}
-            className={`rounded-md py-2 text-sm transition ${role === "client" ? "bg-white text-terracotta shadow" : "text-espresso/70"}`}
+            className={`rounded-md py-2 text-sm transition ${role === "client" ? "bg-[#141414] border border-white/10 text-terracotta shadow" : "text-white/70"}`}
           >
             Sono un cliente
           </button>
@@ -66,7 +66,7 @@ export default function Register() {
             type="button"
             data-testid="role-merchant"
             onClick={() => setRole("merchant")}
-            className={`rounded-md py-2 text-sm transition ${role === "merchant" ? "bg-white text-terracotta shadow" : "text-espresso/70"}`}
+            className={`rounded-md py-2 text-sm transition ${role === "merchant" ? "bg-[#141414] border border-white/10 text-terracotta shadow" : "text-white/70"}`}
           >
             Sono un commerciante
           </button>
@@ -100,7 +100,7 @@ export default function Register() {
                     value={form.zone}
                     onChange={update("zone")}
                     required
-                    className="mt-1 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-input bg-[#141414] border border-white/10 px-3 py-2 text-sm"
                   >
                     <option value="">Seleziona…</option>
                     {zones.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -113,7 +113,7 @@ export default function Register() {
                     value={form.category}
                     onChange={update("category")}
                     required
-                    className="mt-1 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-input bg-[#141414] border border-white/10 px-3 py-2 text-sm"
                   >
                     <option value="">Seleziona…</option>
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -123,12 +123,12 @@ export default function Register() {
             </>
           )}
 
-          <Button data-testid="reg-submit" type="submit" disabled={loading} className="w-full bg-terracotta text-white hover:bg-terracotta/90">
+          <Button data-testid="reg-submit" type="submit" disabled={loading} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Creazione…" : "Crea account"}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-espresso/70">
+        <p className="mt-6 text-center text-sm text-white/70">
           Hai già un account?{" "}
           <Link to="/login" className="text-terracotta hover:underline">Accedi</Link>
         </p>

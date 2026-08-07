@@ -33,10 +33,10 @@ export default function MerchantScan() {
       <div className="mb-8 text-center">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Verifica codice</div>
         <h1 className="mt-2 font-serif text-5xl">Scansiona lo sconto</h1>
-        <p className="mt-2 text-espresso/70">Inserisci il codice del cliente per applicare lo sconto.</p>
+        <p className="mt-2 text-white/70">Inserisci il codice del cliente per applicare lo sconto.</p>
       </div>
 
-      <Card className="border-warm bg-white p-8">
+      <Card className="border-warm bg-[#141414] border border-white/10 p-8">
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label htmlFor="code" className="flex items-center gap-2"><QrCode size={14} /> Codice sconto</Label>
@@ -56,27 +56,27 @@ export default function MerchantScan() {
             type="submit"
             disabled={loading || !code}
             size="lg"
-            className="w-full bg-terracotta text-white hover:bg-terracotta/90"
+            className="w-full grad-fucsia-viola text-white hover:scale-105 transition"
           >
             {loading ? "Verifica…" : "Valida sconto"}
           </Button>
         </form>
 
         {result?.status === "ok" && (
-          <div data-testid="scan-success" className="mt-6 rounded-lg border-2 border-terracotta bg-parchment p-6">
+          <div data-testid="scan-success" className="mt-6 rounded-lg border-2 border-terracotta bg-white/5 p-6">
             <div className="flex items-center gap-3 text-terracotta">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-terracotta text-white">
                 <Check size={20} />
               </div>
               <div>
                 <div className="font-serif text-2xl">Sconto applicato</div>
-                <div className="text-sm text-espresso/70">Cliente: <strong>{result.data.client_name}</strong></div>
+                <div className="text-sm text-white/70">Cliente: <strong>{result.data.client_name}</strong></div>
               </div>
             </div>
             <div className="mt-4 border-t border-warm pt-4 text-sm">
-              <div className="text-espresso/60">Offerta</div>
-              <div className="font-serif text-lg text-espresso">{result.data.discount_title}</div>
-              <div className="mt-2 font-mono text-xs tracking-wider text-espresso/50">{result.data.code}</div>
+              <div className="text-white/60">Offerta</div>
+              <div className="font-serif text-lg text-white">{result.data.discount_title}</div>
+              <div className="mt-2 font-mono text-xs tracking-wider text-white/50">{result.data.code}</div>
             </div>
           </div>
         )}

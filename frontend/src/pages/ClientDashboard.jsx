@@ -25,27 +25,27 @@ export default function ClientDashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="border-warm bg-white p-6 md:col-span-2">
+        <Card className="border-warm bg-[#141414] border border-white/10 p-6 md:col-span-2">
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
             <Sparkles size={12} /> Abbonamento
           </div>
           {sub ? (
             <>
               <div className="mt-3 font-serif text-3xl text-terracotta">Attivo</div>
-              <div className="mt-1 text-sm text-espresso/70">
+              <div className="mt-1 text-sm text-white/70">
                 Rinnovo automatico il {new Date(sub.end_date).toLocaleDateString("it-IT")} · €{sub.price_eur}/mese
               </div>
               <div className="mt-4 flex gap-2">
-                <Link to="/discounts"><Button className="bg-terracotta text-white hover:bg-terracotta/90">Sfoglia sconti</Button></Link>
+                <Link to="/discounts"><Button className="grad-fucsia-viola text-white hover:scale-105 transition">Sfoglia sconti</Button></Link>
                 <Link to="/subscribe"><Button variant="outline">Gestisci</Button></Link>
               </div>
             </>
           ) : (
             <>
-              <div className="mt-3 font-serif text-3xl text-espresso">Non attivo</div>
-              <p className="mt-1 text-sm text-espresso/70">Attiva l'abbonamento per accedere agli sconti.</p>
+              <div className="mt-3 font-serif text-3xl text-white">Non attivo</div>
+              <p className="mt-1 text-sm text-white/70">Attiva l'abbonamento per accedere agli sconti.</p>
               <Link to="/subscribe">
-                <Button data-testid="activate-btn" className="mt-4 bg-terracotta text-white hover:bg-terracotta/90">
+                <Button data-testid="activate-btn" className="mt-4 grad-fucsia-viola text-white hover:scale-105 transition">
                   Attiva a €4,99/mese
                 </Button>
               </Link>
@@ -67,30 +67,30 @@ export default function ClientDashboard() {
       <div className="mt-10">
         <h2 className="mb-4 font-serif text-3xl">I tuoi codici</h2>
         {redemptions.length === 0 ? (
-          <Card className="border-warm bg-parchment p-10 text-center text-espresso/60">
+          <Card className="border-warm bg-white/5 p-10 text-center text-white/60">
             Non hai ancora riscattato nessuno sconto.
           </Card>
         ) : (
           <div className="space-y-3">
             {redemptions.map((r) => (
-              <Card key={r.id} data-testid={`redemption-${r.id}`} className="flex items-center justify-between border-warm bg-white p-4">
+              <Card key={r.id} data-testid={`redemption-${r.id}`} className="flex items-center justify-between border-warm bg-[#141414] border border-white/10 p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-parchment text-terracotta">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-terracotta">
                     <TicketCheck size={20} />
                   </div>
                   <div>
                     <div className="font-serif text-lg">{r.discount_title}</div>
-                    <div className="text-xs text-espresso/60">{r.shop_name}</div>
+                    <div className="text-xs text-white/60">{r.shop_name}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="font-mono text-lg tracking-wider text-espresso">{r.code}</div>
-                    <div className="flex items-center gap-1 text-xs text-espresso/50">
+                    <div className="font-mono text-lg tracking-wider text-white">{r.code}</div>
+                    <div className="flex items-center gap-1 text-xs text-white/50">
                       <CalendarDays size={11} /> {new Date(r.created_at).toLocaleDateString("it-IT")}
                     </div>
                   </div>
-                  <Badge variant={r.status === "redeemed" ? "secondary" : "default"} className={r.status === "redeemed" ? "bg-parchment text-espresso" : "bg-terracotta text-white"}>
+                  <Badge variant={r.status === "redeemed" ? "secondary" : "default"} className={r.status === "redeemed" ? "bg-white/5 text-white" : "bg-terracotta text-white"}>
                     {r.status === "redeemed" ? "Utilizzato" : "Attivo"}
                   </Badge>
                 </div>

@@ -50,7 +50,7 @@ export default function Subscribe() {
         <h1 className="mt-3 font-serif text-5xl">Un caffè al mese.<br/><span className="italic text-terracotta">Sconti per tutto l'anno.</span></h1>
       </div>
 
-      <Card className="mt-10 border-warm bg-white p-8">
+      <Card className="mt-10 border-warm bg-[#141414] border border-white/10 p-8">
         {sub ? (
           <div data-testid="active-subscription">
             <div className="flex items-center gap-3 text-terracotta">
@@ -59,16 +59,16 @@ export default function Subscribe() {
               </div>
               <div>
                 <div className="font-serif text-2xl">Abbonamento attivo</div>
-                <div className="text-sm text-espresso/60">Valido fino al {new Date(sub.end_date).toLocaleDateString("it-IT")}</div>
+                <div className="text-sm text-white/60">Valido fino al {new Date(sub.end_date).toLocaleDateString("it-IT")}</div>
               </div>
             </div>
-            <div className="mt-6 grid gap-3 text-sm text-espresso/80">
+            <div className="mt-6 grid gap-3 text-sm text-white/80">
               <div className="flex justify-between border-b border-warm py-2"><span>Piano</span><span>Mensile — €4,99</span></div>
               <div className="flex justify-between border-b border-warm py-2"><span>Metodo di pagamento</span><span>•••• {sub.card_last4}</span></div>
               <div className="flex justify-between border-b border-warm py-2"><span>Stato</span><span className="text-terracotta">Attivo</span></div>
             </div>
             <div className="mt-6 flex gap-3">
-              <Button onClick={() => nav("/discounts")} className="bg-terracotta text-white hover:bg-terracotta/90">Sfoglia gli sconti</Button>
+              <Button onClick={() => nav("/discounts")} className="grad-fucsia-viola text-white hover:scale-105 transition">Sfoglia gli sconti</Button>
               <Button data-testid="cancel-sub-btn" variant="outline" onClick={cancel}>Annulla abbonamento</Button>
             </div>
           </div>
@@ -76,9 +76,9 @@ export default function Subscribe() {
           <>
             <div className="flex items-baseline gap-2">
               <span className="font-serif text-6xl text-terracotta">€4,99</span>
-              <span className="text-espresso/60">/ mese</span>
+              <span className="text-white/60">/ mese</span>
             </div>
-            <ul className="mt-6 space-y-2 text-sm text-espresso/80">
+            <ul className="mt-6 space-y-2 text-sm text-white/80">
               {[
                 "Sconto in ogni locale partner di Roma",
                 "Nessun limite mensile all'utilizzo",
@@ -90,7 +90,7 @@ export default function Subscribe() {
             </ul>
 
             <div className="mt-8 space-y-3">
-              <Label htmlFor="card" className="flex items-center gap-2 text-espresso"><CreditCard size={14} /> Carta di pagamento (mock)</Label>
+              <Label htmlFor="card" className="flex items-center gap-2 text-white"><CreditCard size={14} /> Carta di pagamento (mock)</Label>
               <Input
                 id="card"
                 data-testid="card-input"
@@ -98,7 +98,7 @@ export default function Subscribe() {
                 onChange={(e) => setCard(e.target.value)}
                 placeholder="0000 0000 0000 0000"
               />
-              <p className="text-xs text-espresso/50">
+              <p className="text-xs text-white/50">
                 💡 Questa è una simulazione. Nessun pagamento reale sarà effettuato.
               </p>
             </div>
@@ -108,7 +108,7 @@ export default function Subscribe() {
               onClick={subscribe}
               disabled={loading}
               size="lg"
-              className="mt-6 w-full bg-terracotta text-white hover:bg-terracotta/90"
+              className="mt-6 w-full grad-fucsia-viola text-white hover:scale-105 transition"
             >
               {loading ? "Attivazione…" : "Attiva abbonamento — €4,99"}
             </Button>
