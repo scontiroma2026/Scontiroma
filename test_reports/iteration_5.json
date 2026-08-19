@@ -1,0 +1,47 @@
+{
+  "summary": "Iteration 5 (bug fix: TEST leftovers + whitespace on shop/discount fields). Backend: 9/9 pytest passed. Frontend: /discounts shows exactly 9 cards, no TEST_ leftovers, no leading/trailing whitespace on any shop_name/title/description. First 3 cards (Menu pesce, Pizza capricciosa, Pizza margherita) render with sensible names, consistent prices, valid discount %.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/discounts", "issues": ["Data-quality (not a bug of this fix): two user-created merchants use the literal string 'Ristorante' as their shop_name — visually confusing but valid (user chose that name). The trim fix is working; the shop name is simply generic. Consider a min-length or 'not equal to category' validation for shop_name on register/profile."]}
+    ]
+  },
+  "backend_tests_run": [
+    "TestPublicDiscountsCleanliness (3): GET /api/discounts returns exactly 9, no TEST/whitespace on any card; first 3 have valid shop_name+title+prices — PASS",
+    "TestMerchantTrimOnCreate (3): POST /merchants/me/discount strips leading/trailing whitespace on title/description/terms; empty ('   ' or '') title/description returns 422 — PASS",
+    "TestProfileAndRegisterTrim (2): PUT /merchants/me/profile trims shop_name/zone (verified by both response and GET /auth/me); POST /auth/register trims name+shop_name — PASS",
+    "TestRegression (1): seed merchants (Trattoria da Marco / Caffè del Corso / Aurora SPA) still present in public list with clean names — PASS"
+  ],
+  "frontend_tests_run": [
+    "GET /discounts renders 9 cards (matches spec)",
+    "No card has 'TEST' or 'TEST_' in shop_name or title",
+    "No shop_name/title/description on visible cards has leading/trailing whitespace",
+    "First 3 cards render with proper shop_name, title, category badge, zone, and price (both original and discounted)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration5.py",
+    "/app/test_reports/pytest/iter5_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DiscountIn.cleaned() only strips title/description/image_url/terms — if you later add more string fields to DiscountIn, remember to add them to the tuple in server.py:200.",
+    "/merchants/me/profile trims all string fields via isinstance check — good. But there is no min-length validation: a merchant can now save shop_name='' (empty string) via PUT /merchants/me/profile. Consider rejecting empty strings after strip.",
+    "/auth/register still falls back to 'Negozio'/'Centro Storico'/'Ristorante' defaults if merchant leaves fields blank (server.py:284-286). This means a merchant registering with only email+name gets shop_name='<their name>' and category='Ristorante' — that is the source of the 'Ristorante' shop_name showing on public /discounts cards (data-quality issue observed in frontend). Consider requiring shop_name+zone+category for role='merchant' at register time.",
+    "server.py is now ~1500 lines (carry-over from iter4) — split into routers is overdue.",
+    "No index on discounts.created_at, but list_discounts sorts client-side after .to_list(500) — fine for now but plan an index if catalog grows."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration5.py (new)",
+    "/app/test_reports/iteration_5.json (new)",
+    "/app/test_reports/pytest/iter5_results.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (9/9)", "frontend": "100%"},
+  "test_credentials": "admin@scontiroma.it/admin123 + master ValeRoma2026. Ephemeral trim_test_* merchants used during this run and DELETED at end (via direct Mongo delete_many on {email: /^trim_test_/}) — DB is clean.",
+  "seed_data_creation": "None persisted. 5 trim_test_ merchants + 1 associated discount were created during pytest and then deleted by test cleanup script.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: REACT_APP_BACKEND_URL=https://deal-bundle.preview.emergentagent.com pytest /app/backend/tests/test_iteration5.py -v. The test_public_list_expected_count_9 will fail if the count drifts from 9 — update if catalog changes. Cleanup step at end of module prints created emails but does NOT delete them from DB; use the mongo one-liner in this iteration's log to delete: db.users.delete_many({email: /^trim_test_/}); db.discounts.delete_many({merchant_id: {\\$in: [...ids]}}).",
+  "rca of the issue": "Original bug: first 3 shops on /discounts were incomprehensible because (a) 10 leftover TEST_/testing-agent users from previous iterations were still in DB with generic/whitespace-polluted names, and (b) DiscountIn had no strip() on save so merchants could submit '  Pizza  ' and it would render with visible trailing spaces in the card. Fix applied by main agent: one-off Mongo migration deleted TEST leftovers + stripped whitespace on existing records; DiscountIn.cleaned() now strips on write, POST /merchants/me/discount returns 422 if title/description empty after strip, PUT /merchants/me/profile trims all string fields, /auth/register trims name/shop_name/zone/category. Verified end-to-end: 9 clean cards on /discounts, all new merchant submissions with whitespace are stored stripped, empty inputs are rejected with 422."
+}

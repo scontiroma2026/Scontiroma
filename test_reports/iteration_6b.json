@@ -1,0 +1,23 @@
+{
+  "summary": "Iteration 6b - Focused verification of PhotoEnhancer value<->preview sync fix (useEffect([value]) at PhotoEnhancer.jsx lines 89-93). Registered fresh merchant, filled discount form, uploaded /tmp/testphoto.jpg (800x600 JPEG), verified preview + badge + data-URL src, submitted. Then navigated away (/merchant) and back to /merchant/discount: preview appeared IMMEDIATELY with persisted data URL (no 'Carica una foto' upload button). Also verified hard page reload: preview appeared immediately and image src identical to previous session. FIX VERIFIED. Regression on previous 8 checks: upload works, preview appears, badge visible, src is data:image/jpeg;base64 (~4.8KB), submit persists, change+clear buttons render. Reprocess button correctly hidden for persisted image (no lastFileRef) and correctly shown for fresh upload in-session.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PhotoEnhancer.jsx useEffect(89-93) correctly syncs preview with parent-loaded value; guarded to avoid clobbering an in-progress local upload via lastFileRef.current check — good.",
+    "Note: Reprocess button is intentionally not shown after remount/reload since lastFileRef is not persisted (only the enhanced data URL is). This is expected behavior."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100% on fix verification + regression"},
+  "test_credentials": "Ephemeral testmerchant_165204@scontiroma.it / test12345 created via /api/auth/register",
+  "seed_data_creation": "Fresh merchant registered; /tmp/testphoto.jpg reused (800x600 solid brown JPEG ~8KB)",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PhotoEnhancer preview<->value sync fix is confirmed working. Returning merchants and hard reloads correctly display persisted image. No further action needed on this feature.",
+  "rca of the issue": "N/A - fix confirmed. The fix adds a useEffect that watches the `value` prop and updates local `preview` state when the parent's async GET /merchants/me/discount populates form.image_url after mount."
+}

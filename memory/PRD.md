@@ -48,6 +48,8 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **[2026-02-19]** Limite 1 coupon/negozio/utente per mese solare (reset automatico ogni 1° con `month_key`); pulsante disabilitato con "Sconto già utilizzato questo mese"
 - **[2026-02-19]** QR dinamico URL universale a 20s: `/qr/{code}.{slot}.{hmac}` scansionabile da qualsiasi fotocamera senza app. Pagina pubblica full-screen VERDE ✓ ABBONAMENTO VALIDO o ROSSA X CODICE NON VALIDO. Timer + barra progresso 20s.
 - **[2026-02-19]** Analytics scan tracciate automaticamente su prima scansione valida (user/negozio/sconto/timestamp)
+- **[2026-02-19]** Bug fix: rimossi negozi TEST_ dal QA + trim automatico whitespace su shop_name/title/description/terms + validazione 422 per campi vuoti
+- **[2026-02-19]** Auto-enhancement foto client-side: al caricamento, Canvas applica automaticamente luminosità +15%, contrasto +10%, saturazione +15%, sharpening (kernel 3x3 anti-mosso), resize max 1200px, JPEG q0.85. Anteprima immediata con badge "Foto ottimizzata automaticamente per la homepage!". Componente `PhotoEnhancer` riutilizzabile.
 
 ## Prioritized Backlog
 - **P1**: Real Stripe integration (currently mocked).

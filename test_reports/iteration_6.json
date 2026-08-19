@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration 6 - Frontend-only testing of PhotoEnhancer auto-enhancement feature on /merchant/discount. Registered a fresh merchant to avoid locked seed. All 8 requested checks PASSED: (1) upload button visible with correct copy 'Carica una foto · JPG o PNG · L'app la ottimizzerà automaticamente', (2) preview appears <3s after set_input_files on hidden #disc-photo-input, (3) badge visible with exact text 'Foto ottimizzata automaticamente per la homepage!' and disappears after ~4s, (4) img src starts with 'data:image/jpeg;base64,' (~4.8KB for 800x600 test JPEG - well under 500KB budget), (5) POST /api/merchants/me/discount body.image_url starts with data URL prefix and matches persisted value returned by subsequent GET, (6) change/clear/reprocess buttons all functional (clear restores upload button; reprocess re-runs enhancement and produces new data URL), (7) backend accepted payload (200) with no 413, (8) approval workflow works: status becomes 'pending' after edit+save. Regression: editing without changing photo preserves existing image_url in POST and persists it (status returns to 'pending').",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "PhotoEnhancer", "issue": "Local `preview` state initializes from `value` prop only on mount and does not sync when parent later updates `value` (e.g., after async GET /merchants/me/discount loads existing image_url). Result: returning merchant with an already-saved photo sees the empty 'Carica una foto' upload prompt instead of the existing image preview. Data still persists correctly because form.image_url is preserved in parent state, so submit round-trips fine, but the UX is misleading. Suggested fix: useEffect([value]) that sets preview to value when value changes and preview is empty (or unconditionally).", "selector": "[data-testid=\"disc-photo-preview\"]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: in PhotoEnhancer.jsx add useEffect(() => { if (value && value !== preview) setPreview(value); }, [value]) so existing/persisted image_url shows in preview after parent's async load."
+  ],
+  "critical_code_review_comments": [
+    "PhotoEnhancer.jsx: `preview` state is not synced with `value` prop after mount (see UI bug above).",
+    "applyConvolution runs a 3x3 kernel in JS on the main thread over up to 1200x1200 = 1.44M pixels; for larger images this can jank the UI. Consider OffscreenCanvas/Worker for future perf.",
+    "MerchantDiscount.jsx: no client-side check that image_url is present before submit (feature intentionally optional since backend DiscountIn.image_url is Optional[str]) - fine."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100%"},
+  "test_credentials": "Created ephemeral merchant testmerchant_813531@scontiroma.it / test12345 during run (also 395930 and 933347 from earlier attempts). Recommend cleanup script or ignore (all prefixed 'testmerchant_').",
+  "seed_data_creation": "Registered fresh merchants via POST /api/auth/register (role=merchant) to bypass locked-for-month seed data. /tmp/testphoto.jpg (800x600 solid brown JPEG, ~8KB) generated with PIL.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PhotoEnhancer works end-to-end. Only outstanding item is the value->preview sync on remount/reload (see ui_bugs). All primary acceptance criteria of iteration 6 verified. Payload size is very small (~5KB) with the tiny test JPEG; real photos will be larger but still well under limits due to 1200px max + JPEG 0.85.",
+  "rca of the issue": "N/A - no blocking bug. UX sync issue root cause: PhotoEnhancer uses useState(value || null) which captures value only at first render; when parent's load() later populates form.image_url via setState, the child prop updates but the child's local `preview` state is not re-derived."
+}

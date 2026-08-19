@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle } from "lucide-react";
+import PhotoEnhancer from "@/components/PhotoEnhancer";
 
 export default function MerchantDiscount() {
   const [form, setForm] = useState({
@@ -147,8 +148,13 @@ export default function MerchantDiscount() {
               </div>
             </div>
             <div>
-              <Label>URL immagine</Label>
-              <Input data-testid="disc-image" value={form.image_url} onChange={upd("image_url")} className="mt-1 bg-black/40 border-white/10 text-white" placeholder="https://..." />
+              <Label>Foto dell'offerta</Label>
+              <p className="text-xs text-white/50 mt-1 mb-2">La foto verrà ottimizzata automaticamente (luminosità, contrasto, colori, nitidezza) prima del salvataggio.</p>
+              <PhotoEnhancer
+                value={form.image_url}
+                onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                testIdPrefix="disc-photo"
+              />
             </div>
             <div>
               <Label>Termini e condizioni</Label>

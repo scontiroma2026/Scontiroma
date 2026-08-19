@@ -195,6 +195,13 @@ class DiscountIn(BaseModel):
     terms: Optional[str] = ""
     active: bool = True
 
+    def cleaned(self) -> dict:
+        d = self.model_dump()
+        for k in ("title", "description", "image_url", "terms"):
+            if isinstance(d.get(k), str):
+                d[k] = d[k].strip()
+        return d
+
 
 class MerchantProfileIn(BaseModel):
     shop_name: Optional[str] = None
@@ -268,15 +275,15 @@ async def register(payload: RegisterIn, response: Response):
         "id": user_id,
         "email": email,
         "password_hash": hash_password(payload.password),
-        "name": payload.name.strip(),
+        "name": (payload.name or "").strip(),
         "role": payload.role,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if payload.role == "merchant":
         doc.update({
-            "shop_name": payload.shop_name or payload.name,
-            "zone": payload.zone or "Centro Storico",
-            "category": payload.category or "Ristorante",
+            "shop_name": (payload.shop_name or payload.name or "").strip() or "Negozio",
+            "zone": (payload.zone or "Centro Storico").strip(),
+            "category": (payload.category or "Ristorante").strip(),
             "description": "",
             "address": "",
             "image_url": "",
@@ -615,7 +622,9 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
                 and existing.get("locked_month") == month_key
                 and not existing.get("force_editable", False)):
             raise HTTPException(423, "Offerta attiva per questo mese. Potrai inserire o modificare la nuova offerta a partire dal 1° del mese prossimo.")
-        data = payload.model_dump()
+        data = payload.cleaned()
+        if not data.get("title") or not data.get("description"):
+            raise HTTPException(422, "Titolo e descrizione sono obbligatori")
         data["updated_at"] = now_iso
         data["approval_status"] = "pending"
         data["approval_note"] = ""
@@ -626,7 +635,9 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         d = await db.discounts.find_one({"id": existing["id"]})
     else:
         did = str(uuid.uuid4())
-        doc = payload.model_dump()
+        doc = payload.cleaned()
+        if not doc.get("title") or not doc.get("description"):
+            raise HTTPException(422, "Titolo e descrizione sono obbligatori")
         doc.update({
             "id": did,
             "merchant_id": user["id"],
@@ -645,7 +656,11 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
 
 @api.put("/merchants/me/profile")
 async def merchant_update_profile(payload: MerchantProfileIn, user: dict = Depends(require_merchant)):
-    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    updates = {}
+    for k, v in payload.model_dump().items():
+        if v is None:
+            continue
+        updates[k] = v.strip() if isinstance(v, str) else v
     if updates:
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
     u = await db.users.find_one({"id": user["id"]})
