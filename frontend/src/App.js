@@ -16,6 +16,7 @@ import MerchantScan from "@/pages/MerchantScan";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancel from "@/pages/PaymentCancel";
+import MapView from "@/pages/MapView";
 import PreviewGallery from "@/pages/PreviewGallery";
 import PreviewA from "@/pages/previews/PreviewA";
 import PreviewB from "@/pages/previews/PreviewB";
@@ -43,6 +44,7 @@ function App() {
             <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
+            <Route path="/map" element={<MapView />} />
             <Route path="/preview" element={<PreviewGallery />} />
             <Route path="/preview/a" element={<PreviewA />} />
             <Route path="/preview/b" element={<PreviewB />} />

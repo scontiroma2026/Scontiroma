@@ -296,6 +296,8 @@ async def enrich_discount(d: dict) -> dict:
             "address": merchant.get("address", ""),
             "image_url": merchant.get("image_url", ""),
             "description": merchant.get("description", ""),
+            "lat": merchant.get("lat"),
+            "lng": merchant.get("lng"),
         }
     if d.get("original_price") and d.get("discounted_price") is not None:
         try:
@@ -771,6 +773,7 @@ SEED_MERCHANTS = [
      "zone": "Trastevere", "category": "Ristorante",
      "description": "Cucina romana tradizionale nel cuore di Trastevere.",
      "address": "Via del Moro 12, Roma",
+     "lat": 41.8896, "lng": 12.4681,
      "image_url": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800",
      "discount": {"title": "Menu degustazione a metà prezzo",
                   "description": "Antipasto, primo, secondo e dolce con vino della casa.",
@@ -781,6 +784,7 @@ SEED_MERCHANTS = [
      "zone": "Centro Storico", "category": "Bar & Caffè",
      "description": "Caffè storico dal 1954, torrefazione artigianale.",
      "address": "Via del Corso 88, Roma",
+     "lat": 41.9028, "lng": 12.4796,
      "image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
      "discount": {"title": "Cappuccino + Cornetto a €2",
                   "description": "Colazione italiana con cappuccino e cornetto artigianale.",
@@ -791,6 +795,7 @@ SEED_MERCHANTS = [
      "zone": "Prati", "category": "Beauty & SPA",
      "description": "Centro benessere con percorso termale e massaggi.",
      "address": "Via Cola di Rienzo 200, Roma",
+     "lat": 41.9086, "lng": 12.4620,
      "image_url": "https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=800",
      "discount": {"title": "Massaggio 60min -50%",
                   "description": "Massaggio rilassante di 60 minuti con oli essenziali.",
@@ -801,6 +806,7 @@ SEED_MERCHANTS = [
      "zone": "Testaccio", "category": "Pizzeria",
      "description": "Pizza romana sottile e croccante, forno a legna.",
      "address": "Via Galvani 24, Roma",
+     "lat": 41.8759, "lng": 12.4756,
      "image_url": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800",
      "discount": {"title": "Pizza + Birra a €7",
                   "description": "Una pizza a scelta con birra artigianale media.",
@@ -811,6 +817,7 @@ SEED_MERCHANTS = [
      "zone": "Monti", "category": "Gelateria",
      "description": "Gelato artigianale con ingredienti biologici a km 0.",
      "address": "Via dei Serpenti 45, Roma",
+     "lat": 41.8951, "lng": 12.4905,
      "image_url": "https://images.unsplash.com/photo-1567206563064-6f60f40a2b57?w=800",
      "discount": {"title": "Coppa media a €2",
                   "description": "Coppa 3 gusti a scelta con panna inclusa.",
@@ -821,6 +828,7 @@ SEED_MERCHANTS = [
      "zone": "EUR", "category": "Sport & Fitness",
      "description": "Palestra premium con piscina, sauna e corsi.",
      "address": "Viale Europa 100, Roma",
+     "lat": 41.8330, "lng": 12.4682,
      "image_url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
      "discount": {"title": "Ingresso singolo a €5",
                   "description": "Accesso libero a sala pesi, cardio e piscina.",
@@ -871,12 +879,17 @@ async def seed_data():
                 "category": m["category"],
                 "description": m["description"],
                 "address": m["address"],
+                "lat": m.get("lat"),
+                "lng": m.get("lng"),
                 "image_url": m["image_url"],
                 "phone": "",
                 "created_at": datetime.now(timezone.utc).isoformat(),
             })
             merchant_id = uid
         else:
+            # Backfill lat/lng if missing
+            if m.get("lat") and not existing.get("lat"):
+                await db.users.update_one({"id": existing["id"]}, {"$set": {"lat": m.get("lat"), "lng": m.get("lng")}})
             merchant_id = existing["id"]
 
         if not await db.discounts.find_one({"merchant_id": merchant_id}):

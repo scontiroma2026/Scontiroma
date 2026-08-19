@@ -26,9 +26,13 @@ export default function Navbar() {
       ? [{ to: "/admin", label: "Admin" }]
       : [
           { to: "/discounts", label: "Sconti" },
+          { to: "/map", label: "Mappa" },
           { to: "/dashboard", label: "Il mio account" },
         ]
-    : [{ to: "/discounts", label: "Esplora sconti" }];
+    : [
+        { to: "/discounts", label: "Esplora sconti" },
+        { to: "/map", label: "Mappa" },
+      ];
 
   return (
     <header data-testid="navbar" className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/70 backdrop-blur-md">
