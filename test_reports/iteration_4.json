@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 4 (approval workflow, monthly redemption enforcement, 20s rotating QR URLs, public /qr/verify auto-consume, admin pending tab) — Backend: 19/19 pytest passed. Frontend: all critical flows verified via Playwright: /qr/:token invalid & valid full-screen pages, /merchant/discount banner-pending & banner-locked (submit disabled with 'Modifiche bloccate questo mese'), /admin pending tab lists pending offer with approve/reject buttons and row disappears after approve, /discounts/:id redeem button says 'Sconto già utilizzato questo mese. Torna il mese prossimo!' and is disabled after monthly consume.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "backend_tests_run": [
+    "TestApprovalFlow (7): merchant creates pending / not in public list / merchant GET shows approval_status+locked_this_month / admin pending list / admin approve => locked_month=current YYYY-MM + appears in public list / edit locked returns 423 with 'attiva' / force-edit unlocks and merchant resave => pending / reject with reason then resubmit => pending — ALL PASS",
+    "TestRedemptionAndQR (10): create redemption first time (month_key set, status=pending) / second create reuses pending / status endpoint (pending, used_this_month=false) / token returns qr_value starting with FRONTEND_URL/qr/CODE.slot.hmac (dots, HMAC verified externally) window_sec=20 / PUBLIC /qr/verify with no auth returns valid=true + shop + discount + percent and consumes / recent second call still valid / tampered hmac invalid / old slot expired / status after consume => used_this_month=true / second create returns 409 'utilizzato' — ALL PASS",
+    "TestPublicList (1): GET /api/discounts only returns approved+active — PASS"
+  ],
+  "frontend_tests_run": [
+    "/qr/<tampered-token> shows qr-invalid full-screen red with 'CODICE NON VALIDO O GIÀ UTILIZZATO' (no login required)",
+    "/qr/<valid-token> shows qr-valid green full-screen with shop, discount, percent (auto-consumes redemption)",
+    "Merchant login -> /merchant/discount after force-edit + resave shows banner-pending",
+    "After admin approve, /merchant/discount shows banner-locked; disc-submit disabled with text 'Modifiche bloccate questo mese'",
+    "Admin /admin -> master gate ValeRoma2026 -> tab-pending shows pending discount row with approve+reject buttons; clicking approve removes it from list",
+    "Client /discounts/:id after redemption consumed: redeem-btn text = 'Sconto già utilizzato questo mese. Torna il mese prossimo!' and disabled=true"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/test_reports/pytest/iter4_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py now ~1500 lines — splitting into routers (auth/discounts/redemptions/qr/admin/subscription/webauthn) is overdue.",
+    "/qr/verify auto-consumes on first successful scan by anyone with the URL. Because the qr_value is a plain public URL, any user (or bot) that intercepts the QR image (screenshot shared, camera roll leak) can burn the redemption without the merchant scanning. Consider requiring a merchant-side confirmation (soft-scan then merchant confirms) or short-lived tokens (already 20s but slot=±1 gives up to ~60s window).",
+    "/qr/verify does not rate-limit; a scanner could enumerate tokens/hmac (12 hex chars = 48 bits, brute force impractical but still consider rate limiting per IP).",
+    "current_month_key relies on server UTC time, but the redemption month rule is 'calendar month' which for Italy is Europe/Rome. Around midnight UTC on the last day of the month CET/CEST users may be reset one hour late/early. Consider using ZoneInfo('Europe/Rome').",
+    "Admin master password ADMIN_MASTER_PASSWORD compared with '==' (not hmac.compare_digest) — carried over from iter3.",
+    "The 'discount_percent' returned by /qr/verify is None when original_price is falsy; if data has original_price=0 UI hides badge silently. Not a bug but worth noting.",
+    "MerchantDiscount.jsx uses readOnly on submit but form inputs are still enabled while locked — banner says 'blocked' and submit is disabled, but a merchant could still type. Consider disabling the fieldset."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration4.py (new)",
+    "/app/test_reports/iteration_4.json (new)",
+    "/app/test_reports/pytest/iter4_results.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% (all flows)"},
+  "test_credentials": "admin@scontiroma.it/admin123 + master ValeRoma2026 (from .env — NOTE: /app/memory/test_credentials.md still says 'RomaMaster2026!' which is stale; actual env value is 'ValeRoma2026'). cliente@scontiroma.it/cliente123, trattoria/gelato/etc @scontiroma.it/merchant123.",
+  "seed_data_creation": "Tests create ephemeral TEST_merch_*, TEST_cli_*, TEST_rm_*, TEST_rc_*, TEST_frm_*, TEST_frc_* users + related discounts and redemptions. They are left in DB (safe: month_key ties redemptions to current YYYY-MM only). No production data modified.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: pytest /app/backend/tests/test_iteration4.py -v. Master password must be sent via X-Admin-Master header (obtain from POST /admin/verify-master {password: ValeRoma2026}). ROTATION_WINDOW_SEC=20, HMAC = hex(HMAC-SHA256(JWT_SECRET, code+':'+slot))[:12]. FRONTEND_URL=https://deal-bundle.preview.emergentagent.com. Public /api/qr/verify auto-consumes pending redemption on first call and still returns valid=true for ~40s after (2 slots) — this behaviour is intentional so both merchant and any secondary scan see green. IMPORTANT: /app/memory/test_credentials.md file has stale master password 'RomaMaster2026!'; update to 'ValeRoma2026' to match .env.",
+  "rca of the issue": "N/A — no bugs found in iteration 4."
+}

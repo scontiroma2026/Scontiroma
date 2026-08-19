@@ -220,7 +220,7 @@ class RedeemVerifyIn(BaseModel):
     code: str  # Accepts plain "ABC123" or rotating "ABC123|slot|hmac"
 
 
-ROTATION_WINDOW_SEC = 10
+ROTATION_WINDOW_SEC = 20
 
 
 def _rotating_hmac(code: str, slot: int) -> str:
@@ -233,11 +233,27 @@ def current_slot() -> int:
 
 
 def parse_rotating_code(raw: str):
-    """Return (code, slot, token) if rotating, else (code, None, None)."""
-    parts = raw.strip().split("|")
-    if len(parts) == 3:
-        return parts[0].upper(), int(parts[1]), parts[2]
-    return raw.strip().upper(), None, None
+    """Return (code, slot, token). Accepts formats:
+    - plain 'ABC123'
+    - 'CODE|slot|hmac'  (legacy)
+    - 'CODE.slot.hmac'  (URL-safe)
+    - full URL '.../qr/CODE.slot.hmac' or '.../qr/CODE|slot|hmac'
+    """
+    raw = raw.strip()
+    if "/qr/" in raw:
+        raw = raw.rsplit("/qr/", 1)[-1]
+    for sep in (".", "|"):
+        parts = raw.split(sep)
+        if len(parts) == 3:
+            try:
+                return parts[0].upper(), int(parts[1]), parts[2]
+            except ValueError:
+                continue
+    return raw.upper(), None, None
+
+
+def current_month_key() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
 # ---------- Auth Routes ----------
@@ -537,13 +553,21 @@ async def enrich_discount(d: dict) -> dict:
             d["percent_off"] = round((saving / d["original_price"]) * 100)
         except Exception:
             d["percent_off"] = 0
+    # Include approval + lock info for merchant/admin views
+    d.setdefault("approval_status", "approved")
+    d.setdefault("locked_month", None)
+    d.setdefault("approval_note", "")
+    d.setdefault("force_editable", False)
+    d["locked_this_month"] = (d.get("approval_status") == "approved"
+                              and d.get("locked_month") == current_month_key()
+                              and not d.get("force_editable", False))
     return d
 
 
 @api.get("/discounts")
 async def list_discounts(zone: Optional[str] = None, category: Optional[str] = None, q: Optional[str] = None):
-    # Find active discounts; filter merchants after enrich
-    docs = await db.discounts.find({"active": True}).to_list(500)
+    # Only APPROVED + active discounts visible publicly
+    docs = await db.discounts.find({"active": True, "approval_status": "approved"}).to_list(500)
     out = []
     for d in docs:
         item = await enrich_discount(d)
@@ -584,9 +608,20 @@ async def merchant_get_discount(user: dict = Depends(require_merchant)):
 async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(require_merchant)):
     existing = await db.discounts.find_one({"merchant_id": user["id"]})
     now_iso = datetime.now(timezone.utc).isoformat()
+    month_key = current_month_key()
     if existing:
+        # Locked if approved this month unless admin override flag set
+        if (existing.get("approval_status") == "approved"
+                and existing.get("locked_month") == month_key
+                and not existing.get("force_editable", False)):
+            raise HTTPException(423, "Offerta attiva per questo mese. Potrai inserire o modificare la nuova offerta a partire dal 1° del mese prossimo.")
         data = payload.model_dump()
         data["updated_at"] = now_iso
+        data["approval_status"] = "pending"
+        data["approval_note"] = ""
+        data["locked_month"] = None
+        data["approved_at"] = None
+        data["force_editable"] = False
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
     else:
@@ -597,6 +632,11 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
             "merchant_id": user["id"],
             "created_at": now_iso,
             "updated_at": now_iso,
+            "approval_status": "pending",
+            "approval_note": "",
+            "locked_month": None,
+            "approved_at": None,
+            "force_editable": False,
         })
         await db.discounts.insert_one(doc)
         d = doc
@@ -808,16 +848,22 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
     d = await db.discounts.find_one({"id": discount_id})
     if not d:
         raise HTTPException(404, "Sconto non trovato")
+    if d.get("approval_status") != "approved" or not d.get("active", True):
+        raise HTTPException(403, "Offerta non disponibile")
 
-    # Reuse existing pending redemption for same discount if any (last 24h)
-    existing = await db.redemptions.find_one({
+    month_key = current_month_key()
+    # Enforce: 1 coupon per shop per user per calendar month
+    already = await db.redemptions.find_one({
         "user_id": user["id"],
-        "discount_id": discount_id,
-        "status": "pending",
+        "merchant_id": d["merchant_id"],
+        "month_key": month_key,
     })
-    if existing:
-        existing = {k: v for k, v in existing.items() if k != "_id"}
-        return {"redemption": existing}
+    if already:
+        # If still pending (QR generated but not consumed), return it so user can rescan
+        if already.get("status") == "pending":
+            already = {k: v for k, v in already.items() if k != "_id"}
+            return {"redemption": already}
+        raise HTTPException(409, "Sconto già utilizzato questo mese. Torna il mese prossimo!")
 
     code = gen_code(8)
     doc = {
@@ -827,11 +873,29 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
         "discount_id": discount_id,
         "merchant_id": d["merchant_id"],
         "status": "pending",
+        "month_key": month_key,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "redeemed_at": None,
     }
     await db.redemptions.insert_one(doc)
     return {"redemption": {k: v for k, v in doc.items() if k != "_id"}}
+
+
+@api.get("/redemptions/discount/{discount_id}/status")
+async def redemption_status(discount_id: str, user: dict = Depends(require_client)):
+    """Tell client if they already used this shop this calendar month."""
+    d = await db.discounts.find_one({"id": discount_id})
+    if not d:
+        raise HTTPException(404, "Sconto non trovato")
+    month_key = current_month_key()
+    r = await db.redemptions.find_one({
+        "user_id": user["id"], "merchant_id": d["merchant_id"], "month_key": month_key,
+    })
+    if not r:
+        return {"used_this_month": False, "status": None}
+    return {"used_this_month": r.get("status") == "redeemed",
+            "status": r.get("status"),
+            "redemption_id": r.get("id")}
 
 
 @api.get("/redemptions/me")
@@ -856,12 +920,62 @@ async def redemption_token(rid: str, user: dict = Depends(require_client)):
         raise HTTPException(404, "Codice non trovato")
     slot = current_slot()
     token = _rotating_hmac(r["code"], slot)
+    payload = f"{r['code']}.{slot}.{token}"
+    origin = os.environ.get("FRONTEND_URL", "").rstrip("/")
     return {
         "code": r["code"],
         "slot": slot,
         "token": token,
-        "qr_value": f"{r['code']}|{slot}|{token}",
+        "qr_value": f"{origin}/qr/{payload}" if origin else payload,
         "expires_in": ROTATION_WINDOW_SEC - (int(datetime.now(timezone.utc).timestamp()) % ROTATION_WINDOW_SEC),
+        "window_sec": ROTATION_WINDOW_SEC,
+    }
+
+
+# ---------- Public QR scan verification (no auth) ----------
+@api.get("/qr/verify")
+async def qr_verify_public(token: str):
+    code, slot, hmac_tok = parse_rotating_code(token)
+    reason = None
+    if slot is None or hmac_tok is None:
+        return {"valid": False, "reason": "Formato codice non valido"}
+    cur = current_slot()
+    if abs(cur - slot) > 1:
+        return {"valid": False, "reason": "QR code scaduto"}
+    if not hmac_lib.compare_digest(_rotating_hmac(code, slot), hmac_tok):
+        return {"valid": False, "reason": "QR code manomesso"}
+    r = await db.redemptions.find_one({"code": code})
+    if not r:
+        return {"valid": False, "reason": "Codice non trovato"}
+    if r.get("status") == "redeemed":
+        # If redeemed in same slot window (~40s), still show green as freshly scanned
+        try:
+            ts = datetime.fromisoformat(r.get("redeemed_at",""))
+            if (datetime.now(timezone.utc) - ts).total_seconds() < ROTATION_WINDOW_SEC * 2:
+                pass  # allow re-display
+            else:
+                return {"valid": False, "reason": "Codice già utilizzato"}
+        except Exception:
+            return {"valid": False, "reason": "Codice già utilizzato"}
+    # Consume on first successful scan
+    if r.get("status") == "pending":
+        await db.redemptions.update_one(
+            {"id": r["id"], "status": "pending"},
+            {"$set": {"status": "redeemed",
+                      "redeemed_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    # Fetch enriched data
+    disc = await db.discounts.find_one({"id": r.get("discount_id")})
+    m = await db.users.find_one({"id": r.get("merchant_id")})
+    c = await db.users.find_one({"id": r.get("user_id")})
+    return {
+        "valid": True,
+        "client_name": (c.get("name") if c else "").split(" ")[0] if c else "Cliente",
+        "client_initial": ((c.get("name","?")[:1] or "?").upper()) if c else "?",
+        "shop_name": m.get("shop_name") if m else "-",
+        "discount_title": disc.get("title") if disc else "-",
+        "discount_percent": None if not disc or not disc.get("original_price") else round((1 - disc["discounted_price"]/disc["original_price"])*100),
+        "redeemed_at": r.get("redeemed_at") or datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -1075,6 +1189,58 @@ class AdminDiscountUpdate(BaseModel):
     active: Optional[bool] = None
 
 
+class RejectIn(BaseModel):
+    reason: Optional[str] = ""
+
+
+@api.get("/admin/discounts/pending")
+async def admin_list_pending(user: dict = Depends(require_admin_master)):
+    docs = await db.discounts.find({"approval_status": "pending"}).sort("updated_at", -1).to_list(200)
+    out = []
+    for d in docs:
+        out.append(await enrich_discount(d))
+    return {"discounts": out}
+
+
+@api.post("/admin/discounts/{discount_id}/approve")
+async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+    now = datetime.now(timezone.utc)
+    result = await db.discounts.update_one({"id": discount_id}, {"$set": {
+        "approval_status": "approved",
+        "approved_at": now.isoformat(),
+        "locked_month": now.strftime("%Y-%m"),
+        "approval_note": "",
+        "force_editable": False,
+    }})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Sconto non trovato")
+    d = await db.discounts.find_one({"id": discount_id})
+    return {"discount": await enrich_discount(d)}
+
+
+@api.post("/admin/discounts/{discount_id}/reject")
+async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict = Depends(require_admin_master)):
+    result = await db.discounts.update_one({"id": discount_id}, {"$set": {
+        "approval_status": "rejected",
+        "approval_note": payload.reason or "",
+        "approved_at": None,
+        "locked_month": None,
+    }})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Sconto non trovato")
+    return {"ok": True}
+
+
+@api.post("/admin/discounts/{discount_id}/force-edit")
+async def admin_force_edit(discount_id: str, user: dict = Depends(require_admin_master)):
+    """Admin override: allow merchant to modify a locked offer this month."""
+    result = await db.discounts.update_one({"id": discount_id},
+        {"$set": {"force_editable": True, "approval_status": "pending"}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Sconto non trovato")
+    return {"ok": True}
+
+
 @api.get("/admin/merchants")
 async def admin_list_merchants(user: dict = Depends(require_admin_master)):
     docs = await db.users.find({"role": "merchant"}).sort("created_at", -1).to_list(500)
@@ -1275,6 +1441,11 @@ async def seed_data():
                 "active": d["active"],
                 "created_at": now_iso,
                 "updated_at": now_iso,
+                "approval_status": "approved",
+                "approved_at": now_iso,
+                "locked_month": datetime.now(timezone.utc).strftime("%Y-%m"),
+                "approval_note": "",
+                "force_editable": False,
             })
 
 

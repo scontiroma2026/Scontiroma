@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState(null);
   const [merchants, setMerchants] = useState([]);
+  const [pending, setPending] = useState([]);
   const [tab, setTab] = useState("analytics");
 
   // Add master token to api calls
@@ -63,17 +64,34 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const [s, m] = await Promise.all([
+      const [s, m, p] = await Promise.all([
         api.get("/admin/stats", hdrs()),
         api.get("/admin/merchants", hdrs()),
+        api.get("/admin/discounts/pending", hdrs()),
       ]);
       setStats(s.data);
       setMerchants(m.data.merchants || []);
+      setPending(p.data.discounts || []);
     } catch (err) {
       const status = err?.response?.status;
       if (status === 403) { setGated(true); localStorage.removeItem("admin_master_token"); setMasterToken(""); }
       else toast.error(formatApiError(err));
     }
+  };
+
+  const approveDiscount = async (id) => {
+    try { await api.post(`/admin/discounts/${id}/approve`, {}, hdrs()); toast.success("Offerta approvata ✓"); loadData(); }
+    catch (err) { toast.error(formatApiError(err)); }
+  };
+  const rejectDiscount = async (id) => {
+    const reason = window.prompt("Motivo del rifiuto (visibile al commerciante):", "") || "";
+    try { await api.post(`/admin/discounts/${id}/reject`, { reason }, hdrs()); toast.success("Offerta rimandata in bozza"); loadData(); }
+    catch (err) { toast.error(formatApiError(err)); }
+  };
+  const forceEdit = async (id) => {
+    if (!window.confirm("Consentire al commerciante di modificare l'offerta questo mese?")) return;
+    try { await api.post(`/admin/discounts/${id}/force-edit`, {}, hdrs()); toast.success("Sblocco concesso"); loadData(); }
+    catch (err) { toast.error(formatApiError(err)); }
   };
 
   if (gated) {
@@ -127,8 +145,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-2 border-b border-white/10">
-        {[["analytics","Analytics"], ["merchants",`Negozi (${merchants.length})`], ["log","Log completo"]].map(([k, l]) => (
+      <div className="mb-6 flex gap-2 border-b border-white/10 flex-wrap">
+        {[["analytics","Analytics"], ["pending", `Offerte in attesa (${pending.length})`], ["merchants",`Negozi (${merchants.length})`], ["log","Log completo"]].map(([k, l]) => (
           <button
             key={k}
             data-testid={`tab-${k}`}
@@ -229,7 +247,46 @@ export default function AdminDashboard() {
       )}
 
       {tab === "merchants" && (
-        <MerchantsTable merchants={merchants} onRefresh={loadData} hdrs={hdrs} />
+        <MerchantsTable merchants={merchants} onRefresh={loadData} hdrs={hdrs} onForceEdit={forceEdit} />
+      )}
+
+      {tab === "pending" && (
+        <Card className="border-white/10 bg-white/5 p-6">
+          <h3 className="font-serif text-2xl">Offerte in attesa di approvazione</h3>
+          <p className="text-xs text-white/50 mt-1">Approva per pubblicare subito, o rifiuta per rimandare in bozza al commerciante.</p>
+          {pending.length === 0 ? (
+            <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-10 text-center text-white/60">
+              🎉 Nessuna offerta in attesa. Ottimo lavoro!
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {pending.map((d) => (
+                <div key={d.id} data-testid={`pending-${d.id}`} className="grid grid-cols-1 md:grid-cols-[100px_1fr_auto] gap-4 rounded-xl border border-white/10 bg-black/30 p-4">
+                  <img src={d.image_url || d.merchant?.image_url} alt="" className="h-24 w-24 rounded-lg object-cover" />
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-ciano">{d.merchant?.shop_name} · {d.merchant?.zone}</div>
+                    <div className="font-serif text-xl text-white mt-1">{d.title}</div>
+                    <p className="text-sm text-white/70 mt-1 line-clamp-2">{d.description}</p>
+                    <div className="mt-2 flex items-baseline gap-2 text-sm">
+                      <span className="text-fucsia font-bold text-lg">€{d.discounted_price?.toFixed(2)}</span>
+                      <span className="text-white/40 line-through">€{d.original_price?.toFixed(2)}</span>
+                      <span className="ml-2 text-neon text-xs">−{d.percent_off}%</span>
+                    </div>
+                    {d.terms && <div className="mt-2 text-xs text-white/50">Termini: {d.terms}</div>}
+                  </div>
+                  <div className="flex flex-col gap-2 md:justify-center">
+                    <Button data-testid={`approve-${d.id}`} onClick={() => approveDiscount(d.id)} className="grad-fucsia-viola text-white rounded-full">
+                      <Check size={14} className="mr-1" /> Approva
+                    </Button>
+                    <Button data-testid={`reject-${d.id}`} onClick={() => rejectDiscount(d.id)} variant="outline" className="rounded-full border-destructive/40 text-destructive hover:bg-destructive/10">
+                      <X size={14} className="mr-1" /> Rifiuta
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       )}
 
       {tab === "log" && (
@@ -279,7 +336,7 @@ function Kpi({ icon, label, value, c }) {
   );
 }
 
-function MerchantsTable({ merchants, onRefresh, hdrs }) {
+function MerchantsTable({ merchants, onRefresh, hdrs, onForceEdit }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
@@ -388,6 +445,9 @@ function MerchantsTable({ merchants, onRefresh, hdrs }) {
                     </div>
                   ) : (
                     <div className="flex justify-end gap-2">
+                      {m.discount_id && (
+                        <button data-testid={`admin-force-edit-${m.discount_id}`} onClick={() => onForceEdit(m.discount_id)} className="rounded-md bg-ciano/20 hover:bg-ciano/30 p-2 text-ciano" title="Sblocca modifica per il commerciante">🔓</button>
+                      )}
                       <button data-testid={`admin-merchant-edit-${m.id}`} onClick={() => startEdit(m)} className="rounded-md bg-white/10 hover:bg-white/20 p-2 text-white" title="Modifica"><Edit3 size={14} /></button>
                       <button data-testid={`admin-merchant-delete-${m.id}`} onClick={() => del(m)} className="rounded-md bg-destructive/20 hover:bg-destructive/30 p-2 text-destructive" title="Elimina"><Trash2 size={14} /></button>
                     </div>

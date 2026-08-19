@@ -20,6 +20,7 @@ import MapView from "@/pages/MapView";
 import SetupSecurity from "@/pages/SetupSecurity";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import QRVerify from "@/pages/QRVerify";
 import PreviewGallery from "@/pages/PreviewGallery";
 import PreviewA from "@/pages/previews/PreviewA";
 import PreviewB from "@/pages/previews/PreviewB";
@@ -51,6 +52,8 @@ function App() {
             <Route path="/setup-security" element={<ProtectedRoute><SetupSecurity /></ProtectedRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/qr/:token" element={<QRVerify />} />
+            <Route path="/qr" element={<QRVerify />} />
             <Route path="/preview" element={<PreviewGallery />} />
             <Route path="/preview/a" element={<PreviewA />} />
             <Route path="/preview/b" element={<PreviewB />} />

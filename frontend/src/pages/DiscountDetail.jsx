@@ -20,6 +20,8 @@ export default function DiscountDetail() {
   const [tokenData, setTokenData] = useState(null);
   const [countdown, setCountdown] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [alreadyUsed, setAlreadyUsed] = useState(false);
+  const [windowSec, setWindowSec] = useState(20);
   const pollRef = useRef(null);
   const tickRef = useRef(null);
 
@@ -33,8 +35,9 @@ export default function DiscountDetail() {
   useEffect(() => {
     if (user && user.role === "client") {
       api.get("/subscription/me").then((r) => setSubActive(r.data.active));
+      api.get(`/redemptions/discount/${id}/status`).then((r) => setAlreadyUsed(r.data.used_this_month)).catch(() => {});
     }
-  }, [user]);
+  }, [user, id]);
 
   const redeem = async () => {
     if (!user) return nav("/login");
@@ -56,22 +59,23 @@ export default function DiscountDetail() {
       const { data } = await api.get(`/redemptions/${rid}/token`);
       setTokenData(data);
       setCountdown(data.expires_in);
+      setWindowSec(data.window_sec || 20);
     } catch (e) {
       console.error(e);
     }
   };
 
-  // Poll token every 10s while dialog is open + tick down countdown every 1s
+  // Poll token every window_sec while dialog is open + tick down countdown every 1s
   useEffect(() => {
     if (dialogOpen && redemption) {
-      pollRef.current = setInterval(() => fetchToken(redemption.id), 10000);
-      tickRef.current = setInterval(() => setCountdown((c) => (c <= 1 ? 10 : c - 1)), 1000);
+      pollRef.current = setInterval(() => fetchToken(redemption.id), (windowSec || 20) * 1000);
+      tickRef.current = setInterval(() => setCountdown((c) => (c <= 1 ? (windowSec || 20) : c - 1)), 1000);
       return () => {
         clearInterval(pollRef.current);
         clearInterval(tickRef.current);
       };
     }
-  }, [dialogOpen, redemption]);
+  }, [dialogOpen, redemption, windowSec]);
 
   if (loading || !discount) {
     return <div className="mx-auto max-w-7xl px-6 py-16 text-white/60">Caricamento…</div>;
@@ -119,13 +123,15 @@ export default function DiscountDetail() {
             <Button
               data-testid="redeem-btn"
               onClick={redeem}
+              disabled={alreadyUsed}
               size="lg"
-              className="mt-6 w-full grad-fucsia-viola text-white hover:scale-105 transition"
+              className={`mt-6 w-full text-white hover:scale-105 transition ${alreadyUsed ? "bg-white/10 hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola"}`}
             >
               {!user ? "Accedi per riscattare" :
                 user.role !== "client" ? "Riservato ai clienti" :
                 !subActive ? "Abbonati per riscattare" :
-                "Ottieni QR Code"}
+                alreadyUsed ? "Sconto già utilizzato questo mese. Torna il mese prossimo!" :
+                "Mostra QR Code"}
             </Button>
           </Card>
 
@@ -158,6 +164,15 @@ export default function DiscountDetail() {
                 <QRCodeSVG value={tokenData?.qr_value || redemption.code} size={220} fgColor="#0A0A0A" bgColor="#ffffff" level="M" />
                 <div className="absolute -top-3 -right-3 flex h-12 w-12 items-center justify-center rounded-full grad-fucsia-viola text-white font-bold shadow-lg text-sm">
                   {countdown}s
+                </div>
+              </div>
+              {/* Countdown progress bar */}
+              <div className="w-full max-w-[220px]">
+                <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full grad-fucsia-viola transition-all duration-1000 ease-linear" style={{width: `${(countdown / (windowSec || 20)) * 100}%`}} />
+                </div>
+                <div className="mt-2 text-center text-xs text-white/60">
+                  Il codice scade tra <span className="text-fucsia font-bold">{countdown}s</span>
                 </div>
               </div>
               <div data-testid="redemption-code" className="text-center">

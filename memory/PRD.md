@@ -42,6 +42,12 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **[2026-02-19]** WebAuthn biometric login (Face ID / impronta) + PIN 4 cifre fallback + Setup Security post-registrazione
 - **[2026-02-19]** Recupero credenziali (email → token → nuova password)
 - **[2026-02-19]** Master password gate su /admin + gestione negozi (approva/modifica/elimina con cascade)
+- **[2026-02-19]** Password: nuova master `ValeRoma2026` + toggle mostra/nascondi su ogni campo
+- **[2026-02-19]** Workflow approvazione: ogni offerta merchant sale come `pending` → invisibile al pubblico → admin tab "Offerte in Attesa" con Approva/Rifiuta (con motivo) / force-edit
+- **[2026-02-19]** Lock modifiche mese in corso: offerta approvata è read-only fino al 1° del mese seguente (banner "Offerta attiva per questo mese")
+- **[2026-02-19]** Limite 1 coupon/negozio/utente per mese solare (reset automatico ogni 1° con `month_key`); pulsante disabilitato con "Sconto già utilizzato questo mese"
+- **[2026-02-19]** QR dinamico URL universale a 20s: `/qr/{code}.{slot}.{hmac}` scansionabile da qualsiasi fotocamera senza app. Pagina pubblica full-screen VERDE ✓ ABBONAMENTO VALIDO o ROSSA X CODICE NON VALIDO. Timer + barra progresso 20s.
+- **[2026-02-19]** Analytics scan tracciate automaticamente su prima scansione valida (user/negozio/sconto/timestamp)
 
 ## Prioritized Backlog
 - **P1**: Real Stripe integration (currently mocked).
