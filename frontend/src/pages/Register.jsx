@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function Register() {
   const { register } = useAuth();
@@ -83,7 +84,7 @@ export default function Register() {
           </div>
           <div>
             <Label>Password (min 6)</Label>
-            <Input data-testid="reg-password" type="password" required minLength={6} value={form.password} onChange={update("password")} className="mt-1" />
+            <PasswordInput data-testid="reg-password" required minLength={6} value={form.password} onChange={update("password")} className="mt-1" />
           </div>
 
           {role === "merchant" && (

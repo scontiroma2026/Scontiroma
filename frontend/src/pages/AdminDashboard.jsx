@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Users, Store, Zap, TrendingUp, Euro, Calendar, Lock, Check, X, Trash2, Edit3, ShieldAlert, LogOut } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
@@ -90,9 +91,8 @@ export default function AdminDashboard() {
           </div>
           <p className="mt-4 text-sm text-white/60">Inserisci la master password per accedere ai dati sensibili.</p>
           <form onSubmit={verifyMaster} className="mt-6 space-y-4">
-            <Input
+            <PasswordInput
               data-testid="master-pw"
-              type="password"
               placeholder="•••••••••••••"
               value={masterPw}
               onChange={(e) => setMasterPw(e.target.value)}

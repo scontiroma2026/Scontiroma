@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -41,11 +42,11 @@ export default function ResetPassword() {
           </div>
           <div>
             <Label className="text-white/80">Nuova password</Label>
-            <Input data-testid="reset-pw" type="password" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+            <PasswordInput data-testid="reset-pw" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
           </div>
           <div>
             <Label className="text-white/80">Conferma</Label>
-            <Input data-testid="reset-pw2" type="password" required minLength={6} value={pw2} onChange={(e) => setPw2(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+            <PasswordInput data-testid="reset-pw2" required minLength={6} value={pw2} onChange={(e) => setPw2(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
           </div>
           <Button data-testid="reset-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
             {busy ? "Salvataggio…" : "Aggiorna password"}

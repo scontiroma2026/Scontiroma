@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import api, { formatApiError } from "@/lib/api";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { ScanFace, KeyRound, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function Login() {
   const { login, refresh } = useAuth();
@@ -134,12 +135,11 @@ export default function Login() {
             <h1 className="font-serif text-4xl text-white">Il tuo PIN</h1>
             <p className="mt-2 text-sm text-white/60">4 cifre per {email || "il tuo account"}</p>
             <form onSubmit={submitPin} className="mt-6 space-y-4">
-              <Input
+              <PasswordInput
                 data-testid="pin-input"
                 inputMode="numeric"
                 pattern="[0-9]{4}"
                 maxLength={4}
-                type="password"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g,""))}
                 className="text-center text-3xl tracking-[0.5em] font-mono bg-black/40 border-white/10 text-white py-6"
@@ -168,7 +168,7 @@ export default function Login() {
               </div>
               <div>
                 <Label className="text-white/80">Password</Label>
-                <Input data-testid="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+                <PasswordInput data-testid="login-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
               </div>
               <Button data-testid="login-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
                 {busy ? "Accesso…" : "Accedi"}

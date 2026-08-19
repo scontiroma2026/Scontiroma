@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { ScanFace, KeyRound, Check, Sparkles } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function SetupSecurity() {
   const nav = useNavigate();
@@ -81,9 +82,9 @@ export default function SetupSecurity() {
           <form onSubmit={savePin} className="mt-4 grid grid-cols-2 gap-3">
             <div>
               <Label className="text-white/80">Nuovo PIN</Label>
-              <Input
+              <PasswordInput
                 data-testid="pin-new"
-                inputMode="numeric" maxLength={4} type="password"
+                inputMode="numeric" maxLength={4}
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g,""))}
                 className="mt-1 text-center text-2xl tracking-[0.4em] font-mono bg-black/40 border-white/10 text-white py-5"
@@ -91,9 +92,9 @@ export default function SetupSecurity() {
             </div>
             <div>
               <Label className="text-white/80">Conferma</Label>
-              <Input
+              <PasswordInput
                 data-testid="pin-confirm"
-                inputMode="numeric" maxLength={4} type="password"
+                inputMode="numeric" maxLength={4}
                 value={pinConfirm}
                 onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g,""))}
                 className="mt-1 text-center text-2xl tracking-[0.4em] font-mono bg-black/40 border-white/10 text-white py-5"
