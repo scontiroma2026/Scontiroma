@@ -26,7 +26,7 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - 12 zone Roma + 10 categorie
 - Catalogo `/discounts` con filtri (zona, categoria, ricerca) e 6 seed
 - Detail `/discounts/:id` con generazione QR code
-- Subscribe page (Stripe test mode + fallback mock)
+- Subscribe page (Stripe test mode)
 - Client dashboard con abbonamento e cronologia codici
 - Merchant dashboard con stats (totali/utilizzati/pending)
 - Merchant discount form (crea/modifica singola offerta)
@@ -35,10 +35,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **[2026-02-19]** Redesign "Dark Bubblegum" (nero + fucsia/ciano/neon + immagini Roma)
 - **[2026-02-19]** Prezzo abbonamento €2,99/mese
 - **[2026-02-19]** QR dinamico rotante ogni 10 secondi (HMAC signature anti-fraud)
-- **[2026-02-19]** Admin dashboard `/admin` con KPI + grafici + top merchant/clienti + log recenti
+- **[2026-02-19]** Admin dashboard `/admin` con KPI + grafici + top merchant/clienti + log
 - **[2026-02-19]** FAQ 8-item su landing
 - **[2026-02-19]** Stripe Billing test mode integrato (Checkout hosted + webhook + payment success/cancel)
-- **[2026-02-19]** Mappa interattiva Roma `/map` (Leaflet + OpenStreetMap tema dark, pin fucsia con % sconto, popup con dettagli)
+- **[2026-02-19]** Mappa interattiva Roma `/map` (Leaflet + OSM tema dark)
+- **[2026-02-19]** WebAuthn biometric login (Face ID / impronta) + PIN 4 cifre fallback + Setup Security post-registrazione
+- **[2026-02-19]** Recupero credenziali (email → token → nuova password)
+- **[2026-02-19]** Master password gate su /admin + gestione negozi (approva/modifica/elimina con cascade)
 
 ## Prioritized Backlog
 - **P1**: Real Stripe integration (currently mocked).

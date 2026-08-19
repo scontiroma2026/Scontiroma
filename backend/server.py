@@ -12,14 +12,26 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 
 import bcrypt
+import base64
 import hmac as hmac_lib
 import hashlib
+import json as _json
 import stripe
 import jwt
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr, Field
+from webauthn import (
+    generate_registration_options, verify_registration_response,
+    generate_authentication_options, verify_authentication_response,
+    options_to_json,
+)
+from webauthn.helpers.structs import (
+    AuthenticatorAttachment, AuthenticatorSelectionCriteria,
+    ResidentKeyRequirement, UserVerificationRequirement,
+    PublicKeyCredentialDescriptor,
+)
 
 
 # ---------- Setup ----------
@@ -36,6 +48,21 @@ REFRESH_TTL_DAYS = 7
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "sk_test_emergent")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_3eur"
+
+# WebAuthn
+WEBAUTHN_RP_ID = os.environ.get("WEBAUTHN_RP_ID", "localhost")
+WEBAUTHN_ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "http://localhost:3000")
+WEBAUTHN_RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Sconti Roma")
+CHALLENGE_TTL = timedelta(minutes=5)
+
+
+def b64u(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def unb64u(s: str) -> bytes:
+    pad = 4 - len(s) % 4
+    return base64.urlsafe_b64decode(s + ("=" * pad if pad != 4 else ""))
 
 app = FastAPI(title="Sconti Roma API")
 api = APIRouter(prefix="/api")
@@ -270,6 +297,211 @@ async def logout(response: Response):
 @api.get("/auth/me")
 async def me(user: dict = Depends(get_current_user)):
     return {"user": user}
+
+
+# ---------- PIN & WebAuthn ----------
+class PinIn(BaseModel):
+    pin: str = Field(min_length=4, max_length=4)
+
+
+class PinLoginIn(BaseModel):
+    email: EmailStr
+    pin: str = Field(min_length=4, max_length=4)
+
+
+class WebAuthnCompleteIn(BaseModel):
+    credential: dict
+
+
+class WebAuthnLoginBeginIn(BaseModel):
+    email: EmailStr
+
+
+class ForgotIn(BaseModel):
+    email: EmailStr
+
+
+class ResetIn(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6)
+
+
+@api.post("/auth/pin")
+async def set_pin(payload: PinIn, user: dict = Depends(get_current_user)):
+    if not payload.pin.isdigit():
+        raise HTTPException(422, "Il PIN deve essere di 4 cifre")
+    await db.users.update_one({"id": user["id"]}, {"$set": {"pin_hash": hash_password(payload.pin), "pin_set": True}})
+    return {"ok": True}
+
+
+@api.post("/auth/pin-login")
+async def pin_login(payload: PinLoginIn, response: Response):
+    if not payload.pin.isdigit():
+        raise HTTPException(422, "PIN non valido")
+    email = payload.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    if not u or not u.get("pin_hash") or not verify_password(payload.pin, u["pin_hash"]):
+        raise HTTPException(401, "Credenziali non valide")
+    access = create_token(u["id"], u["email"], "access")
+    refresh = create_token(u["id"], u["email"], "refresh")
+    set_auth_cookies(response, access, refresh)
+    return {"user": sanitize_user(u), "access_token": access}
+
+
+@api.post("/webauthn/register/begin")
+async def webauthn_register_begin(user: dict = Depends(get_current_user)):
+    u = await db.users.find_one({"id": user["id"]})
+    if u.get("webauthn_user_id"):
+        wid = unb64u(u["webauthn_user_id"])
+    else:
+        wid = secrets.token_bytes(32)
+        await db.users.update_one({"id": u["id"]}, {"$set": {"webauthn_user_id": b64u(wid)}})
+    exclude = [PublicKeyCredentialDescriptor(id=unb64u(c["credential_id"]))
+               for c in u.get("webauthn_credentials", [])]
+    options = generate_registration_options(
+        rp_id=WEBAUTHN_RP_ID, rp_name=WEBAUTHN_RP_NAME,
+        user_id=wid, user_name=u["email"], user_display_name=u.get("name") or u["email"],
+        exclude_credentials=exclude,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            authenticator_attachment=AuthenticatorAttachment.PLATFORM,
+            resident_key=ResidentKeyRequirement.PREFERRED,
+            user_verification=UserVerificationRequirement.PREFERRED,
+        ),
+    )
+    await db.webauthn_challenges.insert_one({
+        "user_id": u["id"], "kind": "register", "challenge": b64u(options.challenge),
+        "expires_at": datetime.now(timezone.utc) + CHALLENGE_TTL,
+    })
+    return _json.loads(options_to_json(options))
+
+
+@api.post("/webauthn/register/complete")
+async def webauthn_register_complete(payload: WebAuthnCompleteIn, user: dict = Depends(get_current_user)):
+    ch = await db.webauthn_challenges.find_one_and_delete({
+        "user_id": user["id"], "kind": "register",
+        "expires_at": {"$gt": datetime.now(timezone.utc)},
+    })
+    if not ch:
+        raise HTTPException(400, "Sessione scaduta, riprova")
+    try:
+        v = verify_registration_response(
+            credential=payload.credential,
+            expected_challenge=unb64u(ch["challenge"]),
+            expected_rp_id=WEBAUTHN_RP_ID,
+            expected_origin=WEBAUTHN_ORIGIN,
+            require_user_verification=False,
+        )
+    except Exception as exc:
+        raise HTTPException(400, f"Registrazione biometrica fallita: {exc}")
+    transports = payload.credential.get("response", {}).get("transports", [])
+    record = {
+        "credential_id": b64u(v.credential_id),
+        "public_key": b64u(v.credential_public_key),
+        "sign_count": v.sign_count,
+        "transports": transports,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.update_one({"id": user["id"]}, {"$push": {"webauthn_credentials": record}, "$set": {"biometric_enabled": True}})
+    return {"ok": True}
+
+
+@api.post("/webauthn/login/begin")
+async def webauthn_login_begin(payload: WebAuthnLoginBeginIn):
+    email = payload.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    if not u or not u.get("webauthn_credentials"):
+        raise HTTPException(400, "Nessun dispositivo biometrico registrato")
+    allow = [PublicKeyCredentialDescriptor(
+        id=unb64u(c["credential_id"]), transports=c.get("transports") or None)
+        for c in u["webauthn_credentials"]]
+    options = generate_authentication_options(
+        rp_id=WEBAUTHN_RP_ID, allow_credentials=allow,
+        user_verification=UserVerificationRequirement.PREFERRED,
+    )
+    await db.webauthn_challenges.insert_one({
+        "user_id": u["id"], "kind": "login", "challenge": b64u(options.challenge),
+        "expires_at": datetime.now(timezone.utc) + CHALLENGE_TTL,
+    })
+    return _json.loads(options_to_json(options))
+
+
+@api.post("/webauthn/login/complete")
+async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Response):
+    cid = payload.credential.get("id")
+    if not cid:
+        raise HTTPException(400, "Credenziale non valida")
+    u = await db.users.find_one({"webauthn_credentials.credential_id": cid})
+    if not u:
+        raise HTTPException(401, "Autenticazione fallita")
+    ch = await db.webauthn_challenges.find_one_and_delete({
+        "user_id": u["id"], "kind": "login",
+        "expires_at": {"$gt": datetime.now(timezone.utc)},
+    })
+    if not ch:
+        raise HTTPException(401, "Sessione scaduta, riprova")
+    cred = next(c for c in u["webauthn_credentials"] if c["credential_id"] == cid)
+    try:
+        v = verify_authentication_response(
+            credential=payload.credential,
+            expected_challenge=unb64u(ch["challenge"]),
+            expected_rp_id=WEBAUTHN_RP_ID,
+            expected_origin=WEBAUTHN_ORIGIN,
+            credential_public_key=unb64u(cred["public_key"]),
+            credential_current_sign_count=cred.get("sign_count", 0),
+            require_user_verification=False,
+        )
+    except Exception:
+        raise HTTPException(401, "Autenticazione fallita")
+    await db.users.update_one(
+        {"id": u["id"], "webauthn_credentials.credential_id": cid},
+        {"$set": {"webauthn_credentials.$.sign_count": v.new_sign_count}},
+    )
+    access = create_token(u["id"], u["email"], "access")
+    refresh = create_token(u["id"], u["email"], "refresh")
+    set_auth_cookies(response, access, refresh)
+    return {"user": sanitize_user(u), "access_token": access}
+
+
+# ---------- Password recovery ----------
+@api.post("/auth/forgot")
+async def forgot_password(payload: ForgotIn):
+    email = payload.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    # Return same response either way (no user enumeration), but include token for demo/MVP
+    if not u:
+        return {"ok": True, "message": "Se l'email esiste, riceverai le istruzioni."}
+    token = secrets.token_urlsafe(32)
+    expires = datetime.now(timezone.utc) + timedelta(hours=1)
+    await db.users.update_one({"id": u["id"]}, {"$set": {
+        "reset_token": token, "reset_expires": expires.isoformat(),
+    }})
+    # MVP: return token directly since no email provider is configured
+    return {
+        "ok": True,
+        "message": "Recupero attivato. Copia il codice qui sotto per resettare la password.",
+        "reset_token": token,
+        "reset_link": f"{os.environ.get('FRONTEND_URL','')}/reset-password?token={token}",
+    }
+
+
+@api.post("/auth/reset")
+async def reset_password(payload: ResetIn):
+    u = await db.users.find_one({"reset_token": payload.token})
+    if not u:
+        raise HTTPException(400, "Codice non valido")
+    try:
+        exp = datetime.fromisoformat(u.get("reset_expires", ""))
+        if exp < datetime.now(timezone.utc):
+            raise HTTPException(400, "Codice scaduto")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(400, "Codice non valido")
+    await db.users.update_one({"id": u["id"]}, {
+        "$set": {"password_hash": hash_password(payload.new_password)},
+        "$unset": {"reset_token": "", "reset_expires": ""},
+    })
+    return {"ok": True, "email": u["email"]}
 
 
 # ---------- Meta ----------
@@ -668,8 +900,62 @@ def require_admin(user: dict = Depends(get_current_user)) -> dict:
     return user
 
 
+ADMIN_MASTER_PASSWORD = os.environ.get("ADMIN_MASTER_PASSWORD", "")
+ADMIN_MASTER_TTL_MIN = 60
+
+
+def _sign_master(user_id: str, exp: datetime) -> str:
+    return jwt.encode({"sub": user_id, "typ": "admin_master", "exp": exp}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def _verify_master_token(token: str, user_id: str) -> bool:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload.get("typ") == "admin_master" and payload.get("sub") == user_id
+    except Exception:
+        return False
+
+
+def require_admin_master(request: Request, user: dict = Depends(require_admin)) -> dict:
+    token = request.cookies.get("admin_master_token") or request.headers.get("X-Admin-Master", "")
+    if not token or not _verify_master_token(token, user["id"]):
+        raise HTTPException(403, "Master password richiesta")
+    return user
+
+
+class MasterVerifyIn(BaseModel):
+    password: str
+
+
+@api.post("/admin/verify-master")
+async def admin_verify_master(payload: MasterVerifyIn, response: Response, user: dict = Depends(require_admin)):
+    if not ADMIN_MASTER_PASSWORD or payload.password != ADMIN_MASTER_PASSWORD:
+        raise HTTPException(401, "Master password errata")
+    exp = datetime.now(timezone.utc) + timedelta(minutes=ADMIN_MASTER_TTL_MIN)
+    token = _sign_master(user["id"], exp)
+    response.set_cookie(
+        "admin_master_token", token,
+        max_age=ADMIN_MASTER_TTL_MIN * 60,
+        httponly=True, secure=True, samesite="none", path="/",
+    )
+    return {"ok": True, "token": token, "expires_in": ADMIN_MASTER_TTL_MIN * 60}
+
+
+@api.post("/admin/logout-master")
+async def admin_logout_master(response: Response):
+    response.delete_cookie("admin_master_token", path="/")
+    return {"ok": True}
+
+
+@api.get("/admin/session")
+async def admin_session(request: Request, user: dict = Depends(require_admin)):
+    token = request.cookies.get("admin_master_token") or request.headers.get("X-Admin-Master", "")
+    verified = bool(token and _verify_master_token(token, user["id"]))
+    return {"master_verified": verified}
+
+
 @api.get("/admin/stats")
-async def admin_stats(user: dict = Depends(require_admin)):
+async def admin_stats(user: dict = Depends(require_admin_master)):
     total_users = await db.users.count_documents({"role": "client"})
     total_merchants = await db.users.count_documents({"role": "merchant"})
     now = datetime.now(timezone.utc)
@@ -765,6 +1051,88 @@ async def admin_stats(user: dict = Depends(require_admin)):
         "top_clients": top_clients,
         "recent": recent,
     }
+
+
+# ---------- Admin: Merchants management ----------
+class AdminMerchantUpdate(BaseModel):
+    shop_name: Optional[str] = None
+    description: Optional[str] = None
+    zone: Optional[str] = None
+    category: Optional[str] = None
+    address: Optional[str] = None
+    image_url: Optional[str] = None
+    phone: Optional[str] = None
+    approved: Optional[bool] = None
+
+
+class AdminDiscountUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    original_price: Optional[float] = None
+    discounted_price: Optional[float] = None
+    image_url: Optional[str] = None
+    terms: Optional[str] = None
+    active: Optional[bool] = None
+
+
+@api.get("/admin/merchants")
+async def admin_list_merchants(user: dict = Depends(require_admin_master)):
+    docs = await db.users.find({"role": "merchant"}).sort("created_at", -1).to_list(500)
+    out = []
+    for m in docs:
+        m = {k: v for k, v in m.items() if k not in ("_id", "password_hash", "pin_hash", "webauthn_credentials", "webauthn_user_id")}
+        m["approved"] = m.get("approved", True)  # default True for existing
+        disc = await db.discounts.find_one({"merchant_id": m["id"]})
+        m["has_discount"] = disc is not None
+        if disc:
+            m["discount_id"] = disc["id"]
+            m["discount_title"] = disc.get("title")
+            m["discount_active"] = disc.get("active", True)
+        red_count = await db.redemptions.count_documents({"merchant_id": m["id"]})
+        m["redemptions_count"] = red_count
+        out.append(m)
+    return {"merchants": out}
+
+
+@api.put("/admin/merchants/{merchant_id}")
+async def admin_update_merchant(merchant_id: str, payload: AdminMerchantUpdate, user: dict = Depends(require_admin_master)):
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(400, "Nessuna modifica")
+    result = await db.users.update_one({"id": merchant_id, "role": "merchant"}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Commerciante non trovato")
+    m = await db.users.find_one({"id": merchant_id})
+    return {"merchant": sanitize_user(m)}
+
+
+@api.delete("/admin/merchants/{merchant_id}")
+async def admin_delete_merchant(merchant_id: str, user: dict = Depends(require_admin_master)):
+    result = await db.users.delete_one({"id": merchant_id, "role": "merchant"})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Commerciante non trovato")
+    await db.discounts.delete_many({"merchant_id": merchant_id})
+    return {"ok": True}
+
+
+@api.put("/admin/discounts/{discount_id}")
+async def admin_update_discount(discount_id: str, payload: AdminDiscountUpdate, user: dict = Depends(require_admin_master)):
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(400, "Nessuna modifica")
+    result = await db.discounts.update_one({"id": discount_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Sconto non trovato")
+    d = await db.discounts.find_one({"id": discount_id})
+    return {"discount": await enrich_discount(d)}
+
+
+@api.delete("/admin/discounts/{discount_id}")
+async def admin_delete_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+    result = await db.discounts.delete_one({"id": discount_id})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Sconto non trovato")
+    return {"ok": True}
 
 
 # ---------- Seeding ----------
@@ -918,6 +1286,9 @@ async def on_startup():
     await db.subscriptions.create_index("user_id")
     await db.redemptions.create_index("code", unique=True)
     await db.redemptions.create_index("merchant_id")
+    await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
+    await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
+    await db.users.create_index("reset_token", sparse=True)
     await seed_data()
 
 

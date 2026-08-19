@@ -15,6 +15,11 @@ api.interceptors.request.use((config) => {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const master = localStorage.getItem("admin_master_token");
+  if (master) {
+    config.headers = config.headers || {};
+    if (!config.headers["X-Admin-Master"]) config.headers["X-Admin-Master"] = master;
+  }
   return config;
 });
 

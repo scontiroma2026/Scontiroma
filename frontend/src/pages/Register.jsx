@@ -44,7 +44,7 @@ export default function Register() {
     setLoading(false);
     if (!res.ok) return toast.error(res.error);
     toast.success("Benvenuto in Sconti Roma!");
-    nav(role === "merchant" ? "/merchant/discount" : "/subscribe");
+    nav("/setup-security");
   };
 
   return (

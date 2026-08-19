@@ -1,0 +1,61 @@
+{
+  "summary": "Iteration 3 (WebAuthn/PIN, forgot-reset, admin master gate + merchants management) — backend: 21/21 pytest passed; frontend: all critical flows verified via Playwright. Backend covers PIN set/login (incl. 422 non-numeric + wrong-length, 401 wrong pin), WebAuthn register/begin (returns options with challenge/rp/user.name) and login/begin without creds (400 'Nessun dispositivo biometrico registrato'), password recovery (forgot returns reset_token for known email + generic response for unknown, reset with invalid token 400 / short pw 422, full reset flow updates password), admin master gate (wrong pw 401, non-admin 403, stats without master 403, stats with X-Admin-Master 200, /admin/session), and admin merchants CRUD + admin discounts update/delete. Frontend: /login shows Face ID big button + PIN fallback + Usa email/password + Registrati + Password dimenticata; admin login → /admin gated by master password (RomaMaster2026!) → dashboard with KPI cards (Clienti/Commercianti/Abbonati attivi/MRR) + Analytics/Negozi/Log tabs. Merchants tab: 9 approve toggles, 9 edit icons, 9 delete icons; edit reveals Salva/Annulla; delete triggers confirm(). /forgot-password shows reset link with token inline. /setup-security exposes pin-new, pin-confirm, pin-save, enroll-biometric-btn and PIN save works. Register flow with new email redirects to /setup-security.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AdminDashboard merchants tab", "issues": ["Edit / Delete / Save / Cancel actions are icon-only buttons without data-testid (only title attribute). Add data-testid like admin-merchant-edit-{id} / -delete / -save for future automation."]},
+      {"screen": "Login step=password", "issues": ["Email input in password step has no data-testid (only login-email in step 1). Add data-testid=\"login-email-pw\" or reuse login-email across steps."]}
+    ]
+  },
+  "backend_tests_run": [
+    "TestPin (5): set_pin_ok, non_numeric_422, wrong_length_422, pin_login_success, pin_login_wrong_pin_401 -> ALL PASS",
+    "TestWebAuthn (2): register_begin_returns_options (challenge/rp.id/user.name), login_begin_no_credential_400 -> ALL PASS",
+    "TestForgotReset (5): forgot_existing_returns_token, forgot_unknown_no_token, reset_invalid_400, reset_short_pw_422, full_reset_flow (register->forgot->reset->login) -> ALL PASS",
+    "TestAdminMaster (6): wrong_pw_401, non_admin_403, verify_master_correct, stats_without_master_403, stats_with_master_ok, session_endpoint -> ALL PASS",
+    "TestAdminMerchants (3): list_merchants (shop_name/approved/has_discount/redemptions_count), approve+edit+restore, discount update+delete+cascade merchant delete -> ALL PASS"
+  ],
+  "frontend_tests_run": [
+    "/login shows Face ID, PIN, email/password toggle, Registrati, Password dimenticata",
+    "Password login as admin@scontiroma.it -> /admin",
+    "/admin shows master password gate; RomaMaster2026! unlocks dashboard",
+    "KPI cards (Clienti, Commercianti, Abbonati attivi, MRR) + tabs Analytics/Negozi/Log render",
+    "Merchants tab lists 9 merchants with approve toggles + edit icons + delete icons",
+    "Edit click reveals Salva/Annulla; Delete click triggers window.confirm()",
+    "/forgot-password with cliente@scontiroma.it renders reset link containing token in DOM",
+    "/setup-security exposes pin-new, pin-confirm, pin-save, enroll-biometric-btn; PIN save works",
+    "Register with new email redirects to /setup-security"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration3.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iter3_results.xml"
+  ],
+  "action_items": [
+    "(Optional/polish) Add data-testid to AdminDashboard merchants action icons (edit/delete/save/cancel/approve-toggle) for robust automation.",
+    "(Optional/polish) Add data-testid to email input in Login password step.",
+    "(Security review, carried over from iter2) /api/payments/status/{session_id} still has no auth — any user knowing a session_id can trigger Stripe retrieve+mark_subscription_paid for another user. Not related to iter3 but still open."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now ~1300 lines; split into routers (auth, webauthn, admin, discounts, subscription, payments, redemptions) before next iteration.",
+    "ADMIN_MASTER_PASSWORD is compared with plain '==' (no HMAC compare_digest); low risk since single fixed string but consider hmac.compare_digest for constant-time.",
+    "/auth/forgot returns reset_token in the response body (MVP mode) — acceptable for demo but must be replaced by email delivery before production; add a config flag (e.g. FORGOT_RETURN_TOKEN=false) to hide it in prod.",
+    "PIN model uses Field(min_length=4, max_length=4) but does not enforce digits at Pydantic layer — handler raises 422 manually. Consider a pattern='^[0-9]{4}$' validator so schema-level clients get proper validation.",
+    "/admin/merchants returns 'approved: True' default for legacy merchants without the field — good; ensure new merchants get an explicit approved=false at register if a review-flow is desired (currently all new merchants immediately visible in listings).",
+    "webauthn_register_begin does not delete previous outstanding challenges for the same user; a stray challenge doc could linger until TTL expires. Consider deleting existing 'register' challenges before inserting new one.",
+    "AdminMasterVerifyIn.password is not rate-limited — brute force protection missing on /admin/verify-master. Add a per-admin lockout / delay after N failures."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration3.py (new)",
+    "/app/test_reports/iteration_3.json (new)",
+    "/app/test_reports/pytest/iter3_results.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% (all flows)"},
+  "test_credentials": "admin@scontiroma.it/admin123 (+ master RomaMaster2026!), cliente@scontiroma.it/cliente123 (PIN now set to 5678 by tests, then reset via /auth/pin call to 1234 during backend suite — last state: 1234), gelato/trattoria/etc @scontiroma.it/merchant123",
+  "seed_data_creation": "Tests create ephemeral TEST_ users (TEST_reset_*, TEST_merch_*) — TEST_merch_* is cleaned up by cascade delete test; TEST_reset_* users remain in db (harmless). Cliente PIN was set to '1234' by TestPin.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: pytest /app/backend/tests/test_iteration3.py -v (21 tests). Master password 'RomaMaster2026!' must be sent via header 'X-Admin-Master: <token from /admin/verify-master>' for all /admin/stats /admin/merchants /admin/discounts calls. Frontend AdminDashboard merchant action icons don't have data-testids — use button[title='Modifica'|'Elimina'|'Salva'|'Annulla']. Email input in Login password step has no data-testid — use input[type=email]. WebAuthn end-to-end (register/complete + login/complete) cannot be Playwright-tested without a virtual authenticator; only register/begin and login/begin are covered.",
+  "rca of the issue": "N/A — no bugs found in iteration 3."
+}

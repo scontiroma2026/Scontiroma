@@ -17,6 +17,9 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancel from "@/pages/PaymentCancel";
 import MapView from "@/pages/MapView";
+import SetupSecurity from "@/pages/SetupSecurity";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import PreviewGallery from "@/pages/PreviewGallery";
 import PreviewA from "@/pages/previews/PreviewA";
 import PreviewB from "@/pages/previews/PreviewB";
@@ -45,6 +48,9 @@ function App() {
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route path="/map" element={<MapView />} />
+            <Route path="/setup-security" element={<ProtectedRoute><SetupSecurity /></ProtectedRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/preview" element={<PreviewGallery />} />
             <Route path="/preview/a" element={<PreviewA />} />
             <Route path="/preview/b" element={<PreviewB />} />
