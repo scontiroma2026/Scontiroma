@@ -65,7 +65,7 @@ export default function PreviewC() {
                 PREZZO.
               </h1>
               <p className="mt-6 max-w-lg text-white/70">
-                €4,99/mese. Un pass. Tutta la città. Nessun BS, nessuna trappola.
+                €2,99/mese. Un pass. Tutta la città. Nessun BS, nessuna trappola.
                 Solo sconti veri dai locali che conosci.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -87,7 +87,7 @@ export default function PreviewC() {
                   <div className="text-xs text-white/50 uppercase">areas</div>
                 </div>
                 <div>
-                  <div className="text-3xl">€4.99</div>
+                  <div className="text-3xl">€2.99</div>
                   <div className="text-xs text-white/50 uppercase">/month</div>
                 </div>
               </div>

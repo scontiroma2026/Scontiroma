@@ -35,7 +35,7 @@ export default function Landing() {
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
-                <Sparkles size={12} className="text-neon" /> €4,99 al mese · Solo Roma
+                <Sparkles size={12} className="text-neon" /> €2,99 al mese · Solo Roma
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
@@ -62,8 +62,8 @@ export default function Landing() {
               {/* Chip stats */}
               <div className="mt-10 flex flex-wrap gap-3">
                 <Chip label="50+ locali" grad="grad-fucsia-viola" />
-                <Chip label="12 quartieri" grad="grad-ciano-fucsia" />
-                <Chip label="Cancelli quando vuoi" grad="grad-neon" dark />
+                <Chip label="Cancelli quando vuoi" grad="grad-ciano-fucsia" />
+                <Chip label="No commissioni" grad="grad-neon" dark />
               </div>
             </div>
 
@@ -80,7 +80,7 @@ export default function Landing() {
               {/* Floating deal cards */}
               <div className="absolute -left-6 top-10 rotate-[-6deg] rounded-2xl bg-fucsia p-4 shadow-2xl glow-fucsia" style={{animation: 'float 4s ease-in-out infinite'}}>
                 <div className="text-[10px] uppercase text-white/80 tracking-widest">Membership</div>
-                <div className="font-serif text-3xl text-white">€4,99<span className="text-sm">/mese</span></div>
+                <div className="font-serif text-3xl text-white">€2,99<span className="text-sm">/mese</span></div>
               </div>
               <div className="absolute -right-4 bottom-20 rotate-[6deg] rounded-2xl bg-ciano p-4 text-black shadow-2xl glow-ciano" style={{animation: 'float 5s ease-in-out infinite'}}>
                 <div className="flex items-center gap-1 text-xs font-bold"><Zap size={12} /> Sconto attivo</div>
@@ -107,7 +107,7 @@ export default function Landing() {
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { n: "01", t: "Abbonati", d: "€4,99 al mese. Cancelli quando vuoi. Nessuna sorpresa in bolletta.", c: "fucsia" },
+            { n: "01", t: "Abbonati", d: "€2,99 al mese. Cancelli quando vuoi. Nessuna sorpresa in bolletta.", c: "fucsia" },
             { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
             { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Amen.", c: "neon" },
           ].map((s) => (
@@ -199,6 +199,34 @@ export default function Landing() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="relative mx-auto max-w-5xl px-6 pb-20">
+        <div className="mb-10">
+          <div className="text-xs uppercase tracking-[0.2em] text-neon">FAQ</div>
+          <h2 className="mt-2 font-serif text-5xl">Domande frequenti</h2>
+        </div>
+        <div className="space-y-3">
+          {[
+            { q: "Quanto costa Sconti Roma?", a: "€2,99 al mese. Nessun costo di attivazione, nessuna commissione nascosta. Puoi cancellare quando vuoi con un clic." },
+            { q: "Come funziona uno sconto?", a: "Scegli un locale, apri il dettaglio e clicca 'Ottieni QR Code'. Mostri il QR (che cambia ogni 10 secondi per sicurezza) al commerciante, lui lo scansiona e paghi il prezzo scontato. Punto." },
+            { q: "Perché il QR cambia ogni 10 secondi?", a: "Per evitare screenshot e raggiri. Il codice è unico e temporaneo: solo tu in quel momento puoi usarlo, così i commercianti sanno che sei un vero abbonato." },
+            { q: "Quanti sconti posso usare in un mese?", a: "Illimitati. Ogni sconto può essere usato una volta per abbonamento (o secondo i termini indicati dal locale). Se sei ghiotto, la matematica ti conviene già dal secondo sconto." },
+            { q: "Posso cancellare quando voglio?", a: "Sì. Vai in 'Il mio account' → 'Annulla abbonamento'. Nessuna penale, nessuna domanda, nessuna telefonata imbarazzante di retention." },
+            { q: "Come posso pagare?", a: "Tramite Stripe: carta di credito, debito o wallet (Apple Pay, Google Pay). Pagamento sicuro, i tuoi dati non passano dai nostri server." },
+            { q: "Sono un commerciante, come partecipo?", a: "Registrati come commerciante, crea la tua singola offerta e comparirai nel catalogo. Zero commissioni, zero costi di ingresso, solo nuovi clienti." },
+            { q: "In quali quartieri di Roma funziona?", a: "Trastevere, Centro Storico, Prati, Testaccio, Monti, EUR, Ostiense, Parioli, San Giovanni, Trieste-Salario, Pigneto, Flaminio — e continuiamo ad aggiungerne." },
+          ].map((f, i) => (
+            <details key={i} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
+              <summary className="flex cursor-pointer items-center justify-between text-white font-semibold">
+                <span className="font-serif text-lg">{f.q}</span>
+                <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 text-sm text-white/70 leading-relaxed">{f.a}</p>
+            </details>
+          ))}
         </div>
       </section>
 

@@ -46,7 +46,7 @@ export default function PreviewB() {
                 scontata.
               </h1>
               <p className="mt-6 max-w-md text-lg text-[#2A0E3D]/70">
-                Un abbonamento a €4,99 e ogni quartiere diventa il tuo parco giochi.
+                Un abbonamento a €2,99 e ogni quartiere diventa il tuo parco giochi.
                 Sconti veri, come una limonata al bar sotto casa.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -69,7 +69,7 @@ export default function PreviewB() {
                   <div className="text-xs">quartieri</div>
                 </div>
                 <div className="rotate-[-3deg] rounded-2xl bg-[#7A5CFF] px-4 py-3 text-white shadow-lg">
-                  <div className="retro-b-display italic text-2xl">€4,99</div>
+                  <div className="retro-b-display italic text-2xl">€2,99</div>
                   <div className="text-xs">al mese</div>
                 </div>
               </div>

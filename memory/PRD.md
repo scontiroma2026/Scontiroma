@@ -20,18 +20,24 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - QR code per redemption; il commerciante scansiona/inserisce codice.
 - Ruoli separati con protezione route.
 
-## What's Implemented (2026-02-05)
+## What's Implemented (2026-02-05 → 2026-02-19)
 - Landing page (hero, come funziona, in vetrina, categorie, merchant CTA)
 - Registrazione/login clienti + commercianti (JWT)
 - 12 zone Roma + 10 categorie
 - Catalogo `/discounts` con filtri (zona, categoria, ricerca) e 6 seed
 - Detail `/discounts/:id` con generazione QR code
-- Subscribe page (mock payment con carta fittizia)
+- Subscribe page (Stripe test mode + fallback mock)
 - Client dashboard con abbonamento e cronologia codici
 - Merchant dashboard con stats (totali/utilizzati/pending)
 - Merchant discount form (crea/modifica singola offerta)
 - Merchant scan (validazione codice con success/error UI)
 - Seed: admin, 1 cliente demo, 6 commercianti con 6 sconti
+- **[2026-02-19]** Redesign "Dark Bubblegum" (nero + fucsia/ciano/neon + immagini Roma)
+- **[2026-02-19]** Prezzo abbonamento €2,99/mese
+- **[2026-02-19]** QR dinamico rotante ogni 10 secondi (HMAC signature anti-fraud)
+- **[2026-02-19]** Admin dashboard `/admin` con KPI + grafici (30gg, ore, giorni settimana) + top merchant/clienti + log recenti
+- **[2026-02-19]** FAQ 8-item su landing
+- **[2026-02-19]** Stripe Billing test mode integrato (Checkout hosted + webhook + payment success/cancel)
 
 ## Prioritized Backlog
 - **P1**: Real Stripe integration (currently mocked).

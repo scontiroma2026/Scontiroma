@@ -45,7 +45,7 @@ export default function PreviewA() {
                 <span className="text-[#FF3355]">A PALATA!</span>
               </h1>
               <p className="mt-4 max-w-md text-lg font-medium">
-                4,99€ al mese e ti mangi Roma a metà prezzo. Zero commissioni, ZERO seccature.
+                2,99€ al mese e ti mangi Roma a metà prezzo. Zero commissioni, ZERO seccature.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <button className="rounded-full border-4 border-black bg-black px-8 py-4 text-lg font-bold text-white shadow-pop-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition">
@@ -80,7 +80,7 @@ export default function PreviewA() {
         {/* How it works strip */}
         <section className="border-y-4 border-black bg-[#FF3355] py-4 overflow-hidden">
           <div className="flex gap-8 whitespace-nowrap text-white pop-a-display text-3xl animate-marquee" style={{animation: 'marquee 20s linear infinite'}}>
-            {"★ 50 LOCALI ★ 12 QUARTIERI ★ 4,99€/MESE ★ ZERO STRESS ★ ".repeat(4)}
+            {"★ 50 LOCALI ★ 12 QUARTIERI ★ 2,99€/MESE ★ ZERO STRESS ★ ".repeat(4)}
           </div>
           <style>{`@keyframes marquee { from {transform: translateX(0)} to {transform: translateX(-50%)} }`}</style>
         </section>

@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 2 tested new features: Stripe TEST-mode subscription checkout (€2,99), rotating QR (10s slot + HMAC), admin analytics dashboard, FAQ, and removal of '12 quartieri'. Backend pytest suite: 9/9 passed. Frontend Playwright: all critical flows pass — landing renders (no '12 quartieri', €2,99 present), FAQ #faq has 8 <details> items with working expand, /subscribe shows 'Paga con Stripe → €2,99/mese' and triggers /api/payments/checkout returning a checkout.stripe.com URL, /admin as client redirects to /, /admin as admin renders KPI cards (Clienti, Commercianti, Abbonati attivi, MRR, Sconti mese, Totale sconti), Ultimi 30 giorni bar chart, Per giorno della settimana, Per orario del giorno, Negozi più utilizzati and Clienti più attivi tables. Redeem QR dialog shows rotating countdown badge, 'Codice sicuro rotante' text, and the dialog content changes across 3.5s (countdown ticks).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "backend_tests_run": [
+    "TestStripeCheckout::test_checkout_unauth_401 -> PASS (401 without auth)",
+    "TestStripeCheckout::test_checkout_as_client_returns_stripe_url -> PASS (returns https://checkout.stripe.com/ URL, payment_transactions record created, /payments/status/{id} returns pending)",
+    "TestRotatingQR::test_token_owner -> PASS (qr_value == code|slot|hmac; hmac == HMAC-SHA256(JWT_SECRET, code:slot)[:12])",
+    "TestRotatingQR::test_token_non_owner_404 -> PASS (403/404 for non-owner)",
+    "TestRotatingQR::test_verify_rotating_owner_merchant -> PASS",
+    "TestRotatingQR::test_verify_plain_code_backcompat -> PASS",
+    "TestRotatingQR::test_verify_tampered_token_400 -> PASS",
+    "TestAdminStats::test_admin_stats_ok -> PASS (totals+daily+by_hour[24]+by_weekday[7]+top_merchants+top_clients+recent)",
+    "TestAdminStats::test_admin_stats_non_admin_403 -> PASS"
+  ],
+  "frontend_tests_run": [
+    "Landing loads, €2,99 present, '12 quartieri' absent",
+    "FAQ #faq renders 8 <details> items; first expands on click (open attr set)",
+    "/subscribe (client) shows 'Paga con Stripe → €2,99/mese' button; click triggers POST /api/payments/checkout and browser redirects to Stripe (URL not verified inline due to fast redirect, but backend test verified https://checkout.stripe.com/ format)",
+    "/admin as client redirects to '/' (not on /admin)",
+    "/admin as admin: KPI cards + daily/hour/weekday charts + top tables render",
+    "Client discount redeem: qr-dialog shows 'Codice sicuro rotante', countdown badge (e.g. 9s), '10 secondi' rotation text; content changes over 3.5s"
+  ],
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is ~930 lines; consider splitting into routers (auth, discounts, subscription, payments, redemptions, admin) for maintainability",
+    "GET /api/payments/status/{session_id} has no auth — any user knowing a session_id can trigger a Stripe retrieve+webhook-fallback mark_subscription_paid for another user. Consider requiring auth and verifying session.metadata.user_id == current user.",
+    "STRIPE_WEBHOOK_SECRET falls back to '' — signature verification would still fail if empty which is safe, but log a warning at startup if unset in production",
+    "In /payments/checkout the retry branch catches only InvalidRequestError; a generic Stripe error path could be added for robustness",
+    "/subscription/subscribe is still a mock endpoint accessible in production — ensure it is disabled or admin-only when STRIPE_MODE=live"
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py", "/app/test_reports/iteration_2.json"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@scontiroma.it/admin123, cliente@scontiroma.it/cliente123, gym@scontiroma.it/merchant123, trattoria@scontiroma.it/merchant123",
+  "seed_data_creation": "None; used existing seed. Note: my tests toggled cliente@scontiroma.it subscription state (subscribe + cancel + subscribe). Currently cliente has an active mock subscription created during QR flow test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest lives at /app/backend/tests/backend_test.py (rerun with: pytest /app/backend/tests/backend_test.py -v). All 9 tests pass. Frontend FAQ uses native <details>/<summary> (no <button>) — select with '#faq details' and click summary. For /subscribe flow, cliente must have NO active subscription to see Stripe button; otherwise page shows 'Abbonamento attivo'. Cancel via POST /api/subscription/cancel to reset. When clicking 'Paga con Stripe', page redirects fast to Stripe — use page.expect_response on /api/payments/checkout to capture the URL instead of reading DOM afterward.",
+  "rca of the issue": "N/A — no bugs found in this iteration."
+}

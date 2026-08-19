@@ -22,6 +22,8 @@ export default function Navbar() {
           { to: "/merchant/discount", label: "Il mio sconto" },
           { to: "/merchant/scan", label: "Scansiona" },
         ]
+      : user.role === "admin"
+      ? [{ to: "/admin", label: "Admin" }]
       : [
           { to: "/discounts", label: "Sconti" },
           { to: "/dashboard", label: "Il mio account" },

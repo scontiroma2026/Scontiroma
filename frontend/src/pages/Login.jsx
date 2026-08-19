@@ -21,7 +21,7 @@ export default function Login() {
     setLoading(false);
     if (!res.ok) return toast.error(res.error);
     toast.success(`Bentornato, ${res.user.name}`);
-    nav(res.user.role === "merchant" ? "/merchant/dashboard" : "/discounts");
+    nav(res.user.role === "merchant" ? "/merchant/dashboard" : res.user.role === "admin" ? "/admin" : "/discounts");
   };
 
   return (

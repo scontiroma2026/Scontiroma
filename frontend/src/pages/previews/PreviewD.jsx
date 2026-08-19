@@ -43,7 +43,7 @@ export default function PreviewD() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-4 py-2 text-xs font-bold shadow">
                 <span>✨</span>
-                <span>Novità · €4,99 al mese</span>
+                <span>Novità · €2,99 al mese</span>
                 <span>✨</span>
               </div>
               <h1 className="mt-6 bg-d-display text-7xl leading-[0.95] md:text-8xl">

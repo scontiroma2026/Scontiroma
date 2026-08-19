@@ -12,6 +12,9 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Literal
 
 import bcrypt
+import hmac as hmac_lib
+import hashlib
+import stripe
 import jwt
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
 from starlette.middleware.cors import CORSMiddleware
@@ -28,6 +31,11 @@ JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALGORITHM = "HS256"
 ACCESS_TTL_MIN = 60 * 24  # 1 day
 REFRESH_TTL_DAYS = 7
+
+# Stripe
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "sk_test_emergent")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_3eur"
 
 app = FastAPI(title="Sconti Roma API")
 api = APIRouter(prefix="/api")
@@ -177,8 +185,32 @@ class SubscribeIn(BaseModel):
     card_last4: Optional[str] = "4242"
 
 
+class StripeCheckoutIn(BaseModel):
+    origin_url: str
+
+
 class RedeemVerifyIn(BaseModel):
-    code: str
+    code: str  # Accepts plain "ABC123" or rotating "ABC123|slot|hmac"
+
+
+ROTATION_WINDOW_SEC = 10
+
+
+def _rotating_hmac(code: str, slot: int) -> str:
+    msg = f"{code}:{slot}".encode()
+    return hmac_lib.new(JWT_SECRET.encode(), msg, hashlib.sha256).hexdigest()[:12]
+
+
+def current_slot() -> int:
+    return int(datetime.now(timezone.utc).timestamp()) // ROTATION_WINDOW_SEC
+
+
+def parse_rotating_code(raw: str):
+    """Return (code, slot, token) if rotating, else (code, None, None)."""
+    parts = raw.strip().split("|")
+    if len(parts) == 3:
+        return parts[0].upper(), int(parts[1]), parts[2]
+    return raw.strip().upper(), None, None
 
 
 # ---------- Auth Routes ----------
@@ -385,7 +417,7 @@ async def subscribe(payload: SubscribeIn, user: dict = Depends(require_client)):
         "user_id": user["id"],
         "plan": payload.plan,
         "status": "active",
-        "price_eur": 4.99,
+        "price_eur": 2.99,
         "start_date": now.isoformat(),
         "end_date": end.isoformat(),
         "card_last4": payload.card_last4 or "4242",
@@ -407,6 +439,131 @@ async def cancel_sub(user: dict = Depends(require_client)):
         {"$set": {"status": "cancelled"}}
     )
     return {"ok": True}
+
+
+# ---------- Stripe Checkout (subscription €3/month) ----------
+@api.post("/payments/checkout")
+async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(require_client)):
+    prices = stripe.Price.list(lookup_keys=[STRIPE_PRICE_LOOKUP], active=True, limit=1).data
+    if not prices:
+        raise HTTPException(500, "Prezzo non configurato")
+    price = prices[0]
+    try:
+        session = stripe.checkout.Session.create(
+            line_items=[{"price": price.id, "quantity": 1}],
+            mode="subscription",
+            success_url=f"{payload.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{payload.origin_url}/payment/cancel",
+            customer_email=user["email"],
+            metadata={"user_id": user["id"], "lookup_key": STRIPE_PRICE_LOOKUP},
+            managed_payments={"enabled": True},
+        )
+    except stripe.error.InvalidRequestError as e:
+        msg = (getattr(e, "user_message", "") or "").lower()
+        if "managed payments" in msg or "ineligible" in msg:
+            session = stripe.checkout.Session.create(
+                line_items=[{"price": price.id, "quantity": 1}],
+                mode="subscription",
+                success_url=f"{payload.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{payload.origin_url}/payment/cancel",
+                customer_email=user["email"],
+                metadata={"user_id": user["id"], "lookup_key": STRIPE_PRICE_LOOKUP},
+                automatic_tax={"enabled": True},
+                billing_address_collection="required",
+            )
+        else:
+            raise HTTPException(500, f"Stripe error: {e}")
+
+    await db.payment_transactions.insert_one({
+        "session_id": session.id,
+        "user_id": user["id"],
+        "lookup_key": STRIPE_PRICE_LOOKUP,
+        "amount": 300, "currency": "eur",
+        "status": "initiated", "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"checkout_url": session.url, "session_id": session.id}
+
+
+async def mark_subscription_paid(session, user_id: str):
+    now = datetime.now(timezone.utc)
+    end = now + timedelta(days=30)
+    # Deactivate old active subs
+    await db.subscriptions.update_many(
+        {"user_id": user_id, "status": "active"},
+        {"$set": {"status": "replaced"}}
+    )
+    await db.subscriptions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "plan": "monthly",
+        "status": "active",
+        "price_eur": 3.00,
+        "start_date": now.isoformat(),
+        "end_date": end.isoformat(),
+        "stripe_session_id": session.get("id") if isinstance(session, dict) else session.id,
+        "stripe_subscription_id": (session.get("subscription") if isinstance(session, dict) else session.subscription),
+        "provider": "stripe",
+    })
+
+
+@api.get("/payments/status/{session_id}")
+async def payment_status(session_id: str):
+    record = await db.payment_transactions.find_one({"session_id": session_id})
+    if not record:
+        raise HTTPException(404, "Transazione non trovata")
+    # Webhook fallback: query Stripe directly if still pending
+    if record.get("payment_status") != "paid":
+        try:
+            s = stripe.checkout.Session.retrieve(session_id)
+            if s.payment_status == "paid" or s.status == "complete":
+                result = await db.payment_transactions.update_one(
+                    {"session_id": session_id, "payment_status": {"$ne": "paid"}},
+                    {"$set": {"status": "completed", "payment_status": "paid",
+                              "stripe_subscription_id": s.subscription,
+                              "updated_at": datetime.now(timezone.utc).isoformat()}},
+                )
+                if result.modified_count > 0 and record.get("user_id"):
+                    await mark_subscription_paid(s, record["user_id"])
+                record = await db.payment_transactions.find_one({"session_id": session_id})
+        except Exception:
+            pass
+    return {
+        "session_id": record["session_id"],
+        "status": record["status"],
+        "payment_status": record["payment_status"],
+    }
+
+
+@api.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+    except Exception:
+        raise HTTPException(400, "Invalid signature")
+    obj = event["data"]["object"]
+    t = event["type"]
+    if t == "checkout.session.completed":
+        result = await db.payment_transactions.update_one(
+            {"session_id": obj["id"], "payment_status": {"$ne": "paid"}},
+            {"$set": {"status": "completed", "payment_status": obj.get("payment_status", "paid"),
+                      "stripe_subscription_id": obj.get("subscription"),
+                      "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+        if result.modified_count > 0:
+            uid = (obj.get("metadata") or {}).get("user_id")
+            if uid:
+                await mark_subscription_paid(obj, uid)
+    elif t == "customer.subscription.deleted":
+        sub_id = obj.get("id")
+        await db.subscriptions.update_many(
+            {"stripe_subscription_id": sub_id, "status": "active"},
+            {"$set": {"status": "cancelled"}}
+        )
+    return {"status": "ok"}
 
 
 # ---------- Redemption ----------
@@ -458,14 +615,37 @@ async def my_redemptions(user: dict = Depends(require_client)):
     return {"redemptions": out}
 
 
+@api.get("/redemptions/{rid}/token")
+async def redemption_token(rid: str, user: dict = Depends(require_client)):
+    r = await db.redemptions.find_one({"id": rid, "user_id": user["id"]})
+    if not r:
+        raise HTTPException(404, "Codice non trovato")
+    slot = current_slot()
+    token = _rotating_hmac(r["code"], slot)
+    return {
+        "code": r["code"],
+        "slot": slot,
+        "token": token,
+        "qr_value": f"{r['code']}|{slot}|{token}",
+        "expires_in": ROTATION_WINDOW_SEC - (int(datetime.now(timezone.utc).timestamp()) % ROTATION_WINDOW_SEC),
+    }
+
+
 @api.post("/redemptions/verify")
 async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(require_merchant)):
-    code = payload.code.strip().upper()
+    code, slot, token = parse_rotating_code(payload.code)
     r = await db.redemptions.find_one({"code": code, "merchant_id": user["id"]})
     if not r:
         raise HTTPException(404, "Codice non trovato")
     if r["status"] == "redeemed":
         raise HTTPException(400, "Codice già utilizzato")
+    # If rotating format supplied, validate freshness (±1 slot = 10-20s window)
+    if slot is not None and token is not None:
+        cur = current_slot()
+        if abs(cur - slot) > 1:
+            raise HTTPException(400, "QR code scaduto, chiedi al cliente di aggiornarlo")
+        if not hmac_lib.compare_digest(_rotating_hmac(code, slot), token):
+            raise HTTPException(400, "QR code non valido (possibile screenshot)")
     await db.redemptions.update_one(
         {"id": r["id"]},
         {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat()}}
@@ -477,6 +657,112 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
     r["discount_title"] = disc.get("title") if disc else ""
     r["client_name"] = cu.get("name") if cu else ""
     return {"redemption": r}
+
+
+# ---------- Admin ----------
+def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    if user.get("role") != "admin":
+        raise HTTPException(403, "Riservato all'amministratore")
+    return user
+
+
+@api.get("/admin/stats")
+async def admin_stats(user: dict = Depends(require_admin)):
+    total_users = await db.users.count_documents({"role": "client"})
+    total_merchants = await db.users.count_documents({"role": "merchant"})
+    now = datetime.now(timezone.utc)
+    start_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    active_subs = await db.subscriptions.count_documents({"status": "active", "end_date": {"$gt": now.isoformat()}})
+    total_redemptions = await db.redemptions.count_documents({})
+    redemptions_month = await db.redemptions.count_documents({"created_at": {"$gte": start_month}})
+    mrr = active_subs * 2.99
+
+    # Last 30 days per-day counts
+    thirty_ago = (now - timedelta(days=30)).isoformat()
+    docs = await db.redemptions.find({"created_at": {"$gte": thirty_ago}}).to_list(5000)
+    by_day = {}
+    by_hour = [0] * 24
+    by_weekday = [0] * 7
+    for d in docs:
+        try:
+            dt = datetime.fromisoformat(d["created_at"])
+            key = dt.strftime("%Y-%m-%d")
+            by_day[key] = by_day.get(key, 0) + 1
+            by_hour[dt.hour] += 1
+            by_weekday[dt.weekday()] += 1
+        except Exception:
+            pass
+    daily = [{"date": k, "count": v} for k, v in sorted(by_day.items())]
+
+    # Top merchants
+    all_reds = await db.redemptions.find({}).to_list(5000)
+    per_merchant = {}
+    for r in all_reds:
+        mid = r.get("merchant_id")
+        per_merchant[mid] = per_merchant.get(mid, 0) + 1
+    top_ids = sorted(per_merchant.items(), key=lambda x: -x[1])[:10]
+    top_merchants = []
+    for mid, count in top_ids:
+        m = await db.users.find_one({"id": mid})
+        if m:
+            top_merchants.append({
+                "id": mid,
+                "shop_name": m.get("shop_name") or m.get("name"),
+                "zone": m.get("zone"),
+                "category": m.get("category"),
+                "redemptions": count,
+            })
+
+    # Top clients
+    per_client = {}
+    for r in all_reds:
+        cid = r.get("user_id")
+        per_client[cid] = per_client.get(cid, 0) + 1
+    top_client_ids = sorted(per_client.items(), key=lambda x: -x[1])[:10]
+    top_clients = []
+    for cid, count in top_client_ids:
+        c = await db.users.find_one({"id": cid})
+        if c:
+            top_clients.append({
+                "id": cid,
+                "name": c.get("name"),
+                "email": c.get("email"),
+                "redemptions": count,
+            })
+
+    # Recent redemptions (last 20)
+    recent_docs = await db.redemptions.find({}).sort("created_at", -1).to_list(20)
+    recent = []
+    for r in recent_docs:
+        m = await db.users.find_one({"id": r.get("merchant_id")})
+        c = await db.users.find_one({"id": r.get("user_id")})
+        disc = await db.discounts.find_one({"id": r.get("discount_id")})
+        recent.append({
+            "code": r.get("code"),
+            "status": r.get("status"),
+            "created_at": r.get("created_at"),
+            "redeemed_at": r.get("redeemed_at"),
+            "shop_name": m.get("shop_name") if m else "-",
+            "client_name": c.get("name") if c else "-",
+            "discount_title": disc.get("title") if disc else "-",
+        })
+
+    return {
+        "totals": {
+            "clients": total_users,
+            "merchants": total_merchants,
+            "active_subscriptions": active_subs,
+            "mrr_eur": round(mrr, 2),
+            "total_redemptions": total_redemptions,
+            "redemptions_this_month": redemptions_month,
+        },
+        "daily": daily,
+        "by_hour": by_hour,
+        "by_weekday": by_weekday,
+        "top_merchants": top_merchants,
+        "top_clients": top_clients,
+        "recent": recent,
+    }
 
 
 # ---------- Seeding ----------

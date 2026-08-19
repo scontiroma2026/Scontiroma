@@ -13,6 +13,9 @@ import ClientDashboard from "@/pages/ClientDashboard";
 import MerchantDashboard from "@/pages/MerchantDashboard";
 import MerchantDiscount from "@/pages/MerchantDiscount";
 import MerchantScan from "@/pages/MerchantScan";
+import AdminDashboard from "@/pages/AdminDashboard";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import PaymentCancel from "@/pages/PaymentCancel";
 import PreviewGallery from "@/pages/PreviewGallery";
 import PreviewA from "@/pages/previews/PreviewA";
 import PreviewB from "@/pages/previews/PreviewB";
@@ -37,6 +40,9 @@ function App() {
             <Route path="/merchant/dashboard" element={<ProtectedRoute role="merchant"><MerchantDashboard /></ProtectedRoute>} />
             <Route path="/merchant/discount" element={<ProtectedRoute role="merchant"><MerchantDiscount /></ProtectedRoute>} />
             <Route path="/merchant/scan" element={<ProtectedRoute role="merchant"><MerchantScan /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route path="/preview" element={<PreviewGallery />} />
             <Route path="/preview/a" element={<PreviewA />} />
             <Route path="/preview/b" element={<PreviewB />} />
