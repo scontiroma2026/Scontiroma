@@ -331,12 +331,12 @@ async def me(user: dict = Depends(get_current_user)):
 
 # ---------- PIN & WebAuthn ----------
 class PinIn(BaseModel):
-    pin: str = Field(min_length=4, max_length=4)
+    pin: str = Field(min_length=6, max_length=6)
 
 
 class PinLoginIn(BaseModel):
     email: EmailStr
-    pin: str = Field(min_length=4, max_length=4)
+    pin: str = Field(min_length=6, max_length=6)
 
 
 class WebAuthnCompleteIn(BaseModel):
@@ -359,7 +359,7 @@ class ResetIn(BaseModel):
 @api.post("/auth/pin")
 async def set_pin(payload: PinIn, user: dict = Depends(get_current_user)):
     if not payload.pin.isdigit():
-        raise HTTPException(422, "Il PIN deve essere di 4 cifre")
+        raise HTTPException(422, "Il PIN deve essere di 6 cifre")
     await db.users.update_one({"id": user["id"]}, {"$set": {"pin_hash": hash_password(payload.pin), "pin_set": True}})
     return {"ok": True}
 
@@ -376,6 +376,58 @@ async def pin_login(payload: PinLoginIn, response: Response):
     refresh = create_token(u["id"], u["email"], "refresh")
     set_auth_cookies(response, access, refresh)
     return {"user": sanitize_user(u), "access_token": access}
+
+
+# ---------- PIN forgot / reset (OTP via email) ----------
+class PinForgotIn(BaseModel):
+    email: EmailStr
+
+class PinResetIn(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6)
+    new_pin: str = Field(min_length=6, max_length=6)
+
+
+@api.post("/auth/pin-forgot")
+async def pin_forgot(payload: PinForgotIn):
+    email = payload.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    if u:
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+        await db.users.update_one({"id": u["id"]}, {"$set": {
+            "pin_reset_code_hash": hash_password(code),
+            "pin_reset_expires": expires.isoformat(),
+        }})
+        try:
+            from email_service import send_pin_reset_code
+            await send_pin_reset_code(u["email"], u.get("name") or "utente", code)
+        except Exception as e:
+            logging.warning(f"pin_forgot email failed: {e}")
+    return {"ok": True, "message": "Se l'email è registrata, riceverai un codice a 6 cifre entro pochi secondi."}
+
+
+@api.post("/auth/pin-reset")
+async def pin_reset(payload: PinResetIn):
+    if not payload.code.isdigit() or not payload.new_pin.isdigit():
+        raise HTTPException(422, "Codice o PIN non valido")
+    email = payload.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    if not u or not u.get("pin_reset_code_hash"):
+        raise HTTPException(400, "Nessuna richiesta di reset attiva. Ripeti la procedura.")
+    try:
+        exp = datetime.fromisoformat(u.get("pin_reset_expires"))
+    except Exception:
+        exp = datetime.now(timezone.utc) - timedelta(seconds=1)
+    if exp < datetime.now(timezone.utc):
+        raise HTTPException(400, "Codice scaduto, richiedine uno nuovo.")
+    if not verify_password(payload.code, u["pin_reset_code_hash"]):
+        raise HTTPException(401, "Codice non valido.")
+    await db.users.update_one({"id": u["id"]}, {
+        "$set": {"pin_hash": hash_password(payload.new_pin), "pin_set": True},
+        "$unset": {"pin_reset_code_hash": "", "pin_reset_expires": ""},
+    })
+    return {"ok": True, "message": "PIN aggiornato. Ora puoi accedere."}
 
 
 @api.post("/webauthn/register/begin")

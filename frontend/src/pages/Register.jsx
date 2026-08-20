@@ -19,7 +19,9 @@ export default function Register() {
   const [form, setForm] = useState({
     email: "",
     password: "",
-    name: "",
+    first_name: "",
+    last_name: "",
+    name: "", // usato solo per merchant (nome referente)
     shop_name: "",
     zone: "",
     category: "",
@@ -45,7 +47,13 @@ export default function Register() {
     setLoading(true);
     const payload = { ...form, role };
     if (role === "client") {
+      // Concatena nome + cognome nel campo `name` che il backend si aspetta
+      payload.name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
+      delete payload.first_name; delete payload.last_name;
       delete payload.shop_name; delete payload.zone; delete payload.category;
+    } else {
+      // Per il merchant usiamo il campo unico `name` (referente)
+      delete payload.first_name; delete payload.last_name;
     }
     const res = await register(payload);
     setLoading(false);
@@ -80,10 +88,23 @@ export default function Register() {
         </div>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
-          <div>
-            <Label>Nome{role === "merchant" ? " referente" : ""}</Label>
-            <Input data-testid="reg-name" required value={form.name} onChange={update("name")} className="mt-1" />
-          </div>
+          {role === "client" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Nome</Label>
+                <Input data-testid="reg-first-name" required value={form.first_name} onChange={update("first_name")} className="mt-1" />
+              </div>
+              <div>
+                <Label>Cognome</Label>
+                <Input data-testid="reg-last-name" required value={form.last_name} onChange={update("last_name")} className="mt-1" />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Label>Nome referente</Label>
+              <Input data-testid="reg-name" required value={form.name} onChange={update("name")} className="mt-1" />
+            </div>
+          )}
           <div>
             <Label>Email</Label>
             <Input data-testid="reg-email" type="email" required value={form.email} onChange={update("email")} className="mt-1" />

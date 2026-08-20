@@ -178,3 +178,18 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
 </body></html>"""
     subject = "🛍️ Il tuo abbonamento è attivo! Scopri i nuovi sconti di questo mese"
     return await _send(to, subject, html)
+
+
+async def send_pin_reset_code(to: str, name: str, code: str) -> Optional[str]:
+    """Email con codice OTP a 6 cifre per resettare il PIN. Valido 10 minuti."""
+    safe_name = (name or "").strip() or "utente"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Recupero PIN</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {safe_name},</p>
+<p style="margin:0 0 20px;color:#d4d4d8">Hai richiesto di reimpostare il PIN. Usa questo codice a 6 cifre per proseguire (valido 10 minuti):</p>
+<div style="text-align:center;margin:28px 0">
+  <div style="display:inline-block;padding:20px 36px;background:#0b0b0f;border:2px solid #FF6B35;border-radius:14px;font-family:'Courier New',monospace;font-size:38px;letter-spacing:12px;color:#FF6B35;font-weight:700">{code}</div>
+</div>
+<p style="margin:20px 0 0;color:#a1a1aa;font-size:13px">Se non sei stato tu a richiederlo, ignora questa email — il codice scadrà da solo.</p>
+"""
+    return await _send(to, "Il tuo codice per reimpostare il PIN — Sconti Roma", _shell(inner, "Sconti Roma"))

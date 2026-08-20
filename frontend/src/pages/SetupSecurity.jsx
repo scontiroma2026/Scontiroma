@@ -23,7 +23,7 @@ export default function SetupSecurity() {
   const savePin = async (e) => {
     e.preventDefault();
     if (pin !== pinConfirm) return toast.error("I due PIN non corrispondono");
-    if (!/^\d{4}$/.test(pin)) return toast.error("Il PIN deve essere 4 cifre");
+    if (!/^\d{6}$/.test(pin)) return toast.error("Il PIN deve essere di 6 cifre");
     setBusy(true);
     try {
       await api.post("/auth/pin", { pin });
@@ -74,7 +74,7 @@ export default function SetupSecurity() {
           </div>
           <div>
             <div className="text-xs uppercase text-ciano tracking-wider">Passo 1</div>
-            <h2 className="font-serif text-2xl text-white">Codice PIN a 4 cifre</h2>
+            <h2 className="font-serif text-2xl text-white">Codice PIN a 6 cifre</h2>
             <p className="text-xs text-white/60">Usalo se il Face ID non funziona</p>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function SetupSecurity() {
               <Label className="text-white/80">Nuovo PIN</Label>
               <PasswordInput
                 data-testid="pin-new"
-                inputMode="numeric" maxLength={4}
+                inputMode="numeric" maxLength={6}
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g,""))}
                 className="mt-1 text-center text-2xl tracking-[0.4em] font-mono bg-black/40 border-white/10 text-white py-5"
@@ -94,13 +94,13 @@ export default function SetupSecurity() {
               <Label className="text-white/80">Conferma</Label>
               <PasswordInput
                 data-testid="pin-confirm"
-                inputMode="numeric" maxLength={4}
+                inputMode="numeric" maxLength={6}
                 value={pinConfirm}
                 onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g,""))}
                 className="mt-1 text-center text-2xl tracking-[0.4em] font-mono bg-black/40 border-white/10 text-white py-5"
               />
             </div>
-            <Button data-testid="pin-save" type="submit" disabled={busy || pin.length !== 4} className="col-span-2 grad-fucsia-viola text-white rounded-full">
+            <Button data-testid="pin-save" type="submit" disabled={busy || pin.length !== 6} className="col-span-2 grad-fucsia-viola text-white rounded-full">
               Salva PIN
             </Button>
           </form>

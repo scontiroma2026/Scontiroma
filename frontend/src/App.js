@@ -20,6 +20,7 @@ import PaymentCancel from "@/pages/PaymentCancel";
 import MapView from "@/pages/MapView";
 import SetupSecurity from "@/pages/SetupSecurity";
 import ForgotPassword from "@/pages/ForgotPassword";
+import ForgotPin from "@/pages/ForgotPin";
 import ResetPassword from "@/pages/ResetPassword";
 import QRVerify from "@/pages/QRVerify";
 import PreviewGallery from "@/pages/PreviewGallery";
@@ -52,6 +53,7 @@ function App() {
             <Route path="/map" element={<MapView />} />
             <Route path="/setup-security" element={<ProtectedRoute><SetupSecurity /></ProtectedRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/forgot-pin" element={<ForgotPin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/qr/:token" element={<QRVerify />} />
             <Route path="/qr" element={<QRVerify />} />

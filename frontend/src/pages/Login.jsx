@@ -19,6 +19,7 @@ export default function Login() {
   const [pin, setPin] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [autoTried, setAutoTried] = useState(false);
 
   const goBiometric = async () => {
     if (!email) return toast.error("Inserisci l'email");
@@ -33,13 +34,30 @@ export default function Login() {
       toast.success("Bentornato! ✦");
       nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
     } catch (e) {
-      const msg = formatApiError(e) || (e?.name === "NotAllowedError" ? "Scansione annullata o non riuscita" : "Face ID non disponibile");
-      toast.error(msg);
+      // Face ID non riuscito → cade sul PIN silenziosamente se è un auto-attempt
+      const isNotAllowed = e?.name === "NotAllowedError" || e?.name === "InvalidStateError";
+      if (!autoTried && !isNotAllowed) {
+        const msg = formatApiError(e) || "Face ID non disponibile";
+        toast.error(msg);
+      }
       setStep("pin");
     } finally {
       setBusy(false);
     }
   };
+
+  // Auto-tentativo Face ID all'apertura se abbiamo l'email dell'ultimo login
+  useEffect(() => {
+    if (autoTried) return;
+    const lastEmail = localStorage.getItem("last_email");
+    if (!lastEmail) return;
+    if (!window.PublicKeyCredential) return; // browser senza WebAuthn
+    setAutoTried(true);
+    // piccolo delay per permettere al render di stabilizzarsi
+    const t = setTimeout(() => { goBiometric(); }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const submitPin = async (e) => {
     e.preventDefault();
@@ -133,23 +151,30 @@ export default function Login() {
               <ArrowLeft size={12} /> indietro
             </button>
             <h1 className="font-serif text-4xl text-white">Il tuo PIN</h1>
-            <p className="mt-2 text-sm text-white/60">4 cifre per {email || "il tuo account"}</p>
+            <p className="mt-2 text-sm text-white/60">6 cifre per {email || "il tuo account"}</p>
             <form onSubmit={submitPin} className="mt-6 space-y-4">
               <PasswordInput
                 data-testid="pin-input"
                 inputMode="numeric"
-                pattern="[0-9]{4}"
-                maxLength={4}
+                pattern="[0-9]{6}"
+                maxLength={6}
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g,""))}
                 className="text-center text-3xl tracking-[0.5em] font-mono bg-black/40 border-white/10 text-white py-6"
                 autoFocus
               />
-              <Button data-testid="pin-submit" type="submit" disabled={pin.length !== 4 || busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
+              <Button data-testid="pin-submit" type="submit" disabled={pin.length !== 6 || busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
                 {busy ? "Attendi…" : "Entra"}
               </Button>
-              <div className="text-center text-xs">
-                <Link to="/forgot-password" className="text-ciano hover:underline">PIN o password dimenticati?</Link>
+              <div className="text-center text-xs space-y-2">
+                <div>
+                  <Link data-testid="forgot-pin-link" to={`/forgot-pin${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="text-fucsia hover:underline font-semibold">
+                    Hai dimenticato il PIN?
+                  </Link>
+                </div>
+                <div>
+                  <Link to="/forgot-password" className="text-ciano hover:underline">Password dimenticata?</Link>
+                </div>
               </div>
             </form>
           </>

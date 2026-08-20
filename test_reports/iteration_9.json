@@ -1,0 +1,23 @@
+{
+  "summary": "PIN 6-digit auth refactor + Forgot/Reset OTP flow tested end-to-end. Backend: 16/16 pytest passing (PIN validation 4→422 / 5→422 / 6→200, PIN login 200/401, pin-forgot stores bcrypt hash + expires in Mongo for both known and unknown emails, pin-reset returns 401 on wrong code and 400 when no active request, full E2E reset with injected hash succeeds and clears pin_reset_code_hash, new PIN works via pin-login, Stripe webhook signature validation returns 400 — no regression). Frontend: Register page correctly shows Nome+Cognome for client role and concatenates into `name` on submit; SetupSecurity PIN save-button remains disabled at 4/5 digits and enables at 6 digits, POST /api/auth/pin returns 200; Login PIN step displays '6 cifre per <email>' with maxLength=6, submit disabled until 6 digits, forgot-pin-link data-testid points to /forgot-pin?email=<encoded>; ForgotPin page shows email prefilled, advances to verify step on send, submit disabled unless code=6 AND newPin=6, invalid code triggers 'Codice non valido.' toast and stays on verify step; auto-Face-ID skipped correctly when localStorage.last_email is absent (page renders normally).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_pin_auth_flow.py",
+    "/app/test_reports/pytest/pin_auth.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is now 1500+ lines — consider splitting auth routes (PIN, WebAuthn, password reset) into a dedicated `auth_router.py` module for maintainability.",
+    "pin_reset_expires is stored as ISO string; if the string is somehow missing/malformed, the fallback silently sets exp to past — acceptable but consider raising 400 'reset scaduto' explicitly to distinguish from wrong-code cases.",
+    "In `send_pin_reset_code` and other email helpers the user name is interpolated directly into HTML — for defence-in-depth, HTML-escape the name (though the app trusts registered users, it's a minor XSS hygiene concern for future admin-triggered flows)."
+  ],
+  "updated_files": ["/app/backend/tests/test_pin_auth_flow.py"],
+  "success_rate": {"backend": "100% (16/16)", "frontend": "100%"},
+  "test_credentials": "francesco@gmail.com / francesco123 — PIN reset back to 123456 at end of test suite. Test users created: test_pin_<ts>@example.com and test_flow_<ts>@example.com (client, password 'password123', PIN 246810).",
+  "seed_data_creation": "Two ephemeral client accounts created via /api/auth/register with TEST_ analog prefix (test_pin_, test_flow_). No merchant/admin data touched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All PIN 6-digit + forgot-pin OTP flows verified. francesco@gmail.com PIN is 123456 (restored at end of test_pin_reset_full_flow_success). Backend pin-forgot writes bcrypt hash to `pin_reset_code_hash` and ISO expiry to `pin_reset_expires`; pin-reset unsets both on success. Frontend ForgotPin uses data-testids: forgot-pin-page/email/send/code/new/confirm/submit/success. Auto-Face-ID triggers only if localStorage.last_email is set — clear it before login-page tests for fresh users.",
+  "rca of the issue": "N/A — no bugs found in this iteration."
+}
