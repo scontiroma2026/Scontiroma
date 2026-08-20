@@ -878,6 +878,7 @@ async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(requir
 async def mark_subscription_paid(session, user_id: str):
     now = datetime.now(timezone.utc)
     end = now + timedelta(days=30)
+    session_id = session.get("id") if isinstance(session, dict) else session.id
     # Deactivate old active subs
     await db.subscriptions.update_many(
         {"user_id": user_id, "status": "active"},
@@ -891,10 +892,24 @@ async def mark_subscription_paid(session, user_id: str):
         "price_eur": 3.00,
         "start_date": now.isoformat(),
         "end_date": end.isoformat(),
-        "stripe_session_id": session.get("id") if isinstance(session, dict) else session.id,
+        "stripe_session_id": session_id,
         "stripe_subscription_id": (session.get("subscription") if isinstance(session, dict) else session.subscription),
         "provider": "stripe",
     })
+    # Invio idempotente della mail di benvenuto/attivazione. Usiamo un flag sul
+    # payment_transaction per non spedirla due volte quando arriva sia il polling
+    # che il webhook.
+    flag = await db.payment_transactions.find_one_and_update(
+        {"session_id": session_id, "welcome_email_sent": {"$ne": True}},
+        {"$set": {"welcome_email_sent": True}},
+    )
+    if flag:
+        try:
+            u = await db.users.find_one({"id": user_id})
+            if u and u.get("email"):
+                await send_monthly_discounts_notification(u["email"], u.get("name") or "")
+        except Exception as e:
+            logging.warning(f"stripe welcome email failed: {e}")
 
 
 @api.get("/payments/status/{session_id}")
@@ -946,13 +961,6 @@ async def stripe_webhook(request: Request):
             uid = (obj.get("metadata") or {}).get("user_id")
             if uid:
                 await mark_subscription_paid(obj, uid)
-                # Invia email di benvenuto/attivazione (bottone verso gli sconti)
-                try:
-                    u = await db.users.find_one({"id": uid})
-                    if u and u.get("email"):
-                        await send_monthly_discounts_notification(u["email"], u.get("name") or "")
-                except Exception as e:
-                    logging.warning(f"stripe welcome email failed: {e}")
     elif t == "customer.subscription.deleted":
         sub_id = obj.get("id")
         await db.subscriptions.update_many(
@@ -1015,8 +1023,20 @@ async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(requir
         "end_date": end.isoformat(),
         "paypal_subscription_id": payload.subscription_id,
         "provider": "paypal",
+        "welcome_email_sent": True,
     }
     await db.subscriptions.insert_one(doc)
+    # Idempotenza: mandiamo la mail solo se non l'abbiamo già mandata per questa PayPal subscription
+    already = await db.subscriptions.count_documents({
+        "paypal_subscription_id": payload.subscription_id,
+        "welcome_email_sent": True,
+        "id": {"$ne": doc["id"]},
+    })
+    if already == 0:
+        try:
+            await send_monthly_discounts_notification(user["email"], user.get("name") or "")
+        except Exception as e:
+            logging.warning(f"paypal welcome email failed: {e}")
     return {"subscription": {k: v for k, v in doc.items() if k != "_id"}}
 
 

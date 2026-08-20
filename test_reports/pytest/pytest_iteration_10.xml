@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="6" failures="0" skipped="0" tests="22" time="4.315" timestamp="2026-08-20T17:56:44.357171+00:00" hostname="agent-env-68074b6b-8089-4395-a1ca-2291114b108b"><testcase classname="tests.test_pin_auth_flow" name="test_register_new_client_with_full_name" time="0.479" /><testcase classname="tests.test_subscription_email_idempotency" name="test_scenario_A_polling_then_webhook_sends_email_once" time="0.045" /><testcase classname="tests.test_subscription_email_idempotency" name="test_scenario_B_webhook_then_polling_sends_email_once" time="0.005" /><testcase classname="tests.test_subscription_email_idempotency" name="test_scenario_C_only_polling_still_sends_email" time="0.003" /><testcase classname="tests.test_subscription_email_idempotency" name="test_no_duplicate_active_subscription_after_double_call" time="0.004" /><testcase classname="tests.test_subscription_email_idempotency" name="test_email_failure_does_not_break_subscription" time="0.004" /><testcase classname="tests.test_subscription_email_idempotency" name="test_stripe_webhook_invalid_signature_regression" time="0.410" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_4_digits_rejected_422" time="0.508" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_5_digits_rejected_422" time="0.085" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_6_digits_accepted_200" time="0.304" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_6_non_digit_rejected_422" time="0.078" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_login_success" time="0.426" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_login_wrong_pin_401" time="0.362" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_login_4_digits_rejected_422" time="0.183" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_forgot_existing_email_returns_ok_and_stores_hash" time="0.000"><error message="failed on setup with &quot;pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'&quot;">tests/test_pin_auth_flow.py:37: in db
+    client = AsyncIOMotorClient(MONGO_URL)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/core.py:148: in __init__
+    delegate = self.__delegate_class__(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:771: in __init__
+    res = uri_parser.parse_uri(
+/root/.venv/lib/python3.11/site-packages/pymongo/uri_parser.py:497: in parse_uri
+    raise InvalidURI(f"Invalid URI scheme: URI must begin with '{SCHEME}' or '{SRV_SCHEME}'")
+E   pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'</error></testcase><testcase classname="tests.test_pin_auth_flow" name="test_pin_forgot_unknown_email_returns_ok_no_enumeration" time="0.152" /><testcase classname="tests.test_pin_auth_flow" name="test_pin_reset_wrong_code_401" time="0.000"><error message="failed on setup with &quot;pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'&quot;">tests/test_pin_auth_flow.py:37: in db
+    client = AsyncIOMotorClient(MONGO_URL)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/core.py:148: in __init__
+    delegate = self.__delegate_class__(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:771: in __init__
+    res = uri_parser.parse_uri(
+/root/.venv/lib/python3.11/site-packages/pymongo/uri_parser.py:497: in parse_uri
+    raise InvalidURI(f"Invalid URI scheme: URI must begin with '{SCHEME}' or '{SRV_SCHEME}'")
+E   pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'</error></testcase><testcase classname="tests.test_pin_auth_flow" name="test_pin_reset_no_request_active_400" time="0.000"><error message="failed on setup with &quot;pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'&quot;">tests/test_pin_auth_flow.py:37: in db
+    client = AsyncIOMotorClient(MONGO_URL)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/core.py:148: in __init__
+    delegate = self.__delegate_class__(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:771: in __init__
+    res = uri_parser.parse_uri(
+/root/.venv/lib/python3.11/site-packages/pymongo/uri_parser.py:497: in parse_uri
+    raise InvalidURI(f"Invalid URI scheme: URI must begin with '{SCHEME}' or '{SRV_SCHEME}'")
+E   pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'</error></testcase><testcase classname="tests.test_pin_auth_flow" name="test_pin_reset_full_flow_success" time="0.000"><error message="failed on setup with &quot;pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'&quot;">tests/test_pin_auth_flow.py:37: in db
+    client = AsyncIOMotorClient(MONGO_URL)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/core.py:148: in __init__
+    delegate = self.__delegate_class__(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:771: in __init__
+    res = uri_parser.parse_uri(
+/root/.venv/lib/python3.11/site-packages/pymongo/uri_parser.py:497: in parse_uri
+    raise InvalidURI(f"Invalid URI scheme: URI must begin with '{SCHEME}' or '{SRV_SCHEME}'")
+E   pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'</error></testcase><testcase classname="tests.test_pin_auth_flow" name="test_pin_reset_short_code_422" time="0.000"><error message="failed on setup with &quot;pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'&quot;">tests/test_pin_auth_flow.py:37: in db
+    client = AsyncIOMotorClient(MONGO_URL)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/core.py:148: in __init__
+    delegate = self.__delegate_class__(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:771: in __init__
+    res = uri_parser.parse_uri(
+/root/.venv/lib/python3.11/site-packages/pymongo/uri_parser.py:497: in parse_uri
+    raise InvalidURI(f"Invalid URI scheme: URI must begin with '{SCHEME}' or '{SRV_SCHEME}'")
+E   pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'</error></testcase><testcase classname="tests.test_pin_auth_flow" name="test_pin_reset_short_new_pin_422" time="0.000"><error message="failed on setup with &quot;pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'&quot;">tests/test_pin_auth_flow.py:37: in db
+    client = AsyncIOMotorClient(MONGO_URL)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/core.py:148: in __init__
+    delegate = self.__delegate_class__(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/pymongo/mongo_client.py:771: in __init__
+    res = uri_parser.parse_uri(
+/root/.venv/lib/python3.11/site-packages/pymongo/uri_parser.py:497: in parse_uri
+    raise InvalidURI(f"Invalid URI scheme: URI must begin with '{SCHEME}' or '{SRV_SCHEME}'")
+E   pymongo.errors.InvalidURI: Invalid URI scheme: URI must begin with 'mongodb://' or 'mongodb+srv://'</error></testcase><testcase classname="tests.test_pin_auth_flow" name="test_stripe_webhook_invalid_signature_400" time="0.157" /></testsuite></testsuites>
