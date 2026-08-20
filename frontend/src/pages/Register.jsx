@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import PasswordInput from "@/components/PasswordInput";
+import { LEGAL_LINKS } from "@/components/LegalFooter";
 
 export default function Register() {
   const { register } = useAuth();
@@ -26,6 +27,7 @@ export default function Register() {
   const [zones, setZones] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
 
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
@@ -36,6 +38,10 @@ export default function Register() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!acceptedLegal) {
+      toast.error("Devi accettare Termini, Privacy e Cookie Policy per continuare");
+      return;
+    }
     setLoading(true);
     const payload = { ...form, role };
     if (role === "client") {
@@ -124,7 +130,29 @@ export default function Register() {
             </>
           )}
 
-          <Button data-testid="reg-submit" type="submit" disabled={loading} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
+          {/* GDPR legal checkbox */}
+          <div className="rounded-xl border border-white/10 bg-black/40 p-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                data-testid="legal-accept"
+                type="checkbox"
+                checked={acceptedLegal}
+                onChange={(e) => setAcceptedLegal(e.target.checked)}
+                required
+                className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
+              />
+              <span className="text-xs text-white/80 leading-relaxed">
+                Accetto i{" "}
+                <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold" data-testid="link-terms">Termini e Condizioni</a>
+                {" "}e confermo di aver letto la{" "}
+                <a href={LEGAL_LINKS.privacy} target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline font-semibold" data-testid="link-privacy">Privacy Policy</a>
+                {" "}e la{" "}
+                <a href={LEGAL_LINKS.cookie} target="_blank" rel="noopener noreferrer" className="text-neon hover:underline font-semibold" data-testid="link-cookie">Cookie Policy</a>.
+              </span>
+            </label>
+          </div>
+
+          <Button data-testid="reg-submit" type="submit" disabled={loading || !acceptedLegal} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Creazione…" : "Crea account"}
           </Button>
         </form>

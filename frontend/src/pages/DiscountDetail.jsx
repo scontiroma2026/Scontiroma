@@ -91,8 +91,13 @@ export default function DiscountDetail() {
       </button>
 
       <div className="grid gap-10 md:grid-cols-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm">
-          <img src={discount.image_url || m.image_url} alt={discount.title} className="h-full w-full object-cover" />
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-fucsia/20 to-ciano/10">
+          <img
+            src={discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"}
+            alt={discount.title}
+            className="h-full w-full object-cover"
+            onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
+          />
           <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
             −{discount.percent_off}%
           </div>

@@ -1,0 +1,21 @@
+{
+  "summary": "GDPR compliance UI tested end-to-end. All acceptance criteria pass: mandatory legal checkbox on /register with correct label text, 3 clickable links (Termini, Privacy, Cookie) with target=_blank + rel=noopener noreferrer, submit button disabled when unchecked (no POST /api/auth/register fires even on force-click), enabled once checked with successful navigation to /setup-security for both client and merchant flows. Global LegalFooter present on /, /discounts, /map, /login with 3 correctly configured anchor links, and correctly hidden on /qr/:token fullscreen pages.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "LegalFooter.jsx defines an unused HIDE_ON constant (lines 10) that is never referenced — the actual hide logic only checks /qr paths. Consider removing dead code or wiring HIDE_ON to the check to avoid confusion.",
+    "Placeholder href='#privacy-policy' etc. cause the page to scroll to top when clicked (fragment nav). Since target=_blank is set they open in a new tab which is harmless, but replace with real Iubenda URLs before production."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "seed_data_creation": "Created 2 throwaway users via /api/auth/register (test_gdpr_<ts>@example.com client + test_merc_<ts>@example.com merchant)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 8 verified GDPR checkbox + LegalFooter. Both client and merchant registration navigate to /setup-security. Note: LegalFooter is also displayed on /setup-security and /register (only hidden on /qr routes) — the request only mandated hiding on /qr, so this is compliant."
+}

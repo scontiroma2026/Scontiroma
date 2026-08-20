@@ -10,9 +10,10 @@ export default function DiscountCard({ discount }) {
       <Card className="overflow-hidden border-white/10 bg-white/5 backdrop-blur transition-all hover:-translate-y-1 hover:border-fucsia hover:shadow-[0_0_40px_rgba(255,46,147,0.3)]">
         <div className="relative aspect-[4/3] overflow-hidden">
           <img
-            src={discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"}
+          src={discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"}
             alt={discount.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full grad-fucsia-viola px-3 py-1.5 text-xs font-bold text-white shadow-lg glow-fucsia">
