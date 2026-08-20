@@ -18,7 +18,12 @@ import hashlib
 import json as _json
 import stripe
 import jwt
-from email_service import send_password_reset, send_merchant_approved, send_merchant_rejected
+from email_service import (
+    send_password_reset,
+    send_merchant_approved,
+    send_merchant_rejected,
+    send_monthly_discounts_notification,
+)
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
 from starlette.middleware.cors import CORSMiddleware
@@ -889,6 +894,13 @@ async def stripe_webhook(request: Request):
             uid = (obj.get("metadata") or {}).get("user_id")
             if uid:
                 await mark_subscription_paid(obj, uid)
+                # Invia email di benvenuto/attivazione (bottone verso gli sconti)
+                try:
+                    u = await db.users.find_one({"id": uid})
+                    if u and u.get("email"):
+                        await send_monthly_discounts_notification(u["email"], u.get("name") or "")
+                except Exception as e:
+                    logging.warning(f"stripe welcome email failed: {e}")
     elif t == "customer.subscription.deleted":
         sub_id = obj.get("id")
         await db.subscriptions.update_many(

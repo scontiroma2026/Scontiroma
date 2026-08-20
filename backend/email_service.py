@@ -95,3 +95,86 @@ async def send_merchant_rejected(to: str, name: str, shop_name: str, discount_ti
 </div>
 """
     return await _send(to, "Offerta da rivedere — Sconti Roma", _shell(inner))
+
+
+async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optional[str] = None) -> Optional[str]:
+    """Email mensile agli abbonati per annunciare i nuovi sconti del mese.
+    Usa un template bulletproof (table-based) compatibile con Gmail / Outlook / Apple Mail,
+    con bottone arancione (#FF6B35) grande e cliccabile su tutti i client.
+    """
+    safe_name = (name or "").strip() or "abbonato"
+    link = cta_url or f"{APP_URL}/discounts"
+    html = f"""<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sconti Quartiere</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111">
+<!-- preheader nascosto -->
+<div style="display:none;max-height:0;overflow:hidden;color:transparent">Il tuo abbonamento è attivo — scopri le nuove offerte del mese!</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f5;padding:32px 0">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06)">
+
+        <!-- header -->
+        <tr>
+          <td align="center" style="padding:28px 32px;background:linear-gradient(90deg,#FF6B35,#FF2E93);color:#ffffff">
+            <div style="font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:0.3px">Sconti Quartiere</div>
+            <div style="margin-top:6px;font-size:13px;opacity:0.9">🛍️ Il tuo abbonamento è attivo!</div>
+          </td>
+        </tr>
+
+        <!-- body -->
+        <tr>
+          <td style="padding:36px 40px 8px 40px">
+            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:24px;color:#111">Ciao {safe_name},</h1>
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333">
+              Il tuo abbonamento mensile da <strong>3€</strong> è attivo e si è rinnovato con successo!
+            </p>
+            <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#333">
+              I commercianti del tuo quartiere hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
+            </p>
+          </td>
+        </tr>
+
+        <!-- BUTTON (bulletproof: VML + <a> fallback) -->
+        <tr>
+          <td align="center" style="padding:8px 40px 36px 40px">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{link}" style="height:60px;v-text-anchor:middle;width:460px;" arcsize="18%" strokecolor="#FF6B35" fillcolor="#FF6B35">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">VAI SUBITO A VEDERE I NUOVI SCONTI DI QUESTO MESE</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-- -->
+            <a href="{link}"
+               style="display:inline-block;background:#FF6B35;color:#ffffff !important;text-decoration:none;font-weight:800;font-size:15px;line-height:1.3;letter-spacing:0.4px;padding:18px 28px;border-radius:12px;box-shadow:0 6px 16px rgba(255,107,53,0.35);text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+               target="_blank" rel="noopener">
+              VAI SUBITO A VEDERE I NUOVI SCONTI DI QUESTO MESE
+            </a>
+            <!--<![endif]-->
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td style="padding:24px 40px 32px 40px;background:#fafafa;border-top:1px solid #e5e5e5">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;text-align:center">
+              Ricevi questa email perché sei un abbonato attivo di <strong>Sconti Quartiere</strong>. Puoi gestire le tue preferenze o disdire il rinnovo in qualsiasi momento dalla sezione <strong>Profilo</strong> dentro l'app.
+            </p>
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top:16px;font-size:11px;color:#a1a1aa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        © 2026 Sconti Quartiere · Roma
+      </div>
+    </td>
+  </tr>
+</table>
+</body></html>"""
+    subject = "🛍️ Il tuo abbonamento è attivo! Scopri i nuovi sconti di questo mese"
+    return await _send(to, subject, html)
