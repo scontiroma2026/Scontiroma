@@ -21,7 +21,20 @@ export default function Subscribe() {
     try {
       const { data } = await api.post("/payments/checkout", { origin_url: window.location.origin });
       if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+        // Se siamo dentro un iframe (es. "View Preview" di Emergent), Stripe non permette
+        // il caricamento in-frame. Facciamo il redirect sulla finestra top oppure apriamo
+        // una nuova scheda come fallback.
+        const inIframe = window.self !== window.top;
+        if (inIframe) {
+          try {
+            window.top.location.href = data.checkout_url;
+          } catch (_) {
+            // parent cross-origin → apri in nuova tab
+            window.open(data.checkout_url, "_blank", "noopener,noreferrer");
+          }
+        } else {
+          window.location.href = data.checkout_url;
+        }
       } else {
         toast.error("Errore avvio pagamento");
         setLoading(false);
