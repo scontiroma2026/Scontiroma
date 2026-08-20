@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle } from "lucide-react";
 import PhotoEnhancer from "@/components/PhotoEnhancer";
+import DefaultImagePicker from "@/components/DefaultImagePicker";
 
 export default function MerchantDiscount() {
   const [form, setForm] = useState({
@@ -149,7 +150,13 @@ export default function MerchantDiscount() {
             </div>
             <div>
               <Label>Foto dell'offerta</Label>
-              <p className="text-xs text-white/50 mt-1 mb-2">La foto verrà ottimizzata automaticamente (luminosità, contrasto, colori, nitidezza) prima del salvataggio.</p>
+              <p className="text-xs text-white/50 mt-1 mb-2">Carica una tua foto (verrà ottimizzata automaticamente) oppure scegli da 100 immagini pronte.</p>
+              <div className="mb-3">
+                <DefaultImagePicker
+                  selectedUrl={form.image_url}
+                  onSelect={(url) => setForm((f) => ({ ...f, image_url: url }))}
+                />
+              </div>
               <PhotoEnhancer
                 value={form.image_url}
                 onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}

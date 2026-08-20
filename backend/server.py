@@ -538,6 +538,13 @@ async def categories():
     return {"categories": CATEGORIES}
 
 
+@api.get("/default-images")
+async def default_images():
+    """Return the curated 100-image library grouped by 10 categories."""
+    from default_images import DEFAULT_IMAGE_LIBRARY
+    return {"library": DEFAULT_IMAGE_LIBRARY}
+
+
 # ---------- Discounts ----------
 async def enrich_discount(d: dict) -> dict:
     d = {k: v for k, v in d.items() if k != "_id"}
@@ -723,45 +730,69 @@ async def subscribe(payload: SubscribeIn, user: dict = Depends(require_client)):
 
 @api.post("/subscription/cancel")
 async def cancel_sub(user: dict = Depends(require_client)):
+    # Cancel on Stripe first (for stripe-provider subs), then update DB
+    active_subs = await db.subscriptions.find(
+        {"user_id": user["id"], "status": "active"}
+    ).to_list(length=None)
+    for s in active_subs:
+        sid = s.get("stripe_subscription_id")
+        if s.get("provider") == "stripe" and sid:
+            try:
+                stripe.Subscription.cancel(sid)
+            except Exception as e:
+                logging.warning(f"Stripe cancel failed for {sid}: {e}")
     await db.subscriptions.update_many(
         {"user_id": user["id"], "status": "active"},
-        {"$set": {"status": "cancelled"}}
+        {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"ok": True}
 
 
 # ---------- Stripe Checkout (subscription €3/month) ----------
+async def get_or_create_stripe_customer(user: dict) -> str:
+    """Return the Stripe customer id for the given user, creating & storing it if needed."""
+    cid = user.get("stripe_customer_id")
+    if cid:
+        try:
+            c = stripe.Customer.retrieve(cid)
+            if not getattr(c, "deleted", False):
+                return cid
+        except Exception:
+            pass
+    # Create a new dedicated customer for this user. We deliberately omit `email` so that
+    # Stripe Link does NOT auto-attach on Checkout (which triggers the "Confirm it's you"
+    # OTP loop and blocks users who cancelled and want to resubscribe).
+    c = stripe.Customer.create(
+        name=user.get("name") or None,
+        description=user["email"],
+        metadata={"user_id": user["id"], "app_email": user["email"]},
+    )
+    await db.users.update_one({"id": user["id"]}, {"$set": {"stripe_customer_id": c.id}})
+    return c.id
+
+
 @api.post("/payments/checkout")
 async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(require_client)):
     prices = stripe.Price.list(lookup_keys=[STRIPE_PRICE_LOOKUP], active=True, limit=1).data
     if not prices:
         raise HTTPException(500, "Prezzo non configurato")
     price = prices[0]
+    customer_id = await get_or_create_stripe_customer(user)
+    common_kwargs = dict(
+        line_items=[{"price": price.id, "quantity": 1}],
+        mode="subscription",
+        success_url=f"{payload.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{payload.origin_url}/payment/cancel",
+        customer=customer_id,
+        # Force plain card to avoid Stripe Link auth loop (OTP "Confirm it's you")
+        payment_method_types=["card"],
+        metadata={"user_id": user["id"], "lookup_key": STRIPE_PRICE_LOOKUP},
+    )
     try:
-        session = stripe.checkout.Session.create(
-            line_items=[{"price": price.id, "quantity": 1}],
-            mode="subscription",
-            success_url=f"{payload.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{payload.origin_url}/payment/cancel",
-            customer_email=user["email"],
-            metadata={"user_id": user["id"], "lookup_key": STRIPE_PRICE_LOOKUP},
-            managed_payments={"enabled": True},
-        )
+        # Explicit payment_method_types=['card'] disables Link auth ("Confirm it's you" loop)
+        session = stripe.checkout.Session.create(**common_kwargs)
     except stripe.error.InvalidRequestError as e:
-        msg = (getattr(e, "user_message", "") or "").lower()
-        if "managed payments" in msg or "ineligible" in msg:
-            session = stripe.checkout.Session.create(
-                line_items=[{"price": price.id, "quantity": 1}],
-                mode="subscription",
-                success_url=f"{payload.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=f"{payload.origin_url}/payment/cancel",
-                customer_email=user["email"],
-                metadata={"user_id": user["id"], "lookup_key": STRIPE_PRICE_LOOKUP},
-                automatic_tax={"enabled": True},
-                billing_address_collection="required",
-            )
-        else:
-            raise HTTPException(500, f"Stripe error: {e}")
+        raise HTTPException(500, f"Stripe error: {e}")
 
     await db.payment_transactions.insert_one({
         "session_id": session.id,

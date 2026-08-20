@@ -50,10 +50,15 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **[2026-02-19]** Analytics scan tracciate automaticamente su prima scansione valida (user/negozio/sconto/timestamp)
 - **[2026-02-19]** Bug fix: rimossi negozi TEST_ dal QA + trim automatico whitespace su shop_name/title/description/terms + validazione 422 per campi vuoti
 - **[2026-02-19]** Auto-enhancement foto client-side: al caricamento, Canvas applica automaticamente luminosità +15%, contrasto +10%, saturazione +15%, sharpening (kernel 3x3 anti-mosso), resize max 1200px, JPEG q0.85. Anteprima immediata con badge "Foto ottimizzata automaticamente per la homepage!". Componente `PhotoEnhancer` riutilizzabile.
+- **[2026-02-20]** Bug fix Stripe (Francesco): `POST /api/subscription/cancel` ora annulla anche su Stripe (prima cancellava solo nel DB → utenti ancora addebitati). `POST /api/payments/checkout` crea/riusa Stripe Customer senza email + forza `payment_method_types=["card"]` per bypassare il loop OTP "Confirm it's you" di Stripe Link che bloccava i re-iscritti.
+- **[2026-02-20]** Libreria 100 immagini default (10 categorie × 10): `backend/default_images.py` con URL Unsplash CDN 800x450 verificati (Ristoranti, Pizzerie, Palestre, Padel, Calcetto, Meccanici, Bar, Parrucchieri, Abbigliamento, Alimentari). Endpoint `GET /api/default-images` e componente `DefaultImagePicker.jsx` con dialog tab-based sul form MerchantDiscount.
 
 ## Prioritized Backlog
-- **P1**: Real Stripe integration (currently mocked).
-- **P1**: Merchant profile page (edit shop image, description, address).
+- **P0**: PayPal Subscriptions integration (piano ricorrente €3/mese Sandbox) — richiede CLIENT_ID + CLIENT_SECRET da https://developer.paypal.com/dashboard/applications/sandbox
+- **P1**: Connect Stripe live (currently Sandbox)
+- **P1**: Iubenda placeholder → real customer IDs
+- **P1**: Geolocalizza Utente (map centered on user location + nearest first)
+- **P1**: Provider Email (Resend) per recovery token e notifiche approvazione
 - **P2**: Client saved/favoriti discounts.
 - **P2**: Mappa Roma con quartieri interattivi.
 - **P2**: Notifiche nuovi sconti nella tua zona.
