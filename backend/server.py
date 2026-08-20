@@ -18,6 +18,8 @@ import hashlib
 import json as _json
 import stripe
 import jwt
+from email_service import send_password_reset, send_merchant_approved, send_merchant_rejected
+import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -498,12 +500,17 @@ async def forgot_password(payload: ForgotIn):
     await db.users.update_one({"id": u["id"]}, {"$set": {
         "reset_token": token, "reset_expires": expires.isoformat(),
     }})
-    # MVP: return token directly since no email provider is configured
+    # Invia email via Resend (no-op se non configurato); il token/link resta anche in risposta
+    # come fallback finché il provider è in sandbox.
+    try:
+        await send_password_reset(u["email"], u.get("name") or "utente", token)
+    except Exception as e:
+        logging.warning(f"forgot-password email send failed: {e}")
     return {
         "ok": True,
-        "message": "Recupero attivato. Copia il codice qui sotto per resettare la password.",
+        "message": "Recupero attivato. Controlla la tua email (o usa il codice qui sotto).",
         "reset_token": token,
-        "reset_link": f"{os.environ.get('FRONTEND_URL','')}/reset-password?token={token}",
+        "reset_link": f"{os.environ.get('APP_URL', os.environ.get('FRONTEND_URL',''))}/reset-password?token={token}",
     }
 
 
@@ -741,6 +748,11 @@ async def cancel_sub(user: dict = Depends(require_client)):
                 stripe.Subscription.cancel(sid)
             except Exception as e:
                 logging.warning(f"Stripe cancel failed for {sid}: {e}")
+        elif s.get("provider") == "paypal" and s.get("paypal_subscription_id"):
+            try:
+                await paypal_service.cancel_subscription(s["paypal_subscription_id"], "User requested cancel")
+            except Exception as e:
+                logging.warning(f"PayPal cancel failed for {s['paypal_subscription_id']}: {e}")
     await db.subscriptions.update_many(
         {"user_id": user["id"], "status": "active"},
         {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
@@ -882,6 +894,101 @@ async def stripe_webhook(request: Request):
         await db.subscriptions.update_many(
             {"stripe_subscription_id": sub_id, "status": "active"},
             {"$set": {"status": "cancelled"}}
+        )
+    return {"status": "ok"}
+
+
+# ---------- PayPal Subscriptions (€3/mese ricorrente) ----------
+class PayPalActivateIn(BaseModel):
+    subscription_id: str
+
+
+@api.get("/paypal/config")
+async def paypal_config():
+    """Ritorna client_id + plan_id per il frontend (PayPal Buttons SDK)."""
+    if not paypal_service.is_configured():
+        return {"enabled": False}
+    try:
+        plan_id = await paypal_service.ensure_plan()
+    except Exception as e:
+        logging.warning(f"PayPal plan setup failed: {e}")
+        return {"enabled": False, "error": "plan_setup_failed"}
+    return {
+        "enabled": True,
+        "client_id": paypal_service.PAYPAL_CLIENT_ID,
+        "plan_id": plan_id,
+        "mode": paypal_service.PAYPAL_MODE,
+    }
+
+
+@api.post("/paypal/activate")
+async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(require_client)):
+    """Chiamato dal frontend dopo `onApprove` di PayPal Buttons. Verifica lo stato reale
+    su PayPal e crea la subscription attiva localmente."""
+    if not paypal_service.is_configured():
+        raise HTTPException(400, "PayPal non configurato")
+    try:
+        sub = await paypal_service.get_subscription(payload.subscription_id)
+    except Exception as e:
+        raise HTTPException(400, f"Impossibile verificare la sottoscrizione: {e}")
+    pp_status = sub.get("status")
+    if pp_status not in ("ACTIVE", "APPROVED", "APPROVAL_PENDING"):
+        raise HTTPException(400, f"Stato sottoscrizione PayPal non valido: {pp_status}")
+    now = datetime.now(timezone.utc)
+    end = now + timedelta(days=30)
+    # Deactivate old actives
+    await db.subscriptions.update_many(
+        {"user_id": user["id"], "status": "active"},
+        {"$set": {"status": "replaced"}}
+    )
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "plan": "monthly",
+        "status": "active",
+        "price_eur": 3.00,
+        "start_date": now.isoformat(),
+        "end_date": end.isoformat(),
+        "paypal_subscription_id": payload.subscription_id,
+        "provider": "paypal",
+    }
+    await db.subscriptions.insert_one(doc)
+    return {"subscription": {k: v for k, v in doc.items() if k != "_id"}}
+
+
+@api.post("/paypal/webhook")
+async def paypal_webhook(request: Request):
+    body = await request.body()
+    try:
+        event = _json.loads(body.decode() or "{}")
+    except Exception:
+        raise HTTPException(400, "Body non JSON")
+    # Verifica firma se abbiamo il webhook id configurato
+    try:
+        ok = await paypal_service.verify_webhook(dict(request.headers), event)
+        if not ok:
+            raise HTTPException(400, "Firma webhook non valida")
+    except paypal_service.PayPalNotConfigured:
+        raise HTTPException(400, "PayPal non configurato")
+    etype = event.get("event_type", "")
+    resource = event.get("resource", {})
+    sub_id = resource.get("id") or resource.get("billing_agreement_id")
+    if not sub_id:
+        return {"status": "ignored"}
+    if etype == "BILLING.SUBSCRIPTION.ACTIVATED":
+        # nessuna azione se già attiva; se stiamo aspettando l'attivazione da /paypal/activate,
+        # potrebbe non esistere ancora — in tal caso ignoriamo (verrà creata da /paypal/activate)
+        await db.subscriptions.update_many(
+            {"paypal_subscription_id": sub_id, "status": {"$ne": "active"}},
+            {"$set": {"status": "active"}}
+        )
+    elif etype in ("BILLING.SUBSCRIPTION.CANCELLED",
+                   "BILLING.SUBSCRIPTION.SUSPENDED",
+                   "BILLING.SUBSCRIPTION.EXPIRED",
+                   "PAYMENT.SALE.DENIED"):
+        await db.subscriptions.update_many(
+            {"paypal_subscription_id": sub_id, "status": "active"},
+            {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
         )
     return {"status": "ok"}
 
@@ -1261,6 +1368,13 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
     d = await db.discounts.find_one({"id": discount_id})
+    # Notifica il commerciante via email
+    try:
+        m = await db.users.find_one({"id": d.get("merchant_id")})
+        if m and m.get("email"):
+            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "")
+    except Exception as e:
+        logging.warning(f"approve email failed: {e}")
     return {"discount": await enrich_discount(d)}
 
 
@@ -1274,6 +1388,13 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
     }})
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
+    try:
+        d = await db.discounts.find_one({"id": discount_id})
+        m = await db.users.find_one({"id": d.get("merchant_id")}) if d else None
+        if m and m.get("email"):
+            await send_merchant_rejected(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", payload.reason or "")
+    except Exception as e:
+        logging.warning(f"reject email failed: {e}")
     return {"ok": True}
 
 

@@ -1,13 +1,37 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "@/lib/api";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, MapPin, ArrowRight, LocateFixed } from "lucide-react";
 
 const ROME_CENTER = [41.8955, 12.4823];
+
+// Haversine distance in km
+function haversineKm(a, b) {
+  if (!a || !b) return Infinity;
+  const R = 6371;
+  const [lat1, lon1] = a;
+  const [lat2, lon2] = b;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+// Ricenter helper — usa useMap per aggiornare la posizione della mappa
+function Recenter({ position, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) map.flyTo(position, zoom ?? map.getZoom(), { duration: 0.8 });
+  }, [position, zoom, map]);
+  return null;
+}
 
 // Custom marker icon with fucsia glow
 const buildIcon = (percent) => L.divIcon({
@@ -40,6 +64,27 @@ export default function MapView() {
   const [category, setCategory] = useState("");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userPos, setUserPos] = useState(null); // [lat, lng]
+  const [geoStatus, setGeoStatus] = useState("idle"); // idle | requesting | granted | denied | error
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus("error");
+      return;
+    }
+    setGeoStatus("requesting");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setGeoStatus("granted");
+      },
+      () => setGeoStatus("denied"),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    );
+  };
+
+  // richiedi posizione al primo mount (silenzioso — il browser mostra il prompt)
+  useEffect(() => { requestLocation(); }, []);
 
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
@@ -60,10 +105,19 @@ export default function MapView() {
     return () => clearTimeout(t);
   }, [zone, category, q]);
 
+  // Ordina per distanza se disponiamo della posizione utente
+  const sortedDiscounts = useMemo(() => {
+    if (!userPos) return discounts;
+    return [...discounts]
+      .map((d) => ({ ...d, _distKm: haversineKm(userPos, [d.merchant.lat, d.merchant.lng]) }))
+      .sort((a, b) => a._distKm - b._distKm);
+  }, [discounts, userPos]);
+
   const stats = useMemo(() => ({
-    count: discounts.length,
-    maxOff: Math.max(0, ...discounts.map(d => d.percent_off || 0)),
-  }), [discounts]);
+    count: sortedDiscounts.length,
+    maxOff: Math.max(0, ...sortedDiscounts.map(d => d.percent_off || 0)),
+    nearest: userPos && sortedDiscounts[0] ? sortedDiscounts[0]._distKm : null,
+  }), [sortedDiscounts, userPos]);
 
   return (
     <main data-testid="map-page" className="min-h-[calc(100vh-72px)] text-white">
@@ -86,7 +140,31 @@ export default function MapView() {
       <div className="mx-auto max-w-7xl px-6 pt-8 pb-4">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">Sconti sulla mappa</div>
         <h1 className="mt-2 font-serif text-5xl">Roma <span className="text-grad">a colpo d'occhio</span></h1>
-        <p className="mt-2 text-white/60">{stats.count} sconti attivi · fino a <span className="text-neon font-bold">−{stats.maxOff}%</span></p>
+        <p className="mt-2 text-white/60">
+          {stats.count} sconti attivi · fino a <span className="text-neon font-bold">−{stats.maxOff}%</span>
+          {stats.nearest != null && (
+            <> · più vicino a <span className="text-ciano font-bold">{stats.nearest.toFixed(1)} km</span></>
+          )}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <Button
+            data-testid="locate-me-btn"
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={requestLocation}
+            className="rounded-full border-ciano/50 bg-ciano/10 text-ciano hover:bg-ciano/20 hover:text-white"
+          >
+            <LocateFixed size={12} className="mr-1.5" />
+            {geoStatus === "granted" ? "Aggiorna posizione" : "Trova sconti vicino a me"}
+          </Button>
+          {geoStatus === "denied" && (
+            <span className="text-yellow-300/80">Posizione negata — abilitala nel browser per vedere gli sconti più vicini.</span>
+          )}
+          {geoStatus === "requesting" && (
+            <span className="text-white/50">Rilevo posizione…</span>
+          )}
+        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-6 pb-4 flex flex-col gap-3 md:flex-row">
@@ -128,7 +206,17 @@ export default function MapView() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <ZoomControl position="bottomright" />
-            {discounts.map((d) => (
+            {userPos && <Recenter position={userPos} zoom={14} />}
+            {userPos && (
+              <CircleMarker
+                center={userPos}
+                radius={9}
+                pathOptions={{ color: "#00E5FF", fillColor: "#00E5FF", fillOpacity: 0.9, weight: 3 }}
+              >
+                <Popup>La tua posizione</Popup>
+              </CircleMarker>
+            )}
+            {sortedDiscounts.map((d) => (
               <Marker
                 key={d.id}
                 position={[d.merchant.lat, d.merchant.lng]}
@@ -149,6 +237,7 @@ export default function MapView() {
                     <div className="p-3">
                       <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ciano">
                         <MapPin size={10} /> {d.merchant.zone} · {d.merchant.category}
+                        {d._distKm != null && <span className="text-white/60">· {d._distKm.toFixed(1)} km</span>}
                       </div>
                       <div className="mt-1 font-serif text-lg text-white leading-tight group-hover:text-fucsia transition">
                         {d.title}

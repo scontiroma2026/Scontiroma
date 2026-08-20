@@ -52,13 +52,17 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **[2026-02-19]** Auto-enhancement foto client-side: al caricamento, Canvas applica automaticamente luminosità +15%, contrasto +10%, saturazione +15%, sharpening (kernel 3x3 anti-mosso), resize max 1200px, JPEG q0.85. Anteprima immediata con badge "Foto ottimizzata automaticamente per la homepage!". Componente `PhotoEnhancer` riutilizzabile.
 - **[2026-02-20]** Bug fix Stripe (Francesco): `POST /api/subscription/cancel` ora annulla anche su Stripe (prima cancellava solo nel DB → utenti ancora addebitati). `POST /api/payments/checkout` crea/riusa Stripe Customer senza email + forza `payment_method_types=["card"]` per bypassare il loop OTP "Confirm it's you" di Stripe Link che bloccava i re-iscritti.
 - **[2026-02-20]** Libreria 100 immagini default (10 categorie × 10): `backend/default_images.py` con URL Unsplash CDN 800x450 verificati (Ristoranti, Pizzerie, Palestre, Padel, Calcetto, Meccanici, Bar, Parrucchieri, Abbigliamento, Alimentari). Endpoint `GET /api/default-images` e componente `DefaultImagePicker.jsx` con dialog tab-based sul form MerchantDiscount.
+- **[2026-02-20]** Resend integration (placeholder key): `backend/email_service.py` con send async non-blocking, template HTML dark theme. Wired su `POST /auth/forgot` (mail di recovery), `POST /admin/discounts/:id/approve` e `/reject` (notifica merchant). Se `RESEND_API_KEY` non è settata, log-only no-op.
+- **[2026-02-20]** PayPal Subscriptions Sandbox (placeholder keys): `backend/paypal_service.py` con OAuth + bootstrap idempotente Product+Plan €3/mese EUR, endpoint `GET /api/paypal/config`, `POST /api/paypal/activate`, `POST /api/paypal/webhook` (gestisce ACTIVATED/CANCELLED/SUSPENDED/EXPIRED/PAYMENT_DENIED). Frontend `Subscribe.jsx` con tab Carta/PayPal e componente `PayPalCheckout.jsx` (`@paypal/react-paypal-js`).
+- **[2026-02-20]** Geolocalizzazione utente: `MapView.jsx` chiede posizione al mount, centra la mappa sul pin ciano dell'utente e ordina gli sconti per distanza (Haversine). Anche `Discounts.jsx` mostra la griglia ordinata "dal più vicino". Pulsante "Aggiorna posizione".
 
 ## Prioritized Backlog
-- **P0**: PayPal Subscriptions integration (piano ricorrente €3/mese Sandbox) — richiede CLIENT_ID + CLIENT_SECRET da https://developer.paypal.com/dashboard/applications/sandbox
+- **P0**: Sostituire i placeholder in `.env` con chiavi reali → **PAYPAL_CLIENT_ID/PAYPAL_SECRET** (developer.paypal.com sandbox) e **RESEND_API_KEY** (resend.com); poi creare il webhook PayPal e mettere il suo ID in `PAYPAL_WEBHOOK_ID`.
+- **P1**: Google Maps API (sostituire Leaflet+OSM) — richiede API KEY + carta su Google Cloud.
 - **P1**: Connect Stripe live (currently Sandbox)
 - **P1**: Iubenda placeholder → real customer IDs
-- **P1**: Geolocalizza Utente (map centered on user location + nearest first)
-- **P1**: Provider Email (Resend) per recovery token e notifiche approvazione
+- **P2**: Filtri "nel raggio di X km" sulla mappa
+- **P2**: Recupero credenziali admin (via email + eventuale master password reset)
 - **P2**: Client saved/favoriti discounts.
 - **P2**: Mappa Roma con quartieri interattivi.
 - **P2**: Notifiche nuovi sconti nella tua zona.

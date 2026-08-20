@@ -2,7 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, LocateFixed } from "lucide-react";
+
+function haversineKm(a, b) {
+  if (!a || !b) return Infinity;
+  const R = 6371;
+  const [lat1, lon1] = a; const [lat2, lon2] = b;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
 
 export default function Discounts() {
   const [discounts, setDiscounts] = useState([]);
@@ -12,6 +22,19 @@ export default function Discounts() {
   const [category, setCategory] = useState("");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userPos, setUserPos] = useState(null);
+  const [geoStatus, setGeoStatus] = useState("idle");
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) return setGeoStatus("error");
+    setGeoStatus("requesting");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setUserPos([pos.coords.latitude, pos.coords.longitude]); setGeoStatus("granted"); },
+      () => setGeoStatus("denied"),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    );
+  };
+  useEffect(() => { requestLocation(); }, []);
 
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
@@ -32,7 +55,13 @@ export default function Discounts() {
     return () => clearTimeout(t);
   }, [zone, category, q]);
 
-  const count = discounts.length;
+  const sorted = useMemo(() => {
+    if (!userPos) return discounts;
+    return [...discounts]
+      .map((d) => ({ ...d, _distKm: (d.merchant?.lat && d.merchant?.lng) ? haversineKm(userPos, [d.merchant.lat, d.merchant.lng]) : Infinity }))
+      .sort((a, b) => a._distKm - b._distKm);
+  }, [discounts, userPos]);
+  const count = sorted.length;
 
   return (
     <main data-testid="discounts-page" className="mx-auto max-w-7xl px-6 py-12">
@@ -73,9 +102,27 @@ export default function Discounts() {
         </select>
       </div>
 
-      <div className="mb-4 text-sm text-white/60">
-        {loading ? "Caricamento…" : <span data-testid="results-count">{count} sconti trovati</span>}
+      <div className="mb-4 flex items-center justify-between text-sm text-white/60">
+        <div>
+          {loading ? "Caricamento…" : <span data-testid="results-count">{count} sconti trovati</span>}
+          {userPos && !loading && <span className="ml-2 text-ciano">· ordinati per distanza</span>}
+        </div>
+        <button
+          type="button"
+          data-testid="discounts-locate-btn"
+          onClick={requestLocation}
+          className="inline-flex items-center gap-1.5 rounded-full border border-ciano/40 bg-ciano/10 text-ciano px-3 py-1.5 text-xs hover:bg-ciano/20 hover:text-white transition"
+        >
+          <LocateFixed size={12} />
+          {geoStatus === "granted" ? "Aggiorna posizione" : "Trova quelli vicini a me"}
+        </button>
       </div>
+
+      {geoStatus === "denied" && (
+        <div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-100">
+          Posizione negata — abilitala nel browser per vedere prima gli sconti più vicini.
+        </div>
+      )}
 
       {!loading && count === 0 && (
         <div className="rounded-xl border border-warm bg-white/5 p-10 text-center text-white/70">
@@ -84,7 +131,7 @@ export default function Discounts() {
       )}
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {discounts.map((d) => <DiscountCard key={d.id} discount={d} />)}
+        {sorted.map((d) => <DiscountCard key={d.id} discount={d} />)}
       </div>
     </main>
   );

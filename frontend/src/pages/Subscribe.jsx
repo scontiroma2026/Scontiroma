@@ -4,16 +4,17 @@ import api, { formatApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Check, Shield, Sparkles, Zap } from "lucide-react";
+import { Check, Shield, Sparkles, Zap, CreditCard } from "lucide-react";
+import PayPalCheckout from "@/components/PayPalCheckout";
 
 export default function Subscribe() {
   const nav = useNavigate();
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [method, setMethod] = useState("card"); // "card" | "paypal"
 
-  useEffect(() => {
-    api.get("/subscription/me").then((r) => setSub(r.data.subscription));
-  }, []);
+  const refresh = () => api.get("/subscription/me").then((r) => setSub(r.data.subscription));
+  useEffect(() => { refresh(); }, []);
 
   const startCheckout = async () => {
     setLoading(true);
@@ -89,18 +90,48 @@ export default function Subscribe() {
 
             <div className="mt-8 rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white/60 flex items-center gap-2">
               <Shield size={14} className="text-ciano" />
-              Pagamento sicuro con Stripe · Modalità test (usa carta 4242 4242 4242 4242)
+              Pagamento sicuro con Stripe o PayPal · Cancelli quando vuoi, senza penali
             </div>
 
-            <Button
-              data-testid="subscribe-btn"
-              onClick={startCheckout}
-              disabled={loading}
-              size="lg"
-              className="mt-6 w-full grad-fucsia-viola glow-fucsia text-white font-bold hover:scale-[1.02] transition rounded-full py-6 text-base"
-            >
-              {loading ? "Reindirizzamento a Stripe…" : "Paga con Stripe → €2,99/mese"}
-            </Button>
+            {/* Tab metodo di pagamento */}
+            <div className="mt-6 grid grid-cols-2 gap-2 rounded-full bg-black/40 p-1 border border-white/10">
+              <button
+                type="button"
+                data-testid="tab-card"
+                onClick={() => setMethod("card")}
+                className={`rounded-full py-2 text-sm font-medium flex items-center justify-center gap-2 transition ${
+                  method === "card" ? "bg-white text-black" : "text-white/70 hover:text-white"
+                }`}
+              >
+                <CreditCard size={14} /> Carta (Stripe)
+              </button>
+              <button
+                type="button"
+                data-testid="tab-paypal"
+                onClick={() => setMethod("paypal")}
+                className={`rounded-full py-2 text-sm font-medium flex items-center justify-center gap-2 transition ${
+                  method === "paypal" ? "bg-[#FFC439] text-[#003087]" : "text-white/70 hover:text-white"
+                }`}
+              >
+                <span className="font-serif font-bold">Pay<span className="text-[#009cde]">Pal</span></span>
+              </button>
+            </div>
+
+            {method === "card" ? (
+              <Button
+                data-testid="subscribe-btn"
+                onClick={startCheckout}
+                disabled={loading}
+                size="lg"
+                className="mt-4 w-full grad-fucsia-viola glow-fucsia text-white font-bold hover:scale-[1.02] transition rounded-full py-6 text-base"
+              >
+                {loading ? "Reindirizzamento a Stripe…" : "Paga con Stripe → €2,99/mese"}
+              </Button>
+            ) : (
+              <div className="mt-4">
+                <PayPalCheckout onSuccess={refresh} />
+              </div>
+            )}
           </>
         )}
       </Card>
