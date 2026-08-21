@@ -332,7 +332,14 @@ async def logout(response: Response):
 
 @api.get("/auth/me")
 async def me(user: dict = Depends(get_current_user)):
-    return {"user": user}
+    # Aggiunge flag abbonamento attivo (usato dal frontend per mostrare il contatore
+    # vendite del mese sulle card).
+    has_sub = False
+    if user.get("role") == "client":
+        has_sub = await db.subscriptions.count_documents({
+            "user_id": user["id"], "status": "active",
+        }) > 0
+    return {"user": {**user, "has_active_subscription": has_sub}}
 
 
 # ---------- PIN & WebAuthn ----------
@@ -633,6 +640,16 @@ async def enrich_discount(d: dict) -> dict:
             d["percent_off"] = round((saving / d["original_price"]) * 100)
         except Exception:
             d["percent_off"] = 0
+    # Contatore mensile scansioni (redemption) — visibile agli abbonati sul card
+    try:
+        month_start_iso = _month_start_iso()
+        d["sales_this_month"] = await db.redemptions.count_documents({
+            "discount_id": d.get("id"),
+            "status": "redeemed",
+            "redeemed_at": {"$gte": month_start_iso},
+        })
+    except Exception:
+        d["sales_this_month"] = 0
     # Include approval + lock info for merchant/admin views
     d.setdefault("approval_status", "approved")
     d.setdefault("locked_month", None)
@@ -642,6 +659,43 @@ async def enrich_discount(d: dict) -> dict:
                               and d.get("locked_month") == current_month_key()
                               and not d.get("force_editable", False))
     return d
+
+
+def _month_start_iso() -> str:
+    now = datetime.now(timezone.utc)
+    return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+
+@api.get("/merchants/top")
+async def top_merchants(limit: int = 3):
+    """Top N commercianti per numero di scansioni riuscite (redemption) del mese corrente."""
+    limit = max(1, min(limit, 20))
+    month_start = _month_start_iso()
+    pipeline = [
+        {"$match": {"status": "redeemed", "redeemed_at": {"$gte": month_start}}},
+        {"$group": {"_id": "$merchant_id", "sales": {"$sum": 1}}},
+        {"$sort": {"sales": -1}},
+        {"$limit": limit},
+    ]
+    top = await db.redemptions.aggregate(pipeline).to_list(limit)
+    out = []
+    for row in top:
+        mid = row["_id"]
+        if not mid:
+            continue
+        m = await db.users.find_one({"id": mid, "role": "merchant"})
+        if not m:
+            continue
+        # Sconto attivo attuale del merchant
+        d = await db.discounts.find_one({
+            "merchant_id": mid, "active": True, "approval_status": "approved",
+        })
+        if not d:
+            continue
+        item = await enrich_discount(d)
+        item["sales_this_month"] = row["sales"]
+        out.append(item)
+    return {"merchants": out}
 
 
 @api.get("/discounts")

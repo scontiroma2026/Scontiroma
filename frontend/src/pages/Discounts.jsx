@@ -24,6 +24,7 @@ export default function Discounts() {
   const [loading, setLoading] = useState(true);
   const [userPos, setUserPos] = useState(null);
   const [geoStatus, setGeoStatus] = useState("idle");
+  const [topDiscounts, setTopDiscounts] = useState([]);
 
   const requestLocation = () => {
     if (!navigator.geolocation) return setGeoStatus("error");
@@ -39,6 +40,7 @@ export default function Discounts() {
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
+    api.get("/merchants/top?limit=3").then((r) => setTopDiscounts(r.data.merchants || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -101,6 +103,30 @@ export default function Discounts() {
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
+
+      {topDiscounts.length > 0 && (
+        <div data-testid="top-shops-section" className="mb-10 rounded-2xl border border-fucsia/20 bg-gradient-to-br from-fucsia/5 to-transparent p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🏆</span>
+                <h2 className="font-serif text-2xl text-white">I più richiesti questo mese</h2>
+              </div>
+              <p className="text-sm text-white/60 mt-1">Le 3 offerte più utilizzate dagli abbonati a Roma</p>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {topDiscounts.map((d, i) => (
+              <div key={d.id} className="relative">
+                <div className={`absolute -top-3 -left-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-white font-bold shadow-lg ${i === 0 ? "bg-yellow-500" : i === 1 ? "bg-zinc-300 text-zinc-900" : "bg-orange-500"}`}>
+                  {i + 1}°
+                </div>
+                <DiscountCard discount={d} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-4 flex items-center justify-between text-sm text-white/60">
         <div>

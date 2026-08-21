@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { MapPin, ArrowRight, Zap } from "lucide-react";
+import { MapPin, ArrowRight, Zap, TrendingUp } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DiscountCard({ discount }) {
   const m = discount.merchant || {};
   const savings = (discount.original_price - discount.discounted_price).toFixed(2);
+  const { user } = useAuth();
+  const isSubscriber = user?.role === "client" && user?.has_active_subscription === true;
+  const sales = discount.sales_this_month ?? 0;
   return (
     <Link to={`/discounts/${discount.id}`} data-testid={`discount-card-${discount.id}`} className="group block">
       <Card className="overflow-hidden border-white/10 bg-white/5 backdrop-blur transition-all hover:-translate-y-1 hover:border-fucsia hover:shadow-[0_0_40px_rgba(255,46,147,0.3)]">
@@ -19,6 +23,14 @@ export default function DiscountCard({ discount }) {
           <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full grad-fucsia-viola px-3 py-1.5 text-xs font-bold text-white shadow-lg glow-fucsia">
             <Zap size={12} /> −{discount.percent_off}%
           </div>
+          {isSubscriber && sales > 0 && (
+            <div
+              data-testid={`sales-counter-${discount.id}`}
+              className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/70 backdrop-blur px-2.5 py-1 text-xs font-semibold text-neon border border-neon/30"
+            >
+              <TrendingUp size={12} /> +{sales} venduti questo mese
+            </div>
+          )}
         </div>
         <div className="space-y-3 p-5">
           <div className="flex items-center justify-between text-xs">

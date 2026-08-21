@@ -1,0 +1,25 @@
+{
+  "summary": "Monthly sales counter feature validated end-to-end. New /api/merchants/top?limit=3 returns enriched discounts ordered by this-month redeemed counts; /api/discounts injects sales_this_month per discount; /api/auth/me now exposes has_active_subscription (true for subscribed clients, false otherwise, 401 for anon). E2E seeding of 4 redemptions in redemptions collection (redeemed status, current-month redeemed_at) correctly bumped a discount to #1 on /merchants/top and increased its sales_this_month. Old redemptions and pending redemptions are correctly ignored. Frontend smoke: DiscountCard renders data-testid=sales-counter-{id} ONLY for subscribed users (francesco: 4 badges rendered '+X venduti questo mese'); anonymous session shows 0 badges. /discounts page renders data-testid=top-shops-section with 1°/2°/3° badges. All 44 previous regression tests still green (1 skipped).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_sales_counter.py",
+    "/app/test_reports/pytest/sales_counter.xml",
+    "/app/test_reports/discounts_subscribed.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py L664 `_month_start_iso()` compares stored redeemed_at strings via $gte — safe here because redeemed_at is always serialized with datetime.isoformat() including tzinfo (see L1286, L1300, L1321). Consider adding a doc-comment on the invariant so future code using naive datetimes doesn't break the counter.",
+    "enrich_discount now performs an extra db.redemptions.count_documents call per discount in the /discounts list (N+1). Fine for current seed size (<20 discounts) but should be replaced with a single $lookup or an aggregation once catalog grows (>100 discounts).",
+    "/api/merchants/top loops sequentially awaiting users + discounts inside the pipeline — could be batched with $lookup for lower latency, but current perf is acceptable.",
+    "server.py still 1997 lines with deprecated @app.on_event; already flagged in iter_13, non-blocking."
+  ],
+  "updated_files": ["/app/backend/tests/test_sales_counter.py (new)"],
+  "success_rate": {"backend": "100% (52/52 passed, 1 skipped)", "frontend": "100%"},
+  "test_credentials": "francesco@gmail.com / francesco123 (subscribed); admin@scontiroma.it / admin123 / master ValeRoma2026",
+  "seed_data_creation": "test_sales_counter.py::TestE2ESalesCounter inserts TEST_-prefixed redemptions (current month + one 2024-01 + one pending) directly via motor-compatible collection, and always deletes them in finally; also creates and removes a TEST_nosub_* client user.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New test file /app/backend/tests/test_sales_counter.py covers sales-counter + top-merchants + has_active_subscription. Requires MONGO_URL, DB_NAME, REACT_APP_BACKEND_URL env vars (auto-loaded from /app/backend/.env). Frontend rule: sales-counter-{id} badge shows only when user.role='client' AND user.has_active_subscription===true AND discount.sales_this_month>0. Top section is public and always renders when /merchants/top returns >=1 shop.",
+  "rca of the issue": "N/A — feature acceptance, no bug."
+}
