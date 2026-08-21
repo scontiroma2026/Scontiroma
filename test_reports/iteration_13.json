@@ -1,0 +1,27 @@
+{
+  "summary": "SEC-001 fix validated end-to-end. POST /api/auth/forgot no longer leaks reset_token/reset_link. Response is identical for existing vs non-existent emails (anti-enumeration). Token is still persisted in MongoDB and delivery is attempted via Resend (logs show [email:error] due to sandbox restriction — expected). /auth/reset regression still functional. Frontend ForgotPassword page shows only generic message + spam info box; token/copy/'Imposta nuova password' UI fully removed. All 44 backend regression tests + 1 skip pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_sec001_forgot_password.py",
+    "/app/test_reports/pytest/sec001_regression.xml",
+    "/app/test_reports/forgot_after_submit.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py L1734/L1748: `@app.on_event(startup/shutdown)` is deprecated in FastAPI — migrate to lifespan handlers (non-blocking).",
+    "server.py is 1943 lines — consider splitting by domain (auth, discounts, subscription, admin) for maintainability.",
+    "Pre-existing test env parsing bug in test_pin_auth_flow.py L19: it reads MONGO_URL from /app/backend/.env without stripping surrounding quotes, so running without MONGO_URL env set raises pymongo InvalidURI. Passes when env vars are exported. Not related to SEC-001 fix; recommend `.strip().strip('\"')` for robustness.",
+    "ForgotPassword.jsx still imports `Copy, Check` from lucide-react and defines an unused `copy()` helper referencing `result.reset_token` (dead code after SEC-001 fix). Remove to prevent future regression."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_sec001_forgot_password.py (new)"
+  ],
+  "success_rate": {"backend": "100% (44/44 passed, 1 skipped)", "frontend": "100%"},
+  "test_credentials": "francesco@gmail.com / francesco123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None (used existing seeded user).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New security test file /app/backend/tests/test_sec001_forgot_password.py covers: (1) no leak for existing email, (2) anti-enumeration equality with non-existent email, (3) reset_token persisted in Mongo, (4) full reset flow using DB-read token, (5) invalid token → 400/401, (6) login regression. Run with MONGO_URL and DB_NAME env vars set (see pre-existing parser quirk in test_pin_auth_flow.py). Resend fails in sandbox by design — inspect backend.err.log for [email:error] to confirm invoke.",
+  "rca of the issue": "Before the fix, /api/auth/forgot returned the plain `reset_token` and `reset_link` in the JSON response. Any actor who knew (or guessed) an email address could then call /api/auth/reset with that token and take over the account. Fix removes those fields from the response; token is only transmitted via out-of-band email (Resend). Response body is now identical for existing and non-existing emails, preventing user enumeration. Verified via 6 dedicated tests plus browser check of ForgotPassword.jsx UI."
+}

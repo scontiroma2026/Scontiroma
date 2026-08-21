@@ -53,22 +53,10 @@ export default function ForgotPassword() {
             <div className="rounded-xl border border-fucsia/30 bg-fucsia/5 p-4 text-sm text-white/80">
               {result.message}
             </div>
-            {result.reset_token && (
-              <>
-                <div>
-                  <Label className="text-white/80 text-xs uppercase">Codice temporaneo (MVP)</Label>
-                  <div className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-black/40 p-3">
-                    <code className="flex-1 font-mono text-xs text-ciano break-all">{result.reset_token}</code>
-                    <button onClick={copy} className="rounded-md bg-white/10 p-2 hover:bg-white/20">
-                      {copied ? <Check size={14} className="text-fucsia" /> : <Copy size={14} className="text-white" />}
-                    </button>
-                  </div>
-                </div>
-                <Link to={`/reset-password?token=${result.reset_token}`}>
-                  <Button className="w-full grad-fucsia-viola text-white rounded-full">Imposta nuova password →</Button>
-                </Link>
-              </>
-            )}
+            <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white/60">
+              <p>📧 Se questa email è registrata, riceverai un link per reimpostare la password entro pochi minuti.</p>
+              <p className="mt-2">Controlla anche la cartella spam. Il link scade dopo 1 ora.</p>
+            </div>
           </div>
         )}
 

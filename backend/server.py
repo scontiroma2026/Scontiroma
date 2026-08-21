@@ -551,30 +551,26 @@ async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Respons
 
 
 # ---------- Password recovery ----------
+GENERIC_RESET_MSG = "Se l'email è registrata, riceverai a breve un link per reimpostare la password."
+
+
 @api.post("/auth/forgot")
 async def forgot_password(payload: ForgotIn):
     email = payload.email.lower().strip()
     u = await db.users.find_one({"email": email})
-    # Return same response either way (no user enumeration), but include token for demo/MVP
-    if not u:
-        return {"ok": True, "message": "Se l'email esiste, riceverai le istruzioni."}
-    token = secrets.token_urlsafe(32)
-    expires = datetime.now(timezone.utc) + timedelta(hours=1)
-    await db.users.update_one({"id": u["id"]}, {"$set": {
-        "reset_token": token, "reset_expires": expires.isoformat(),
-    }})
-    # Invia email via Resend (no-op se non configurato); il token/link resta anche in risposta
-    # come fallback finché il provider è in sandbox.
-    try:
-        await send_password_reset(u["email"], u.get("name") or "utente", token)
-    except Exception as e:
-        logging.warning(f"forgot-password email send failed: {e}")
-    return {
-        "ok": True,
-        "message": "Recupero attivato. Controlla la tua email (o usa il codice qui sotto).",
-        "reset_token": token,
-        "reset_link": f"{os.environ.get('APP_URL', os.environ.get('FRONTEND_URL',''))}/reset-password?token={token}",
-    }
+    # Risposta identica sia se l'utente esiste sia se no (anti-enumeration).
+    # Il token viene SOLO inviato per email tramite Resend, MAI restituito nella response.
+    if u:
+        token = secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(hours=1)
+        await db.users.update_one({"id": u["id"]}, {"$set": {
+            "reset_token": token, "reset_expires": expires.isoformat(),
+        }})
+        try:
+            await send_password_reset(u["email"], u.get("name") or "utente", token)
+        except Exception as e:
+            logging.warning(f"forgot-password email send failed: {e}")
+    return {"ok": True, "message": GENERIC_RESET_MSG}
 
 
 @api.post("/auth/reset")
