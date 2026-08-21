@@ -31,6 +31,10 @@ BASE = "https://api-m.sandbox.paypal.com" if PAYPAL_MODE == "sandbox" else "http
 PLAN_LOOKUP_NAME = "Sconti Roma Monthly 3EUR"
 
 _cached_plan_id: Optional[str] = PAYPAL_PLAN_ID_ENV or None
+# Cache access token 5 min (PayPal tokens live ~9 hours; short cache avoids
+# burning auth quota on 30s health polls without risking staleness).
+_cached_token: Optional[str] = None
+_cached_token_exp: float = 0.0
 
 
 class PayPalNotConfigured(Exception):
@@ -47,6 +51,10 @@ def _require():
 
 
 async def _access_token() -> str:
+    global _cached_token, _cached_token_exp
+    import time as _t
+    if _cached_token and _cached_token_exp > _t.time() + 30:
+        return _cached_token
     _require()
     async with httpx.AsyncClient(timeout=15) as c:
         r = await c.post(
@@ -56,7 +64,10 @@ async def _access_token() -> str:
             headers={"Accept": "application/json"},
         )
         r.raise_for_status()
-        return r.json()["access_token"]
+        j = r.json()
+        _cached_token = j["access_token"]
+        _cached_token_exp = _t.time() + min(int(j.get("expires_in", 300)), 300)
+        return _cached_token
 
 
 async def _authed_headers() -> dict:

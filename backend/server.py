@@ -18,6 +18,8 @@ import hashlib
 import json as _json
 import stripe
 import jwt
+import asyncio
+import httpx
 from email_service import (
     send_password_reset,
     send_merchant_approved,
@@ -186,6 +188,7 @@ class RegisterIn(BaseModel):
     shop_name: Optional[str] = None
     zone: Optional[str] = None
     category: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class LoginIn(BaseModel):
@@ -287,6 +290,9 @@ async def register(payload: RegisterIn, response: Response):
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if payload.role == "merchant":
+        phone = (payload.phone or "").strip()
+        if not phone:
+            raise HTTPException(422, "Il numero di telefono è obbligatorio per i commercianti")
         doc.update({
             "shop_name": (payload.shop_name or payload.name or "").strip() or "Negozio",
             "zone": (payload.zone or "Centro Storico").strip(),
@@ -294,7 +300,7 @@ async def register(payload: RegisterIn, response: Response):
             "description": "",
             "address": "",
             "image_url": "",
-            "phone": "",
+            "phone": phone,
         })
     await db.users.insert_one(doc)
 
@@ -1170,19 +1176,45 @@ async def redemption_token(rid: str, user: dict = Depends(require_client)):
 
 
 # ---------- Public QR scan verification (no auth) ----------
+async def _log_scan(valid: bool, reason: str, redemption: Optional[dict] = None):
+    """Salva ogni scansione (soprattutto quelle fallite) per il registro frodi admin."""
+    try:
+        doc = {
+            "id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "valid": valid,
+            "reason": reason,
+            "redemption_id": redemption.get("id") if redemption else None,
+            "discount_id": redemption.get("discount_id") if redemption else None,
+            "merchant_id": redemption.get("merchant_id") if redemption else None,
+            "user_id": redemption.get("user_id") if redemption else None,
+        }
+        # Aggiungi shop_name pre-calcolato per il log admin (evita join a query)
+        if redemption and redemption.get("merchant_id"):
+            m = await db.users.find_one({"id": redemption["merchant_id"]})
+            if m:
+                doc["shop_name"] = m.get("shop_name") or m.get("name") or "-"
+        await db.qr_scans.insert_one(doc)
+    except Exception as e:
+        logging.warning(f"scan log failed: {e}")
+
+
 @api.get("/qr/verify")
 async def qr_verify_public(token: str):
     code, slot, hmac_tok = parse_rotating_code(token)
-    reason = None
     if slot is None or hmac_tok is None:
+        await _log_scan(False, "Formato codice non valido")
         return {"valid": False, "reason": "Formato codice non valido"}
     cur = current_slot()
     if abs(cur - slot) > 1:
+        await _log_scan(False, "QR code scaduto")
         return {"valid": False, "reason": "QR code scaduto"}
     if not hmac_lib.compare_digest(_rotating_hmac(code, slot), hmac_tok):
+        await _log_scan(False, "QR code manomesso")
         return {"valid": False, "reason": "QR code manomesso"}
     r = await db.redemptions.find_one({"code": code})
     if not r:
+        await _log_scan(False, "Codice non trovato")
         return {"valid": False, "reason": "Codice non trovato"}
     if r.get("status") == "redeemed":
         # If redeemed in same slot window (~40s), still show green as freshly scanned
@@ -1191,8 +1223,10 @@ async def qr_verify_public(token: str):
             if (datetime.now(timezone.utc) - ts).total_seconds() < ROTATION_WINDOW_SEC * 2:
                 pass  # allow re-display
             else:
+                await _log_scan(False, "Codice già utilizzato", r)
                 return {"valid": False, "reason": "Codice già utilizzato"}
         except Exception:
+            await _log_scan(False, "Codice già utilizzato", r)
             return {"valid": False, "reason": "Codice già utilizzato"}
     # Consume on first successful scan
     if r.get("status") == "pending":
@@ -1201,6 +1235,7 @@ async def qr_verify_public(token: str):
             {"$set": {"status": "redeemed",
                       "redeemed_at": datetime.now(timezone.utc).isoformat()}}
         )
+        await _log_scan(True, "OK", r)
     # Fetch enriched data
     disc = await db.discounts.find_one({"id": r.get("discount_id")})
     m = await db.users.find_one({"id": r.get("merchant_id")})
@@ -1717,6 +1752,180 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     client.close()
+
+
+# ---------- Reviews (client → private feedback) ----------
+class ReviewIn(BaseModel):
+    redemption_id: str
+    stars: int = Field(ge=1, le=5)
+    comment: Optional[str] = ""
+
+
+@api.get("/redemptions/mine")
+async def my_redemptions_v2(user: dict = Depends(require_client)):
+    """Lista sconti già utilizzati dall'utente con flag `reviewed`."""
+    reds = await db.redemptions.find({
+        "user_id": user["id"],
+        "status": "redeemed",
+    }).sort("redeemed_at", -1).to_list(200)
+    out = []
+    for r in reds:
+        review = await db.reviews.find_one({"redemption_id": r["id"], "user_id": user["id"]})
+        d = await db.discounts.find_one({"id": r.get("discount_id")})
+        m = await db.users.find_one({"id": r.get("merchant_id")})
+        out.append({
+            "id": r["id"],
+            "redeemed_at": r.get("redeemed_at"),
+            "discount_id": r.get("discount_id"),
+            "discount_title": d.get("title") if d else "-",
+            "shop_name": m.get("shop_name") if m else "-",
+            "reviewed": bool(review),
+            "stars": review.get("stars") if review else None,
+        })
+    return {"redemptions": out}
+
+
+@api.post("/reviews")
+async def create_review(payload: ReviewIn, user: dict = Depends(require_client)):
+    r = await db.redemptions.find_one({"id": payload.redemption_id, "user_id": user["id"]})
+    if not r:
+        raise HTTPException(404, "Redemption non trovata")
+    if r.get("status") != "redeemed":
+        raise HTTPException(400, "Non puoi recensire uno sconto non ancora utilizzato")
+    existing = await db.reviews.find_one({"redemption_id": r["id"], "user_id": user["id"]})
+    if existing:
+        raise HTTPException(400, "Hai già recensito questo sconto")
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "redemption_id": r["id"],
+        "discount_id": r.get("discount_id"),
+        "merchant_id": r.get("merchant_id"),
+        "stars": payload.stars,
+        "private_comment": (payload.comment or "").strip()[:1000],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.reviews.insert_one(doc)
+    return {"ok": True, "review": {k: v for k, v in doc.items() if k != "_id"}}
+
+
+@api.get("/reviews/shop/{merchant_id}")
+async def shop_reviews_summary(merchant_id: str):
+    """Solo aggregato pubblico (nessun commento) — usato per mostrare la media sull'app."""
+    cur = db.reviews.find({"merchant_id": merchant_id})
+    stars = [r["stars"] async for r in cur]
+    if not stars:
+        return {"count": 0, "avg": None}
+    return {"count": len(stars), "avg": round(sum(stars) / len(stars), 2)}
+
+
+# ---------- Admin — nuove sezioni ----------
+@api.get("/admin/merchants/{merchant_id}/discounts")
+async def admin_merchant_discounts(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Restituisce tutte le offerte (attive + storico + rifiutate) di un commerciante."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
+        raise HTTPException(404, "Commerciante non trovato")
+    cur = db.discounts.find({"merchant_id": merchant_id}).sort("created_at", -1)
+    items = []
+    async for d in cur:
+        d.pop("_id", None)
+        red_count = await db.redemptions.count_documents({"discount_id": d["id"]})
+        d["redemptions_count"] = red_count
+        items.append(d)
+    return {
+        "merchant": {
+            "id": m["id"], "email": m["email"], "name": m.get("name"),
+            "shop_name": m.get("shop_name"), "zone": m.get("zone"),
+            "category": m.get("category"), "phone": m.get("phone", ""),
+            "address": m.get("address", ""),
+        },
+        "discounts": items,
+    }
+
+
+@api.get("/admin/fraud-log")
+async def admin_fraud_log(user: dict = Depends(require_admin_master), limit: int = 200):
+    """Registro delle scansioni fallite (schermata rossa) per anti-frode."""
+    cur = db.qr_scans.find({"valid": False}).sort("timestamp", -1).limit(min(limit, 500))
+    out = []
+    async for s in cur:
+        s.pop("_id", None)
+        if not s.get("shop_name") and s.get("merchant_id"):
+            m = await db.users.find_one({"id": s["merchant_id"]})
+            s["shop_name"] = m.get("shop_name") if m else "-"
+        out.append(s)
+    return {"scans": out}
+
+
+@api.get("/admin/reviews")
+async def admin_reviews(user: dict = Depends(require_admin_master), limit: int = 500):
+    """Tutte le recensioni in ordine cronologico. Include commenti privati (visibili solo qui)."""
+    cur = db.reviews.find().sort("created_at", -1).limit(min(limit, 1000))
+    out = []
+    async for r in cur:
+        r.pop("_id", None)
+        u = await db.users.find_one({"id": r.get("user_id")})
+        m = await db.users.find_one({"id": r.get("merchant_id")})
+        d = await db.discounts.find_one({"id": r.get("discount_id")})
+        r["user_name"] = u.get("name") if u else "-"
+        r["user_email"] = u.get("email") if u else "-"
+        r["shop_name"] = m.get("shop_name") if m else "-"
+        r["merchant_phone"] = m.get("phone") if m else ""
+        r["discount_title"] = d.get("title") if d else "-"
+        out.append(r)
+    return {"reviews": out}
+
+
+@api.get("/admin/health")
+async def admin_health(user: dict = Depends(require_admin_master)):
+    """Stato di salute dei servizi critici (DB, Stripe, PayPal, Resend)."""
+    import time as _t
+    async def check_db():
+        t0 = _t.time()
+        try:
+            await db.command("ping")
+            return {"ok": True, "ms": round((_t.time()-t0)*1000)}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:100]}
+    async def check_stripe():
+        t0 = _t.time()
+        try:
+            await asyncio.to_thread(stripe.Balance.retrieve)
+            return {"ok": True, "ms": round((_t.time()-t0)*1000)}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:100]}
+    async def check_paypal():
+        if not paypal_service.is_configured():
+            return {"ok": False, "error": "non configurato", "warning": True}
+        t0 = _t.time()
+        try:
+            await paypal_service._access_token()
+            return {"ok": True, "ms": round((_t.time()-t0)*1000)}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:100]}
+    async def check_resend():
+        import email_service as _es
+        if not _es._configured:
+            return {"ok": False, "error": "non configurato", "warning": True}
+        t0 = _t.time()
+        try:
+            async with httpx.AsyncClient(timeout=6) as c:
+                r = await c.get("https://api.resend.com/domains",
+                                headers={"Authorization": f"Bearer {_es.RESEND_API_KEY}"})
+            return {"ok": r.status_code == 200, "ms": round((_t.time()-t0)*1000),
+                    **({"error": f"HTTP {r.status_code}"} if r.status_code != 200 else {})}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:100]}
+
+    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), check_resend())
+    return {
+        "db": results[0],
+        "stripe": results[1],
+        "paypal": results[2],
+        "resend": results[3],
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 # ---------- Include Router & CORS ----------

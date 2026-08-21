@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
+import HealthWidget from "@/components/admin/HealthWidget";
+import FraudLog from "@/components/admin/FraudLog";
+import ReviewsCenter from "@/components/admin/ReviewsCenter";
+import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,6 +23,8 @@ export default function AdminDashboard() {
   const [merchants, setMerchants] = useState([]);
   const [pending, setPending] = useState([]);
   const [tab, setTab] = useState("analytics");
+  const [selectedMerchantId, setSelectedMerchantId] = useState(null);
+  const [discountsOpen, setDiscountsOpen] = useState(false);
 
   // Add master token to api calls
   const hdrs = () => masterToken ? { headers: { "X-Admin-Master": masterToken } } : {};
@@ -144,9 +150,14 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
+      {/* Health widget */}
+      <div className="mb-4">
+        <HealthWidget />
+      </div>
+
       {/* Tabs */}
       <div className="mb-6 flex gap-2 border-b border-white/10 flex-wrap">
-        {[["analytics","Analytics"], ["pending", `Offerte in attesa (${pending.length})`], ["merchants",`Negozi (${merchants.length})`], ["log","Log completo"]].map(([k, l]) => (
+        {[["analytics","Analytics"], ["pending", `Offerte in attesa (${pending.length})`], ["merchants",`Negozi (${merchants.length})`], ["fraud","Registro Frodi"], ["reviews","Feedback"], ["log","Log completo"]].map(([k, l]) => (
           <button
             key={k}
             data-testid={`tab-${k}`}
@@ -155,6 +166,9 @@ export default function AdminDashboard() {
           >{l}</button>
         ))}
       </div>
+
+      {tab === "fraud" && <FraudLog />}
+      {tab === "reviews" && <ReviewsCenter />}
 
       {tab === "analytics" && (
         <>
@@ -247,7 +261,7 @@ export default function AdminDashboard() {
       )}
 
       {tab === "merchants" && (
-        <MerchantsTable merchants={merchants} onRefresh={loadData} hdrs={hdrs} onForceEdit={forceEdit} />
+        <MerchantsTable merchants={merchants} onRefresh={loadData} hdrs={hdrs} onForceEdit={forceEdit} onViewDiscounts={(id) => { setSelectedMerchantId(id); setDiscountsOpen(true); }} />
       )}
 
       {tab === "pending" && (
@@ -323,6 +337,12 @@ export default function AdminDashboard() {
           </div>
         </Card>
       )}
+
+      <MerchantDiscountsDialog
+        merchantId={selectedMerchantId}
+        open={discountsOpen}
+        onOpenChange={(o) => { setDiscountsOpen(o); if (!o) setSelectedMerchantId(null); }}
+      />
     </main>
   );
 }
@@ -336,7 +356,7 @@ function Kpi({ icon, label, value, c }) {
   );
 }
 
-function MerchantsTable({ merchants, onRefresh, hdrs, onForceEdit }) {
+function MerchantsTable({ merchants, onRefresh, hdrs, onForceEdit, onViewDiscounts }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [discEdit, setDiscEdit] = useState(null); // {discount_id, merchant_name, fields}
@@ -470,6 +490,25 @@ function MerchantsTable({ merchants, onRefresh, hdrs, onForceEdit }) {
                     <>
                       <div className="text-white font-semibold">{m.shop_name}</div>
                       <div className="text-xs text-white/60">{m.email}</div>
+                      {m.phone && (
+                        <div className="mt-1 flex items-center gap-1.5 text-xs">
+                          <span className="text-white/70 font-mono">{m.phone}</span>
+                          <a
+                            data-testid={`wa-link-${m.id}`}
+                            href={`https://wa.me/${(m.phone||"").replace(/[^0-9+]/g,"")}?text=${encodeURIComponent(`Ciao ${m.name || m.shop_name}, ti scrivo da Sconti Roma...`)}`}
+                            target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-full bg-green-500 hover:bg-green-400 px-2 py-0.5 text-[10px] font-medium text-white"
+                          >WhatsApp</a>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        data-testid={`view-discounts-${m.id}`}
+                        onClick={() => onViewDiscounts?.(m.id)}
+                        className="mt-2 text-xs text-ciano hover:underline"
+                      >
+                        Vedi tutte le offerte →
+                      </button>
                     </>
                   )}
                 </td>

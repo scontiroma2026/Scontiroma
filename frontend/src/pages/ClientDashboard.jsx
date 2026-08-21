@@ -5,7 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, TicketCheck, Sparkles } from "lucide-react";
+import { CalendarDays, TicketCheck, Sparkles, Star } from "lucide-react";
+import MyUsedDiscounts from "@/components/MyUsedDiscounts";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -98,6 +99,12 @@ export default function ClientDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="mt-12">
+        <h2 className="mb-2 font-serif text-3xl flex items-center gap-2"><Star size={22} className="text-yellow-400"/> I miei sconti usati</h2>
+        <p className="text-sm text-white/60 mb-4">Lascia una recensione: 5 stelle sull'app, un commento privato solo per l'amministratore.</p>
+        <MyUsedDiscounts />
       </div>
     </main>
   );
