@@ -55,19 +55,32 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **[2026-02-20]** Resend integration (placeholder key): `backend/email_service.py` con send async non-blocking, template HTML dark theme. Wired su `POST /auth/forgot` (mail di recovery), `POST /admin/discounts/:id/approve` e `/reject` (notifica merchant). Se `RESEND_API_KEY` non è settata, log-only no-op.
 - **[2026-02-20]** PayPal Subscriptions Sandbox (placeholder keys): `backend/paypal_service.py` con OAuth + bootstrap idempotente Product+Plan €3/mese EUR, endpoint `GET /api/paypal/config`, `POST /api/paypal/activate`, `POST /api/paypal/webhook` (gestisce ACTIVATED/CANCELLED/SUSPENDED/EXPIRED/PAYMENT_DENIED). Frontend `Subscribe.jsx` con tab Carta/PayPal e componente `PayPalCheckout.jsx` (`@paypal/react-paypal-js`).
 - **[2026-02-20]** Geolocalizzazione utente: `MapView.jsx` chiede posizione al mount, centra la mappa sul pin ciano dell'utente e ordina gli sconti per distanza (Haversine). Anche `Discounts.jsx` mostra la griglia ordinata "dal più vicino". Pulsante "Aggiorna posizione".
+- **[2026-02-22]** GDPR Legal Suite completa:
+  - 4 pagine legali statiche interne: `/privacy`, `/cookies`, `/termini`, `/recesso` (basate su GDPR + Codice Consumo). Componente `LegalLayout` condiviso.
+  - Cookie Banner GDPR compliant (`CookieBanner.jsx`) con 3 opzioni (Accetta tutti / Rifiuta / Personalizza), preferenze granulari (Essenziali/Funzionali/Marketing), salvato in localStorage + log server per prova legale.
+  - Endpoint GDPR: `POST /api/gdpr/consent-log` (log consenso cookie), `GET /api/gdpr/export` (art. 20 portabilità dati in JSON), `DELETE /api/gdpr/delete-account` (art. 17 diritto all'oblio con anonimizzazione fatture), `POST /api/gdpr/marketing-consent` (revoca consenso marketing).
+  - Componente `GdprSection.jsx` in ClientDashboard e MerchantDashboard con toggle marketing + pulsanti Scarica dati / Elimina account.
+  - Register.jsx aggiornato con checkbox marketing opzionale + consensi salvati in `users.consents` con timestamp.
+  - Footer legale aggiornato: link interni + pulsante "Gestisci cookie".
+- **[2026-02-23]** Indirizzo attività obbligatorio alla registrazione commerciante (`Register.jsx` + `RegisterIn` model).
+- **[2026-02-23]** Utilizzi multipli mensili configurabili per sconto:
+  - `DiscountIn.max_uses_per_month` (1-10, default 1) — merchant sceglie quante volte al mese ogni abbonato può usare lo sconto (Es. Pizzeria da Marco: 3 usi/mese).
+  - UI selettore preset `1/2/3/5/10` in `MerchantDiscount.jsx`.
+  - `POST /api/redemptions/create/{id}` conta utilizzi consumati (`status:redeemed`) e blocca oltre max, altrimenti genera NUOVO codice ogni volta.
+  - `GET /api/redemptions/discount/{id}/status` ritorna `{used_count, max_uses, remaining, has_pending}` (backward compat con `used_this_month`).
+  - `DiscountDetail.jsx` mostra badge "N utilizzi/mese", contatore "X/N rimasti", label dinamica "Genera QR (utilizzo 2 di 3)".
 
 ## Prioritized Backlog
-- **P0**: Sostituire i placeholder in `.env` con chiavi reali → **PAYPAL_CLIENT_ID/PAYPAL_SECRET** (developer.paypal.com sandbox) e **RESEND_API_KEY** (resend.com); poi creare il webhook PayPal e mettere il suo ID in `PAYPAL_WEBHOOK_ID`.
-- **P1**: Google Maps API (sostituire Leaflet+OSM) — richiede API KEY + carta su Google Cloud.
+- **P0**: Verificare i 2 record DNS mancanti su Aruba (MX + TXT SPF `send.scontiroma.it`) → DKIM già verificato ✅ Resend attende solo questi due.
+- **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Connect Stripe live (currently Sandbox)
-- **P1**: Iubenda placeholder → real customer IDs
 - **P2**: Filtri "nel raggio di X km" sulla mappa
 - **P2**: Recupero credenziali admin (via email + eventuale master password reset)
 - **P2**: Client saved/favoriti discounts.
 - **P2**: Mappa Roma con quartieri interattivi.
 - **P2**: Notifiche nuovi sconti nella tua zona.
 - **P3**: Programma referral (invita amici = mese gratis).
-- **P3**: Admin dashboard per moderare commercianti.
+- **P3**: Split `server.py` (2170+ righe) in `routes/auth.py`, `routes/payments.py`, `routes/admin.py`, `routes/gdpr.py`.
 
 ## Test Credentials
 See `/app/memory/test_credentials.md`.

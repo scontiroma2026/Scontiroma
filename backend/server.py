@@ -189,6 +189,7 @@ class RegisterIn(BaseModel):
     zone: Optional[str] = None
     category: Optional[str] = None
     phone: Optional[str] = None
+    address: Optional[str] = None
     # GDPR consents:
     legal_accepted: Optional[bool] = False
     marketing_opt_in: Optional[bool] = False
@@ -207,6 +208,9 @@ class DiscountIn(BaseModel):
     image_url: Optional[str] = None
     terms: Optional[str] = ""
     active: bool = True
+    # Numero massimo di volte che uno stesso abbonato può usare lo sconto nel mese in corso.
+    # Default 1. Massimo 10 per prevenire abusi.
+    max_uses_per_month: int = Field(default=1, ge=1, le=10)
 
     def cleaned(self) -> dict:
         d = self.model_dump()
@@ -309,7 +313,7 @@ async def register(payload: RegisterIn, response: Response):
             "zone": (payload.zone or "Centro Storico").strip(),
             "category": (payload.category or "Ristorante").strip(),
             "description": "",
-            "address": "",
+            "address": (payload.address or "").strip(),
             "image_url": "",
             "phone": phone,
         })
@@ -666,6 +670,7 @@ async def enrich_discount(d: dict) -> dict:
     d.setdefault("locked_month", None)
     d.setdefault("approval_note", "")
     d.setdefault("force_editable", False)
+    d.setdefault("max_uses_per_month", 1)
     d["locked_this_month"] = (d.get("approval_status") == "approved"
                               and d.get("locked_month") == current_month_key()
                               and not d.get("force_editable", False))
@@ -1156,19 +1161,34 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
         raise HTTPException(403, "Offerta non disponibile")
 
     month_key = current_month_key()
-    # Enforce: 1 coupon per shop per user per calendar month
-    already = await db.redemptions.find_one({
+    max_uses = int(d.get("max_uses_per_month") or 1)
+
+    # 1) Se esiste una redemption PENDING (QR generato ma non ancora scansionato) → riusala.
+    pending = await db.redemptions.find_one({
         "user_id": user["id"],
         "merchant_id": d["merchant_id"],
         "month_key": month_key,
+        "status": "pending",
     })
-    if already:
-        # If still pending (QR generated but not consumed), return it so user can rescan
-        if already.get("status") == "pending":
-            already = {k: v for k, v in already.items() if k != "_id"}
-            return {"redemption": already}
-        raise HTTPException(409, "Sconto già utilizzato questo mese. Torna il mese prossimo!")
+    if pending:
+        return {"redemption": {k: v for k, v in pending.items() if k != "_id"}}
 
+    # 2) Conta gli usi già consumati questo mese (status = "redeemed")
+    used_count = await db.redemptions.count_documents({
+        "user_id": user["id"],
+        "merchant_id": d["merchant_id"],
+        "month_key": month_key,
+        "status": "redeemed",
+    })
+    if used_count >= max_uses:
+        if max_uses == 1:
+            raise HTTPException(409, "Sconto già utilizzato questo mese. Torna il mese prossimo!")
+        raise HTTPException(
+            409,
+            f"Hai già usato questo sconto {max_uses} volte questo mese. Torna il mese prossimo!",
+        )
+
+    # 3) Genera nuovo codice/QR — ogni chiamata produce un codice DIVERSO.
     code = gen_code(8)
     doc = {
         "id": str(uuid.uuid4()),
@@ -1178,6 +1198,8 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
         "merchant_id": d["merchant_id"],
         "status": "pending",
         "month_key": month_key,
+        "use_number": used_count + 1,  # 1-based (1° uso, 2° uso, ...)
+        "max_uses_per_month": max_uses,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "redeemed_at": None,
     }
@@ -1187,19 +1209,38 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
 
 @api.get("/redemptions/discount/{discount_id}/status")
 async def redemption_status(discount_id: str, user: dict = Depends(require_client)):
-    """Tell client if they already used this shop this calendar month."""
+    """Ritorna quante volte l'utente ha già usato lo sconto questo mese e quante gliene restano."""
     d = await db.discounts.find_one({"id": discount_id})
     if not d:
         raise HTTPException(404, "Sconto non trovato")
     month_key = current_month_key()
-    r = await db.redemptions.find_one({
-        "user_id": user["id"], "merchant_id": d["merchant_id"], "month_key": month_key,
+    max_uses = int(d.get("max_uses_per_month") or 1)
+
+    used_count = await db.redemptions.count_documents({
+        "user_id": user["id"],
+        "merchant_id": d["merchant_id"],
+        "month_key": month_key,
+        "status": "redeemed",
     })
-    if not r:
-        return {"used_this_month": False, "status": None}
-    return {"used_this_month": r.get("status") == "redeemed",
-            "status": r.get("status"),
-            "redemption_id": r.get("id")}
+    pending = await db.redemptions.find_one({
+        "user_id": user["id"],
+        "merchant_id": d["merchant_id"],
+        "month_key": month_key,
+        "status": "pending",
+    })
+
+    remaining = max(0, max_uses - used_count)
+    return {
+        "used_this_month": used_count >= max_uses,  # backward compat
+        "used_count": used_count,
+        "max_uses": max_uses,
+        "remaining": remaining,
+        "has_pending": bool(pending),
+        "pending_redemption_id": pending.get("id") if pending else None,
+        # legacy fields for old clients
+        "status": pending.get("status") if pending else ("redeemed" if used_count >= max_uses else None),
+        "redemption_id": pending.get("id") if pending else None,
+    }
 
 
 @api.get("/redemptions/me")
@@ -1520,6 +1561,7 @@ class AdminDiscountUpdate(BaseModel):
     image_url: Optional[str] = None
     terms: Optional[str] = None
     active: Optional[bool] = None
+    max_uses_per_month: Optional[int] = Field(default=None, ge=1, le=10)
 
 
 class RejectIn(BaseModel):

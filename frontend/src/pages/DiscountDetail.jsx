@@ -21,6 +21,7 @@ export default function DiscountDetail() {
   const [countdown, setCountdown] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [alreadyUsed, setAlreadyUsed] = useState(false);
+  const [usageInfo, setUsageInfo] = useState({ used_count: 0, max_uses: 1, remaining: 1 });
   const [windowSec, setWindowSec] = useState(20);
   const pollRef = useRef(null);
   const tickRef = useRef(null);
@@ -35,7 +36,14 @@ export default function DiscountDetail() {
   useEffect(() => {
     if (user && user.role === "client") {
       api.get("/subscription/me").then((r) => setSubActive(r.data.active));
-      api.get(`/redemptions/discount/${id}/status`).then((r) => setAlreadyUsed(r.data.used_this_month)).catch(() => {});
+      api.get(`/redemptions/discount/${id}/status`).then((r) => {
+        setAlreadyUsed(!!r.data.used_this_month);
+        setUsageInfo({
+          used_count: r.data.used_count || 0,
+          max_uses: r.data.max_uses || 1,
+          remaining: typeof r.data.remaining === "number" ? r.data.remaining : (r.data.used_this_month ? 0 : 1),
+        });
+      }).catch(() => {});
     }
   }, [user, id]);
 
@@ -125,6 +133,34 @@ export default function DiscountDetail() {
               </div>
               <TicketPercent size={40} className="text-terracotta/40" />
             </div>
+
+            {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
+            {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (
+              <div
+                data-testid="usage-counter"
+                className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm"
+              >
+                <div className="text-white/70">
+                  Utilizzi questo mese
+                </div>
+                <div className="font-mono text-white">
+                  <span className={usageInfo.remaining > 0 ? "text-fucsia font-bold" : "text-red-400 font-bold"}>
+                    {usageInfo.used_count}
+                  </span>
+                  <span className="text-white/40"> / {usageInfo.max_uses}</span>
+                  {usageInfo.remaining > 0 && (
+                    <span className="ml-2 text-xs text-white/50">({usageInfo.remaining} rimasti)</span>
+                  )}
+                </div>
+              </div>
+            )}
+            {/* Badge informativo per NON abbonati */}
+            {(!user || user.role !== "client") && discount.max_uses_per_month > 1 && (
+              <div className="mt-4 rounded-lg border border-fucsia/30 bg-fucsia/10 px-4 py-2 text-xs text-fucsia">
+                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per abbonato
+              </div>
+            )}
+
             <Button
               data-testid="redeem-btn"
               onClick={redeem}
@@ -135,8 +171,12 @@ export default function DiscountDetail() {
               {!user ? "Accedi per riscattare" :
                 user.role !== "client" ? "Riservato ai clienti" :
                 !subActive ? "Abbonati per riscattare" :
-                alreadyUsed ? "Sconto già utilizzato questo mese. Torna il mese prossimo!" :
-                "Mostra QR Code"}
+                alreadyUsed ? (usageInfo.max_uses > 1
+                  ? `Hai già usato tutti i ${usageInfo.max_uses} utilizzi del mese`
+                  : "Sconto già utilizzato questo mese. Torna il mese prossimo!") :
+                usageInfo.max_uses > 1 && usageInfo.used_count > 0
+                  ? `Genera QR (utilizzo ${usageInfo.used_count + 1} di ${usageInfo.max_uses})`
+                  : "Mostra QR Code"}
             </Button>
           </Card>
 

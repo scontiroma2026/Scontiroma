@@ -26,6 +26,7 @@ export default function Register() {
     zone: "",
     category: "",
     phone: "",
+    address: "",
   });
   const [zones, setZones] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -52,7 +53,7 @@ export default function Register() {
       // Concatena nome + cognome nel campo `name` che il backend si aspetta
       payload.name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
       delete payload.first_name; delete payload.last_name;
-      delete payload.shop_name; delete payload.zone; delete payload.category; delete payload.phone;
+      delete payload.shop_name; delete payload.zone; delete payload.category; delete payload.phone; delete payload.address;
     } else {
       // Per il merchant usiamo il campo unico `name` (referente)
       delete payload.first_name; delete payload.last_name;
@@ -121,6 +122,17 @@ export default function Register() {
               <div>
                 <Label>Nome attività</Label>
                 <Input data-testid="reg-shop" required value={form.shop_name} onChange={update("shop_name")} className="mt-1" />
+              </div>
+              <div>
+                <Label>Indirizzo attività <span className="text-xs text-white/50">(es. Via del Corso 100, 00186 Roma)</span></Label>
+                <Input
+                  data-testid="reg-address"
+                  required
+                  placeholder="Via, numero civico, CAP e città"
+                  value={form.address}
+                  onChange={update("address")}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <Label>Telefono attività <span className="text-xs text-white/50">(es. +39 06 1234567)</span></Label>

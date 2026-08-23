@@ -14,7 +14,7 @@ import DefaultImagePicker from "@/components/DefaultImagePicker";
 export default function MerchantDiscount() {
   const [form, setForm] = useState({
     title: "", description: "", original_price: "", discounted_price: "",
-    image_url: "", terms: "", active: true,
+    image_url: "", terms: "", active: true, max_uses_per_month: 1,
   });
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState(null);
@@ -30,6 +30,7 @@ export default function MerchantDiscount() {
         title: d.title, description: d.description,
         original_price: d.original_price, discounted_price: d.discounted_price,
         image_url: d.image_url || "", terms: d.terms || "", active: d.active,
+        max_uses_per_month: d.max_uses_per_month || 1,
       });
     }
   };
@@ -42,6 +43,7 @@ export default function MerchantDiscount() {
         ...form,
         original_price: parseFloat(form.original_price),
         discounted_price: parseFloat(form.discounted_price),
+        max_uses_per_month: parseInt(form.max_uses_per_month, 10) || 1,
       };
       if (isNaN(payload.original_price) || isNaN(payload.discounted_price)) {
         toast.error("Inserisci prezzi validi"); setLoading(false); return;
@@ -166,6 +168,35 @@ export default function MerchantDiscount() {
             <div>
               <Label>Termini e condizioni</Label>
               <Textarea data-testid="disc-terms" value={form.terms} onChange={upd("terms")} className="mt-1 bg-black/40 border-white/10 text-white" rows={2} />
+            </div>
+
+            {/* Utilizzi al mese per abbonato */}
+            <div className="rounded-lg border border-white/10 bg-black/40 p-4">
+              <Label className="text-white">Quante volte al mese ogni abbonato può usare questo sconto?</Label>
+              <p className="text-xs text-white/60 mt-1 mb-3">
+                Esempio: se scegli <strong>3</strong>, ogni cliente abbonato potrà scansionare il tuo QR fino a 3 volte nel mese in corso. Ogni utilizzo genera un codice QR <strong>diverso</strong> e conta una singola visita.
+              </p>
+              <div className="grid grid-cols-5 gap-2">
+                {[1, 2, 3, 5, 10].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    data-testid={`disc-uses-${n}`}
+                    onClick={() => setForm({ ...form, max_uses_per_month: n })}
+                    disabled={readOnly}
+                    className={`rounded-lg border py-3 text-sm font-semibold transition ${
+                      form.max_uses_per_month === n
+                        ? "border-fucsia bg-fucsia/15 text-fucsia"
+                        : "border-white/10 bg-black/40 text-white/70 hover:border-white/30"
+                    }`}
+                  >
+                    {n === 1 ? "1 volta" : `${n}× mese`}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 text-xs text-white/50">
+                Scelto: <span className="text-fucsia font-semibold">{form.max_uses_per_month} utilizzi al mese</span> per abbonato
+              </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/40 p-4">
               <div>
