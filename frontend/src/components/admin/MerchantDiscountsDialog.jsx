@@ -93,9 +93,16 @@ export default function MerchantDiscountsDialog({ merchantId, open, onOpenChange
                         {d.locked_month && <span className="text-xs text-white/40 font-mono">🔒 {d.locked_month}</span>}
                       </div>
                       <div className="text-xs text-white/60 mt-1 line-clamp-1">{d.description}</div>
-                      <div className="mt-1 flex items-center gap-4 text-xs text-white/70">
+                      <div className="mt-1 flex items-center gap-4 text-xs text-white/70 flex-wrap">
                         <span>€ {Number(d.original_price||0).toFixed(2)} → <span className="text-fucsia font-semibold">€ {Number(d.discounted_price||0).toFixed(2)}</span></span>
                         <span>· {d.redemptions_count} redemption</span>
+                        <span
+                          data-testid={`disc-uses-${d.id}`}
+                          className="inline-flex items-center gap-1 rounded-full border border-fucsia/40 bg-fucsia/10 px-2 py-0.5 text-[10px] text-fucsia font-semibold"
+                          title="Utilizzi al mese per abbonato"
+                        >
+                          🔁 {d.max_uses_per_month || 1}× / mese
+                        </span>
                         {d.approval_note && <span className="text-red-300">· {d.approval_note}</span>}
                       </div>
                     </div>

@@ -286,6 +286,20 @@ export default function AdminDashboard() {
                       <span className="text-white/40 line-through">€{d.original_price?.toFixed(2)}</span>
                       <span className="ml-2 text-neon text-xs">−{d.percent_off}%</span>
                     </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span
+                        data-testid={`pending-uses-${d.id}`}
+                        className="inline-flex items-center gap-1 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold"
+                        title="Quante volte al mese ogni abbonato può usare lo sconto"
+                      >
+                        🔁 {d.max_uses_per_month || 1}× al mese per abbonato
+                      </span>
+                      {d.category && (
+                        <span className="rounded-full border border-white/10 bg-black/40 px-2.5 py-0.5 text-xs text-white/70">
+                          {d.category}
+                        </span>
+                      )}
+                    </div>
                     {d.terms && <div className="mt-2 text-xs text-white/50">Termini: {d.terms}</div>}
                   </div>
                   <div className="flex flex-col gap-2 md:justify-center">
