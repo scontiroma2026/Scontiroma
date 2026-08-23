@@ -33,6 +33,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  // Ricorda credenziali su questo dispositivo (default: attivo, come UX consumer)
+  const [rememberCreds, setRememberCreds] = useState(true);
 
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
@@ -61,6 +63,18 @@ export default function Register() {
     const res = await register(payload);
     setLoading(false);
     if (!res.ok) return toast.error(res.error);
+    // Salva credenziali sul dispositivo per prossimi accessi (email + ruolo)
+    if (rememberCreds) {
+      try {
+        localStorage.setItem("last_email", form.email);
+        localStorage.setItem("last_role", role);
+      } catch (_) { /* localStorage disabled */ }
+    } else {
+      try {
+        localStorage.removeItem("last_email");
+        localStorage.removeItem("last_role");
+      } catch (_) {}
+    }
     toast.success("Benvenuto in Sconti Roma!");
     nav("/setup-security");
   };
@@ -110,11 +124,28 @@ export default function Register() {
           )}
           <div>
             <Label>Email</Label>
-            <Input data-testid="reg-email" type="email" required value={form.email} onChange={update("email")} className="mt-1" />
+            <Input
+              data-testid="reg-email"
+              type="email"
+              required
+              autoComplete="email"
+              inputMode="email"
+              value={form.email}
+              onChange={update("email")}
+              className="mt-1"
+            />
           </div>
           <div>
             <Label>Password (min 6)</Label>
-            <PasswordInput data-testid="reg-password" required minLength={6} value={form.password} onChange={update("password")} className="mt-1" />
+            <PasswordInput
+              data-testid="reg-password"
+              required
+              minLength={6}
+              autoComplete="new-password"
+              value={form.password}
+              onChange={update("password")}
+              className="mt-1"
+            />
           </div>
 
           {role === "merchant" && (
@@ -211,6 +242,23 @@ export default function Register() {
               </span>
             </label>
           </div>
+
+          {/* Ricorda credenziali sul dispositivo */}
+          <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-white/10 bg-black/40 p-3">
+            <input
+              data-testid="remember-creds"
+              type="checkbox"
+              checked={rememberCreds}
+              onChange={(e) => setRememberCreds(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-ciano cursor-pointer"
+            />
+            <span className="text-xs text-white/80 leading-relaxed">
+              💾 <strong className="text-ciano">Salva queste credenziali su questo dispositivo</strong> per il prossimo accesso.
+              <span className="block mt-0.5 text-white/50">
+                Al prossimo login troverai la tua email già scritta. Il tuo browser ti proporrà anche di ricordare la password.
+              </span>
+            </span>
+          </label>
 
           <Button data-testid="reg-submit" type="submit" disabled={loading || !acceptedLegal} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Creazione…" : "Crea account"}

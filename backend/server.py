@@ -2574,6 +2574,76 @@ async def admin_simulate_renewal(
     }
 
 
+@api.post("/admin/geocode-backfill")
+async def admin_geocode_backfill(
+    limit: int = 100,
+    user: dict = Depends(require_admin_master),
+):
+    """Batch geocoding di TUTTI i merchant che hanno un `address` ma non hanno
+    `lat`/`lng`. Rispetta il rate-limit Nominatim (1 richiesta/sec)."""
+    limit = max(1, min(limit, 500))
+    query = {
+        "role": "merchant",
+        "address": {"$exists": True, "$ne": ""},
+        "$or": [
+            {"lat": {"$exists": False}},
+            {"lng": {"$exists": False}},
+            {"lat": None},
+            {"lng": None},
+        ],
+    }
+    merchants = await db.users.find(
+        query, {"_id": 0, "id": 1, "shop_name": 1, "address": 1}
+    ).to_list(length=limit)
+
+    if not merchants:
+        return {
+            "ok": True,
+            "total": 0,
+            "geocoded": 0,
+            "failed": 0,
+            "message": "Nessun merchant necessita geocoding.",
+        }
+
+    results = []
+    geocoded_count = 0
+    failed_count = 0
+    for m in merchants:
+        coords = await geocode_address(m["address"])
+        if coords:
+            await db.users.update_one(
+                {"id": m["id"]},
+                {"$set": {"lat": coords["lat"], "lng": coords["lng"]}},
+            )
+            geocoded_count += 1
+            results.append({
+                "id": m["id"],
+                "shop_name": m.get("shop_name"),
+                "address": m["address"],
+                "lat": coords["lat"],
+                "lng": coords["lng"],
+                "status": "ok",
+            })
+        else:
+            failed_count += 1
+            results.append({
+                "id": m["id"],
+                "shop_name": m.get("shop_name"),
+                "address": m["address"],
+                "status": "failed",
+            })
+        # Rate limit Nominatim: 1 req/sec (policy ufficiale)
+        await asyncio.sleep(1.1)
+
+    return {
+        "ok": True,
+        "total": len(merchants),
+        "geocoded": geocoded_count,
+        "failed": failed_count,
+        "results": results,
+    }
+
+
 # ---------- Include Router & CORS (LAST) ----------
 app.include_router(api)
 

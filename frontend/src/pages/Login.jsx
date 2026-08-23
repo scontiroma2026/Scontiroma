@@ -186,14 +186,30 @@ export default function Login() {
               <ArrowLeft size={12} /> indietro
             </button>
             <h1 className="font-serif text-4xl text-white">Email e password</h1>
-            <form onSubmit={submitPassword} className="mt-6 space-y-4">
+            <form onSubmit={submitPassword} className="mt-6 space-y-4" autoComplete="on">
               <div>
                 <Label className="text-white/80">Email</Label>
-                <Input data-testid="login-email-pw" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+                <Input
+                  data-testid="login-email-pw"
+                  type="email"
+                  required
+                  autoComplete="username"
+                  inputMode="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 bg-black/40 border-white/10 text-white"
+                />
               </div>
               <div>
                 <Label className="text-white/80">Password</Label>
-                <PasswordInput data-testid="login-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+                <PasswordInput
+                  data-testid="login-password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 bg-black/40 border-white/10 text-white"
+                />
               </div>
               <Button data-testid="login-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
                 {busy ? "Accesso…" : "Accedi"}
