@@ -75,6 +75,16 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - `privacy@scontiroma.it` → Diritti GDPR. Mantenuta in PrivacyPolicy (3 ref), CookiePolicy, GdprSection (sotto "Scarica i miei dati"), Termini §12 (row Privacy).
   - `partner@scontiroma.it` → Sezione dedicata "Modifiche o rimozione del negozio" in Termini §5 con **preavviso minimo 15 giorni** per modifiche/sospensione/rimozione + candidature nuovi negozi. Row anche in Support e Termini §12.
 
+- **[2026-02-23]** Rinnovi automatici mensili via webhook + email di ricevuta:
+  - Stripe webhook estende su `invoice.payment_succeeded` (esclude il primo charge `subscription_create`).
+  - PayPal webhook estende su `PAYMENT.SALE.COMPLETED` / `PAYMENT.CAPTURE.COMPLETED`.
+  - Helper `extend_subscription_on_renewal()` idempotente via collection `renewal_events` (chiave `provider_event_id`).
+  - Aggiorna `subscriptions.end_date` + nuovo campo `users.data_scadenza_abbonamento` (base = `max(now, current_end)` + 30gg, evita di bruciare giorni residui).
+  - Nuova email `send_renewal_receipt` con soggetto **"Il tuo abbonamento a Sconti Roma si è rinnovato!"** — HTML dark theme con importo, prossimo rinnovo formattato in italiano, CTA "Scopri i nuovi sconti".
+  - Endpoint QA `POST /api/admin/simulate-renewal/{user_id}?provider=stripe|paypal` (require_admin_master) per test manuali senza collegare Stripe Test Clocks / PayPal Webhook Simulator.
+  - Test completo: 2 rinnovi Stripe (+30gg cumulativi ✅), idempotenza (stesso event_id → skip ✅), rinnovo PayPal (✅). 4 email Resend inviate a Francesco confermate con ID.
+  - Nota: user aveva chiesto sender `noreply@send.scontiroma.it` ma quel sottodominio NON è verificato su Resend (solo `scontiroma.it` root). Uso `SENDER_EMAIL` corrente = `noreply@scontiroma.it` che funziona.
+
 ## Prioritized Backlog
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".

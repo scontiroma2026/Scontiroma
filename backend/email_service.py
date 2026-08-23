@@ -193,3 +193,90 @@ async def send_pin_reset_code(to: str, name: str, code: str) -> Optional[str]:
 <p style="margin:20px 0 0;color:#a1a1aa;font-size:13px">Se non sei stato tu a richiederlo, ignora questa email — il codice scadrà da solo.</p>
 """
     return await _send(to, "Il tuo codice per reimpostare il PIN — Sconti Roma", _shell(inner, "Sconti Roma"))
+
+
+
+async def send_renewal_receipt(
+    to: str,
+    name: str,
+    next_end_date_iso: str,
+    price_eur: float = 3.00,
+    provider: str = "stripe",
+) -> Optional[str]:
+    """Email di ricevuta mensile inviata quando l'abbonamento si rinnova con successo.
+    Chiamata dai webhook Stripe (invoice.payment_succeeded) e PayPal (PAYMENT.SALE.COMPLETED).
+    """
+    safe_name = (name or "").strip() or "abbonato"
+    # Formatta la nuova data di scadenza in italiano leggibile
+    try:
+        from datetime import datetime as _dt
+        dt = _dt.fromisoformat(next_end_date_iso.replace("Z", "+00:00"))
+        it_months = [
+            "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+            "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
+        ]
+        next_end_human = f"{dt.day} {it_months[dt.month - 1]} {dt.year}"
+    except Exception:
+        next_end_human = next_end_date_iso[:10]
+
+    provider_label = {"stripe": "Carta di credito", "paypal": "PayPal"}.get(provider, "Metodo di pagamento")
+
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:26px;color:#fff">
+  🎉 Rinnovo confermato!
+</h2>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:16px">Ciao {safe_name},</p>
+<p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Il tuo abbonamento a <strong style="color:#fff">Sconti Roma</strong> si è rinnovato con successo.
+  Puoi continuare a usare tutti gli sconti dei nostri commercianti per un altro mese intero!
+</p>
+
+<!-- Riepilogo pagamento -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0b0b0f;border:1px solid #27272a;border-radius:12px;margin:24px 0">
+  <tr>
+    <td style="padding:20px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <span style="color:#71717a;font-size:13px;text-transform:uppercase;letter-spacing:1px">Importo</span>
+      </div>
+      <div style="font-family:Georgia,serif;font-size:32px;color:#FF2E93;font-weight:700;margin-bottom:20px">€{price_eur:.2f}</div>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:6px 0;color:#71717a;font-size:13px">Metodo:</td>
+          <td style="padding:6px 0;color:#f4f4f5;font-size:13px;text-align:right">{provider_label}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;color:#71717a;font-size:13px">Piano:</td>
+          <td style="padding:6px 0;color:#f4f4f5;font-size:13px;text-align:right">Mensile a rinnovo automatico</td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;color:#71717a;font-size:13px">Prossimo rinnovo:</td>
+          <td style="padding:6px 0;color:#00E5FF;font-size:13px;text-align:right;font-weight:600">{next_end_human}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- CTA -->
+<div style="text-align:center;margin:28px 0">
+  <a href="{APP_URL}/discounts" style="display:inline-block;padding:14px 36px;background:linear-gradient(90deg,#FF2E93,#7C3AED);color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px">
+    Scopri i nuovi sconti del mese →
+  </a>
+</div>
+
+<p style="margin:24px 0 0;color:#a1a1aa;font-size:12px;line-height:1.5">
+  Vuoi disdire? Puoi farlo in qualsiasi momento dalla tua area personale
+  (<a href="{APP_URL}/account" style="color:#00E5FF">Il tuo account → Gestisci abbonamento</a>).
+  Rispettiamo il tuo diritto di recesso — nessuna penale, nessuna trattenuta.
+</p>
+<p style="margin:12px 0 0;color:#71717a;font-size:11px">
+  Questa è una ricevuta di pagamento automatico. Non rispondere a questa email.
+  Per assistenza scrivi a <a href="mailto:info@scontiroma.it" style="color:#FF2E93">info@scontiroma.it</a>.
+</p>
+"""
+    return await _send(
+        to,
+        "Il tuo abbonamento a Sconti Roma si è rinnovato!",
+        _shell(inner, "Ricevuta rinnovo"),
+    )

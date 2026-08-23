@@ -25,6 +25,7 @@ from email_service import (
     send_merchant_approved,
     send_merchant_rejected,
     send_monthly_discounts_notification,
+    send_renewal_receipt,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
@@ -947,6 +948,100 @@ async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(requir
     return {"checkout_url": session.url, "session_id": session.id}
 
 
+async def extend_subscription_on_renewal(
+    *,
+    user_id: str,
+    provider: str,
+    provider_event_id: str,
+    provider_sub_id: str,
+    price_eur: float = 3.00,
+) -> Optional[str]:
+    """Estende l'abbonamento di 30 giorni quando arriva un evento di rinnovo pagato
+    (Stripe `invoice.payment_succeeded` o PayPal `PAYMENT.SALE.COMPLETED`).
+
+    - IDEMPOTENTE via `renewal_events` collection (chiave `provider_event_id`).
+    - new_end = max(now, current_end_date) + 30 giorni (non brucia giorni residui).
+    - Aggiorna `users.data_scadenza_abbonamento` per lookup rapido.
+    - Ritorna l'ID email Resend (o None).
+    """
+    existing = await db.renewal_events.find_one({"provider_event_id": provider_event_id})
+    if existing:
+        logging.info(f"[renewal] event {provider_event_id} già processato, skip")
+        return None
+
+    u = await db.users.find_one({"id": user_id})
+    if not u:
+        logging.warning(f"[renewal] utente {user_id} non trovato")
+        return None
+
+    match = {"user_id": user_id, "provider": provider}
+    if provider == "stripe":
+        match["stripe_subscription_id"] = provider_sub_id
+    elif provider == "paypal":
+        match["paypal_subscription_id"] = provider_sub_id
+    sub = await db.subscriptions.find_one(match, sort=[("start_date", -1)])
+    if not sub:
+        sub = await db.subscriptions.find_one(
+            {"user_id": user_id, "status": "active"},
+            sort=[("start_date", -1)],
+        )
+    if not sub:
+        logging.warning(f"[renewal] nessuna subscription per {user_id}/{provider}")
+        return None
+
+    now = datetime.now(timezone.utc)
+    try:
+        current_end = datetime.fromisoformat(sub.get("end_date", "").replace("Z", "+00:00"))
+    except Exception:
+        current_end = now
+    base = max(now, current_end)
+    new_end = base + timedelta(days=30)
+    new_end_iso = new_end.isoformat()
+
+    await db.subscriptions.update_one(
+        {"id": sub["id"]},
+        {"$set": {
+            "end_date": new_end_iso,
+            "status": "active",
+            "last_renewal_at": now.isoformat(),
+            "last_renewal_event_id": provider_event_id,
+        }},
+    )
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "data_scadenza_abbonamento": new_end_iso,
+            "last_renewal_at": now.isoformat(),
+        }},
+    )
+    await db.renewal_events.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "provider": provider,
+        "provider_event_id": provider_event_id,
+        "provider_sub_id": provider_sub_id,
+        "amount_eur": price_eur,
+        "processed_at": now.isoformat(),
+        "new_end_date": new_end_iso,
+    })
+
+    email_id = None
+    try:
+        email_id = await send_renewal_receipt(
+            to=u["email"],
+            name=u.get("name") or "",
+            next_end_date_iso=new_end_iso,
+            price_eur=price_eur,
+            provider=provider,
+        )
+        logging.info(f"[renewal] email inviata to={u['email']} id={email_id}")
+    except Exception as e:
+        logging.error(f"[renewal] email send failed: {e}")
+
+    return email_id
+
+
+
 async def mark_subscription_paid(session, user_id: str):
     now = datetime.now(timezone.utc)
     end = now + timedelta(days=30)
@@ -1033,6 +1128,26 @@ async def stripe_webhook(request: Request):
             uid = (obj.get("metadata") or {}).get("user_id")
             if uid:
                 await mark_subscription_paid(obj, uid)
+    elif t == "invoice.payment_succeeded":
+        # Rinnovo mensile riuscito (recurring charge). Estende abbonamento di 30 giorni.
+        # Ignoriamo l'invoice della prima sottoscrizione (billing_reason=subscription_create)
+        # perché mark_subscription_paid() gestisce già il primo pagamento in checkout.session.completed.
+        billing_reason = obj.get("billing_reason")
+        if billing_reason == "subscription_create":
+            return {"status": "ok", "skipped": "first_charge_handled_by_checkout"}
+        stripe_sub_id = obj.get("subscription")
+        invoice_id = obj.get("id")
+        amount_paid = (obj.get("amount_paid") or 300) / 100.0  # cents → EUR
+        if stripe_sub_id and invoice_id:
+            sub = await db.subscriptions.find_one({"stripe_subscription_id": stripe_sub_id})
+            if sub:
+                await extend_subscription_on_renewal(
+                    user_id=sub["user_id"],
+                    provider="stripe",
+                    provider_event_id=f"stripe:{invoice_id}",
+                    provider_sub_id=stripe_sub_id,
+                    price_eur=amount_paid,
+                )
     elif t == "customer.subscription.deleted":
         sub_id = obj.get("id")
         await db.subscriptions.update_many(
@@ -1138,6 +1253,24 @@ async def paypal_webhook(request: Request):
             {"paypal_subscription_id": sub_id, "status": {"$ne": "active"}},
             {"$set": {"status": "active"}}
         )
+    elif etype in ("PAYMENT.SALE.COMPLETED", "PAYMENT.CAPTURE.COMPLETED"):
+        # Rinnovo ricorrente PayPal (charge mensile su subscription attiva).
+        # `resource.billing_agreement_id` = subscription_id per subscription payments.
+        # Il primo pagamento potrebbe anche arrivare qui: siamo idempotenti via sale_id.
+        sale_id = resource.get("id")
+        billing_agreement_id = resource.get("billing_agreement_id") or resource.get("supplementary_data", {}).get("related_ids", {}).get("subscription_id")
+        amount = resource.get("amount", {})
+        price = float(amount.get("total") or amount.get("value") or 3.00)
+        if sale_id and billing_agreement_id:
+            sub = await db.subscriptions.find_one({"paypal_subscription_id": billing_agreement_id})
+            if sub:
+                await extend_subscription_on_renewal(
+                    user_id=sub["user_id"],
+                    provider="paypal",
+                    provider_event_id=f"paypal:{sale_id}",
+                    provider_sub_id=billing_agreement_id,
+                    price_eur=price,
+                )
     elif etype in ("BILLING.SUBSCRIPTION.CANCELLED",
                    "BILLING.SUBSCRIPTION.SUSPENDED",
                    "BILLING.SUBSCRIPTION.EXPIRED",
@@ -2155,6 +2288,64 @@ async def gdpr_update_marketing(opt_in: bool, user: dict = Depends(get_current_u
         },
     )
     return {"ok": True, "marketing_opt_in": bool(opt_in)}
+
+
+# =====================================================================
+# QA / Testing: Simulazione rinnovo abbonamento
+# =====================================================================
+
+@api.post("/admin/simulate-renewal/{user_id}")
+async def admin_simulate_renewal(
+    user_id: str,
+    provider: str = "stripe",
+    price_eur: float = 3.00,
+    admin: dict = Depends(require_admin_master),
+):
+    """Simula un evento di rinnovo (Stripe invoice.payment_succeeded o PayPal
+    PAYMENT.SALE.COMPLETED) senza dover collegare Test Clocks / Webhook Simulator.
+
+    Utile per QA: chiama la stessa `extend_subscription_on_renewal()` usata dai webhook,
+    quindi la logica testata è identica a quella di produzione (idempotenza inclusa).
+    """
+    if provider not in ("stripe", "paypal"):
+        raise HTTPException(400, "provider deve essere 'stripe' o 'paypal'")
+    u = await db.users.find_one({"id": user_id})
+    if not u:
+        raise HTTPException(404, "Utente non trovato")
+
+    sub = await db.subscriptions.find_one(
+        {"user_id": user_id, "provider": provider},
+        sort=[("start_date", -1)],
+    )
+    if not sub:
+        sub = await db.subscriptions.find_one({"user_id": user_id}, sort=[("start_date", -1)])
+    if not sub:
+        raise HTTPException(400, "Utente non ha nessuna subscription — impossibile simulare rinnovo")
+
+    provider_sub_id = (
+        sub.get("stripe_subscription_id") if provider == "stripe" else sub.get("paypal_subscription_id")
+    ) or f"sim_{provider}_{user_id[:8]}"
+
+    # Ogni chiamata genera un event_id unico → sempre processato (per test manuali multipli)
+    fake_event_id = f"{provider}:sim_{uuid.uuid4()}"
+    email_id = await extend_subscription_on_renewal(
+        user_id=user_id,
+        provider=provider,
+        provider_event_id=fake_event_id,
+        provider_sub_id=provider_sub_id,
+        price_eur=price_eur,
+    )
+    # Ritorna lo stato post-rinnovo
+    updated_user = await db.users.find_one({"id": user_id})
+    updated_sub = await db.subscriptions.find_one({"id": sub["id"]})
+    return {
+        "ok": True,
+        "simulated_event_id": fake_event_id,
+        "email_dispatched_id": email_id,
+        "user_data_scadenza_abbonamento": updated_user.get("data_scadenza_abbonamento"),
+        "subscription_end_date": updated_sub.get("end_date"),
+        "provider": provider,
+    }
 
 
 # ---------- Include Router & CORS (LAST) ----------
