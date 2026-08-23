@@ -743,6 +743,61 @@ async def geocode_address(address: str) -> Optional[dict]:
         return None
 
 
+
+_geocode_suggest_cache: dict = {}
+
+
+async def geocode_suggest(query: str, limit: int = 5) -> list:
+    """Autocomplete indirizzi via Nominatim (Italia). Ritorna lista di suggerimenti."""
+    q = (query or "").strip()
+    if len(q) < 3:
+        return []
+    key = f"{q.lower()}::{limit}"
+    if key in _geocode_suggest_cache:
+        return _geocode_suggest_cache[key]
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            r = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "q": q,
+                    "format": "json",
+                    "limit": limit,
+                    "countrycodes": "it",
+                    "addressdetails": 1,
+                },
+                headers={"User-Agent": "ScontiRoma/1.0 (info@scontiroma.it)"},
+            )
+        if r.status_code != 200:
+            return []
+        raw = r.json() or []
+        out = []
+        for item in raw:
+            addr = item.get("address") or {}
+            road = addr.get("road") or addr.get("pedestrian") or addr.get("footway") or ""
+            house = addr.get("house_number") or ""
+            postcode = addr.get("postcode") or ""
+            city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("suburb") or ""
+            street = f"{road} {house}".strip() if road else ""
+            parts = [p for p in [street, f"{postcode} {city}".strip()] if p]
+            display = ", ".join(parts) if parts else (item.get("display_name") or "")[:120]
+            out.append({
+                "display": display,
+                "full_display_name": item.get("display_name"),
+                "lat": float(item["lat"]),
+                "lng": float(item["lon"]),
+                "road": road,
+                "house_number": house,
+                "postcode": postcode,
+                "city": city,
+            })
+        _geocode_suggest_cache[key] = out
+        return out
+    except Exception as e:
+        logging.warning(f"[geocode_suggest] failed for '{q[:40]}': {e}")
+        return []
+
+
 async def geocode_and_save_merchant(user_id: str, address: str) -> None:
     """Fire-and-forget: geocodifica l'indirizzo del merchant e salva lat/lng.
     Non blocca il flusso di registrazione/update se Nominatim è lento.
@@ -2413,6 +2468,13 @@ async def admin_subscribers(
 @api.get("/")
 async def root():
     return {"message": "Sconti Roma API", "status": "ok"}
+
+
+@api.get("/geocode/suggest")
+async def api_geocode_suggest(q: str, limit: int = 5):
+    """Endpoint pubblico per l'autocomplete indirizzi (usato dai form merchant)."""
+    limit = max(1, min(limit, 10))
+    return {"suggestions": await geocode_suggest(q, limit)}
 
 
 # =====================================================================

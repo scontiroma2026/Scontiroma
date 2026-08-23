@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import PasswordInput from "@/components/PasswordInput";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
 
 export default function Register() {
@@ -155,14 +156,13 @@ export default function Register() {
                 <Input data-testid="reg-shop" required value={form.shop_name} onChange={update("shop_name")} className="mt-1" />
               </div>
               <div>
-                <Label>Indirizzo attività <span className="text-xs text-white/50">(es. Via del Corso 100, 00186 Roma)</span></Label>
-                <Input
-                  data-testid="reg-address"
+                <AddressAutocomplete
+                  label="Indirizzo attività"
+                  helperText="es. Via del Corso 100, 00186 Roma"
                   required
-                  placeholder="Via, numero civico, CAP e città"
                   value={form.address}
-                  onChange={update("address")}
-                  className="mt-1"
+                  onChange={(text) => setForm((f) => ({ ...f, address: text }))}
+                  testId="reg-address"
                 />
               </div>
               <div>
