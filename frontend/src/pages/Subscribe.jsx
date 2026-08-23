@@ -123,7 +123,7 @@ export default function Subscribe() {
             <ul className="mt-6 space-y-3 text-sm text-white/80">
               {[
                 { i: <Zap size={14} className="text-ciano" />, t: "Sconto in ogni locale partner di Roma" },
-                { i: <Sparkles size={14} className="text-neon" />, t: "Nessun limite mensile all'utilizzo" },
+                { i: <Sparkles size={14} className="text-neon" />, t: "Nuovi sconti aggiornati ogni mese" },
                 { i: <Shield size={14} className="text-fucsia" />, t: "QR sicuro rotante ogni 10 secondi" },
                 { i: <Check size={14} className="text-ciano" />, t: "Cancelli quando vuoi, senza penali" },
               ].map((f, idx) => (
