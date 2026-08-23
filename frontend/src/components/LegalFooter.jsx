@@ -28,6 +28,13 @@ export default function LegalFooter() {
         </div>
         <nav className="flex flex-wrap items-center gap-4">
           <Link
+            data-testid="footer-support"
+            to="/support"
+            className="text-white/70 hover:text-fucsia transition underline-offset-4 hover:underline"
+          >
+            Assistenza
+          </Link>
+          <Link
             data-testid="footer-privacy"
             to={LEGAL_LINKS.privacy}
             className="text-white/70 hover:text-fucsia transition underline-offset-4 hover:underline"

@@ -37,8 +37,8 @@ export default function Recesso() {
         <h3 className="font-serif text-xl text-white mt-6">Metodo B — Via email</h3>
         <p>
           Invia una email a{" "}
-          <a href="mailto:privacy@scontiroma.it" className="text-fucsia hover:underline">
-            privacy@scontiroma.it
+          <a href="mailto:info@scontiroma.it?subject=Recesso%20abbonamento" className="text-fucsia hover:underline">
+            info@scontiroma.it
           </a>{" "}
           con oggetto <strong>"Recesso abbonamento"</strong> indicando:
         </p>
@@ -54,7 +54,7 @@ export default function Recesso() {
 
         <h3 className="font-serif text-xl text-white mt-6">Modulo di recesso tipo</h3>
         <div className="rounded-xl border border-white/10 bg-black/40 p-4 font-mono text-xs whitespace-pre-line text-white/80">
-{`Destinatario: Sconti Roma — privacy@scontiroma.it
+{`Destinatario: Sconti Roma — info@scontiroma.it
 
 Con la presente notifico il recesso dal mio contratto di abbonamento
 al servizio Sconti Roma.
@@ -107,8 +107,8 @@ al servizio Sconti Roma.
         <p>
           Se hai problemi ad annullare l'abbonamento o non hai ricevuto il
           rimborso nei termini indicati, contattaci a{" "}
-          <a href="mailto:privacy@scontiroma.it" className="text-fucsia hover:underline">
-            privacy@scontiroma.it
+          <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
+            info@scontiroma.it
           </a>
           . Ti risponderemo entro 24 ore lavorative.
         </p>

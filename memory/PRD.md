@@ -70,9 +70,14 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - `GET /api/redemptions/discount/{id}/status` ritorna `{used_count, max_uses, remaining, has_pending}` (backward compat con `used_this_month`).
   - `DiscountDetail.jsx` mostra badge "N utilizzi/mese", contatore "X/N rimasti", label dinamica "Genera QR (utilizzo 2 di 3)".
 
+- **[2026-02-23]** Mappatura 3 email reali contestuali (tutte cliccabili con `mailto:` che apre app di posta):
+  - `info@scontiroma.it` → Assistenza generale. Creata pagina `/support` (`Support.jsx`) con testo "Hai bisogno di aiuto? Scrivici a info@scontiroma.it, ti risponderemo entro 24 ore!". Link "Assistenza" aggiunto al footer globale. Usata anche in Recesso (contatti + modulo) e LegalLayout (sidebar aiuto).
+  - `privacy@scontiroma.it` → Diritti GDPR. Mantenuta in PrivacyPolicy (3 ref), CookiePolicy, GdprSection (sotto "Scarica i miei dati"), Termini §12 (row Privacy).
+  - `partner@scontiroma.it` → Sezione dedicata "Modifiche o rimozione del negozio" in Termini §5 con **preavviso minimo 15 giorni** per modifiche/sospensione/rimozione + candidature nuovi negozi. Row anche in Support e Termini §12.
+
 ## Prioritized Backlog
-- **P0**: Verificare i 2 record DNS mancanti su Aruba (MX + TXT SPF `send.scontiroma.it`) → DKIM già verificato ✅ Resend attende solo questi due.
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
+- **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".
 - **P1**: Connect Stripe live (currently Sandbox)
 - **P2**: Filtri "nel raggio di X km" sulla mappa
 - **P2**: Recupero credenziali admin (via email + eventuale master password reset)

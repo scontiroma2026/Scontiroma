@@ -9,6 +9,7 @@ import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import CookiePolicy from "@/pages/legal/CookiePolicy";
 import Termini from "@/pages/legal/Termini";
 import Recesso from "@/pages/legal/Recesso";
+import Support from "@/pages/Support";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -71,6 +72,7 @@ function App() {
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/termini" element={<Termini />} />
             <Route path="/recesso" element={<Recesso />} />
+            <Route path="/support" element={<Support />} />
           </Routes>
           <LegalFooter />
           <CookieBanner />

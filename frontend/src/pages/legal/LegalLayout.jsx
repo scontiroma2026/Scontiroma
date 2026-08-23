@@ -34,12 +34,12 @@ export default function LegalLayout({ title, kicker, updatedAt, children }) {
       <div className="mt-12 rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white/60">
         Hai domande? Scrivi a{" "}
         <a
-          href="mailto:privacy@scontiroma.it"
+          href="mailto:info@scontiroma.it"
           className="text-fucsia hover:underline"
         >
-          privacy@scontiroma.it
+          info@scontiroma.it
         </a>
-        . Rispondiamo entro 30 giorni come previsto dal GDPR.
+        . Ti rispondiamo entro 24 ore.
       </div>
     </main>
   );

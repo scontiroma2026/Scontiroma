@@ -122,6 +122,47 @@ export default function Termini() {
           </li>
         </ul>
 
+        <div className="mt-6 rounded-xl border border-neon/30 bg-neon/5 p-5">
+          <h3 className="font-serif text-lg text-white flex items-center gap-2">
+            <span className="text-neon">✎</span> Modifiche o rimozione del negozio
+          </h3>
+          <p className="mt-2 text-sm">
+            Il Commerciante che desidera <strong>modificare</strong> i propri
+            dati (nome attività, indirizzo, categoria, telefono),{" "}
+            <strong>sospendere temporaneamente</strong> l'esposizione dello
+            sconto oppure <strong>rimuovere definitivamente</strong> il negozio
+            dalla piattaforma e dalla mappa deve inviare richiesta scritta a{" "}
+            <a
+              href="mailto:partner@scontiroma.it?subject=Richiesta%20modifica%2Frimozione%20negozio"
+              className="text-neon hover:underline font-semibold"
+              data-testid="link-partner-modifica"
+            >
+              partner@scontiroma.it
+            </a>{" "}
+            con un <strong>preavviso minimo di 15 giorni</strong> rispetto alla
+            data di efficacia richiesta.
+          </p>
+          <p className="mt-2 text-sm">
+            Sconti Roma processerà la richiesta entro 5 giorni lavorativi dalla
+            ricezione e confermerà la data effettiva di applicazione via email.
+            Il preavviso di 15 giorni serve a permettere agli abbonati che
+            hanno già visualizzato l'offerta di completare eventuali riscatti
+            in corso.
+          </p>
+          <p className="mt-2 text-xs text-white/60">
+            Per candidature di nuovi negozi e collaborazioni B2B scrivi allo
+            stesso indirizzo{" "}
+            <a
+              href="mailto:partner@scontiroma.it?subject=Candidatura%20nuovo%20negozio"
+              className="text-neon hover:underline"
+              data-testid="link-partner-candidatura"
+            >
+              partner@scontiroma.it
+            </a>
+            .
+          </p>
+        </div>
+
         <h2 className="font-serif text-2xl text-white mt-8">6. Diritto di recesso</h2>
         <p>
           Gli utenti Consumatori possono esercitare il diritto di recesso
@@ -202,13 +243,26 @@ export default function Termini() {
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">12. Contatti</h2>
-        <p>
-          Per qualsiasi comunicazione:{" "}
-          <a href="mailto:privacy@scontiroma.it" className="text-fucsia hover:underline">
-            privacy@scontiroma.it
-          </a>
-          .
-        </p>
+        <ul className="list-disc pl-6 space-y-1 text-sm">
+          <li>
+            Assistenza generale:{" "}
+            <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline" data-testid="link-termini-info">
+              info@scontiroma.it
+            </a>
+          </li>
+          <li>
+            Privacy e diritti GDPR:{" "}
+            <a href="mailto:privacy@scontiroma.it" className="text-ciano hover:underline" data-testid="link-termini-privacy">
+              privacy@scontiroma.it
+            </a>
+          </li>
+          <li>
+            Commercianti e partner:{" "}
+            <a href="mailto:partner@scontiroma.it" className="text-neon hover:underline" data-testid="link-termini-partner">
+              partner@scontiroma.it
+            </a>
+          </li>
+        </ul>
       </LegalLayout>
     </div>
   );
