@@ -3,7 +3,12 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import LegalFooter from "@/components/LegalFooter";
+import CookieBanner from "@/components/CookieBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
+import CookiePolicy from "@/pages/legal/CookiePolicy";
+import Termini from "@/pages/legal/Termini";
+import Recesso from "@/pages/legal/Recesso";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -62,8 +67,13 @@ function App() {
             <Route path="/preview/b" element={<PreviewB />} />
             <Route path="/preview/c" element={<PreviewC />} />
             <Route path="/preview/d" element={<PreviewD />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/termini" element={<Termini />} />
+            <Route path="/recesso" element={<Recesso />} />
           </Routes>
           <LegalFooter />
+          <CookieBanner />
           <Toaster position="top-center" richColors />
         </AuthProvider>
       </BrowserRouter>

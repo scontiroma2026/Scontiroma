@@ -189,6 +189,9 @@ class RegisterIn(BaseModel):
     zone: Optional[str] = None
     category: Optional[str] = None
     phone: Optional[str] = None
+    # GDPR consents:
+    legal_accepted: Optional[bool] = False
+    marketing_opt_in: Optional[bool] = False
 
 
 class LoginIn(BaseModel):
@@ -281,13 +284,21 @@ async def register(payload: RegisterIn, response: Response):
         raise HTTPException(400, "Email già registrata")
 
     user_id = str(uuid.uuid4())
+    now_iso = datetime.now(timezone.utc).isoformat()
     doc = {
         "id": user_id,
         "email": email,
         "password_hash": hash_password(payload.password),
         "name": (payload.name or "").strip(),
         "role": payload.role,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": now_iso,
+        # GDPR consent snapshot (art. 7 GDPR — proof of consent)
+        "consents": {
+            "legal_accepted": bool(payload.legal_accepted),
+            "legal_accepted_at": now_iso if payload.legal_accepted else None,
+            "marketing_opt_in": bool(payload.marketing_opt_in),
+            "marketing_opt_in_at": now_iso if payload.marketing_opt_in else None,
+        },
     }
     if payload.role == "merchant":
         phone = (payload.phone or "").strip()
@@ -1978,7 +1989,133 @@ async def admin_health(user: dict = Depends(require_admin_master)):
     }
 
 
-# ---------- Include Router & CORS ----------
+# ---------- Include Router & CORS (must be LAST - after all @api.* definitions) ----------
+
+
+@api.get("/")
+async def root():
+    return {"message": "Sconti Roma API", "status": "ok"}
+
+
+# =====================================================================
+# GDPR endpoints — art. 7 (proof of consent), art. 15 (access),
+# art. 17 (right to erasure), art. 20 (portability)
+# =====================================================================
+
+class CookieConsentIn(BaseModel):
+    action: Literal["accept_all", "reject_all", "custom"]
+    prefs: dict
+
+
+@api.post("/gdpr/consent-log")
+async def gdpr_consent_log(payload: CookieConsentIn, request: Request):
+    """Log del consenso cookie come prova legale (art. 7 GDPR).
+    Non richiede autenticazione: memorizza IP + user-agent + scelta."""
+    user_id = None
+    try:
+        # best-effort — se l'utente è loggato lo linkiamo, altrimenti anonimo
+        user = await get_current_user(request)
+        user_id = user.get("id")
+    except Exception:
+        pass
+
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "action": payload.action,
+        "prefs": payload.prefs or {},
+        "ip": request.client.host if request.client else None,
+        "user_agent": request.headers.get("user-agent", "")[:300],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.consent_logs.insert_one(doc)
+    return {"ok": True, "id": doc["id"]}
+
+
+@api.get("/gdpr/export")
+async def gdpr_export(user: dict = Depends(get_current_user)):
+    """Esporta tutti i dati dell'utente in formato JSON (art. 20 GDPR portabilità)."""
+    uid = user["id"]
+
+    # Fetch collections (only what belongs to this user)
+    profile = await db.users.find_one({"id": uid}, {"_id": 0, "password_hash": 0, "pin_hash": 0, "reset_token": 0, "webauthn_credentials": 0})
+
+    redemptions = await db.redemptions.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    qr_scans = await db.qr_scans.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    subscriptions = await db.subscriptions.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    consents = await db.consent_logs.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+
+    # Merchant-specific
+    discounts = []
+    if user.get("role") == "merchant":
+        discounts = await db.discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+
+    export_doc = {
+        "export_generated_at": datetime.now(timezone.utc).isoformat(),
+        "export_version": 1,
+        "notice": "Questo file contiene tutti i tuoi dati personali trattati da Sconti Roma (art. 20 GDPR). Password, PIN e chiavi biometriche sono esclusi per motivi di sicurezza.",
+        "profile": profile,
+        "redemptions": redemptions,
+        "qr_scans": qr_scans,
+        "subscriptions": subscriptions,
+        "cookie_consent_log": consents,
+        "merchant_discounts": discounts,
+    }
+    return export_doc
+
+
+@api.delete("/gdpr/delete-account")
+async def gdpr_delete_account(user: dict = Depends(get_current_user), response: Response = None):
+    """Cancellazione completa dell'account e di tutti i dati collegati (art. 17 GDPR).
+    NB: I dati con obbligo di legge (fatturazione) vengono anonimizzati anziché cancellati."""
+    uid = user["id"]
+
+    if user.get("role") == "admin":
+        raise HTTPException(400, "L'account admin non può essere cancellato via GDPR")
+
+    # 1. Anonimizza subscriptions (obbligo fiscale 10 anni)
+    await db.subscriptions.update_many(
+        {"user_id": uid},
+        {"$set": {"user_id": f"deleted_{uid[:8]}", "anonymized": True, "anonymized_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    # 2. Elimina redemptions, qr_scans, consent_logs, reset_tokens
+    await db.redemptions.delete_many({"user_id": uid})
+    await db.qr_scans.delete_many({"user_id": uid})
+    await db.consent_logs.delete_many({"user_id": uid})
+
+    # 3. Se merchant, elimina i suoi discounts
+    if user.get("role") == "merchant":
+        await db.discounts.delete_many({"merchant_id": uid})
+
+    # 4. Elimina l'utente
+    await db.users.delete_one({"id": uid})
+
+    # 5. Logout
+    if response is not None:
+        response.delete_cookie("access_token", path="/")
+        response.delete_cookie("refresh_token", path="/")
+
+    return {"ok": True, "message": "Account e dati collegati eliminati definitivamente."}
+
+
+@api.post("/gdpr/marketing-consent")
+async def gdpr_update_marketing(opt_in: bool, user: dict = Depends(get_current_user)):
+    """Aggiorna il consenso marketing dell'utente (revocabile in qualunque momento)."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "consents.marketing_opt_in": bool(opt_in),
+                "consents.marketing_opt_in_at": now_iso if opt_in else None,
+                "consents.marketing_revoked_at": None if opt_in else now_iso,
+            }
+        },
+    )
+    return {"ok": True, "marketing_opt_in": bool(opt_in)}
+
+
+# ---------- Include Router & CORS (LAST) ----------
 app.include_router(api)
 
 cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
@@ -1989,8 +2126,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@api.get("/")
-async def root():
-    return {"message": "Sconti Roma API", "status": "ok"}

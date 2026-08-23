@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { QrCode, TicketPercent, Users, TrendingUp } from "lucide-react";
+import GdprSection from "@/components/GdprSection";
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
@@ -91,6 +92,10 @@ export default function MerchantDashboard() {
             </div>
           )}
         </Card>
+      </div>
+
+      <div className="mt-12">
+        <GdprSection />
       </div>
     </main>
   );

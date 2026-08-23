@@ -1,53 +1,67 @@
 import { Link, useLocation } from "react-router-dom";
 
-// Placeholder Iubenda URLs — replace with real IDs when provided
+// Internal legal pages (self-hosted, no Iubenda needed)
 export const LEGAL_LINKS = {
-  privacy: "#privacy-policy",
-  cookie: "#cookie-policy",
-  terms: "#termini-condizioni",
+  privacy: "/privacy",
+  cookie: "/cookies",
+  terms: "/termini",
+  recesso: "/recesso",
 };
-
-const HIDE_ON = new Set(["/qr", "/login", "/setup-security"]);
 
 export default function LegalFooter() {
   const { pathname } = useLocation();
-  // Hide on fullscreen scan pages and specific narrow pages
+  // Hide on fullscreen scan pages
   if (pathname.startsWith("/qr/") || pathname === "/qr") return null;
 
+  const openCookieBanner = () => {
+    window.dispatchEvent(new CustomEvent("sr:open-cookie-banner"));
+  };
+
   return (
-    <footer data-testid="legal-footer" className="border-t border-white/10 bg-black/40 py-6 mt-8">
+    <footer
+      data-testid="legal-footer"
+      className="border-t border-white/10 bg-black/40 py-6 mt-8"
+    >
       <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="text-white/50">
           © {new Date().getFullYear()} Sconti Roma · Made con amore ♡
         </div>
-        <nav className="flex flex-wrap gap-4">
-          <a
+        <nav className="flex flex-wrap items-center gap-4">
+          <Link
             data-testid="footer-privacy"
-            href={LEGAL_LINKS.privacy}
-            target="_blank"
-            rel="noopener noreferrer"
+            to={LEGAL_LINKS.privacy}
             className="text-white/70 hover:text-fucsia transition underline-offset-4 hover:underline"
           >
-            Privacy Policy
-          </a>
-          <a
+            Privacy
+          </Link>
+          <Link
             data-testid="footer-cookie"
-            href={LEGAL_LINKS.cookie}
-            target="_blank"
-            rel="noopener noreferrer"
+            to={LEGAL_LINKS.cookie}
             className="text-white/70 hover:text-ciano transition underline-offset-4 hover:underline"
           >
-            Cookie Policy
-          </a>
-          <a
+            Cookie
+          </Link>
+          <Link
             data-testid="footer-terms"
-            href={LEGAL_LINKS.terms}
-            target="_blank"
-            rel="noopener noreferrer"
+            to={LEGAL_LINKS.terms}
             className="text-white/70 hover:text-neon transition underline-offset-4 hover:underline"
           >
-            Termini e Condizioni
-          </a>
+            Termini
+          </Link>
+          <Link
+            data-testid="footer-recesso"
+            to={LEGAL_LINKS.recesso}
+            className="text-white/70 hover:text-gold transition underline-offset-4 hover:underline"
+          >
+            Recesso
+          </Link>
+          <button
+            data-testid="footer-manage-cookies"
+            onClick={openCookieBanner}
+            className="text-white/70 hover:text-terracotta transition underline-offset-4 hover:underline"
+          >
+            Gestisci cookie
+          </button>
         </nav>
       </div>
     </footer>

@@ -31,6 +31,7 @@ export default function Register() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
@@ -46,7 +47,7 @@ export default function Register() {
       return;
     }
     setLoading(true);
-    const payload = { ...form, role };
+    const payload = { ...form, role, marketing_opt_in: marketingOptIn, legal_accepted: true };
     if (role === "client") {
       // Concatena nome + cognome nel campo `name` che il backend si aspetta
       payload.name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
@@ -165,7 +166,7 @@ export default function Register() {
           )}
 
           {/* GDPR legal checkbox */}
-          <div className="rounded-xl border border-white/10 bg-black/40 p-3">
+          <div className="rounded-xl border border-white/10 bg-black/40 p-3 space-y-3">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 data-testid="legal-accept"
@@ -176,12 +177,25 @@ export default function Register() {
                 className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
               />
               <span className="text-xs text-white/80 leading-relaxed">
-                Accetto i{" "}
+                <span className="text-fucsia">*</span> Accetto i{" "}
                 <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold" data-testid="link-terms">Termini e Condizioni</a>
                 {" "}e confermo di aver letto la{" "}
                 <a href={LEGAL_LINKS.privacy} target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline font-semibold" data-testid="link-privacy">Privacy Policy</a>
                 {" "}e la{" "}
                 <a href={LEGAL_LINKS.cookie} target="_blank" rel="noopener noreferrer" className="text-neon hover:underline font-semibold" data-testid="link-cookie">Cookie Policy</a>.
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                data-testid="marketing-optin"
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 accent-terracotta cursor-pointer"
+              />
+              <span className="text-xs text-white/70 leading-relaxed">
+                Voglio ricevere <strong>comunicazioni promozionali</strong> via email su nuovi sconti e offerte esclusive del mese. <span className="text-white/50">(facoltativo, puoi disdire quando vuoi)</span>
               </span>
             </label>
           </div>
