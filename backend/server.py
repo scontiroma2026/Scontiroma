@@ -745,14 +745,31 @@ async def geocode_address(address: str) -> Optional[dict]:
 
 async def geocode_and_save_merchant(user_id: str, address: str) -> None:
     """Fire-and-forget: geocodifica l'indirizzo del merchant e salva lat/lng.
-    Non blocca il flusso di registrazione/update se Nominatim è lento."""
+    Non blocca il flusso di registrazione/update se Nominatim è lento.
+    Se il geocoding fallisce, marca il merchant con `geocode_failed=true` per
+    consentire all'admin di correggere manualmente l'indirizzo."""
     coords = await geocode_address(address)
+    now_iso = datetime.now(timezone.utc).isoformat()
     if coords:
         await db.users.update_one(
             {"id": user_id},
-            {"$set": {"lat": coords["lat"], "lng": coords["lng"]}},
+            {"$set": {
+                "lat": coords["lat"],
+                "lng": coords["lng"],
+                "geocoded_at": now_iso,
+            }, "$unset": {"geocode_failed": "", "geocode_failed_at": "", "geocode_failed_address": ""}},
         )
         logging.info(f"[geocode] merchant {user_id[:8]} → {coords}")
+    else:
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {
+                "geocode_failed": True,
+                "geocode_failed_at": now_iso,
+                "geocode_failed_address": address,
+            }},
+        )
+        logging.warning(f"[geocode] FAILED merchant {user_id[:8]} address='{address[:60]}'")
 
 
 @api.get("/merchants/top")
@@ -2608,12 +2625,16 @@ async def admin_geocode_backfill(
     results = []
     geocoded_count = 0
     failed_count = 0
+    now_iso = datetime.now(timezone.utc).isoformat()
     for m in merchants:
         coords = await geocode_address(m["address"])
         if coords:
             await db.users.update_one(
                 {"id": m["id"]},
-                {"$set": {"lat": coords["lat"], "lng": coords["lng"]}},
+                {"$set": {
+                    "lat": coords["lat"], "lng": coords["lng"],
+                    "geocoded_at": now_iso,
+                }, "$unset": {"geocode_failed": "", "geocode_failed_at": "", "geocode_failed_address": ""}},
             )
             geocoded_count += 1
             results.append({
@@ -2625,6 +2646,14 @@ async def admin_geocode_backfill(
                 "status": "ok",
             })
         else:
+            await db.users.update_one(
+                {"id": m["id"]},
+                {"$set": {
+                    "geocode_failed": True,
+                    "geocode_failed_at": now_iso,
+                    "geocode_failed_address": m["address"],
+                }},
+            )
             failed_count += 1
             results.append({
                 "id": m["id"],
@@ -2642,6 +2671,76 @@ async def admin_geocode_backfill(
         "failed": failed_count,
         "results": results,
     }
+
+
+@api.get("/admin/merchants/geocode-issues")
+async def admin_geocode_issues(user: dict = Depends(require_admin_master)):
+    """Lista dei merchant che hanno un indirizzo NON geocodificabile (o mai geocodificato).
+    Include sia i falliti espliciti sia quelli con address ma senza lat/lng."""
+    query = {
+        "role": "merchant",
+        "address": {"$exists": True, "$ne": ""},
+        "$or": [
+            {"geocode_failed": True},
+            {"lat": {"$exists": False}},
+            {"lng": {"$exists": False}},
+            {"lat": None},
+            {"lng": None},
+        ],
+    }
+    rows = await db.users.find(
+        query,
+        {"_id": 0, "id": 1, "shop_name": 1, "name": 1, "email": 1, "address": 1,
+         "phone": 1, "category": 1, "zone": 1, "geocode_failed": 1,
+         "geocode_failed_at": 1, "geocode_failed_address": 1, "created_at": 1},
+    ).sort("geocode_failed_at", -1).to_list(length=500)
+    return {"issues": rows, "count": len(rows)}
+
+
+class AdminMerchantAddressIn(BaseModel):
+    address: str = Field(min_length=4, max_length=300)
+
+
+@api.post("/admin/merchants/{merchant_id}/geocode-retry")
+async def admin_geocode_retry(
+    merchant_id: str,
+    payload: Optional[AdminMerchantAddressIn] = None,
+    user: dict = Depends(require_admin_master),
+):
+    """Riprova geocoding per un singolo merchant. Se `payload.address` è
+    presente, aggiorna prima l'indirizzo del merchant (utile per correzioni
+    manuali). Ritorna il risultato del retry."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
+        raise HTTPException(404, "Merchant non trovato")
+
+    new_address = (payload.address.strip() if payload else "") or m.get("address", "")
+    if not new_address:
+        raise HTTPException(400, "Indirizzo mancante — impossibile geocodificare")
+
+    if payload and payload.address and payload.address.strip() != m.get("address"):
+        await db.users.update_one(
+            {"id": merchant_id},
+            {"$set": {"address": payload.address.strip()}},
+        )
+
+    # Bypass cache per il retry — l'admin potrebbe voler ri-tentare lo stesso indirizzo
+    _geocode_cache.pop(new_address.strip().lower(), None)
+    coords = await geocode_address(new_address)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if coords:
+        await db.users.update_one(
+            {"id": merchant_id},
+            {"$set": {"lat": coords["lat"], "lng": coords["lng"], "geocoded_at": now_iso},
+             "$unset": {"geocode_failed": "", "geocode_failed_at": "", "geocode_failed_address": ""}},
+        )
+        return {"ok": True, "status": "geocoded", "lat": coords["lat"], "lng": coords["lng"], "address": new_address}
+    else:
+        await db.users.update_one(
+            {"id": merchant_id},
+            {"$set": {"geocode_failed": True, "geocode_failed_at": now_iso, "geocode_failed_address": new_address}},
+        )
+        return {"ok": False, "status": "still_failed", "address": new_address}
 
 
 # ---------- Include Router & CORS (LAST) ----------

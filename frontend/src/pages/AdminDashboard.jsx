@@ -5,6 +5,7 @@ import HealthWidget from "@/components/admin/HealthWidget";
 import FraudLog from "@/components/admin/FraudLog";
 import ReviewsCenter from "@/components/admin/ReviewsCenter";
 import AdminSubscribers from "@/components/admin/AdminSubscribers";
+import GeocodeIssuesWidget from "@/components/admin/GeocodeIssuesWidget";
 import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -155,6 +156,9 @@ export default function AdminDashboard() {
       <div className="mb-4">
         <HealthWidget />
       </div>
+
+      {/* Alert per merchant con geocoding fallito */}
+      <GeocodeIssuesWidget hdrs={hdrs} />
 
       {/* Tabs */}
       <div className="mb-6 flex gap-2 border-b border-white/10 flex-wrap">
