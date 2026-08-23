@@ -207,6 +207,8 @@ class DiscountIn(BaseModel):
     original_price: float
     discounted_price: float
     image_url: Optional[str] = None
+    # Galleria fino a 8 foto. La prima è la copertina (usata come thumbnail nelle liste).
+    image_urls: Optional[List[str]] = None
     terms: Optional[str] = ""
     active: bool = True
     # Numero massimo di volte che uno stesso abbonato può usare lo sconto nel mese in corso.
@@ -218,6 +220,18 @@ class DiscountIn(BaseModel):
         for k in ("title", "description", "image_url", "terms"):
             if isinstance(d.get(k), str):
                 d[k] = d[k].strip()
+        # Normalizza image_urls: max 8, filtra vuoti
+        urls = d.get("image_urls") or []
+        if not isinstance(urls, list):
+            urls = []
+        urls = [u.strip() for u in urls if isinstance(u, str) and u.strip()][:8]
+        d["image_urls"] = urls
+        # Se image_url mancante ma image_urls presente, usa la prima come copertina
+        if not d.get("image_url") and urls:
+            d["image_url"] = urls[0]
+        # Se image_url c'è ma non è in image_urls, mettilo in cima
+        elif d.get("image_url") and d["image_url"] not in urls:
+            d["image_urls"] = [d["image_url"], *urls][:8]
         return d
 
 
@@ -319,6 +333,10 @@ async def register(payload: RegisterIn, response: Response):
             "phone": phone,
         })
     await db.users.insert_one(doc)
+
+    # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)
+    if payload.role == "merchant" and doc.get("address"):
+        asyncio.create_task(geocode_and_save_merchant(user_id, doc["address"]))
 
     access = create_token(user_id, email, "access")
     refresh = create_token(user_id, email, "refresh")
@@ -672,6 +690,9 @@ async def enrich_discount(d: dict) -> dict:
     d.setdefault("approval_note", "")
     d.setdefault("force_editable", False)
     d.setdefault("max_uses_per_month", 1)
+    # Galleria foto (max 8) — se mancante, fallback al singolo image_url
+    if not isinstance(d.get("image_urls"), list) or not d.get("image_urls"):
+        d["image_urls"] = [d["image_url"]] if d.get("image_url") else []
     d["locked_this_month"] = (d.get("approval_status") == "approved"
                               and d.get("locked_month") == current_month_key()
                               and not d.get("force_editable", False))
@@ -681,6 +702,57 @@ async def enrich_discount(d: dict) -> dict:
 def _month_start_iso() -> str:
     now = datetime.now(timezone.utc)
     return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+
+# ---------- Geocoding via Nominatim (OpenStreetMap, gratuito) ----------
+# Rate limit: max 1 req/sec per policy Nominatim. Usa User-Agent identificativo.
+_geocode_cache: dict = {}
+
+async def geocode_address(address: str) -> Optional[dict]:
+    """Trasforma un indirizzo stringa in {lat, lng} via Nominatim.
+    Ritorna None se non trovato o errore. Cache in-memory per evitare hit ripetuti."""
+    if not address or not isinstance(address, str) or len(address.strip()) < 4:
+        return None
+    key = address.strip().lower()
+    if key in _geocode_cache:
+        return _geocode_cache[key]
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            r = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "q": address,
+                    "format": "json",
+                    "limit": 1,
+                    "countrycodes": "it",
+                    "addressdetails": 0,
+                },
+                headers={"User-Agent": "ScontiRoma/1.0 (info@scontiroma.it)"},
+            )
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        if not data:
+            _geocode_cache[key] = None
+            return None
+        result = {"lat": float(data[0]["lat"]), "lng": float(data[0]["lon"])}
+        _geocode_cache[key] = result
+        return result
+    except Exception as e:
+        logging.warning(f"[geocode] failed for '{address[:50]}': {e}")
+        return None
+
+
+async def geocode_and_save_merchant(user_id: str, address: str) -> None:
+    """Fire-and-forget: geocodifica l'indirizzo del merchant e salva lat/lng.
+    Non blocca il flusso di registrazione/update se Nominatim è lento."""
+    coords = await geocode_address(address)
+    if coords:
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"lat": coords["lat"], "lng": coords["lng"]}},
+        )
+        logging.info(f"[geocode] merchant {user_id[:8]} → {coords}")
 
 
 @api.get("/merchants/top")
@@ -807,6 +879,9 @@ async def merchant_update_profile(payload: MerchantProfileIn, user: dict = Depen
         updates[k] = v.strip() if isinstance(v, str) else v
     if updates:
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
+        # Se l'indirizzo è cambiato, re-geocodifica in background
+        if updates.get("address") and updates["address"] != user.get("address"):
+            asyncio.create_task(geocode_and_save_merchant(user["id"], updates["address"]))
     u = await db.users.find_one({"id": user["id"]})
     return {"user": sanitize_user(u)}
 
@@ -865,8 +940,16 @@ async def subscribe(payload: SubscribeIn, user: dict = Depends(require_client)):
     return {"subscription": {k: v for k, v in doc.items() if k != "_id"}}
 
 
+class CancelSubIn(BaseModel):
+    reason: Optional[str] = None
+    feedback: Optional[str] = None
+
+
 @api.post("/subscription/cancel")
-async def cancel_sub(user: dict = Depends(require_client)):
+async def cancel_sub(payload: Optional[CancelSubIn] = None, user: dict = Depends(require_client)):
+    reason = (payload.reason if payload else None) or "user_requested"
+    feedback = (payload.feedback if payload else None) or ""
+    now_iso = datetime.now(timezone.utc).isoformat()
     # Cancel on Stripe first (for stripe-provider subs), then update DB
     active_subs = await db.subscriptions.find(
         {"user_id": user["id"], "status": "active"}
@@ -885,9 +968,14 @@ async def cancel_sub(user: dict = Depends(require_client)):
                 logging.warning(f"PayPal cancel failed for {s['paypal_subscription_id']}: {e}")
     await db.subscriptions.update_many(
         {"user_id": user["id"], "status": "active"},
-        {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {
+            "status": "cancelled",
+            "cancelled_at": now_iso,
+            "cancelled_reason": reason,
+            "cancelled_feedback": feedback,
+        }}
     )
-    return {"ok": True}
+    return {"ok": True, "cancelled_at": now_iso, "reason": reason}
 
 
 # ---------- Stripe Checkout (subscription €3/month) ----------
@@ -2162,6 +2250,144 @@ async def admin_health(user: dict = Depends(require_admin_master)):
         "resend": results[3],
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+@api.get("/admin/subscribers")
+async def admin_subscribers(
+    filter_status: Optional[str] = None,  # "active" | "cancelled" | "expired" | "all"
+    q: Optional[str] = None,
+    user: dict = Depends(require_admin_master),
+):
+    """Ritorna elenco COMPLETO di tutti gli utenti che hanno mai avuto un abbonamento,
+    con log dettagliato per ognuno:
+    - dati anagrafici (email, nome, provider)
+    - storico abbonamenti (attivazione, cancellazione, rinnovi)
+    - conteggio sconti utilizzati + breakdown per negozio
+
+    Filtri opzionali:
+    - status: filtra per stato subscription più recente
+    - q: filtra per email o nome (case-insensitive)
+    """
+    # 1) Trova tutti gli user_id che hanno almeno una subscription
+    user_ids = await db.subscriptions.distinct("user_id")
+    if not user_ids:
+        return {"subscribers": [], "count": 0}
+
+    # 2) Carica users in batch
+    users = await db.users.find(
+        {"id": {"$in": user_ids}, "role": "client"},
+        {"_id": 0, "password_hash": 0, "pin_hash": 0, "webauthn_credentials": 0, "reset_token": 0},
+    ).to_list(length=None)
+    user_by_id = {u["id"]: u for u in users}
+
+    # 3) Carica tutte le subscriptions raggruppate per user_id
+    all_subs = await db.subscriptions.find(
+        {"user_id": {"$in": user_ids}}, {"_id": 0},
+        sort=[("start_date", -1)],
+    ).to_list(length=None)
+    subs_by_user: dict = {}
+    for s in all_subs:
+        subs_by_user.setdefault(s["user_id"], []).append(s)
+
+    # 4) Carica tutti gli eventi di rinnovo
+    all_renewals = await db.renewal_events.find(
+        {"user_id": {"$in": user_ids}}, {"_id": 0},
+        sort=[("processed_at", -1)],
+    ).to_list(length=None)
+    renewals_by_user: dict = {}
+    for r in all_renewals:
+        renewals_by_user.setdefault(r["user_id"], []).append(r)
+
+    # 5) Redemptions aggregate per user (solo redeemed) con breakdown per negozio
+    pipeline = [
+        {"$match": {"user_id": {"$in": user_ids}, "status": "redeemed"}},
+        {"$group": {
+            "_id": {"user_id": "$user_id", "merchant_id": "$merchant_id"},
+            "count": {"$sum": 1},
+            "last_redeemed_at": {"$max": "$redeemed_at"},
+        }},
+    ]
+    redemption_aggregations = await db.redemptions.aggregate(pipeline).to_list(length=None)
+
+    # Carica shop_name per ogni merchant_id
+    merchant_ids = list({r["_id"]["merchant_id"] for r in redemption_aggregations})
+    merchants = await db.users.find(
+        {"id": {"$in": merchant_ids}, "role": "merchant"},
+        {"_id": 0, "id": 1, "shop_name": 1, "zone": 1},
+    ).to_list(length=None) if merchant_ids else []
+    shop_by_id = {m["id"]: m for m in merchants}
+
+    # Raggruppa per user_id
+    redemptions_by_user: dict = {}
+    for r in redemption_aggregations:
+        uid = r["_id"]["user_id"]
+        mid = r["_id"]["merchant_id"]
+        shop = shop_by_id.get(mid, {})
+        redemptions_by_user.setdefault(uid, []).append({
+            "merchant_id": mid,
+            "shop_name": shop.get("shop_name", "Negozio eliminato"),
+            "zone": shop.get("zone"),
+            "count": r["count"],
+            "last_redeemed_at": r.get("last_redeemed_at"),
+        })
+
+    # 6) Costruisci risposta
+    q_lower = (q or "").strip().lower()
+    result = []
+    for uid in user_ids:
+        u = user_by_id.get(uid)
+        if not u:
+            continue  # user deleted
+        user_subs = subs_by_user.get(uid, [])
+        latest = user_subs[0] if user_subs else None
+        current_status = latest.get("status") if latest else None
+
+        # Filtro status
+        if filter_status and filter_status != "all" and current_status != filter_status:
+            continue
+        # Filtro q
+        if q_lower and q_lower not in (u.get("email") or "").lower() and q_lower not in (u.get("name") or "").lower():
+            continue
+
+        shops = redemptions_by_user.get(uid, [])
+        shops.sort(key=lambda x: x["count"], reverse=True)
+        total_redemptions = sum(s["count"] for s in shops)
+
+        result.append({
+            "user": {
+                "id": u["id"],
+                "email": u["email"],
+                "name": u.get("name"),
+                "phone": u.get("phone"),
+                "created_at": u.get("created_at"),
+                "data_scadenza_abbonamento": u.get("data_scadenza_abbonamento"),
+                "consents": u.get("consents"),
+            },
+            "current_status": current_status,
+            "latest_subscription": latest,
+            "subscriptions_history": user_subs,  # completo per audit
+            "renewal_events": renewals_by_user.get(uid, []),
+            "renewals_count": len(renewals_by_user.get(uid, [])),
+            "total_redemptions": total_redemptions,
+            "shops_used": shops,  # breakdown per negozio
+        })
+
+    # Ordina: attivi prima, poi per data ultima azione
+    def sort_key(r):
+        s = r.get("current_status")
+        status_rank = 0 if s == "active" else (1 if s == "cancelled" else 2)
+        latest_ts = (r.get("latest_subscription") or {}).get("cancelled_at") \
+            or (r.get("latest_subscription") or {}).get("start_date") \
+            or ""
+        return (status_rank, -len(latest_ts), latest_ts)
+    result.sort(key=lambda r: (
+        0 if r.get("current_status") == "active" else 1,
+        -(len((r.get("latest_subscription") or {}).get("start_date") or "")),
+    ))
+
+    return {"subscribers": result, "count": len(result)}
+
+
 
 
 # ---------- Include Router & CORS (must be LAST - after all @api.* definitions) ----------

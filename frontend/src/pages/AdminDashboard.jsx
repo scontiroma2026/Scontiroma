@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import HealthWidget from "@/components/admin/HealthWidget";
 import FraudLog from "@/components/admin/FraudLog";
 import ReviewsCenter from "@/components/admin/ReviewsCenter";
+import AdminSubscribers from "@/components/admin/AdminSubscribers";
 import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -157,7 +158,7 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <div className="mb-6 flex gap-2 border-b border-white/10 flex-wrap">
-        {[["analytics","Analytics"], ["pending", `Offerte in attesa (${pending.length})`], ["merchants",`Negozi (${merchants.length})`], ["fraud","Registro Frodi"], ["reviews","Feedback"], ["log","Log completo"]].map(([k, l]) => (
+        {[["analytics","Analytics"], ["subscribers","Abbonati"], ["pending", `Offerte in attesa (${pending.length})`], ["merchants",`Negozi (${merchants.length})`], ["fraud","Registro Frodi"], ["reviews","Feedback"], ["log","Log completo"]].map(([k, l]) => (
           <button
             key={k}
             data-testid={`tab-${k}`}
@@ -169,6 +170,7 @@ export default function AdminDashboard() {
 
       {tab === "fraud" && <FraudLog />}
       {tab === "reviews" && <ReviewsCenter />}
+      {tab === "subscribers" && <AdminSubscribers hdrs={hdrs} />}
 
       {tab === "analytics" && (
         <>

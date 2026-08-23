@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { MapPin, Clock, ArrowLeft, TicketPercent, Shield } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, TicketPercent, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import MiniMap from "@/components/MiniMap";
 
 export default function DiscountDetail() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function DiscountDetail() {
   const [alreadyUsed, setAlreadyUsed] = useState(false);
   const [usageInfo, setUsageInfo] = useState({ used_count: 0, max_uses: 1, remaining: 1 });
   const [windowSec, setWindowSec] = useState(20);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const pollRef = useRef(null);
   const tickRef = useRef(null);
 
@@ -99,17 +101,74 @@ export default function DiscountDetail() {
       </button>
 
       <div className="grid gap-10 md:grid-cols-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-fucsia/20 to-ciano/10">
-          <img
-            src={discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"}
-            alt={discount.title}
-            className="h-full w-full object-cover"
-            onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
-          />
-          <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
-            −{discount.percent_off}%
-          </div>
-        </div>
+        {(() => {
+          const gallery = (Array.isArray(discount.image_urls) && discount.image_urls.length > 0)
+            ? discount.image_urls
+            : [discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"];
+          const current = gallery[photoIdx] || gallery[0];
+          const hasMulti = gallery.length > 1;
+          return (
+            <div>
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-fucsia/20 to-ciano/10">
+                <img
+                  data-testid="discount-hero-image"
+                  src={current}
+                  alt={discount.title}
+                  className="h-full w-full object-cover transition-opacity duration-300"
+                  onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
+                />
+                <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
+                  −{discount.percent_off}%
+                </div>
+                {hasMulti && (
+                  <>
+                    <button
+                      data-testid="gallery-prev"
+                      onClick={() => setPhotoIdx((i) => (i - 1 + gallery.length) % gallery.length)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-fucsia transition"
+                      aria-label="Foto precedente"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button
+                      data-testid="gallery-next"
+                      onClick={() => setPhotoIdx((i) => (i + 1) % gallery.length)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-fucsia transition"
+                      aria-label="Foto successiva"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/60 px-3 py-1.5">
+                      {gallery.map((_, i) => (
+                        <button
+                          key={i}
+                          data-testid={`gallery-dot-${i}`}
+                          onClick={() => setPhotoIdx(i)}
+                          className={`h-1.5 rounded-full transition-all ${i === photoIdx ? "w-6 bg-fucsia" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
+                          aria-label={`Foto ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              {hasMulti && (
+                <div className="mt-3 grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                  {gallery.map((url, i) => (
+                    <button
+                      key={i}
+                      data-testid={`gallery-thumb-${i}`}
+                      onClick={() => setPhotoIdx(i)}
+                      className={`aspect-square overflow-hidden rounded-md border-2 transition ${i === photoIdx ? "border-fucsia scale-105" : "border-transparent opacity-70 hover:opacity-100"}`}
+                    >
+                      <img src={url} alt={`foto ${i + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <div>
           <div className="mb-2 flex items-center gap-3 text-xs uppercase tracking-wider">
@@ -197,6 +256,18 @@ export default function DiscountDetail() {
           )}
         </div>
       </div>
+
+      {/* Mini-mappa con posizione del negozio */}
+      {typeof m.lat === "number" && typeof m.lng === "number" && (
+        <div className="mt-8">
+          <MiniMap
+            lat={m.lat}
+            lng={m.lng}
+            shopName={m.shop_name}
+            address={m.address}
+          />
+        </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent data-testid="qr-dialog" className="max-w-sm bg-[#141414] border border-white/10">

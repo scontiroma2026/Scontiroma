@@ -8,13 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle } from "lucide-react";
-import PhotoEnhancer from "@/components/PhotoEnhancer";
-import DefaultImagePicker from "@/components/DefaultImagePicker";
+import PhotoGallery from "@/components/PhotoGallery";
 
 export default function MerchantDiscount() {
   const [form, setForm] = useState({
     title: "", description: "", original_price: "", discounted_price: "",
-    image_url: "", terms: "", active: true, max_uses_per_month: 1,
+    image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
   });
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState(null);
@@ -29,7 +28,9 @@ export default function MerchantDiscount() {
       setForm({
         title: d.title, description: d.description,
         original_price: d.original_price, discounted_price: d.discounted_price,
-        image_url: d.image_url || "", terms: d.terms || "", active: d.active,
+        image_url: d.image_url || "",
+        image_urls: Array.isArray(d.image_urls) ? d.image_urls : (d.image_url ? [d.image_url] : []),
+        terms: d.terms || "", active: d.active,
         max_uses_per_month: d.max_uses_per_month || 1,
       });
     }
@@ -151,18 +152,19 @@ export default function MerchantDiscount() {
               </div>
             </div>
             <div>
-              <Label>Foto dell'offerta</Label>
-              <p className="text-xs text-white/50 mt-1 mb-2">Carica una tua foto (verrà ottimizzata automaticamente) oppure scegli da 100 immagini pronte.</p>
-              <div className="mb-3">
-                <DefaultImagePicker
-                  selectedUrl={form.image_url}
-                  onSelect={(url) => setForm((f) => ({ ...f, image_url: url }))}
-                />
-              </div>
-              <PhotoEnhancer
-                value={form.image_url}
-                onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
-                testIdPrefix="disc-photo"
+              <Label>Foto dell'offerta <span className="text-xs text-white/50">(fino a 8, la 1ª è la copertina)</span></Label>
+              <p className="text-xs text-white/50 mt-1 mb-3">
+                Carica le tue foto (verranno ottimizzate) oppure scegli dalla libreria di 100 immagini pronte. Trascina l'ordine o rimuovi con la X.
+              </p>
+              <PhotoGallery
+                value={form.image_urls}
+                onChange={(urls) => setForm((f) => ({
+                  ...f,
+                  image_urls: urls,
+                  image_url: urls[0] || "", // copertina
+                }))}
+                max={8}
+                disabled={readOnly}
               />
             </div>
             <div>

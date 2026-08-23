@@ -85,6 +85,14 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Test completo: 2 rinnovi Stripe (+30gg cumulativi ✅), idempotenza (stesso event_id → skip ✅), rinnovo PayPal (✅). 4 email Resend inviate a Francesco confermate con ID.
   - Nota: user aveva chiesto sender `noreply@send.scontiroma.it` ma quel sottodominio NON è verificato su Resend (solo `scontiroma.it` root). Uso `SENDER_EMAIL` corrente = `noreply@scontiroma.it` che funziona.
 
+- **[2026-02-24]** Feature triple: **Galleria foto** (max 8) + **Geocoding automatico** + **Mini-mappa**:
+  - `DiscountIn.image_urls: List[str]` (max 8, filtered/deduped in `cleaned()`), backward compat con `image_url` (auto-sync copertina).
+  - Nuovo componente `PhotoGallery.jsx`: tile grid con badge "Copertina" sulla 1ª foto, controlli riordino ↑↓/rimozione, staged-preview con Libreria + PhotoEnhancer.
+  - Nuovo endpoint helper `geocode_address()` via Nominatim OpenStreetMap (gratuito, User-Agent identificativo, cache in-memory). `geocode_and_save_merchant()` fire-and-forget su registrazione merchant + su update profilo se address cambia.
+  - Nuovo componente `MiniMap.jsx` con react-leaflet + tema dark, pin fucsia, popup con nome/indirizzo, header "Dove siamo" + pulsante "Portami qui" (link Google Maps navigation).
+  - `DiscountDetail.jsx` ora ha hero con frecce di navigazione ← →, dot indicator, thumbnail strip, MiniMap sotto la card prezzo.
+  - **Verificato E2E**: registrato "Pizzeria da Marco Geo" a Piazza Navona 10 → geocode restituisce `lat=41.8978, lng=12.4728` in 4 secondi ✓ · galleria 3 foto salvata ✓ · mini-mappa renderizza sulla pagina sconto ✓.
+
 ## Prioritized Backlog
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".
