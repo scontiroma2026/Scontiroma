@@ -172,9 +172,46 @@ def gen_code(n: int = 8) -> str:
 async def _cancel_expired_grace(user_id: str) -> None:
     """Se l'utente ha una subscription 'past_due' con grace_expires_at già passata,
     la marca 'cancelled' definitivamente (7 giorni dal mancato pagamento senza
-    retry riuscito → abbonamento decaduto per sempre)."""
-    now_iso = datetime.now(timezone.utc).isoformat()
-    result = await db.subscriptions.update_many(
+    retry riuscito → abbonamento decaduto per sempre).
+
+    In più, cancella la subscription anche sul gateway (Stripe / PayPal) così il
+    provider smette di riprovare il pagamento e non addebita più il cliente.
+    """
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+
+    # Prima trova le sub che stanno per essere marcate cancelled, per poter
+    # chiamare l'API del gateway (dopo l'update non abbiamo più il sub_id).
+    expired = await db.subscriptions.find({
+        "user_id": user_id,
+        "status": "past_due",
+        "grace_expires_at": {"$lt": now_iso},
+    }).to_list(length=None)
+
+    if not expired:
+        return
+
+    for s in expired:
+        provider = s.get("provider")
+        try:
+            if provider == "stripe" and s.get("stripe_subscription_id"):
+                stripe.Subscription.cancel(s["stripe_subscription_id"])
+                logging.info(f"[grace-expired] Stripe sub {s['stripe_subscription_id'][:12]}… cancellata via API")
+            elif provider == "paypal" and s.get("paypal_subscription_id"):
+                await paypal_service.cancel_subscription(
+                    s["paypal_subscription_id"],
+                    reason="Payment failed for 7 days — grace period expired",
+                )
+                logging.info(f"[grace-expired] PayPal sub {s['paypal_subscription_id'][:12]}… cancellata via API")
+        except Exception as e:
+            # Se la chiamata al gateway fallisce (rate limit, network, sub già cancellata
+            # dal loro sistema), continuiamo comunque a cancellare in locale. Il retry
+            # verrà eventualmente coperto da un webhook `customer.subscription.deleted`
+            # / `BILLING.SUBSCRIPTION.CANCELLED`.
+            logging.warning(f"[grace-expired] gateway cancel failed for user={user_id[:8]} sub={s.get('id','?')}: {e}")
+
+    # Aggiorna in blocco lo stato locale (idempotente rispetto agli update già fatti)
+    await db.subscriptions.update_many(
         {
             "user_id": user_id,
             "status": "past_due",
@@ -186,12 +223,11 @@ async def _cancel_expired_grace(user_id: str) -> None:
             "cancel_reason": "grace_period_expired",
         }},
     )
-    if result.modified_count > 0:
-        await db.users.update_one(
-            {"id": user_id},
-            {"$set": {"subscription_status": "cancelled"}},
-        )
-        logging.info(f"[grace-expired] user={user_id[:8]} sub decaduta dopo 7gg senza pagamento")
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"subscription_status": "cancelled"}},
+    )
+    logging.info(f"[grace-expired] user={user_id[:8]} sub decaduta dopo 7gg senza pagamento")
 
 
 async def user_has_active_sub(user_id: str) -> bool:
