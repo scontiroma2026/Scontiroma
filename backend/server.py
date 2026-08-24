@@ -169,7 +169,34 @@ def gen_code(n: int = 8) -> str:
     return "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
 
 
+async def _cancel_expired_grace(user_id: str) -> None:
+    """Se l'utente ha una subscription 'past_due' con grace_expires_at già passata,
+    la marca 'cancelled' definitivamente (7 giorni dal mancato pagamento senza
+    retry riuscito → abbonamento decaduto per sempre)."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    result = await db.subscriptions.update_many(
+        {
+            "user_id": user_id,
+            "status": "past_due",
+            "grace_expires_at": {"$lt": now_iso},
+        },
+        {"$set": {
+            "status": "cancelled",
+            "cancelled_at": now_iso,
+            "cancel_reason": "grace_period_expired",
+        }},
+    )
+    if result.modified_count > 0:
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"subscription_status": "cancelled"}},
+        )
+        logging.info(f"[grace-expired] user={user_id[:8]} sub decaduta dopo 7gg senza pagamento")
+
+
 async def user_has_active_sub(user_id: str) -> bool:
+    # Cleanup lazy: se la grace di 7gg è scaduta, marca la sub come cancellata
+    await _cancel_expired_grace(user_id)
     now_iso = datetime.now(timezone.utc).isoformat()
     sub = await db.subscriptions.find_one({
         "user_id": user_id,
@@ -1029,10 +1056,24 @@ async def merchant_redemptions(user: dict = Depends(require_merchant)):
 # ---------- Subscription ----------
 @api.get("/subscription/me")
 async def my_subscription(user: dict = Depends(get_current_user)):
+    # Lazy cleanup: se la grace di 7gg è scaduta, marca past_due → cancelled
+    await _cancel_expired_grace(user["id"])
+    now_iso = datetime.now(timezone.utc).isoformat()
     sub = await db.subscriptions.find_one({"user_id": user["id"], "status": "active"})
     if sub:
         sub = {k: v for k, v in sub.items() if k != "_id"}
-    return {"subscription": sub, "active": sub is not None}
+        return {"subscription": sub, "active": True, "past_due": False}
+    # Nessuna sub attiva: controlla se c'è una past_due ancora nella finestra di 7gg
+    # (utente sospeso ma può ancora salvare l'abbonamento pagando entro grace_expires_at).
+    past = await db.subscriptions.find_one(
+        {"user_id": user["id"], "status": "past_due", "grace_expires_at": {"$gt": now_iso}},
+        sort=[("payment_failed_at", -1)],
+    )
+    if past:
+        past = {k: v for k, v in past.items() if k != "_id"}
+        return {"subscription": past, "active": False, "past_due": True,
+                "grace_expires_at": past.get("grace_expires_at")}
+    return {"subscription": None, "active": False, "past_due": False}
 
 
 @api.post("/subscription/subscribe")
@@ -1154,6 +1195,80 @@ async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(requir
         "updated_at": datetime.now(timezone.utc).isoformat(),
     })
     return {"checkout_url": session.url, "session_id": session.id}
+
+
+async def suspend_subscription_on_payment_failed(
+    *,
+    user_id: str,
+    provider: str,
+    provider_event_id: str,
+    provider_sub_id: str,
+) -> None:
+    """Sospende IMMEDIATAMENTE l'abbonamento quando arriva un evento di pagamento
+    fallito dai gateway (Stripe `invoice.payment_failed`, PayPal `PAYMENT.SALE.DENIED`
+    o `BILLING.SUBSCRIPTION.PAYMENT.FAILED`).
+
+    Regole:
+      - status → 'past_due', end_date → now (l'utente non può più riscattare sconti)
+      - users.data_scadenza_abbonamento → now (idem per la view "il mio account")
+      - grace_expires_at = now + 7 giorni: finestra in cui Stripe/PayPal riproveranno
+        automaticamente il pagamento (se una successiva `invoice.payment_succeeded`
+        arriva, `extend_subscription_on_renewal` rimette status='active' + 30gg)
+      - IDEMPOTENTE via collection `renewal_events` chiave `provider_event_id`
+    """
+    existing = await db.renewal_events.find_one({"provider_event_id": provider_event_id})
+    if existing:
+        logging.info(f"[payment-failed] event {provider_event_id} già processato, skip")
+        return
+
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    grace_expires_iso = (now + timedelta(days=7)).isoformat()
+
+    match = {"user_id": user_id, "provider": provider}
+    if provider == "stripe":
+        match["stripe_subscription_id"] = provider_sub_id
+    elif provider == "paypal":
+        match["paypal_subscription_id"] = provider_sub_id
+    sub = await db.subscriptions.find_one(match, sort=[("start_date", -1)])
+    if not sub:
+        sub = await db.subscriptions.find_one(
+            {"user_id": user_id, "status": "active"},
+            sort=[("start_date", -1)],
+        )
+    if not sub:
+        logging.warning(f"[payment-failed] nessuna subscription per {user_id}/{provider}")
+        return
+
+    await db.subscriptions.update_one(
+        {"id": sub["id"]},
+        {"$set": {
+            "status": "past_due",
+            "end_date": now_iso,  # sospensione immediata: l'accesso agli sconti si blocca subito
+            "payment_failed_at": now_iso,
+            "grace_expires_at": grace_expires_iso,
+            "last_failure_event_id": provider_event_id,
+        }},
+    )
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "data_scadenza_abbonamento": now_iso,
+            "subscription_status": "past_due",
+            "grace_expires_at": grace_expires_iso,
+        }},
+    )
+    await db.renewal_events.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "provider": provider,
+        "provider_event_id": provider_event_id,
+        "provider_sub_id": provider_sub_id,
+        "type": "payment_failed",
+        "processed_at": now_iso,
+        "grace_expires_at": grace_expires_iso,
+    })
+    logging.info(f"[payment-failed] user={user_id[:8]} suspended via {provider} (grace until {grace_expires_iso})")
 
 
 async def extend_subscription_on_renewal(
@@ -1356,6 +1471,27 @@ async def stripe_webhook(request: Request):
                     provider_sub_id=stripe_sub_id,
                     price_eur=amount_paid,
                 )
+    elif t == "invoice.payment_failed":
+        # Rinnovo mensile FALLITO. Sospendi immediatamente l'abbonamento.
+        # Stripe riproverà il pagamento più volte nei ~7 giorni successivi.
+        # Se un retry ha successo, arriverà `invoice.payment_succeeded` e
+        # `extend_subscription_on_renewal()` rimetterà status=active + 30gg.
+        billing_reason = obj.get("billing_reason")
+        stripe_sub_id = obj.get("subscription")
+        invoice_id = obj.get("id")
+        # Il primo pagamento fallito (subscription_create) è gestito lato checkout
+        # (l'utente vede l'errore nel checkout stesso), non serve sospendere qui.
+        if billing_reason == "subscription_create":
+            return {"status": "ok", "skipped": "first_charge_failed_handled_by_checkout"}
+        if stripe_sub_id and invoice_id:
+            sub = await db.subscriptions.find_one({"stripe_subscription_id": stripe_sub_id})
+            if sub:
+                await suspend_subscription_on_payment_failed(
+                    user_id=sub["user_id"],
+                    provider="stripe",
+                    provider_event_id=f"stripe:fail:{invoice_id}",
+                    provider_sub_id=stripe_sub_id,
+                )
     elif t == "customer.subscription.deleted":
         sub_id = obj.get("id")
         await db.subscriptions.update_many(
@@ -1479,10 +1615,27 @@ async def paypal_webhook(request: Request):
                     provider_sub_id=billing_agreement_id,
                     price_eur=price,
                 )
+    elif etype in ("PAYMENT.SALE.DENIED",
+                   "BILLING.SUBSCRIPTION.PAYMENT.FAILED"):
+        # Rinnovo mensile PayPal FALLITO. Sospendi immediatamente.
+        # PayPal riproverà il pagamento fino a 3 volte nei ~7 giorni successivi (retry policy).
+        # Se una `PAYMENT.SALE.COMPLETED` arriva dopo, `extend_subscription_on_renewal`
+        # rimetterà status=active + 30gg.
+        billing_agreement_id = resource.get("billing_agreement_id") or sub_id or \
+            resource.get("supplementary_data", {}).get("related_ids", {}).get("subscription_id")
+        event_ref = resource.get("id") or event.get("id") or f"pp-{uuid.uuid4().hex[:8]}"
+        if billing_agreement_id:
+            sub = await db.subscriptions.find_one({"paypal_subscription_id": billing_agreement_id})
+            if sub:
+                await suspend_subscription_on_payment_failed(
+                    user_id=sub["user_id"],
+                    provider="paypal",
+                    provider_event_id=f"paypal:fail:{event_ref}",
+                    provider_sub_id=billing_agreement_id,
+                )
     elif etype in ("BILLING.SUBSCRIPTION.CANCELLED",
                    "BILLING.SUBSCRIPTION.SUSPENDED",
-                   "BILLING.SUBSCRIPTION.EXPIRED",
-                   "PAYMENT.SALE.DENIED"):
+                   "BILLING.SUBSCRIPTION.EXPIRED"):
         await db.subscriptions.update_many(
             {"paypal_subscription_id": sub_id, "status": "active"},
             {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
@@ -2803,6 +2956,53 @@ async def gdpr_update_marketing(opt_in: bool, user: dict = Depends(get_current_u
 # =====================================================================
 # QA / Testing: Simulazione rinnovo abbonamento
 # =====================================================================
+
+@api.post("/admin/simulate-payment-failed/{user_id}")
+async def admin_simulate_payment_failed(
+    user_id: str,
+    provider: str = "stripe",
+    admin: dict = Depends(require_admin_master),
+):
+    """Simula un evento di pagamento FALLITO al rinnovo (Stripe `invoice.payment_failed`
+    o PayPal `PAYMENT.SALE.DENIED`) senza dover forzare un fallimento reale sul gateway.
+
+    Attiva `suspend_subscription_on_payment_failed()`: la subscription passa a
+    `past_due`, end_date → ora, grace_expires_at → +7 giorni.
+    """
+    if provider not in ("stripe", "paypal"):
+        raise HTTPException(400, "provider deve essere 'stripe' o 'paypal'")
+    sub = await db.subscriptions.find_one(
+        {"user_id": user_id, "provider": provider},
+        sort=[("start_date", -1)],
+    )
+    if not sub:
+        sub = await db.subscriptions.find_one({"user_id": user_id}, sort=[("start_date", -1)])
+    if not sub:
+        raise HTTPException(400, "Utente non ha nessuna subscription — impossibile simulare")
+
+    provider_sub_id = (
+        sub.get("stripe_subscription_id") if provider == "stripe" else sub.get("paypal_subscription_id")
+    ) or f"sim_{provider}_{user_id[:8]}"
+
+    fake_event_id = f"{provider}:sim-fail:{uuid.uuid4()}"
+    await suspend_subscription_on_payment_failed(
+        user_id=user_id,
+        provider=provider,
+        provider_event_id=fake_event_id,
+        provider_sub_id=provider_sub_id,
+    )
+    updated_sub = await db.subscriptions.find_one({"id": sub["id"]})
+    updated_user = await db.users.find_one({"id": user_id})
+    return {
+        "ok": True,
+        "simulated_event_id": fake_event_id,
+        "subscription_status": updated_sub.get("status"),
+        "subscription_end_date": updated_sub.get("end_date"),
+        "subscription_grace_expires_at": updated_sub.get("grace_expires_at"),
+        "user_subscription_status": updated_user.get("subscription_status"),
+        "provider": provider,
+    }
+
 
 @api.post("/admin/simulate-renewal/{user_id}")
 async def admin_simulate_renewal(

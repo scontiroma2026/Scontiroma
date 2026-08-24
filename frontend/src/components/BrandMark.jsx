@@ -49,14 +49,14 @@ export default function BrandMark({
 /**
  * SRIcon — il logo del brand: silhouette del Colosseo stilizzato.
  *
- * Elementi (stile minimal, in linea col resto dell'app):
- *  - Doppio ordine di archi (bottom + upper gallery) come nell'anfiteatro reale.
- *  - Arco centrale del piano inferiore PIENO in fucsia — accento del brand.
- *  - Skyline "stepped" che riprende il muro sud crollato del Colosseo
- *    (metà alta a sinistra, metà più bassa a destra).
- *  - Sparkle ciano a 4 punte in alto a destra → segnale sconto.
- *  - Linea rosa alla base → suolo/pavimento romano.
- *  - Gli outline seguono `currentColor` così si adattano al testo circostante.
+ * Design minimal, mono-piano (senza upper gallery di piccoli archi):
+ *  - Skyline "stepped" (metà alta a sinistra, metà crollata a destra) →
+ *    il tratto più iconico del Colosseo reale.
+ *  - 4 archi in outline sulla facciata + arco centrale PIENO fucsia →
+ *    accento del brand.
+ *  - Sparkle ciano a 4 punte sopra a destra → segnale sconto.
+ *  - Linea rosa alla base → il suolo romano.
+ *  - Gli outline seguono `currentColor` così si adattano al testo attorno.
  */
 function SRIcon({ className = "" }) {
   return (
@@ -90,46 +90,25 @@ function SRIcon({ className = "" }) {
         strokeLinecap="round"
       />
 
-      {/* Skyline superiore stepped: parte alta a sinistra, parte crollata a destra */}
+      {/* Skyline del Colosseo: parte alta a sinistra, parte "crollata" a destra */}
       <path
-        d="M 4 15
-           L 4 9
-           L 18 9
-           L 18 12
-           L 30 12
-           L 30 15"
+        d="M 4 27
+           L 4 11
+           L 18 11
+           L 18 14
+           L 30 14
+           L 30 27"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* Piano superiore: 4 archi piccoli in outline */}
-      <path
-        d="M 6 15 L 6 12.5 Q 6 10.8 7.5 10.8 Q 9 10.8 9 12.5 L 9 15
-           M 11 15 L 11 12.5 Q 11 10.8 12.5 10.8 Q 14 10.8 14 12.5 L 14 15
-           M 16 15 L 16 12.5 Q 16 10.8 17 10.8
-           M 21 15 L 21 13.6 Q 21 12.6 22.5 12.6 Q 24 12.6 24 13.6 L 24 15
-           M 26 15 L 26 13.6 Q 26 12.6 27.5 12.6 Q 29 12.6 29 13.6 L 29 15"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-
-      {/* Fascia orizzontale che separa i due ordini */}
-      <line
-        x1="4" y1="16.5" x2="30" y2="16.5"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-
-      {/* Piano inferiore: 4 archi grandi, il centrale PIENO fucsia (accento brand) */}
+      {/* Facciata: 4 archi grandi, il centrale PIENO fucsia (accento brand) */}
       {/* Arco 1 (sinistra) — outline */}
       <path
-        d="M 5 26.5 L 5 21 Q 5 17.5 8 17.5 Q 11 17.5 11 21 L 11 26.5"
+        d="M 6 26.5 L 6 20 Q 6 16.5 9 16.5 Q 12 16.5 12 20 L 12 26.5"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.6"
@@ -137,20 +116,20 @@ function SRIcon({ className = "" }) {
       />
       {/* Arco 2 CENTRALE — pieno fucsia */}
       <path
-        d="M 12 26.5 L 12 20.5 Q 12 17 15.5 17 Q 19 17 19 20.5 L 19 26.5 Z"
+        d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z"
         fill="#FF2E93"
       />
       {/* Arco 3 — outline */}
       <path
-        d="M 20 26.5 L 20 21 Q 20 17.5 23 17.5 Q 26 17.5 26 21 L 26 26.5"
+        d="M 21 26.5 L 21 20 Q 21 16.5 23.5 16.5 Q 26 16.5 26 20 L 26 26.5"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
       />
-      {/* Arco 4 (destra) — outline più basso (lato "crollato") */}
+      {/* Arco 4 (destra, più basso — lato "crollato") */}
       <path
-        d="M 27 26.5 L 27 22 Q 27 19 29.5 19 Q 32 19 32 22 L 32 26.5"
+        d="M 27 26.5 L 27 21.5 Q 27 18.5 29 18.5 Q 31 18.5 31 21.5 L 31 26.5"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.6"

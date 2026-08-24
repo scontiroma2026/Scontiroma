@@ -112,6 +112,19 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **AI Photo Enhancement** (Gemini Nano Banana): nuovo endpoint `POST /api/ai/enhance-image` (require merchant) che accetta `image_url` + `category`, scarica l'immagine (max 8MB) via httpx o base64 data-URL, la invia a `gemini-3.1-flash-image-preview` con prompt category-aware ("professional food photography", "energetic sport facility", "luxury beauty & wellness", "fashion retail" o "professional commercial") e regole strict "keep same subject/composition, only improve lighting/color/sharpness". Ritorna un `data:image/*;base64` URL pronto per essere salvato al posto dell'originale. Nel frontend `PhotoGallery.jsx`, ogni tile ha ora un pulsante `photo-ai-enhance-{i}` in alto ("✨ Ottimizza con AI" gradient fucsia→viola on-hover, stato "Ottimizzo…" con spinner durante la chiamata). Passa `category` dal profilo merchant per contestualizzare il prompt.
   - **Verificato**: endpoint `/api/ai/enhance-image` risponde 401 senza auth ✅ · logo con 3 archi + sparkle renderizzato su Landing (3 istanze BrandMark) ✅ · icona pink "S" visibile nel tab browser + navbar ✅.
 
+- **[2026-02-25]** Tripla modifica: **Sospensione immediata su rinnovo fallito** + **testo Termini aggiornato** + **logo Colosseo semplificato**:
+  - **Sospensione immediata al mancato pagamento** (Stripe `invoice.payment_failed`, PayPal `PAYMENT.SALE.DENIED` / `BILLING.SUBSCRIPTION.PAYMENT.FAILED`):
+    - Nuovo helper backend `suspend_subscription_on_payment_failed()`: status→`past_due`, end_date→now, salva `payment_failed_at` e `grace_expires_at=now+7gg`, aggiorna `users.data_scadenza_abbonamento`→now. Idempotente via `renewal_events`.
+    - Cablato nel webhook Stripe (salta però `subscription_create` per non sospendere il primo pagamento fallito, che è gestito lato checkout).
+    - Cablato nel webhook PayPal (spostato `PAYMENT.SALE.DENIED` fuori dal branch che cancellava direttamente).
+    - `PAYMENT.SALE.COMPLETED` successivo (retry riuscito) → `extend_subscription_on_renewal()` riporta lo status a `active` + 30gg (già idempotente).
+    - Lazy cleanup su `/subscription/me` e `user_has_active_sub()`: se `past_due` con `grace_expires_at<now` → status diventa `cancelled` con `cancel_reason='grace_period_expired'` (l'abbonamento decade definitivamente dopo 7 giorni).
+    - `/subscription/me` ora ritorna anche `past_due` bool e `grace_expires_at` per permettere al frontend di mostrare il banner "abbonamento sospeso, hai X giorni per pagare".
+    - Nuovo endpoint QA `POST /admin/simulate-payment-failed/{user_id}?provider=stripe|paypal` (require_admin_master).
+    - **Verificato E2E**: 1) Francesco active → simulate-payment-failed → `active:false, past_due:true, end_date=now, grace=+7gg` ✅ 2) simulate-renewal → `active:true, past_due:false, +30gg` ✅ 3) grace forzato al passato → lazy cleanup marca `cancelled` e `/subscription/me` ritorna `subscription:null, active:false` ✅.
+  - **Terms & Conditions** (`/termini`): riscritta la clausola "Mancato pagamento" — ora dice esplicitamente che l'abbonamento viene sospeso IMMEDIATAMENTE al rinnovo fallito, che ci sono 7 giorni per pagare (durante i quali Stripe/PayPal riproveranno), e che dopo 7 giorni l'abbonamento DECADE definitivamente.
+  - **Logo Colosseo semplificato**: rimossi la upper gallery (i piccoli archi in cima) e la fascia orizzontale intermedia. Restano solo skyline stepped + 4 archi grandi (centrale fucsia) + sparkle ciano + base rosa. Look più pulito e leggibile a piccole dimensioni.
+
 ## Prioritized Backlog
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".

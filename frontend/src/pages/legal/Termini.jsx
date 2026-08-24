@@ -75,8 +75,16 @@ export default function Termini() {
             fatturazione in corso.
           </li>
           <li>
-            <strong>Mancato pagamento</strong>: se il pagamento fallisce
-            l'abbonamento viene sospeso automaticamente entro 7 giorni.
+            <strong>Mancato pagamento</strong>: se il pagamento al rinnovo non
+            va a buon fine, l'abbonamento viene <strong>sospeso
+            immediatamente</strong> e non potrai più utilizzare gli sconti.
+            Hai <strong>7 giorni</strong> per completare il pagamento (Stripe e
+            PayPal riproveranno automaticamente in questo periodo): se
+            l'operazione va a buon fine, l'abbonamento riprende subito e viene
+            rinnovato di 30 giorni. Se trascorrono <strong>7 giorni senza
+            pagamento</strong>, l'abbonamento <strong>decade
+            definitivamente</strong> e per riattivarlo dovrai iscriverti di
+            nuovo.
           </li>
         </ul>
 
