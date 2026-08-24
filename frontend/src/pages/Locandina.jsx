@@ -99,6 +99,54 @@ export default function Locandina() {
               >
                 Scopri · Scansiona · Risparmia
               </div>
+              {/* Logo Colosseo — SVG inline per garantire la stampa fedele */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "3mm" }}>
+                <svg
+                  viewBox="0 0 40 32"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  style={{ width: "22mm", height: "18mm", display: "block" }}
+                >
+                  <path
+                    d="M 34.5 3 L 35.8 5.7 L 38.5 7 L 35.8 8.3 L 34.5 11 L 33.2 8.3 L 30.5 7 L 33.2 5.7 Z"
+                    fill="#00E5FF"
+                  />
+                  <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#FF2E93" strokeWidth="2" strokeLinecap="round" />
+                  <path
+                    d="M 4 27 L 4 11 L 18 11 L 18 14 L 30 14 L 30 27"
+                    fill="none"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M 6 26.5 L 6 20 Q 6 16.5 9 16.5 Q 12 16.5 12 20 L 12 26.5"
+                    fill="none"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z"
+                    fill="#FF2E93"
+                  />
+                  <path
+                    d="M 21 26.5 L 21 20 Q 21 16.5 23.5 16.5 Q 26 16.5 26 20 L 26 26.5"
+                    fill="none"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 27 26.5 L 27 21.5 Q 27 18.5 29 18.5 Q 31 18.5 31 21.5 L 31 26.5"
+                    fill="none"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
               <div
                 style={{
                   fontFamily: "'Fraunces', Georgia, serif",

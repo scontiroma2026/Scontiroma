@@ -141,6 +141,17 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Lightbox foto** (`PhotoGallery.jsx`): ogni tile foto ora è cliccabile (icona ZoomIn + testo "Ingrandisci" in hover). Al click apre un modale full-screen con foto max-h-85vh, contatore "N / M", badge Copertina se index=0, frecce ←/→ per navigare, thumbstrip di dot in basso, chiusura con ESC / click overlay / pulsante X. Blocca lo scroll del body mentre è aperto. Funziona anche in read-only (il merchant può vedere le foto ingrandite anche quando l'offerta è già attiva). Gli overlay-hint hanno `pointer-events-none` per non intercettare i click.
   - **Verificato E2E**: 1) query "Via del Corso Roma" → 2 risultati con badge "senza civico" + hint "Aggiungi il n. civico" ✅ 2) query "Via del Corso 100 Roma" → 1 risultato con `has_house_number=true` senza warning ✅ 3) click su tile foto → lightbox si apre con contatore "1 / 1" + foto full-screen ✅.
 
+- **[2026-02-26 T12:00]** **Refactor AdminDashboard + logo Colosseo su Locandina**:
+  - **AdminDashboard split**: da 655 righe monolitiche → orchestratore snello (175 righe) + 4 nuovi sotto-componenti in `/components/admin/`:
+    - `AdminGate.jsx` (68 righe) — master password gate
+    - `AdminAnalytics.jsx` (135 righe) — KPI, grafici (30gg, weekday, hourly), top merchants & clients
+    - `AdminPending.jsx` (114 righe) — offerte in attesa con approve/reject inline
+    - `AdminLog.jsx` (57 righe) — log cronologico QR/riscatti
+    - `AdminMerchantsTable.jsx` (336 righe) — tabella merchants + `MerchantRow` + `DiscountEditModal` estratti come sotto-funzioni della stessa cartella
+  - **AdminDashboard.jsx** ora contiene solo: state del master token, session check, `loadData()`, tab-switcher, orchestrazione + `MerchantDiscountsDialog` esistente.
+  - **Logo Colosseo su Locandina** (`/locandina`): aggiunto SVG inline (22×18mm) sopra "Sconti Roma" nel flyer A5 stampabile. Colori hard-coded (#FFFFFF outline, #FF2E93 arco centrale + base, #00E5FF sparkle) per garantire fidelity di stampa (non usa `currentColor`).
+  - **Verificato E2E**: 1) admin login → gate password → dashboard renderizza con 7 tabs, 6 KPI corretti (29 clienti, 17 merchants, 8 abbonati, €23.92 MRR, 19 sconti/mese, 19 totali), grafici visibili, zero errori JS ✅. 2) Locandina mostra il Colosseo sopra "Sconti Roma" ✅.
+
 ## Prioritized Backlog
 
 - **[2026-02-25 T23:00]** Code review quality fixes (quick wins):
