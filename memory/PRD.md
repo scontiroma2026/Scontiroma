@@ -101,6 +101,11 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
     - Referral: iscrizione con `referred_by` persiste correttamente in DB ✅
     - Backend `/merchants/me/referrals` ritorna il count corretto ✅
 
+- **[2026-02-25]** Doppia feature UX/PWA: **PWA install banner** + **Pulsante "Chiama & Prenota" con WhatsApp**:
+  - **PWA install banner** (`PWAInstallBanner.jsx` montato in `App.js`): rileva mobile (iOS Safari / Android Chrome) tramite navigator.userAgent + `display-mode: standalone` per non mostrarsi se già installata. Su iOS mostra il testo "Clicca sul tasto Condividi ⎋ in basso e seleziona ➕ Aggiungi alla schermata Home"; su Android usa l'evento `beforeinstallprompt` per lanciare l'install prompt nativo se disponibile, altrimenti "Clicca sui 3 puntini in alto a destra e seleziona Installa applicazione". Dismiss persistente 7 giorni via localStorage (`pwa_install_dismissed_at`). Delay 3s per non saltare al primo paint. Aggiunti anche `manifest.json`, icon-192.svg, icon-512.svg, meta tag Apple e titolo pagina.
+  - **Pulsante Chiama & Prenota + WhatsApp** su `DiscountDetail.jsx`: due CTA affiancate. "Chiama e Prenota con lo Sconto" (arancione terracotta, icona Phone) → link `tel:` con numero normalizzato in formato E.164 italiano (`+39...`). "Scrivi su WhatsApp" (verde #25D366) → `wa.me/...?text=` con messaggio precompilato. Sotto, riquadro gold con "💡 Consiglio furbo: ricorda di specificare a voce «Ho l'abbonamento attivo a Sconti Roma»". Backend `enrich_discount` estende `merchant` con `phone` (già obbligatorio in registrazione merchant).
+  - **Verificato E2E**: iOS Safari UA → banner iOS ✅ · Android Chrome UA → banner Android ✅ · Desktop → banner nascosto ✅ · DiscountDetail mobile → entrambi i pulsanti + tel: cliccabile ✅.
+
 ## Prioritized Backlog
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".

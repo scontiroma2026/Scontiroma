@@ -7,8 +7,34 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { MapPin, Clock, ArrowLeft, TicketPercent, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, TicketPercent, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
+
+// Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
+// Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
+function normalizePhone(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  let digits = trimmed.replace(/[^\d+]/g, "");
+  // Converte 0039 → +39 (formato internazionale con 00)
+  if (digits.startsWith("00")) digits = "+" + digits.slice(2);
+  // Se non ha prefisso internazionale, presumiamo Italia (+39) — mantiene il 0 per fissi
+  if (!digits.startsWith("+")) digits = "+39" + digits;
+  // wa.me vuole solo cifre (no +)
+  const waDigits = digits.replace(/^\+/, "");
+  // Mobile italiano: +393xxxxxxxx (10 digits dopo il prefisso, prima cifra 3)
+  const localPart = digits.replace(/^\+39/, "");
+  const isMobile = /^3\d{8,9}$/.test(localPart);
+  return {
+    display: trimmed,
+    telHref: `tel:${digits}`,
+    waHref: `https://wa.me/${waDigits}?text=${encodeURIComponent(
+      "Ciao! Ho l'abbonamento attivo a Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!"
+    )}`,
+    isMobile,
+  };
+}
 
 export default function DiscountDetail() {
   const { id } = useParams();
@@ -254,6 +280,42 @@ export default function DiscountDetail() {
               <MapPin size={14} className="text-terracotta" /> {m.address}
             </div>
           )}
+
+          {/* Pulsante Chiama e Prenota (+ WhatsApp) — visibile solo se il commerciante ha inserito il numero */}
+          {(() => {
+            const p = normalizePhone(m.phone);
+            if (!p) return null;
+            return (
+              <div data-testid="phone-booking-block" className="mt-6">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <a
+                    href={p.telHref}
+                    data-testid="btn-call-merchant"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-terracotta px-6 py-4 text-lg font-bold text-white shadow-lg shadow-terracotta/30 hover:scale-[1.02] hover:brightness-110 transition"
+                  >
+                    <Phone size={22} className="shrink-0" />
+                    Chiama e Prenota con lo Sconto
+                  </a>
+                  <a
+                    href={p.waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="btn-whatsapp-merchant"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-lg font-bold text-white shadow-lg shadow-emerald-500/30 hover:scale-[1.02] hover:brightness-110 transition"
+                  >
+                    <MessageCircle size={22} className="shrink-0" />
+                    Scrivi su WhatsApp
+                  </a>
+                </div>
+                <div className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3 text-xs leading-relaxed text-white/80">
+                  <span className="mr-1">💡</span>
+                  <strong className="text-gold">Consiglio furbo:</strong> ricorda di specificare a voce durante la chiamata:{" "}
+                  <em className="text-white">"Ho l'abbonamento attivo a Sconti Roma"</em>{" "}
+                  per bloccare il tuo tavolo/appuntamento e assicurarti lo sconto!
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

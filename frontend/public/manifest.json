@@ -1,0 +1,27 @@
+{
+  "short_name": "Sconti Roma",
+  "name": "Sconti Roma — Sblocca la città a €2,99/mese",
+  "description": "Sconti esclusivi nei migliori locali di Roma. €2,99/mese, cancelli quando vuoi.",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0A0A0A",
+  "background_color": "#0A0A0A",
+  "lang": "it-IT",
+  "categories": ["shopping", "lifestyle", "food"]
+}

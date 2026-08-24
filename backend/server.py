@@ -679,6 +679,7 @@ async def enrich_discount(d: dict) -> dict:
             "description": merchant.get("description", ""),
             "lat": merchant.get("lat"),
             "lng": merchant.get("lng"),
+            "phone": merchant.get("phone", ""),
         }
     if d.get("original_price") and d.get("discounted_price") is not None:
         try:
