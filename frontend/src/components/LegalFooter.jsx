@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import BrandMark from "@/components/BrandMark";
 
 // Internal legal pages (self-hosted, no Iubenda needed)
 export const LEGAL_LINKS = {
@@ -23,8 +24,10 @@ export default function LegalFooter() {
       className="border-t border-white/10 bg-black/40 py-6 mt-8"
     >
       <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <div className="text-white/50">
-          © {new Date().getFullYear()} Sconti Roma · Made con amore ♡
+        <div className="flex items-center gap-2 text-white/50">
+          <span>© {new Date().getFullYear()}</span>
+          <BrandMark inline className="text-white/70" />
+          <span>· Made con amore ♡</span>
         </div>
         <nav className="flex flex-wrap items-center gap-4">
           <Link

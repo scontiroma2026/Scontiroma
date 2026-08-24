@@ -10,6 +10,7 @@ import api, { formatApiError } from "@/lib/api";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { ScanFace, KeyRound, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import PasswordInput from "@/components/PasswordInput";
+import BrandMark from "@/components/BrandMark";
 
 export default function Login() {
   const { login, refresh } = useAuth();
@@ -89,7 +90,9 @@ export default function Login() {
         {step === "email" && (
           <>
             <div className="text-xs uppercase tracking-[0.2em] text-ciano">Bentornato</div>
-            <h1 className="mt-2 font-serif text-4xl text-white">Entra in Sconti Roma</h1>
+            <h1 className="mt-2 font-serif text-4xl text-white inline-flex items-center gap-3 flex-wrap justify-center">
+              Entra in <BrandMark className="text-4xl" />
+            </h1>
             <p className="mt-2 text-sm text-white/60">Usa la scansione del volto per un accesso lampo.</p>
 
             <div className="mt-8 space-y-4">

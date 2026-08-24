@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, ShoppingBag, Store, User } from "lucide-react";
 import { useState } from "react";
+import BrandMark from "@/components/BrandMark";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -40,8 +41,8 @@ export default function Navbar() {
         <Link to="/" data-testid="brand-link" className="flex items-center gap-2">
           <div className="grad-fucsia-viola flex h-10 w-10 items-center justify-center rounded-2xl text-white font-serif text-lg glow-fucsia">S</div>
           <div className="flex flex-col leading-tight">
-            <span className="font-serif text-xl tracking-tight text-white">Sconti Roma</span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-ciano">Roma è tua</span>
+            <BrandMark className="text-xl tracking-tight text-white" />
+            <span className="mt-1 text-[11px] uppercase tracking-[0.18em] text-ciano">Roma è tua</span>
           </div>
         </Link>
 

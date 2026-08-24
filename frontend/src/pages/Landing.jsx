@@ -5,6 +5,7 @@ import { Sparkles, MapPin, ArrowRight, Zap, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
+import BrandMark from "@/components/BrandMark";
 
 // Rome landmark imagery (Unsplash direct URLs)
 const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80"; // Colosseo
@@ -241,7 +242,9 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-white/10 py-8 text-center text-xs text-white/50">
-        © {new Date().getFullYear()} Sconti Roma — Made con amore ♡
+        <span className="inline-flex items-center gap-2">
+          © {new Date().getFullYear()} <BrandMark inline className="text-white/70" /> — Made con amore ♡
+        </span>
       </footer>
     </main>
   );

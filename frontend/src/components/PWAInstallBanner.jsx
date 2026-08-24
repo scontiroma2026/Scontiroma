@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Download, Share, X, Smartphone } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
 
 const STORAGE_KEY = "pwa_install_dismissed_at";
 const DISMISS_DAYS = 7;
@@ -123,7 +124,7 @@ export default function PWAInstallBanner() {
         </div>
         <div className="flex-1">
           <div className="font-serif text-lg leading-tight text-white">
-            Installa Sconti Roma sul tuo telefono!
+            Installa <BrandMark inline className="text-white" /> sul tuo telefono!
           </div>
 
           {isIOS && (
