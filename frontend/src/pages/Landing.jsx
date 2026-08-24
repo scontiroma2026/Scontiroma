@@ -25,7 +25,9 @@ export default function Landing() {
         localStorage.setItem("referral_captured_at", new Date().toISOString());
       } catch (_) { /* localStorage disabled */ }
     }
-    api.get("/discounts").then((r) => setFeatured((r.data.discounts || []).slice(0, 3))).catch(() => {});
+    api.get("/discounts").then((r) => setFeatured((r.data.discounts || []).slice(0, 3))).catch((err) => {
+      console.warn("[landing] failed to load featured:", err?.message || err);
+    });
   }, [params]);
 
   return (
@@ -229,8 +231,8 @@ export default function Landing() {
             { q: "Come posso pagare?", a: "Tramite Stripe: carta di credito, debito o wallet (Apple Pay, Google Pay). Pagamento sicuro, i tuoi dati non passano dai nostri server." },
             { q: "Sono un commerciante, come partecipo?", a: "Registrati come commerciante, crea la tua singola offerta e comparirai nel catalogo. Zero commissioni, zero costi di ingresso, solo nuovi clienti." },
             { q: "In quali quartieri di Roma funziona?", a: "Trastevere, Centro Storico, Prati, Testaccio, Monti, EUR, Ostiense, Parioli, San Giovanni, Trieste-Salario, Pigneto, Flaminio — e continuiamo ad aggiungerne." },
-          ].map((f, i) => (
-            <details key={i} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
+          ].map((f) => (
+            <details key={f.q} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
               <summary className="flex cursor-pointer items-center justify-between text-white font-semibold">
                 <span className="font-serif text-lg">{f.q}</span>
                 <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>

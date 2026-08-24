@@ -200,7 +200,7 @@ export default function AdminDashboard() {
               <h3 className="font-serif text-2xl">Per giorno settimana</h3>
               <div className="mt-4 flex h-40 items-end gap-3">
                 {stats.by_weekday.map((c, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-2">
+                  <div key={`day-${i}`} className="flex flex-1 flex-col items-center gap-2">
                     <div className="w-full rounded-t bg-ciano" style={{height: `${(c / maxDay) * 100}%`, minHeight: 4}} />
                     <span className="text-xs text-white/60">{WEEKDAYS[i]}</span>
                     <span className="text-[10px] text-ciano font-bold">{c}</span>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
             <h3 className="font-serif text-2xl">Per orario</h3>
             <div className="mt-4 flex h-32 items-end gap-1">
               {stats.by_hour.map((c, i) => (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                <div key={`hour-${i}`} className="flex flex-1 flex-col items-center gap-1">
                   <div className="w-full rounded-t bg-neon" style={{height: `${(c / maxHour) * 100}%`, minHeight: 2}} title={`${i}:00`} />
                   {i % 3 === 0 && <span className="text-[10px] text-white/50">{i}h</span>}
                 </div>

@@ -24,8 +24,8 @@ if not MONGO_URL or not DB_NAME:
             if line.startswith("DB_NAME=") and not DB_NAME:
                 DB_NAME = line.split("=", 1)[1].strip().strip('"')
 
-EXISTING_EMAIL = "francesco@gmail.com"
-EXISTING_PASSWORD = "francesco123"
+EXISTING_EMAIL = os.environ.get("TEST_CLIENT_EMAIL", "francesco@gmail.com")
+EXISTING_PASSWORD = os.environ.get("TEST_CLIENT_PASSWORD", "francesco123")
 NONEXISTENT_EMAIL = "random_nonexistent_99213@example.com"
 
 

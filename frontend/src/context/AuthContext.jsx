@@ -11,7 +11,11 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get("/auth/me");
       setUser(data.user);
-    } catch {
+    } catch (err) {
+      // Utente anonimo o token scaduto: normale al primo caricamento
+      if (err?.response?.status !== 401) {
+        console.warn("[auth] refresh failed:", err?.message || err);
+      }
       setUser(false);
     } finally {
       setLoading(false);
@@ -45,7 +49,11 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    try { await api.post("/auth/logout"); } catch {}
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      console.warn("[auth] logout failed (proceeding anyway):", err?.message || err);
+    }
     localStorage.removeItem("access_token");
     setUser(false);
   };

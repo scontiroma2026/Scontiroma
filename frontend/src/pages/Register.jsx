@@ -73,12 +73,16 @@ export default function Register() {
       try {
         localStorage.setItem("last_email", form.email);
         localStorage.setItem("last_role", role);
-      } catch (_) { /* localStorage disabled */ }
+      } catch (err) {
+        console.warn("[register] localStorage save failed:", err?.message || err);
+      }
     } else {
       try {
         localStorage.removeItem("last_email");
         localStorage.removeItem("last_role");
-      } catch (_) {}
+      } catch (err) {
+        console.warn("[register] localStorage cleanup failed:", err?.message || err);
+      }
     }
     toast.success("Benvenuto in Sconti Roma!");
     nav("/setup-security");

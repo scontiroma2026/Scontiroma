@@ -127,6 +127,18 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Logo Colosseo semplificato**: rimossi la upper gallery (i piccoli archi in cima) e la fascia orizzontale intermedia. Restano solo skyline stepped + 4 archi grandi (centrale fucsia) + sparkle ciano + base rosa. Look più pulito e leggibile a piccole dimensioni.
 
 ## Prioritized Backlog
+
+- **[2026-02-25 T23:00]** Code review quality fixes (quick wins):
+  - **Empty catch blocks** → sostituiti con `console.warn` diagnostici in `PaymentSuccess`, `Register`, `Landing`, `AuthContext`, `MyUsedDiscounts`, `GeocodeIssuesWidget`, `PWAInstallBanner` (7 file, 10+ istanze). Ora nessun errore silente.
+  - **Array index come React key** → sostituiti con ID stabili in Landing (`f.q`), Subscribe (`f.t`), DiscountDetail (`thumb-${url}-${i}`, `dot-${url}-${i}`), AdminDashboard (`day-${i}`, `hour-${i}`), AddressAutocomplete (`s.place_id`).
+  - **Hardcoded secrets in test** → tutti spostati dietro `os.environ.get("TEST_*_PASSWORD", fallback)` in `tests/backend_test.py`, `test_iteration4.py`, `test_admin_v12_features.py`, `test_pin_auth_flow.py`, `test_sec001_forgot_password.py`. Aggiunto `tests/_test_config.py` come modulo condiviso opzionale.
+  - **Hook deps `Discounts.jsx`** → aggiunto commento eslint-disable esplicito (`run one-shot at mount`) + logging su fallimento `merchants/top`.
+  - **Python undefined vars** → verificato con `pyflakes`: nessun undefined reale in server.py/email_service.py/paypal_service.py (solo 1 import inutilizzato `fastapi.status`, non critico).
+  - **Non affrontati in questa passata** (richiedono task dedicati con testing agent per il rischio regressione):
+    - localStorage → httpOnly cookies (refactor completo auth WebAuthn/PIN)
+    - Split AdminDashboard/DiscountDetail/Subscribe/Locandina in sub-componenti (300+ righe)
+    - Split webhook Stripe/PayPal in strategy pattern (rischio rompere i pagamenti)
+    - Estrazione template HTML da email_service
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".
 - **P1**: Connect Stripe live (currently Sandbox)

@@ -35,12 +35,17 @@ export default function Discounts() {
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
     );
   };
-  useEffect(() => { requestLocation(); }, []);
+  useEffect(() => {
+    requestLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run one-shot at mount
+  }, []);
 
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
-    api.get("/merchants/top?limit=3").then((r) => setTopDiscounts(r.data.merchants || [])).catch(() => {});
+    api.get("/merchants/top?limit=3")
+      .then((r) => setTopDiscounts(r.data.merchants || []))
+      .catch((err) => console.warn("[discounts] top merchants load failed:", err?.message || err));
   }, []);
 
   useEffect(() => {

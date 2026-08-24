@@ -11,8 +11,11 @@ import requests
 
 BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://deal-bundle.preview.emergentagent.com").rstrip("/")
 API = f"{BASE}/api"
-MASTER_PW = "ValeRoma2026"
-JWT_SECRET = "7bf1620c584ce701c6eaa055faa0d7599172631b3a4203ad6d68e950d50b1e6b"
+MASTER_PW = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "ValeRoma2026")
+JWT_SECRET = os.environ.get(
+    "TEST_JWT_SECRET",
+    "7bf1620c584ce701c6eaa055faa0d7599172631b3a4203ad6d68e950d50b1e6b",
+)
 FRONTEND_URL = "https://deal-bundle.preview.emergentagent.com"
 
 

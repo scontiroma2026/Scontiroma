@@ -165,9 +165,9 @@ export default function DiscountDetail() {
                       <ChevronRight size={18} />
                     </button>
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/60 px-3 py-1.5">
-                      {gallery.map((_, i) => (
+                      {gallery.map((url, i) => (
                         <button
-                          key={i}
+                          key={`dot-${url}-${i}`}
                           data-testid={`gallery-dot-${i}`}
                           onClick={() => setPhotoIdx(i)}
                           className={`h-1.5 rounded-full transition-all ${i === photoIdx ? "w-6 bg-fucsia" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
@@ -182,7 +182,7 @@ export default function DiscountDetail() {
                 <div className="mt-3 grid grid-cols-4 sm:grid-cols-8 gap-1.5">
                   {gallery.map((url, i) => (
                     <button
-                      key={i}
+                      key={`thumb-${url}-${i}`}
                       data-testid={`gallery-thumb-${i}`}
                       onClick={() => setPhotoIdx(i)}
                       className={`aspect-square overflow-hidden rounded-md border-2 transition ${i === photoIdx ? "border-fucsia scale-105" : "border-transparent opacity-70 hover:opacity-100"}`}

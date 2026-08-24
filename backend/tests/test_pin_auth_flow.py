@@ -19,8 +19,8 @@ if not BASE_URL:
 MONGO_URL = os.environ.get("MONGO_URL") or open("/app/backend/.env").read().split("MONGO_URL=")[1].split("\n")[0].strip()
 DB_NAME = os.environ.get("DB_NAME") or open("/app/backend/.env").read().split("DB_NAME=")[1].split("\n")[0].strip()
 
-CLIENT_EMAIL = "francesco@gmail.com"
-CLIENT_PASSWORD = "francesco123"
+CLIENT_EMAIL = os.environ.get("TEST_CLIENT_EMAIL", "francesco@gmail.com")
+CLIENT_PASSWORD = os.environ.get("TEST_CLIENT_PASSWORD", "francesco123")
 
 
 @pytest.fixture(scope="module")

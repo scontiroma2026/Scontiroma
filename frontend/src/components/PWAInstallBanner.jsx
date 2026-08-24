@@ -34,7 +34,9 @@ function isDismissedRecently() {
     if (Number.isNaN(ts)) return false;
     const days = (Date.now() - ts) / (1000 * 60 * 60 * 24);
     return days < DISMISS_DAYS;
-  } catch (_) {
+  } catch (err) {
+    // localStorage disabled (private mode) — mostra il banner come default
+    console.warn("[pwa-banner] localStorage read failed:", err?.message || err);
     return false;
   }
 }
@@ -75,7 +77,9 @@ export default function PWAInstallBanner() {
   const dismiss = () => {
     try {
       localStorage.setItem(STORAGE_KEY, String(Date.now()));
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[pwa-banner] localStorage write failed:", err?.message || err);
+    }
     setVisible(false);
   };
 
@@ -90,7 +94,8 @@ export default function PWAInstallBanner() {
       } else {
         dismiss();
       }
-    } catch (_) {
+    } catch (err) {
+      console.warn("[pwa-banner] native prompt failed:", err?.message || err);
       dismiss();
     }
   };

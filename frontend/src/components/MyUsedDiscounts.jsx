@@ -46,7 +46,9 @@ export default function MyUsedDiscounts() {
     try {
       const { data } = await api.get("/redemptions/mine");
       setRows(data.redemptions || []);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn("[my-used-discounts] load failed:", err?.message || err);
+    }
     setLoading(false);
   };
 

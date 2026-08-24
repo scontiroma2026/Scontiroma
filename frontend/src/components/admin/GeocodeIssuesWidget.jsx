@@ -23,8 +23,9 @@ export default function GeocodeIssuesWidget({ hdrs }) {
     try {
       const r = await api.get("/admin/merchants/geocode-issues", hdrs());
       setIssues(r.data.issues || []);
-    } catch (e) {
-      // silent (widget non blocca UI)
+    } catch (err) {
+      // Non blocca la dashboard admin: logga in console senza toast
+      console.warn("[geocode-issues] load failed:", err?.message || err);
     } finally {
       setLoading(false);
     }

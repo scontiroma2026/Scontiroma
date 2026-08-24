@@ -24,7 +24,10 @@ export default function PaymentSuccess() {
           await refresh();
           return;
         }
-      } catch {}
+      } catch (err) {
+        // Polling network error — try again next tick, don't spam console
+        if (tries.current === 0) console.warn("[payment-status] first poll failed:", err?.message || err);
+      }
       tries.current += 1;
       if (tries.current > 10) { setStatus("timeout"); return; }
       setTimeout(poll, 2000);

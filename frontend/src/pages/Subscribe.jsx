@@ -126,8 +126,8 @@ export default function Subscribe() {
                 { i: <Sparkles size={14} className="text-neon" />, t: "Nuovi sconti aggiornati ogni mese" },
                 { i: <Shield size={14} className="text-fucsia" />, t: "QR sicuro rotante ogni 10 secondi" },
                 { i: <Check size={14} className="text-ciano" />, t: "Cancelli quando vuoi, senza penali" },
-              ].map((f, idx) => (
-                <li key={idx} className="flex items-center gap-3">{f.i} {f.t}</li>
+              ].map((f) => (
+                <li key={f.t} className="flex items-center gap-3">{f.i} {f.t}</li>
               ))}
             </ul>
 

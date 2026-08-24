@@ -130,7 +130,7 @@ export default function AddressAutocomplete({
           </div>
           <ul className="max-h-64 overflow-y-auto">
             {suggestions.map((s, i) => (
-              <li key={i}>
+              <li key={s.place_id || s.full_display_name || `${s.display}-${i}`}>
                 <button
                   type="button"
                   data-testid={`${testId}-item-${i}`}

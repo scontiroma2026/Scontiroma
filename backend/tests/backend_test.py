@@ -8,7 +8,10 @@ import requests
 
 BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://deal-bundle.preview.emergentagent.com").rstrip("/")
 API = f"{BASE}/api"
-JWT_SECRET = "7bf1620c584ce701c6eaa055faa0d7599172631b3a4203ad6d68e950d50b1e6b"
+JWT_SECRET = os.environ.get(
+    "TEST_JWT_SECRET",
+    "7bf1620c584ce701c6eaa055faa0d7599172631b3a4203ad6d68e950d50b1e6b",
+)
 
 
 def _login(email, password):
