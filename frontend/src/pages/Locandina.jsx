@@ -84,7 +84,7 @@ export default function Locandina() {
           />
 
           {/* Contenuto */}
-          <div style={{ position: "relative", padding: "12mm 10mm", height: "100%", display: "flex", flexDirection: "column" }}>
+          <div style={{ position: "relative", padding: "9mm 8mm", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {/* Header — brand */}
             <div style={{ textAlign: "center" }}>
               <div
@@ -94,18 +94,18 @@ export default function Locandina() {
                   textTransform: "uppercase",
                   color: "#FFD93D",
                   fontWeight: 700,
-                  marginBottom: "4mm",
+                  marginBottom: "2mm",
                 }}
               >
                 Scopri · Scansiona · Risparmia
               </div>
               {/* Logo Colosseo — SVG inline per garantire la stampa fedele */}
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: "3mm" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5mm" }}>
                 <svg
                   viewBox="0 0 40 32"
                   xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
-                  style={{ width: "22mm", height: "18mm", display: "block" }}
+                  style={{ width: "16mm", height: "13mm", display: "block" }}
                 >
                   <path
                     d="M 34.5 3 L 35.8 5.7 L 38.5 7 L 35.8 8.3 L 34.5 11 L 33.2 8.3 L 30.5 7 L 33.2 5.7 Z"
@@ -151,7 +151,7 @@ export default function Locandina() {
                 style={{
                   fontFamily: "'Fraunces', Georgia, serif",
                   fontWeight: 700,
-                  fontSize: "38pt",
+                  fontSize: "34pt",
                   lineHeight: 1,
                   color: "#fff",
                   letterSpacing: "-0.02em",
@@ -161,7 +161,7 @@ export default function Locandina() {
               </div>
               <div
                 style={{
-                  marginTop: "3mm",
+                  marginTop: "2mm",
                   fontSize: "10pt",
                   color: "rgba(244,244,245,0.75)",
                   fontStyle: "italic",
@@ -177,7 +177,7 @@ export default function Locandina() {
                 width: "20mm",
                 height: "2px",
                 background: "linear-gradient(90deg, #FF2E93, #00E5FF)",
-                margin: "6mm auto",
+                margin: "4mm auto",
               }}
             />
 
@@ -201,7 +201,7 @@ export default function Locandina() {
             </div>
 
             {/* 3 passaggi */}
-            <div style={{ marginTop: "8mm", flex: 1 }}>
+            <div style={{ marginTop: "5mm", flex: 1 }}>
               <div
                 style={{
                   fontFamily: "'Fraunces', Georgia, serif",
@@ -209,7 +209,7 @@ export default function Locandina() {
                   fontWeight: 600,
                   color: "#fff",
                   textAlign: "center",
-                  marginBottom: "5mm",
+                  marginBottom: "3mm",
                 }}
               >
                 Come si fa in <span style={{ color: "#00E5FF" }}>3 passaggi</span>
@@ -226,8 +226,8 @@ export default function Locandina() {
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "4mm",
-                    padding: "3mm 4mm",
-                    marginBottom: "2.5mm",
+                    padding: "2mm 3mm",
+                    marginBottom: "1.5mm",
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: "6px",
@@ -350,7 +350,7 @@ export default function Locandina() {
             {/* Footer */}
             <div
               style={{
-                marginTop: "4mm",
+                marginTop: "2.5mm",
                 textAlign: "center",
                 fontSize: "7.5pt",
                 color: "rgba(244,244,245,0.4)",

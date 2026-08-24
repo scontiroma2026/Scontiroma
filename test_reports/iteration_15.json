@@ -1,0 +1,37 @@
+{
+  "summary": "Verified fixes for BUG 1 (Locandina A5 overflow) and BUG 2 (merchant referral URLs). Also ran regression on AdminDashboard split and httpOnly auth cookies. Backend: 4/4 pytest passed. Frontend: locandina fits within A5 flyer (innerH=605 < flyerH=794), all required elements present, QR renders. Merchant referral card links point to correct FRONTEND_URL host (no stale 68074b6b host anywhere). Admin master gate unlocks and all 7 tabs render without errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Locandina (print media)", "issues": ["Inner content scrollWidth (605px) slightly exceeds flyer clientWidth (559px) when emulating print media. Container has overflow:hidden so no visible breakage, but a couple of pixels of content may be clipped on far right edges. Consider tightening horizontal paddings if any element visibly clips on real print."]},
+      {"screen": "AdminSubscribers tab", "issues": ["React console warning: 'Each child in a list should have a unique key prop. Check the render method of AdminSubscribers'. Non-blocking but should be fixed by adding stable keys to list items."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_bugs_fix.py",
+    "/app/test_reports/pytest/bugs_fix.xml"
+  ],
+  "action_items": [
+    "Optional: add missing key prop in AdminSubscribers list rendering (React warning).",
+    "Optional: investigate 46px horizontal overflow in Locandina inner div when print media is active (overflow:hidden currently masks it)."
+  ],
+  "critical_code_review_comments": [
+    "backend/server.py L1092 correctly prioritizes FRONTEND_URL over APP_URL - fix verified.",
+    "Locandina flyer container correctly sizes to 148x210mm and uses overflow:hidden to guard against any residual overflow.",
+    "Auth uses httpOnly + Secure cookies, no token leakage to JS - good."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_bugs_fix.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Admin: admin@scontiroma.it/admin123 (master ValeRoma2026); Merchant: trattoria@scontiroma.it/merchant123; Client: francesco@gmail.com/francesco123",
+  "seed_data_creation": "None. Used existing seeded accounts.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_bugs_fix.py covers: merchant referrals URL host, httpOnly cookies on client login+logout, admin login. Merchant id for trattoria in current DB: a709af18-d6f8-4f62-81b9-712d1e6a58fb. AdminDashboard tabs are matched via data-testid (Italian labels: Abbonati, Offerte in attesa, Negozi, Registro Frodi, Feedback, Log completo)."
+}

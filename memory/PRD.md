@@ -152,6 +152,12 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Logo Colosseo su Locandina** (`/locandina`): aggiunto SVG inline (22×18mm) sopra "Sconti Roma" nel flyer A5 stampabile. Colori hard-coded (#FFFFFF outline, #FF2E93 arco centrale + base, #00E5FF sparkle) per garantire fidelity di stampa (non usa `currentColor`).
   - **Verificato E2E**: 1) admin login → gate password → dashboard renderizza con 7 tabs, 6 KPI corretti (29 clienti, 17 merchants, 8 abbonati, €23.92 MRR, 19 sconti/mese, 19 totali), grafici visibili, zero errori JS ✅. 2) Locandina mostra il Colosseo sopra "Sconti Roma" ✅.
 
+- **[2026-02-26 T13:00]** **Bug fix Locandina overflow + Referral URL stale**:
+  - **BUG 1 — Locandina QR troncato**: il flyer A5 (148×210mm) andava in overflow verticale (contenuto ~200+ mm dopo l'aggiunta del logo Colosseo). Ridotti: logo 22×18mm→16×13mm, titolo 38pt→34pt, marginBottom "SCOPRI" 4mm→2mm, marginBottom logo 3mm→1.5mm, marginTop tagline 3mm→2mm, divider margin 6mm→4mm, "3 passaggi" marginTop 8mm→5mm marginBottom 5mm→3mm, step cards padding 3mm 4mm→2mm 3mm marginBottom 2.5mm→1.5mm, footer marginTop 4mm→2.5mm, container padding 12mm 10mm→9mm 8mm + `overflow:hidden`. Verificato: `innerH=605px < flyerH=794px`, QR renderizzato, tutti gli elementi visibili nel A5.
+  - **BUG 2 — Referral URLs con host stale**: `supervisord.conf` inietta `APP_URL="https://68074b6b-8089-4395-a1ca-2291114b108b.preview.emergentagent.com"` (URL vecchio del container) che sovrascriveva il `.env`. Fix: `merchant_referrals` (server.py:1092) e `email_service.py:19` ora leggono `FRONTEND_URL` (solo `.env`, no conflict) come sorgente primaria + fallback su `APP_URL` per retrocompatibilità. Verificato: sia `referral_url` sia `flyer_url` ora contengono `https://deal-bundle.preview.emergentagent.com`.
+  - **Fix minori dal testing agent**: ridotto padding orizzontale Locandina 10mm→8mm per eliminare i 46px di overflow orizzontale residuo (era mascherato da overflow:hidden); aggiunto fallback key robusto in `AdminSubscribers.jsx` per gli eventi rinnovo con `provider_event_id` null (evita React warning).
+  - **🧪 Verificato da testing_agent (iteration_15.json)**: backend 100%, frontend 100%, retest_needed=false. Test creato: `/app/backend/tests/test_bugs_fix.py`.
+
 ## Prioritized Backlog
 
 - **[2026-02-25 T23:00]** Code review quality fixes (quick wins):

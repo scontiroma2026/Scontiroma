@@ -1086,7 +1086,10 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
         subscribed_count = len({s["user_id"] for s in subs})
         active_count = len({s["user_id"] for s in subs if s.get("status") == "active"})
 
-    app_url = os.environ.get("APP_URL", "").rstrip("/")
+    # Priorità: FRONTEND_URL (canonical, aggiornato in .env) → APP_URL (fallback legacy).
+    # NB: APP_URL è iniettata da supervisord.conf con un valore hardcoded al bootstrap
+    # del container che può diventare stale — non usarla come sorgente principale.
+    app_url = (os.environ.get("FRONTEND_URL") or os.environ.get("APP_URL") or "").rstrip("/")
     return {
         "merchant_id": user["id"],
         "shop_name": user.get("shop_name"),

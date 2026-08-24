@@ -321,8 +321,8 @@ function SubscriberDetail({ row }) {
               Rinnovi ({row.renewals_count})
             </div>
             <div className="space-y-1 text-[11px] font-mono max-h-40 overflow-y-auto">
-              {row.renewal_events.map((r) => (
-                <div key={r.provider_event_id} className="text-white/70 border-b border-white/5 py-1">
+              {row.renewal_events.map((r, i) => (
+                <div key={r.provider_event_id || `${r.provider}-${r.processed_at}-${i}`} className="text-white/70 border-b border-white/5 py-1">
                   <span className="text-ciano">{fmt(r.processed_at)}</span> ·{" "}
                   <span className="text-fucsia">€{Number(r.amount_eur || 0).toFixed(2)}</span> ·{" "}
                   <span className="text-white/50">{r.provider}</span>
