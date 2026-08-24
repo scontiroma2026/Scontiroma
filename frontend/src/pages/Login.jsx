@@ -91,7 +91,7 @@ export default function Login() {
           <>
             <div className="text-xs uppercase tracking-[0.2em] text-ciano">Bentornato</div>
             <h1 className="mt-2 font-serif text-4xl text-white inline-flex items-center gap-3 flex-wrap justify-center">
-              Entra in <BrandMark className="text-4xl" />
+              Entra in <BrandMark inline className="text-4xl" />
             </h1>
             <p className="mt-2 text-sm text-white/60">Usa la scansione del volto per un accesso lampo.</p>
 

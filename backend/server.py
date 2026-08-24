@@ -2596,6 +2596,92 @@ async def api_geocode_suggest(q: str, limit: int = 5):
     return {"suggestions": await geocode_suggest(q, limit)}
 
 
+# ---------- AI Image Enhancement (Gemini Nano Banana) ----------
+class ImageEnhanceIn(BaseModel):
+    image_url: str  # URL o data URL (base64) dell'immagine originale
+    category: Optional[str] = None  # es. "Ristorante", "Palestra" — aiuta il prompt
+
+
+@api.post("/ai/enhance-image")
+async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require_merchant)):
+    """Riottimizza una foto usando Gemini Nano Banana (image-to-image).
+    Restituisce un data URL base64 pronto per essere salvato al posto dell'originale."""
+    llm_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not llm_key:
+        raise HTTPException(503, "AI enhancer non configurato (EMERGENT_LLM_KEY mancante)")
+
+    raw_url = (payload.image_url or "").strip()
+    if not raw_url:
+        raise HTTPException(422, "image_url mancante")
+
+    # Scarica l'immagine (accetta http/https e data URLs)
+    import base64 as _b64
+    try:
+        if raw_url.startswith("data:"):
+            header, b64 = raw_url.split(",", 1)
+            image_bytes = _b64.b64decode(b64)
+        else:
+            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+                r = await client.get(raw_url, headers={"User-Agent": "ScontiRomaBot/1.0"})
+                r.raise_for_status()
+                image_bytes = r.content
+        if len(image_bytes) > 8 * 1024 * 1024:
+            raise HTTPException(413, "Immagine troppo grande (max 8MB)")
+        if len(image_bytes) < 200:
+            raise HTTPException(422, "Immagine troppo piccola o non valida")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(400, f"Impossibile scaricare l'immagine: {str(e)[:100]}")
+
+    image_b64 = _b64.b64encode(image_bytes).decode("utf-8")
+
+    # Prompt category-aware
+    cat = (payload.category or "").lower()
+    if any(k in cat for k in ["ristorante", "pizzeria", "bar", "aliment"]):
+        style_hint = "professional food photography: warm appetizing lighting, vibrant natural colors, subtle depth of field, restaurant menu quality"
+    elif any(k in cat for k in ["palestr", "padel", "calcett", "sport"]):
+        style_hint = "energetic sport facility photography: bright, motivational, sharp details on equipment, professional gym magazine quality"
+    elif any(k in cat for k in ["parrucch", "estetic", "spa", "benes"]):
+        style_hint = "luxury beauty & wellness photography: soft warm lighting, clean composition, editorial spa magazine quality"
+    elif any(k in cat for k in ["abbigl", "moda", "shop"]):
+        style_hint = "fashion retail photography: crisp lighting, elegant boutique aesthetic, high-end catalog quality"
+    else:
+        style_hint = "professional commercial photography: bright natural lighting, vibrant colors, sharp details, magazine editorial quality"
+
+    prompt = (
+        f"Enhance and re-render this photograph in {style_hint}. "
+        "STRICT rules: keep the exact same subject, layout, and composition as the input image — "
+        "do NOT change the main object, do NOT add or remove elements, do NOT alter branding, logos or text. "
+        "Only improve: lighting, color balance, contrast, sharpness, background cleanliness. "
+        "Output must look like the same scene shot by a professional photographer with premium equipment."
+    )
+
+    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+    session_id = f"sconti-enhance-{user['id'][:8]}-{uuid.uuid4().hex[:6]}"
+    chat = LlmChat(
+        api_key=llm_key,
+        session_id=session_id,
+        system_message="You are a professional photo retoucher AI.",
+    ).with_model("gemini", "gemini-3.1-flash-image-preview").with_params(modalities=["image", "text"])
+
+    try:
+        _, images = await chat.send_message_multimodal_response(
+            UserMessage(text=prompt, file_contents=[ImageContent(image_b64)])
+        )
+        if not images:
+            raise HTTPException(502, "AI non ha restituito immagini. Riprova con una foto diversa.")
+        img = images[0]
+        mime = img.get("mime_type") or "image/png"
+        data_url = f"data:{mime};base64,{img['data']}"
+        return {"enhanced_image_url": data_url, "session_id": session_id, "mime_type": mime}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"[ai-enhance] failed for merchant {user['id'][:8]}: {e}")
+        raise HTTPException(502, f"Errore AI: {str(e)[:120]}")
+
+
 # =====================================================================
 # GDPR endpoints — art. 7 (proof of consent), art. 15 (access),
 # art. 17 (right to erasure), art. 20 (portability)

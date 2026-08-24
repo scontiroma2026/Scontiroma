@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle, Sparkles, Loader2 } 
 import PhotoGallery from "@/components/PhotoGallery";
 
 export default function MerchantDiscount() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
     title: "", description: "", original_price: "", discounted_price: "",
     image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
@@ -238,6 +240,7 @@ export default function MerchantDiscount() {
                 }))}
                 max={8}
                 disabled={readOnly}
+                category={user?.category || ""}
               />
             </div>
             <div>

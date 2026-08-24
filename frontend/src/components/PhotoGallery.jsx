@@ -1,18 +1,42 @@
 import { useState } from "react";
-import { X, ChevronUp, ChevronDown, Plus, Star, ImagePlus } from "lucide-react";
+import { X, ChevronUp, ChevronDown, Plus, Star, ImagePlus, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DefaultImagePicker from "@/components/DefaultImagePicker";
 import PhotoEnhancer from "@/components/PhotoEnhancer";
+import api, { formatApiError } from "@/lib/api";
+import { toast } from "sonner";
 
 /**
  * Galleria foto per il commerciante — max 8 immagini per offerta.
  * value: array di URL, onChange(newArray)
  * La PRIMA foto della galleria è la copertina (thumbnail nelle liste).
  */
-export default function PhotoGallery({ value = [], onChange, max = 8, disabled = false }) {
+export default function PhotoGallery({ value = [], onChange, max = 8, disabled = false, category = "" }) {
   const photos = Array.isArray(value) ? value : [];
   const [staged, setStaged] = useState("");
+  const [enhancingIdx, setEnhancingIdx] = useState(-1);
   const canAdd = photos.length < max && !disabled;
+
+  const enhanceAt = async (i) => {
+    if (disabled || enhancingIdx !== -1) return;
+    setEnhancingIdx(i);
+    try {
+      const { data } = await api.post("/ai/enhance-image", {
+        image_url: photos[i],
+        category: category || "",
+      });
+      const enhanced = data.enhanced_image_url;
+      if (!enhanced) throw new Error("Nessuna immagine restituita");
+      const next = [...photos];
+      next[i] = enhanced;
+      onChange(next);
+      toast.success("Foto ottimizzata con AI ✨");
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setEnhancingIdx(-1);
+    }
+  };
 
   const addStaged = () => {
     if (!staged) return;
@@ -117,6 +141,33 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                     <X size={14} />
                   </button>
                 </div>
+              )}
+              {/* Pulsante "Ottimizza con AI" — sempre visibile in alto */}
+              {!disabled && (
+                <button
+                  type="button"
+                  data-testid={`photo-ai-enhance-${i}`}
+                  onClick={() => enhanceAt(i)}
+                  disabled={enhancingIdx !== -1}
+                  className={`absolute top-8 left-1 right-1 z-10 flex items-center justify-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg backdrop-blur-md transition ${
+                    enhancingIdx === i
+                      ? "grad-fucsia-viola text-white"
+                      : enhancingIdx !== -1
+                      ? "bg-black/60 text-white/40 cursor-wait"
+                      : "bg-black/75 text-white hover:grad-fucsia-viola border border-fucsia/50"
+                  }`}
+                  title="Ottimizza questa foto con l'intelligenza artificiale (Gemini Nano Banana)"
+                >
+                  {enhancingIdx === i ? (
+                    <>
+                      <Loader2 size={12} className="animate-spin" /> Ottimizzo…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={12} className="text-fucsia" /> Ottimizza con AI
+                    </>
+                  )}
+                </button>
               )}
             </div>
           ))}
