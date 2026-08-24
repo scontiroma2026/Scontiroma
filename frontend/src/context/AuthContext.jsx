@@ -29,7 +29,8 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      if (data.access_token) localStorage.setItem("access_token", data.access_token);
+      // Il JWT arriva come cookie httpOnly (impostato dal backend) —
+      // non tocchiamo localStorage per motivi di sicurezza (XSS-safe).
       setUser(data.user);
       return { ok: true, user: data.user };
     } catch (e) {
@@ -40,7 +41,7 @@ export function AuthProvider({ children }) {
   const register = async (payload) => {
     try {
       const { data } = await api.post("/auth/register", payload);
-      if (data.access_token) localStorage.setItem("access_token", data.access_token);
+      // Cookie httpOnly già impostati dal backend, niente localStorage.
       setUser(data.user);
       return { ok: true, user: data.user };
     } catch (e) {
@@ -54,7 +55,8 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn("[auth] logout failed (proceeding anyway):", err?.message || err);
     }
-    localStorage.removeItem("access_token");
+    // Cleanup difensivo: rimuovi eventuali token legacy in localStorage
+    try { localStorage.removeItem("access_token"); } catch (_) { /* localStorage disabled */ }
     setUser(false);
   };
 

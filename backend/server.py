@@ -3250,9 +3250,14 @@ async def admin_geocode_retry(
 app.include_router(api)
 
 cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+if not cors_origins:
+    # Non usare mai wildcard `*` con credentials — i browser rifiutano la
+    # combinazione. In sviluppo locale accetta il frontend classico su :3000.
+    logging.warning("CORS_ORIGINS non impostato: uso fallback dev http://localhost:3000")
+    cors_origins = ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins if cors_origins else ["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

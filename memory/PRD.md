@@ -126,6 +126,16 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Terms & Conditions** (`/termini`): riscritta la clausola "Mancato pagamento" — ora dice esplicitamente che l'abbonamento viene sospeso IMMEDIATAMENTE al rinnovo fallito, che ci sono 7 giorni per pagare (durante i quali Stripe/PayPal riproveranno), e che dopo 7 giorni l'abbonamento DECADE definitivamente.
   - **Logo Colosseo semplificato**: rimossi la upper gallery (i piccoli archi in cima) e la fascia orizzontale intermedia. Restano solo skyline stepped + 4 archi grandi (centrale fucsia) + sparkle ciano + base rosa. Look più pulito e leggibile a piccole dimensioni.
 
+- **[2026-02-25 T23:30]** **JWT httpOnly cookies migration (P0 security fix)**:
+  - **Backend già configurato**: `set_auth_cookies()` imposta `access_token` (24h) + `refresh_token` (7gg) come cookie `httpOnly=True, secure=True, samesite=None, path=/`. `get_current_user()` legge cookie-first, fallback su `Authorization: Bearer` per tool esterni. Tutti e 4 gli endpoint di login (register, login, pin-login, webauthn-complete) chiamano `set_auth_cookies`.
+  - **Frontend rifattorizzato**:
+    - `lib/api.js`: rimosso l'interceptor che leggeva `access_token` da localStorage e aggiungeva header `Authorization: Bearer`. Aggiunto cleanup legacy che rimuove qualsiasi `access_token` residuo in localStorage al boot. Solo `withCredentials: true` — i cookie viaggiano automaticamente.
+    - `context/AuthContext.jsx`: rimossi tutti i `localStorage.setItem("access_token", ...)` da login e register. Il logout continua a chiamare `removeItem` come cleanup difensivo.
+    - `pages/Login.jsx`: rimossi i `localStorage.setItem("access_token", ...)` dai flow webauthn e pin-login.
+  - **CORS**: sostituito il fallback `["*"]` con `["http://localhost:3000"]` — browser blocca `*` + `allow_credentials=True`. In prod usa `CORS_ORIGINS` da .env.
+  - **Verificato E2E**: 1) login francesco → `localStorage.access_token = null` ✅ 2) cookie `access_token` presente con `httpOnly=True, secure=True` ✅ 3) reload di `/dashboard` → utente ancora loggato (persistenza cookie) ✅ 4) logout → cookie cleared `[]` + redirect a `/login` da rotta protetta ✅.
+  - **Impatto XSS**: uno script iniettato via XSS ora NON può leggere il JWT dal `document.cookie` né da `localStorage.getItem("access_token")` — attacco reso inefficace. Rimane la mitigazione di prevenire XSS con Content Security Policy (task futuro).
+
 ## Prioritized Backlog
 
 - **[2026-02-25 T23:00]** Code review quality fixes (quick wins):

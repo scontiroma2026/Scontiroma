@@ -30,7 +30,7 @@ export default function Login() {
       const { data: options } = await api.post("/webauthn/login/begin", { email });
       const assertion = await startAuthentication({ optionsJSON: options });
       const { data } = await api.post("/webauthn/login/complete", { credential: assertion });
-      if (data.access_token) localStorage.setItem("access_token", data.access_token);
+      // Cookie httpOnly già impostato dal backend — niente localStorage per il JWT (anti-XSS).
       await refresh();
       toast.success("Bentornato! ✦");
       nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
@@ -65,7 +65,7 @@ export default function Login() {
     setBusy(true);
     try {
       const { data } = await api.post("/auth/pin-login", { email, pin });
-      if (data.access_token) localStorage.setItem("access_token", data.access_token);
+      // Cookie httpOnly già impostato dal backend — niente localStorage.
       await refresh();
       toast.success("Accesso effettuato");
       nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
