@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, MapPin, ArrowRight, Zap, Heart } from "lucide-react";
@@ -14,9 +14,18 @@ const ROMA_PIAZZA = "https://images.unsplash.com/photo-1525874684015-58379d421a5
 
 export default function Landing() {
   const [featured, setFeatured] = useState([]);
+  const [params] = useSearchParams();
   useEffect(() => {
+    // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
+    const ref = params.get("ref");
+    if (ref) {
+      try {
+        localStorage.setItem("referral_merchant_id", ref);
+        localStorage.setItem("referral_captured_at", new Date().toISOString());
+      } catch (_) { /* localStorage disabled */ }
+    }
     api.get("/discounts").then((r) => setFeatured((r.data.discounts || []).slice(0, 3))).catch(() => {});
-  }, []);
+  }, [params]);
 
   return (
     <main data-testid="landing-page" className="min-h-screen bg-[#0A0A0A] text-white overflow-hidden">

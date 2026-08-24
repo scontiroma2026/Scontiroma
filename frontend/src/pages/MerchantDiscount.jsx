@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import PhotoGallery from "@/components/PhotoGallery";
 
 export default function MerchantDiscount() {
@@ -15,6 +15,8 @@ export default function MerchantDiscount() {
     title: "", description: "", original_price: "", discounted_price: "",
     image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
   });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiOriginal, setAiOriginal] = useState(null); // per il pulsante "Ripristina"
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState(null);
 
@@ -54,10 +56,46 @@ export default function MerchantDiscount() {
       }
       await api.post("/merchants/me/discount", payload);
       toast.success("Offerta inviata! Attende approvazione dell'amministratore.");
+      setAiOriginal(null);
       load();
     } catch (err) {
       toast.error(formatApiError(err));
     } finally { setLoading(false); }
+  };
+
+  const improveWithAI = async () => {
+    if (!form.title || form.title.trim().length < 2) {
+      toast.error("Scrivi prima il titolo dell'offerta");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await api.post("/discounts/improve-description", {
+        title: form.title,
+        description: form.description,
+        category: form.category || "",
+        original_price: parseFloat(form.original_price) || null,
+        discounted_price: parseFloat(form.discounted_price) || null,
+      });
+      const improved = res.data?.improved_description || "";
+      if (improved) {
+        setAiOriginal(form.description);
+        setForm((f) => ({ ...f, description: improved }));
+        toast.success("Descrizione migliorata! Puoi ripristinare l'originale se non ti piace.");
+      } else {
+        toast.error("L'AI non è riuscita a migliorare. Riprova.");
+      }
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally { setAiLoading(false); }
+  };
+
+  const restoreOriginal = () => {
+    if (aiOriginal !== null) {
+      setForm((f) => ({ ...f, description: aiOriginal }));
+      setAiOriginal(null);
+      toast.info("Descrizione originale ripristinata");
+    }
   };
 
   const upd = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -138,7 +176,42 @@ export default function MerchantDiscount() {
               <Input data-testid="disc-title" required value={form.title} onChange={upd("title")} className="mt-1 bg-black/40 border-white/10 text-white" placeholder="Es. Menu degustazione a metà prezzo" />
             </div>
             <div>
-              <Label>Descrizione</Label>
+              <div className="flex items-center justify-between">
+                <Label>Descrizione</Label>
+                <div className="flex items-center gap-2">
+                  {aiOriginal !== null && (
+                    <button
+                      type="button"
+                      data-testid="ai-restore-btn"
+                      onClick={restoreOriginal}
+                      disabled={readOnly || aiLoading}
+                      className="text-[11px] text-white/60 hover:text-white underline-offset-2 hover:underline transition"
+                    >
+                      ↺ Ripristina originale
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    data-testid="ai-improve-btn"
+                    onClick={improveWithAI}
+                    disabled={readOnly || aiLoading || !form.title}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      aiLoading
+                        ? "bg-white/5 text-white/40 cursor-wait"
+                        : readOnly || !form.title
+                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          : "bg-gradient-to-r from-fucsia to-viola text-white hover:scale-105 shadow-lg shadow-fucsia/20"
+                    }`}
+                    title="Genera una descrizione migliore con AI (Claude Sonnet 5)"
+                  >
+                    {aiLoading ? (
+                      <><Loader2 size={12} className="animate-spin" /> Sto pensando…</>
+                    ) : (
+                      <><Sparkles size={12} /> Migliora con AI</>
+                    )}
+                  </button>
+                </div>
+              </div>
               <Textarea data-testid="disc-description" required value={form.description} onChange={upd("description")} className="mt-1 bg-black/40 border-white/10 text-white" rows={3} />
             </div>
             <div className="grid grid-cols-2 gap-4">

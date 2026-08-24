@@ -93,6 +93,14 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - `DiscountDetail.jsx` ora ha hero con frecce di navigazione ← →, dot indicator, thumbnail strip, MiniMap sotto la card prezzo.
   - **Verificato E2E**: registrato "Pizzeria da Marco Geo" a Piazza Navona 10 → geocode restituisce `lat=41.8978, lng=12.4728` in 4 secondi ✓ · galleria 3 foto salvata ✓ · mini-mappa renderizza sulla pagina sconto ✓.
 
+- **[2026-02-24]** Doppia feature: **QR Referral per merchant** + **AI Description Assistant**:
+  - **Referral tracking**: `RegisterIn.referred_by` (merchant_id) + campi `users.referred_by` / `referred_at`. `Landing.jsx` cattura `?ref=` dall'URL e salva in `localStorage.referral_merchant_id`; `Register.jsx` include il ref (priorità URL, poi localStorage) nel payload. Nuovo endpoint `GET /api/merchants/me/referrals` con conteggi (total, subscribed, active) + `referral_url` + `flyer_url`. Nuovo componente `MerchantReferralCard.jsx` nella MerchantDashboard: QR personalizzato + link copiabile + 3 stat card + CTA "Stampa la mia locandina" che apre `/locandina?ref=MID`. Locandina aggiornata per generare QR dinamico su `scontiroma.it/?ref=MID`.
+  - **AI Improve Description**: Nuovo endpoint `POST /api/discounts/improve-description` che usa Claude Sonnet 5 via `emergentintegrations` + `EMERGENT_LLM_KEY`. Prompt system in italiano con 7 regole (max 220 char, no emoji, no prezzi, dettaglio concreto, tono romano-amichevole). Bottone "✨ Migliora con AI" in `MerchantDiscount.jsx` (gradient fucsia→viola) + "↺ Ripristina originale" se l'AI non convince.
+  - **Verificato E2E**: 
+    - AI: "pizza al 50%" → "Margherita cotta nel forno a legna, con pomodoro fresco e mozzarella filante: la classica napoletana da gustare in trattoria..." (168 char, 8.9s) ✅
+    - Referral: iscrizione con `referred_by` persiste correttamente in DB ✅
+    - Backend `/merchants/me/referrals` ritorna il count corretto ✅
+
 ## Prioritized Backlog
 - **P1**: Sostituire placeholder `[DA COMPILARE]` nelle pagine legali con Ragione Sociale + P.IVA + sede quando Francesco aprirà P.IVA in Regime Forfettario.
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".

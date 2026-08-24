@@ -53,10 +53,14 @@ export default function Register() {
     setLoading(true);
     const payload = { ...form, role, marketing_opt_in: marketingOptIn, legal_accepted: true };
     if (role === "client") {
-      // Concatena nome + cognome nel campo `name` che il backend si aspetta
       payload.name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
       delete payload.first_name; delete payload.last_name;
       delete payload.shop_name; delete payload.zone; delete payload.category; delete payload.phone; delete payload.address;
+      // Referral tracking (?ref=merchant_id) — priorità URL, poi localStorage
+      const refFromUrl = params.get("ref");
+      const refFromStorage = (() => { try { return localStorage.getItem("referral_merchant_id"); } catch { return null; } })();
+      const ref = refFromUrl || refFromStorage;
+      if (ref) payload.referred_by = ref;
     } else {
       // Per il merchant usiamo il campo unico `name` (referente)
       delete payload.first_name; delete payload.last_name;

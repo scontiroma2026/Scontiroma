@@ -1,14 +1,19 @@
 import { QRCodeSVG } from "qrcode.react";
-import { Printer, Download } from "lucide-react";
+import { Printer } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 /**
  * Locandina promozionale A5 stampabile per i banchi dei commercianti.
- * URL diretto: /locandina (non nel menu principale)
- * Colori/font coerenti con l'app: fucsia (#FF2E93), ciano (#00E5FF), gold (#FFD93D),
- * viola (#7A5CFF), font Fraunces (serif) + Inter (sans).
+ * URL diretto: /locandina (globale) o /locandina?ref=MERCHANT_ID (personalizzata).
+ * Se ?ref è presente, il QR punta a scontiroma.it/?ref=MERCHANT_ID così
+ * ogni iscrizione viene attribuita al commerciante (referral tracking).
  */
 export default function Locandina() {
-  const APP_URL = "https://scontiroma.it";
+  const [params] = useSearchParams();
+  const ref = params.get("ref");
+  const APP_URL = ref
+    ? `https://scontiroma.it/?ref=${encodeURIComponent(ref)}`
+    : "https://scontiroma.it";
   const openPrint = () => window.print();
 
   return (
