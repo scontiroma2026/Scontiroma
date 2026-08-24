@@ -47,14 +47,16 @@ export default function BrandMark({
 }
 
 /**
- * SRIcon — l'icona vera e propria, ~1.1em × 1em, allineata al testo.
+ * SRIcon — il logo del brand: silhouette del Colosseo stilizzato.
  *
- * Elementi:
- *  - Stella di 4 punte (sparkle) sul lato in alto a destra → segnale sconto.
- *  - Tre archi decrescenti da sinistra a destra → acquedotto/porte di Roma
- *    riletto in chiave moderna. I due archi laterali sono outline, quello
- *    centrale è pieno (accento fucsia) → dà focus e ritmo.
- *  - Base lineare orizzontale → suolo su cui poggiano gli archi.
+ * Elementi (stile minimal, in linea col resto dell'app):
+ *  - Doppio ordine di archi (bottom + upper gallery) come nell'anfiteatro reale.
+ *  - Arco centrale del piano inferiore PIENO in fucsia — accento del brand.
+ *  - Skyline "stepped" che riprende il muro sud crollato del Colosseo
+ *    (metà alta a sinistra, metà più bassa a destra).
+ *  - Sparkle ciano a 4 punte in alto a destra → segnale sconto.
+ *  - Linea rosa alla base → suolo/pavimento romano.
+ *  - Gli outline seguono `currentColor` così si adattano al testo circostante.
  */
 function SRIcon({ className = "" }) {
   return (
@@ -66,50 +68,92 @@ function SRIcon({ className = "" }) {
       className={`block ${className}`}
       style={{ width: "1.35em", height: "1.05em" }}
     >
-      {/* Sparkle dello sconto (in alto a destra) */}
+      {/* Sparkle sconto in alto a destra */}
       <path
-        d="M 33 4
-           L 34.5 7.5
-           L 38 9
-           L 34.5 10.5
-           L 33 14
-           L 31.5 10.5
-           L 28 9
-           L 31.5 7.5
-           Z"
+        d="M 34.5 3
+           L 35.8 5.7
+           L 38.5 7
+           L 35.8 8.3
+           L 34.5 11
+           L 33.2 8.3
+           L 30.5 7
+           L 33.2 5.7 Z"
         fill="#00E5FF"
         opacity="0.95"
       />
 
-      {/* Base orizzontale (suolo/pavimento romano) */}
+      {/* Base orizzontale (suolo romano) */}
       <line
-        x1="2" y1="27" x2="30" y2="27"
+        x1="2.5" y1="27" x2="31.5" y2="27"
         stroke="#FF2E93"
         strokeWidth="2"
         strokeLinecap="round"
       />
 
-      {/* Arco sinistro — outline */}
+      {/* Skyline superiore stepped: parte alta a sinistra, parte crollata a destra */}
       <path
-        d="M 3 26 L 3 18 Q 3 12 8 12 Q 13 12 13 18 L 13 26"
+        d="M 4 15
+           L 4 9
+           L 18 9
+           L 18 12
+           L 30 12
+           L 30 15"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Piano superiore: 4 archi piccoli in outline */}
+      <path
+        d="M 6 15 L 6 12.5 Q 6 10.8 7.5 10.8 Q 9 10.8 9 12.5 L 9 15
+           M 11 15 L 11 12.5 Q 11 10.8 12.5 10.8 Q 14 10.8 14 12.5 L 14 15
+           M 16 15 L 16 12.5 Q 16 10.8 17 10.8
+           M 21 15 L 21 13.6 Q 21 12.6 22.5 12.6 Q 24 12.6 24 13.6 L 24 15
+           M 26 15 L 26 13.6 Q 26 12.6 27.5 12.6 Q 29 12.6 29 13.6 L 29 15"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
         strokeLinecap="round"
       />
 
-      {/* Arco centrale — pieno fucsia (l'accento del brand) */}
-      <path
-        d="M 14 26 L 14 15 Q 14 8 19.5 8 Q 25 8 25 15 L 25 26 Z"
-        fill="#FF2E93"
+      {/* Fascia orizzontale che separa i due ordini */}
+      <line
+        x1="4" y1="16.5" x2="30" y2="16.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
       />
 
-      {/* Arco destro — outline, più piccolo (prospettiva) */}
+      {/* Piano inferiore: 4 archi grandi, il centrale PIENO fucsia (accento brand) */}
+      {/* Arco 1 (sinistra) — outline */}
       <path
-        d="M 26 26 L 26 20 Q 26 15 29.5 15 Q 33 15 33 20 L 33 26"
+        d="M 5 26.5 L 5 21 Q 5 17.5 8 17.5 Q 11 17.5 11 21 L 11 26.5"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      {/* Arco 2 CENTRALE — pieno fucsia */}
+      <path
+        d="M 12 26.5 L 12 20.5 Q 12 17 15.5 17 Q 19 17 19 20.5 L 19 26.5 Z"
+        fill="#FF2E93"
+      />
+      {/* Arco 3 — outline */}
+      <path
+        d="M 20 26.5 L 20 21 Q 20 17.5 23 17.5 Q 26 17.5 26 21 L 26 26.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      {/* Arco 4 (destra) — outline più basso (lato "crollato") */}
+      <path
+        d="M 27 26.5 L 27 22 Q 27 19 29.5 19 Q 32 19 32 22 L 32 26.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
         strokeLinecap="round"
       />
     </svg>
