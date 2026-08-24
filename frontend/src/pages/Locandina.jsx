@@ -18,20 +18,62 @@ export default function Locandina() {
 
   return (
     <>
-      {/* Stili di stampa: nasconde tutto tranne .flyer, formato A5 */}
+      {/* Stili di stampa: nasconde TUTTO il resto della pagina tranne .flyer,
+          formato A5 su UN'UNICA pagina. */}
       <style>{`
         @page { size: A5; margin: 0; }
         @media print {
-          html, body { background: #0A0A0F !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .no-print { display: none !important; }
-          .flyer-wrap { padding: 0 !important; min-height: auto !important; }
+          html, body {
+            background: #0A0A0F !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 148mm !important;
+            height: 210mm !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* 1) Nasconde ogni elemento della pagina (navbar, footer, cookie
+             banner, toast, PWA banner, ecc.) rendendoli invisibili senza
+             rimuoverli dal DOM (mantiene stabile il layout React). */
+          body * { visibility: hidden !important; }
+
+          /* 2) Rende visibile SOLO il flyer e tutto il suo contenuto */
+          .flyer-wrap, .flyer-wrap * { visibility: visible !important; }
+
+          /* 3) Posiziona il flyer esattamente in alto-a-sinistra, dimensione A5.
+             Il position:absolute con top/left=0 garantisce che sia sempre in cima
+             alla pagina di stampa, indipendentemente da margin/padding accumulati. */
+          .flyer-wrap {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 148mm !important;
+            height: 210mm !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: 0 !important;
+            background: transparent !important;
+            display: block !important;
+          }
           .flyer {
             box-shadow: none !important;
             border-radius: 0 !important;
             width: 148mm !important;
             height: 210mm !important;
-            page-break-after: avoid;
+            margin: 0 !important;
+            /* Impedisce split su pagina 2 */
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
+          .flyer * {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .no-print { display: none !important; }
         }
       `}</style>
 

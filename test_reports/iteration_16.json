@@ -1,0 +1,21 @@
+{
+  "summary": "Verified bug fix for /locandina print output. Generated PDFs via Playwright page.pdf(format='A5', prefer_css_page_size=True, print_background=True, margin=0) for both /locandina and /locandina?ref=<id>. Both PDFs have exactly Pages: 1 and Page size: 420 x 594.96 pts (A5). Extracted text via pdftotext confirms all flyer content is present (Sconti Roma, La città a metà prezzo, 3 passaggi, 3 steps, scontiroma.it, info@scontiroma.it, SCOPRI · SCANSIONA · RISPARMIA) and NONE of the forbidden chrome elements are present (no navbar 'Esplora sconti/Mappa/Accedi', no legal footer, no cookie banner 'I biscotti della casa', no 'Stampa/Salva PDF' button). Regression test in screen mode passed: print button, navbar, footer, and cookie banner all visible on-screen; flyer renders correctly as a dark card. No JS errors in console (only unrelated 401s from external resource fetches, not from the flyer code). Print CSS pattern using `body * {visibility:hidden}` + `.flyer-wrap * {visibility:visible}` + absolute positioning at 148mm x 210mm works correctly.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/tmp/locandina_plain.pdf", "/tmp/locandina_ref.pdf", "/tmp/locandina_plain-1.jpg", "/tmp/locandina_ref-1.jpg"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Print CSS pattern is robust and idiomatic - `body * {visibility:hidden}` + selective un-hide of `.flyer-wrap *` correctly excludes navbar/footer/cookie banner/toast/PWA banner without needing to add .no-print to each of them, so future UI additions are automatically excluded from print."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Print CSS fix in /app/frontend/src/pages/Locandina.jsx (lines 21-77) is verified working. PDFs generated with Chromium via page.pdf() come out as exactly 1 A5 page containing only the flyer. For future re-verification: use pdfinfo (expect Pages: 1, Page size: 420 x 594.96 pts (A5)) and pdftotext to extract content. Note: pdftotext output shows letter-spaced text as separate chars (e.g. 'S C O P R I') due to CSS letter-spacing:0.35em on the SCOPRI header - not a bug, just an extraction quirk.",
+  "rca of the issue": "Previous overflow bug was layout-related (already fixed in iteration_15). This new bug was orthogonal: window.print() included ALL body content (navbar, footer, cookie banner, floating print button) in addition to the flyer, causing multiple pages of unwanted UI in the printed PDF. Fix applies robust print CSS: hide everything via `body * {visibility:hidden}`, then re-show only `.flyer-wrap *`, and absolute-position .flyer-wrap at 0,0 with A5 dimensions. Adding page-break-inside:avoid on .flyer prevents any splitting. Result: PDF contains exactly 1 A5 page with only the flyer content."
+}

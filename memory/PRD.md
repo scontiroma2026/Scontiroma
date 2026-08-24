@@ -158,6 +158,18 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Fix minori dal testing agent**: ridotto padding orizzontale Locandina 10mm→8mm per eliminare i 46px di overflow orizzontale residuo (era mascherato da overflow:hidden); aggiunto fallback key robusto in `AdminSubscribers.jsx` per gli eventi rinnovo con `provider_event_id` null (evita React warning).
   - **🧪 Verificato da testing_agent (iteration_15.json)**: backend 100%, frontend 100%, retest_needed=false. Test creato: `/app/backend/tests/test_bugs_fix.py`.
 
+- **[2026-02-26 T14:00]** **Bug fix (2° tentativo) Locandina — stampa 1 pagina A5 pulita**:
+  - **Bug residuo**: quando l'utente cliccava "Stampa/Salva PDF" dal /locandina, oltre al flyer venivano stampati anche la navbar in cima, il footer legale in fondo, il cookie banner e il pulsante flottante — spingendo il contenuto su 2+ pagine con la navbar in cima alla prima e il QR troncato.
+  - **Root cause**: il vecchio print CSS nascondeva solo elementi con classe `.no-print`, ma navbar/footer/cookie banner non avevano quella classe.
+  - **Fix robusto**: sostituito il pattern con:
+    ```css
+    body * { visibility: hidden !important; }
+    .flyer-wrap, .flyer-wrap * { visibility: visible !important; }
+    .flyer-wrap { position: absolute; top: 0; left: 0; width: 148mm; height: 210mm; }
+    ```
+    Nasconde TUTTO il chrome dell'app senza doverlo taggare esplicitamente, poi riporta visibile solo il flyer e lo posiziona in alto-sinistra della pagina di stampa. Aggiunto anche `page-break-inside: avoid` + `break-inside: avoid` su `.flyer` e figli per garantire una singola pagina A5.
+  - **🧪 Verificato dal testing_agent (iteration_16.json)**: 100% frontend, 0 issues. PDF generato con `page.pdf(format='A5', prefer_css_page_size=True)` per entrambe le route `/locandina` e `/locandina?ref=MERCHANT_ID`: `Pages: 1`, `Page size: 420 x 594.96 pts (A5)`. Tutto il contenuto del flyer estratto via pdftotext (Sconti Roma, tagline, 3 passaggi, 3 step, scontiroma.it, info@scontiroma.it). Nessuna navbar/footer/cookie stampata.
+
 ## Prioritized Backlog
 
 - **[2026-02-25 T23:00]** Code review quality fixes (quick wins):
