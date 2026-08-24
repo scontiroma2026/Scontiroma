@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Loader2, Check, Search } from "lucide-react";
+import { MapPin, Loader2, Check, Search, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 
 /**
@@ -44,7 +44,8 @@ export default function AddressAutocomplete({
         const r = await api.get(`/geocode/suggest?q=${encodeURIComponent(q)}&limit=5`);
         setSuggestions(r.data.suggestions || []);
         setOpen((r.data.suggestions || []).length > 0);
-      } catch {
+      } catch (err) {
+        console.warn("[address-autocomplete] fetch failed:", err?.message || err);
         setSuggestions([]);
         setOpen(false);
       } finally {
@@ -125,8 +126,21 @@ export default function AddressAutocomplete({
           data-testid={`${testId}-dropdown`}
           className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-white/15 bg-[#141419] shadow-2xl overflow-hidden animate-in fade-in-0 slide-in-from-top-1"
         >
-          <div className="text-[10px] uppercase tracking-wider text-fucsia px-3 py-2 border-b border-white/10 bg-black/40">
-            {suggestions.length} indirizzi trovati — clicca per selezionare
+          <div className="text-[10px] uppercase tracking-wider text-fucsia px-3 py-2 border-b border-white/10 bg-black/40 flex items-center justify-between">
+            <span>{suggestions.length} indirizzi trovati — clicca per selezionare</span>
+            {(() => {
+              const q = (value || "").trim();
+              const queryHasDigit = /\d/.test(q);
+              const anyNoNumber = suggestions.some((s) => !s.has_house_number);
+              if (!queryHasDigit && anyNoNumber) {
+                return (
+                  <span className="text-yellow-300 text-[9px] normal-case tracking-normal flex items-center gap-1">
+                    <AlertCircle size={10} /> Aggiungi il n. civico
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </div>
           <ul className="max-h-64 overflow-y-auto">
             {suggestions.map((s, i) => (
@@ -138,9 +152,19 @@ export default function AddressAutocomplete({
                   className="w-full text-left px-3 py-2 hover:bg-fucsia/10 transition border-b border-white/5 last:border-b-0"
                 >
                   <div className="flex items-start gap-2">
-                    <MapPin size={12} className="text-fucsia mt-1 shrink-0" />
+                    <MapPin size={12} className={`mt-1 shrink-0 ${s.has_house_number ? "text-fucsia" : "text-yellow-400"}`} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm text-white truncate">{s.display}</div>
+                      <div className="text-sm text-white truncate flex items-center gap-2">
+                        {s.display}
+                        {!s.has_house_number && (
+                          <span
+                            className="text-[9px] text-yellow-300 border border-yellow-500/40 bg-yellow-500/10 rounded px-1.5 py-0.5 shrink-0"
+                            title="Manca il numero civico — aggiungilo nella tua query"
+                          >
+                            senza civico
+                          </span>
+                        )}
+                      </div>
                       {s.full_display_name && s.full_display_name !== s.display && (
                         <div className="text-[10px] text-white/50 truncate">
                           {s.full_display_name}
@@ -153,7 +177,7 @@ export default function AddressAutocomplete({
             ))}
           </ul>
           <div className="text-[10px] text-white/40 px-3 py-1.5 border-t border-white/10 bg-black/40">
-            Powered by OpenStreetMap · <span className="italic">Se non vedi il tuo indirizzo, prova un formato più preciso</span>
+            💡 <strong className="text-white/70">Tip:</strong> per suggerimenti col numero civico digita "Via, numero, città" (es. <em className="text-fucsia/80">Via del Corso 100 Roma</em>)
           </div>
         </div>
       )}

@@ -824,7 +824,15 @@ _geocode_suggest_cache: dict = {}
 
 
 async def geocode_suggest(query: str, limit: int = 5) -> list:
-    """Autocomplete indirizzi via Nominatim (Italia). Ritorna lista di suggerimenti."""
+    """Autocomplete indirizzi via Nominatim, focalizzato su Roma.
+
+    Nominatim ritorna suggerimenti CON numero civico SOLO se l'utente ha già
+    digitato un numero nella query (es. "Via del Corso 100"). Quando il numero
+    manca, tornano match street-level (senza civico). Per aiutare l'utente:
+      - `bounded=1` + `viewbox` di Roma → filtra risultati fuori città (più veloce e pertinente)
+      - `limit` maggiorato → più candidati per il filtro
+      - ordinamento: le suggerimenti CON house_number vengono per prime
+    """
     q = (query or "").strip()
     if len(q) < 3:
         return []
@@ -838,9 +846,12 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
                 params={
                     "q": q,
                     "format": "json",
-                    "limit": limit,
+                    "limit": max(limit * 2, 10),  # più candidati per il riordino
                     "countrycodes": "it",
                     "addressdetails": 1,
+                    # Bounding box di Roma (SW→NE) per privilegiare match locali
+                    "viewbox": "12.234,41.649,12.855,42.141",
+                    "bounded": 1,
                 },
                 headers={"User-Agent": "ScontiRoma/1.0 (info@scontiroma.it)"},
             )
@@ -866,7 +877,20 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
                 "house_number": house,
                 "postcode": postcode,
                 "city": city,
+                "has_house_number": bool(house),
             })
+        # Ordina: prima quelli col civico, poi gli altri (mantenendo l'ordine originale interno)
+        out.sort(key=lambda s: 0 if s["has_house_number"] else 1)
+        # Deduplica per display finale
+        seen = set()
+        deduped = []
+        for s in out:
+            key_disp = s["display"].lower()
+            if key_disp in seen:
+                continue
+            seen.add(key_disp)
+            deduped.append(s)
+        out = deduped[:limit]
         _geocode_suggest_cache[key] = out
         return out
     except Exception as e:
