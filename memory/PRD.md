@@ -172,6 +172,12 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 
 ## Prioritized Backlog
 
+- **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):
+  - **Bug 1 — "ROMA non si legge in stampa"**: Fraunces era importato solo per weight 600 e 800, ma il titolo "Sconti Roma" usava weight **700** → il browser sintetizzava il font a schermo ma in stampa cadeva su Georgia/serif di sistema, deformando il logo. Fix: espanso `@import` di Fraunces a **400-500-600-700-800-900** in `index.css`. Aggiunto **preload esplicito** (`document.fonts.load("700 34pt Fraunces")`) prima di `window.print()` per garantire che il font sia disponibile al print engine.
+  - **Bug 2 — Colori sbiaditi in stampa**: aggiunto `print-color-adjust: exact !important` (con prefissi WebKit e generico) su `.flyer-wrap, .flyer-wrap *` così Safari/Firefox non rimuovono background scuri e sfumature. Il PDF ora è identico all'anteprima a schermo.
+  - **Fix 3 — QR destinazione**: il QR della locandina puntava a `scontiroma.it/?ref=X` (landing); ora punta **direttamente a `scontiroma.it/register?ref=X`** così l'utente che scansiona il codice va subito al form di iscrizione. `Register.jsx` già leggeva `?ref=` dai searchParams (linea 60).
+  - **Verifica**: PDF generato via Playwright + `zbarimg` conferma `QR-Code:https://scontiroma.it/register?ref=a709af18-...`. Rendering PDF pixel-perfect vs preview (screenshot + PDF rasterizzato).
+
 - **[2026-02-26 T13:54]** Referral analytics spostati da Merchant → Admin (per privacy iscritti):
   - `/api/merchants/me/referrals` (backend) **non ritorna più** `total_referrals`, `subscribed_count`, `active_subscribers` e `referrals`. Restituisce solo `referral_url` e `flyer_url`. Il commerciante non può più vedere dati anagrafici o statistiche sugli abbonati arrivati tramite il suo QR.
   - `MerchantReferralCard.jsx` (frontend) **rimossa la griglia di 3 stat** (Iscrizioni/Abbonati/Attivi ora). Restano solo QR + link + CTA "Stampa locandina" / "Prova il link".

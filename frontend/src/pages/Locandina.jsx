@@ -11,15 +11,34 @@ import { useSearchParams } from "react-router-dom";
 export default function Locandina() {
   const [params] = useSearchParams();
   const ref = params.get("ref");
+  // QR punta DIRETTAMENTE alla pagina di registrazione utente (con referral se presente).
   const APP_URL = ref
-    ? `https://scontiroma.it/?ref=${encodeURIComponent(ref)}`
-    : "https://scontiroma.it";
-  const openPrint = () => window.print();
+    ? `https://scontiroma.it/register?ref=${encodeURIComponent(ref)}`
+    : "https://scontiroma.it/register";
+
+  // Assicura che Fraunces (700+800) sia effettivamente caricato prima di stampare,
+  // altrimenti il browser ricade su serif di sistema e "Sconti Roma" cambia
+  // completamente aspetto (utente ha segnalato "non si legge neanche ROMA").
+  const openPrint = async () => {
+    try {
+      if (document?.fonts?.load) {
+        await Promise.all([
+          document.fonts.load("700 34pt Fraunces"),
+          document.fonts.load("800 16pt Fraunces"),
+          document.fonts.load("600 13pt Fraunces"),
+        ]);
+        await document.fonts.ready;
+      }
+    } catch (err) {
+      console.warn("[locandina] font preload failed:", err?.message || err);
+    }
+    window.print();
+  };
 
   return (
     <>
       {/* Stili di stampa: nasconde TUTTO il resto della pagina tranne .flyer,
-          formato A5 su UN'UNICA pagina. */}
+          formato A5 su UN'UNICA pagina, forza colori identici all'anteprima. */}
       <style>{`
         @page { size: A5; margin: 0; }
         @media print {
@@ -31,6 +50,7 @@ export default function Locandina() {
             height: 210mm !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
 
           /* 1) Nasconde ogni elemento della pagina (navbar, footer, cookie
@@ -41,9 +61,16 @@ export default function Locandina() {
           /* 2) Rende visibile SOLO il flyer e tutto il suo contenuto */
           .flyer-wrap, .flyer-wrap * { visibility: visible !important; }
 
-          /* 3) Posiziona il flyer esattamente in alto-a-sinistra, dimensione A5.
-             Il position:absolute con top/left=0 garantisce che sia sempre in cima
-             alla pagina di stampa, indipendentemente da margin/padding accumulati. */
+          /* 3) FORZA colori/sfondi identici all'anteprima anche in stampa.
+             Senza queste regole, Safari/Firefox rimuovono i background scuri
+             e "Roma" (pink su nero) diventa illeggibile. */
+          .flyer-wrap, .flyer-wrap * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+
+          /* 4) Posiziona il flyer esattamente in alto-a-sinistra, dimensione A5. */
           .flyer-wrap {
             position: absolute !important;
             left: 0 !important;
@@ -62,7 +89,6 @@ export default function Locandina() {
             width: 148mm !important;
             height: 210mm !important;
             margin: 0 !important;
-            /* Impedisce split su pagina 2 */
             page-break-after: avoid !important;
             page-break-before: avoid !important;
             page-break-inside: avoid !important;
