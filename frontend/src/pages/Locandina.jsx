@@ -5,16 +5,18 @@ import { useSearchParams } from "react-router-dom";
 /**
  * Locandina promozionale A5 stampabile per i banchi dei commercianti.
  * URL diretto: /locandina (globale) o /locandina?ref=MERCHANT_ID (personalizzata).
- * Se ?ref è presente, il QR punta a scontiroma.it/?ref=MERCHANT_ID così
- * ogni iscrizione viene attribuita al commerciante (referral tracking).
+ * Il QR punta a {origin}/register?ref=MERCHANT_ID — identico al QR mostrato
+ * nella dashboard del commerciante: ogni iscrizione viene attribuita al negozio.
  */
 export default function Locandina() {
   const [params] = useSearchParams();
   const ref = params.get("ref");
   // QR punta DIRETTAMENTE alla pagina di registrazione utente (con referral se presente).
+  // Usa l'origin corrente: in produzione sarà scontiroma.it, in preview l'URL di test.
+  const origin = window.location.origin;
   const APP_URL = ref
-    ? `https://scontiroma.it/register?ref=${encodeURIComponent(ref)}`
-    : "https://scontiroma.it/register";
+    ? `${origin}/register?ref=${encodeURIComponent(ref)}`
+    : `${origin}/register`;
 
   // Assicura che Fraunces (700+800) sia effettivamente caricato prima di stampare,
   // altrimenti il browser ricade su serif di sistema e "Sconti Roma" cambia

@@ -177,6 +177,12 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Brute-force lockout: 5 tentativi falliti (master o recovery) → 15 min. Pulsante "Recovery ID" in dashboard rigenera l'ID (mostrato una sola volta, require_admin_master).
   - Verificato E2E via curl (15 step: login vecchia/nuova pw, master vecchia/nuova, forgot errato/corretto, email Resend reale inviata, reset corto/valido/riuso, token invalidato, regenerate) + screenshot gate/forgot/dashboard/reset-page.
 
+- **[2026-08-26]** **QR unificati merchant (dashboard = locandina)**:
+  - `referral_url` backend ora punta a `/register?ref=MID` (prima homepage `/?ref=`). QR dashboard e QR locandina codificano ESATTAMENTE lo stesso URL.
+  - `Locandina.jsx` non hardcoda più `scontiroma.it`: usa `window.location.origin` (in produzione sarà scontiroma.it, ora preview → testabile subito col telefono).
+  - Confermato: esiste UNA sola locandina — l'anteprima a schermo e la stampa sono lo stesso identico flyer (print CSS isola solo `.flyer-wrap`).
+  - Verificato: curl `/merchants/me/referrals` + decodifica zbarimg del QR renderizzato → URL identici.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

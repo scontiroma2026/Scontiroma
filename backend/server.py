@@ -1094,7 +1094,7 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
     return {
         "merchant_id": user["id"],
         "shop_name": user.get("shop_name"),
-        "referral_url": f"{app_url}/?ref={user['id']}",
+        "referral_url": f"{app_url}/register?ref={user['id']}",
         "flyer_url": f"{app_url}/locandina?ref={user['id']}",
     }
 
