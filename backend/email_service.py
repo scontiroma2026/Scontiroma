@@ -196,6 +196,156 @@ async def send_pin_reset_code(to: str, name: str, code: str) -> Optional[str]:
 
 
 
+async def send_payment_failed_immediate(
+    to: str,
+    name: str,
+    grace_expires_iso: str,
+    provider: str = "stripe",
+) -> Optional[str]:
+    """Email inviata IMMEDIATAMENTE quando il pagamento del rinnovo fallisce.
+    Informa l'utente che l'abbonamento è sospeso ma può ancora essere salvato
+    entro 7 giorni aggiornando il metodo di pagamento.
+    """
+    safe_name = (name or "").strip() or "abbonato"
+    try:
+        from datetime import datetime as _dt
+        dt = _dt.fromisoformat(grace_expires_iso.replace("Z", "+00:00"))
+        it_months = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+                     "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+        deadline_human = f"{dt.day} {it_months[dt.month - 1]} {dt.year}"
+    except Exception:
+        deadline_human = grace_expires_iso[:10]
+
+    provider_label = {"stripe": "carta di credito", "paypal": "PayPal"}.get(provider, "metodo di pagamento")
+
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">⚠️ Problema con il tuo pagamento</h2>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:16px">Ciao {safe_name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Non siamo riusciti ad addebitare il rinnovo mensile del tuo abbonamento a <strong style="color:#fff">Sconti Roma</strong> tramite {provider_label}.
+</p>
+<p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Il tuo abbonamento è stato <strong style="color:#f59e0b">temporaneamente sospeso</strong> — al momento non puoi riscattare nuovi sconti.
+</p>
+
+<div style="background:#1a1a20;border:1px solid #f59e0b;border-radius:10px;padding:16px 20px;margin:20px 0">
+  <div style="color:#f59e0b;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Hai 7 giorni per salvare il tuo abbonamento</div>
+  <div style="color:#f4f4f5;font-size:15px;line-height:1.5">
+    Se aggiorni il tuo metodo di pagamento entro il <strong>{deadline_human}</strong>, il rinnovo verrà ritentato automaticamente e non perderai nulla.
+  </div>
+</div>
+
+<div style="text-align:center;margin:28px 0">
+  <a href="{APP_URL}/account" style="display:inline-block;padding:14px 36px;background:linear-gradient(90deg,#FF2E93,#7C3AED);color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px">
+    Aggiorna metodo di pagamento →
+  </a>
+</div>
+
+<p style="margin:24px 0 0;color:#a1a1aa;font-size:13px;line-height:1.5">
+  Se non aggiorni il pagamento entro il {deadline_human}, il tuo abbonamento verrà annullato definitivamente e per tornare a usare Sconti Roma dovrai iscriverti di nuovo.
+</p>
+<p style="margin:12px 0 0;color:#71717a;font-size:11px">
+  Serve aiuto? Scrivici a <a href="mailto:info@scontiroma.it" style="color:#FF2E93">info@scontiroma.it</a>.
+</p>
+"""
+    return await _send(to, "⚠️ Problema con il tuo pagamento — Sconti Roma", _shell(inner, "Pagamento fallito"))
+
+
+async def send_grace_period_reminder(
+    to: str,
+    name: str,
+    grace_expires_iso: str,
+    days_left: int,
+) -> Optional[str]:
+    """Promemoria inviato al giorno 5 della grace period (2 giorni rimasti).
+    Ultimo push per convincere l'utente ad aggiornare il metodo di pagamento
+    prima della cancellazione automatica.
+    """
+    safe_name = (name or "").strip() or "abbonato"
+    try:
+        from datetime import datetime as _dt
+        dt = _dt.fromisoformat(grace_expires_iso.replace("Z", "+00:00"))
+        it_months = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+                     "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+        deadline_human = f"{dt.day} {it_months[dt.month - 1]} {dt.year}"
+    except Exception:
+        deadline_human = grace_expires_iso[:10]
+
+    days_label = "giorno" if days_left == 1 else "giorni"
+
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">⏰ Ultimi {days_left} {days_label} per il tuo abbonamento</h2>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:16px">Ciao {safe_name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Il tuo abbonamento a <strong style="color:#fff">Sconti Roma</strong> è ancora sospeso perché non siamo riusciti ad addebitare il rinnovo.
+</p>
+
+<div style="background:#1a1a20;border:2px solid #ef4444;border-radius:10px;padding:20px;margin:24px 0;text-align:center">
+  <div style="color:#ef4444;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Scadenza</div>
+  <div style="color:#fff;font-family:Georgia,serif;font-size:22px;font-weight:700">{deadline_human}</div>
+  <div style="color:#fecaca;font-size:14px;margin-top:8px">
+    Dopo questa data l'abbonamento sarà <strong>annullato definitivamente</strong>.
+  </div>
+</div>
+
+<p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Ti bastano <strong>30 secondi</strong> per aggiornare il metodo di pagamento e non perdere l'accesso agli sconti dei commercianti del tuo quartiere.
+</p>
+
+<div style="text-align:center;margin:28px 0">
+  <a href="{APP_URL}/account" style="display:inline-block;padding:16px 40px;background:linear-gradient(90deg,#ef4444,#FF2E93);color:#fff;text-decoration:none;border-radius:999px;font-weight:700;font-size:16px;box-shadow:0 4px 16px rgba(239,68,68,0.4)">
+    Salva il mio abbonamento →
+  </a>
+</div>
+
+<p style="margin:24px 0 0;color:#71717a;font-size:12px;line-height:1.5;text-align:center">
+  Se non vuoi più rinnovare, non devi fare nulla: l'abbonamento decadrà automaticamente il {deadline_human}.
+</p>
+"""
+    return await _send(to, f"⏰ Ultimi {days_left} {days_label} per salvare il tuo abbonamento", _shell(inner, "Promemoria"))
+
+
+async def send_subscription_cancelled(
+    to: str,
+    name: str,
+) -> Optional[str]:
+    """Email finale inviata quando la grace period scade e l'abbonamento
+    viene cancellato definitivamente. Include CTA per riabbonarsi.
+    """
+    safe_name = (name or "").strip() or "abbonato"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il tuo abbonamento è stato annullato</h2>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:16px">Ciao {safe_name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Non siamo riusciti a rinnovare il tuo abbonamento a <strong style="color:#fff">Sconti Roma</strong> nei 7 giorni di tolleranza. Come da nostri termini, l'abbonamento è stato <strong>annullato</strong>.
+</p>
+
+<div style="background:#1a1a20;border:1px solid #27272a;border-radius:10px;padding:16px 20px;margin:20px 0">
+  <div style="color:#71717a;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Cosa succede ora?</div>
+  <ul style="margin:0;padding-left:20px;color:#d4d4d8;font-size:14px;line-height:1.7">
+    <li>Non ti verrà più addebitato nulla.</li>
+    <li>Non puoi più riscattare sconti dei commercianti.</li>
+    <li>I tuoi dati e la cronologia sconti restano salvati.</li>
+  </ul>
+</div>
+
+<p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
+  Cambiato idea? Puoi <strong>riattivare il tuo abbonamento</strong> in qualsiasi momento — solo 3€/mese e torni subito a risparmiare sui commercianti del tuo quartiere.
+</p>
+
+<div style="text-align:center;margin:28px 0">
+  <a href="{APP_URL}/subscription" style="display:inline-block;padding:14px 36px;background:linear-gradient(90deg,#FF2E93,#7C3AED);color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px">
+    Riattiva l'abbonamento →
+  </a>
+</div>
+
+<p style="margin:24px 0 0;color:#71717a;font-size:12px;text-align:center;line-height:1.5">
+  Ci dispiace vederti andare. Se c'è qualcosa che possiamo fare meglio, scrivici a <a href="mailto:info@scontiroma.it" style="color:#FF2E93">info@scontiroma.it</a> — ogni feedback conta.
+</p>
+"""
+    return await _send(to, "Il tuo abbonamento Sconti Roma è stato annullato", _shell(inner, "Abbonamento annullato"))
+
+
 async def send_renewal_receipt(
     to: str,
     name: str,

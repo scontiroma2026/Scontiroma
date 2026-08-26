@@ -26,6 +26,9 @@ from email_service import (
     send_merchant_rejected,
     send_monthly_discounts_notification,
     send_renewal_receipt,
+    send_payment_failed_immediate,
+    send_grace_period_reminder,
+    send_subscription_cancelled,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
@@ -228,6 +231,19 @@ async def _cancel_expired_grace(user_id: str) -> None:
         {"$set": {"subscription_status": "cancelled"}},
     )
     logging.info(f"[grace-expired] user={user_id[:8]} sub decaduta dopo 7gg senza pagamento")
+
+    # Email #3: notifica finale di cancellazione (idempotente via flag su user)
+    try:
+        u = await db.users.find_one({"id": user_id})
+        if u and u.get("email") and not u.get("cancellation_email_sent"):
+            await send_subscription_cancelled(to=u["email"], name=u.get("name") or "")
+            await db.users.update_one(
+                {"id": user_id},
+                {"$set": {"cancellation_email_sent": True, "cancellation_email_sent_at": now_iso}},
+            )
+            logging.info(f"[grace-expired] email cancellazione inviata to={u['email']}")
+    except Exception as e:
+        logging.error(f"[grace-expired] email send failed: {e}")
 
 
 async def user_has_active_sub(user_id: str) -> bool:
@@ -1333,6 +1349,20 @@ async def suspend_subscription_on_payment_failed(
     })
     logging.info(f"[payment-failed] user={user_id[:8]} suspended via {provider} (grace until {grace_expires_iso})")
 
+    # Email #1: notifica immediata di pagamento fallito (idempotente via renewal_events)
+    try:
+        u = await db.users.find_one({"id": user_id})
+        if u and u.get("email"):
+            await send_payment_failed_immediate(
+                to=u["email"],
+                name=u.get("name") or "",
+                grace_expires_iso=grace_expires_iso,
+                provider=provider,
+            )
+            logging.info(f"[payment-failed] email inviata to={u['email']}")
+    except Exception as e:
+        logging.error(f"[payment-failed] email send failed: {e}")
+
 
 async def extend_subscription_on_renewal(
     *,
@@ -1398,6 +1428,13 @@ async def extend_subscription_on_renewal(
         {"$set": {
             "data_scadenza_abbonamento": new_end_iso,
             "last_renewal_at": now.isoformat(),
+            "subscription_status": "active",
+        }, "$unset": {
+            "grace_reminder_sent": "",
+            "grace_reminder_sent_at": "",
+            "cancellation_email_sent": "",
+            "cancellation_email_sent_at": "",
+            "grace_expires_at": "",
         }},
     )
     await db.renewal_events.insert_one({
@@ -2395,6 +2432,97 @@ async def seed_data():
             })
 
 
+
+# ============================================================
+# Grace-period reminder scheduler
+# ============================================================
+# Job giornaliero: scansiona utenti con abbonamento `past_due` la cui
+# `grace_expires_at` cade fra ~2 giorni (giorno 5 dei 7 di grace),
+# e invia l'email #2 di ultimo promemoria. Idempotente via flag
+# `grace_reminder_sent` sull'user.
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler  # noqa: E402
+from apscheduler.triggers.cron import CronTrigger  # noqa: E402
+
+_scheduler: Optional[AsyncIOScheduler] = None
+
+
+async def _run_grace_reminders() -> dict:
+    """Trova utenti past_due con grace_expires_at che scade fra 36-60 ore
+    (finestra centrata sul giorno 5 di 7) e invia email #2. Ritorna un
+    riepilogo con `checked` e `sent`.
+    """
+    now = datetime.now(timezone.utc)
+    window_start = (now + timedelta(hours=36)).isoformat()
+    window_end = (now + timedelta(hours=60)).isoformat()
+
+    cursor = db.subscriptions.find({
+        "status": "past_due",
+        "grace_expires_at": {"$gte": window_start, "$lte": window_end},
+    })
+    subs = await cursor.to_list(length=None)
+    sent = 0
+    for s in subs:
+        user_id = s.get("user_id")
+        grace_iso = s.get("grace_expires_at")
+        if not user_id or not grace_iso:
+            continue
+        u = await db.users.find_one({"id": user_id})
+        if not u or not u.get("email"):
+            continue
+        if u.get("grace_reminder_sent"):
+            continue
+        try:
+            grace_dt = datetime.fromisoformat(grace_iso.replace("Z", "+00:00"))
+            hours_left = (grace_dt - now).total_seconds() / 3600
+            days_left = max(1, int(-(-hours_left // 24)))  # ceil division
+        except Exception:
+            days_left = 2
+        try:
+            await send_grace_period_reminder(
+                to=u["email"],
+                name=u.get("name") or "",
+                grace_expires_iso=grace_iso,
+                days_left=days_left,
+            )
+            await db.users.update_one(
+                {"id": user_id},
+                {"$set": {"grace_reminder_sent": True, "grace_reminder_sent_at": now.isoformat()}},
+            )
+            sent += 1
+            logging.info(f"[grace-reminder] email inviata to={u['email']} days_left={days_left}")
+        except Exception as e:
+            logging.error(f"[grace-reminder] send failed for user={user_id[:8]}: {e}")
+    return {"checked": len(subs), "sent": sent}
+
+
+def _start_scheduler() -> None:
+    global _scheduler
+    if _scheduler is not None:
+        return
+    _scheduler = AsyncIOScheduler(timezone="Europe/Rome")
+    # Ogni giorno alle 10:00 ora italiana
+    _scheduler.add_job(
+        _run_grace_reminders,
+        CronTrigger(hour=10, minute=0),
+        id="grace_reminders_daily",
+        replace_existing=True,
+    )
+    _scheduler.start()
+    logging.info("[scheduler] AsyncIOScheduler avviato — grace reminders alle 10:00 Europe/Rome")
+
+
+def _stop_scheduler() -> None:
+    global _scheduler
+    if _scheduler is not None:
+        try:
+            _scheduler.shutdown(wait=False)
+        except Exception:
+            pass
+        _scheduler = None
+
+
+
 @app.on_event("startup")
 async def on_startup():
     await db.users.create_index("email", unique=True)
@@ -2407,10 +2535,12 @@ async def on_startup():
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     await seed_data()
+    _start_scheduler()
 
 
 @app.on_event("shutdown")
 async def on_shutdown():
+    _stop_scheduler()
     client.close()
 
 
@@ -3119,6 +3249,15 @@ async def admin_simulate_renewal(
         "subscription_end_date": updated_sub.get("end_date"),
         "provider": provider,
     }
+
+
+@api.post("/admin/run-grace-reminders")
+async def admin_run_grace_reminders(user: dict = Depends(require_admin_master)):
+    """Trigger MANUALE del job di reminder (utile per QA).
+    In produzione parte in automatico ogni giorno alle 10:00 Europe/Rome.
+    """
+    result = await _run_grace_reminders()
+    return {"ok": True, **result}
 
 
 @api.post("/admin/geocode-backfill")

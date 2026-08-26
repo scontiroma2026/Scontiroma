@@ -172,6 +172,14 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 
 ## Prioritized Backlog
 
+- **[2026-02-26 T13:45]** Email dunning per pagamento fallito (P0 growth) — implementati **3 email + scheduler** per non perdere abbonati:
+  - **Email #1 (immediata)** in `send_payment_failed_immediate`: triggerata dentro `suspend_subscription_on_payment_failed` quando lo webhook Stripe/PayPal marca `past_due` (giorno 0). Avvisa che sub è sospesa, mostra la scadenza dei 7gg, CTA su `/account`. Idempotente via `renewal_events`.
+  - **Email #2 (promemoria giorno 5)** in `send_grace_period_reminder`: `AsyncIOScheduler` gira ogni giorno alle 10:00 Europe/Rome (`_start_scheduler`), scansiona sub `past_due` con `grace_expires_at` fra 36-60h da now, calcola `days_left` con ceil(hours/24), invia email urgente ("Ultimi 2 giorni"). Flag `users.grace_reminder_sent` per idempotenza. Endpoint manuale `POST /api/admin/run-grace-reminders`.
+  - **Email #3 (cancellazione finale)**: aggiunta dentro `_cancel_expired_grace` — al termine dei 7gg quando la sub passa a `cancelled`, invia notifica con CTA riabbonati. Flag `users.cancellation_email_sent` per idempotenza.
+  - **Reset dei flag** al rinnovo pagato: `extend_subscription_on_renewal` fa `$unset` di `grace_reminder_sent`, `cancellation_email_sent`, `grace_expires_at` così se in futuro il pagamento fallirà di nuovo, il ciclo email riparte.
+  - **Test manuale**: `admin/simulate-payment-failed/{user_id}` → email #1 verificata in log; grace_expires_at spostato a +48h + `admin/run-grace-reminders` → email #2 verificata; grace_expires_at spostato a -1h + hit di `subscription/me` → email #3 verificata. Tutte e 3 le email consegnate via Resend con ID di conferma nei log.
+  - Nuove dipendenze: `apscheduler==3.11.3`, `tzlocal==5.4.4`.
+
 - **[2026-02-25 T23:00]** Code review quality fixes (quick wins):
   - **Empty catch blocks** → sostituiti con `console.warn` diagnostici in `PaymentSuccess`, `Register`, `Landing`, `AuthContext`, `MyUsedDiscounts`, `GeocodeIssuesWidget`, `PWAInstallBanner` (7 file, 10+ istanze). Ora nessun errore silente.
   - **Array index come React key** → sostituiti con ID stabili in Landing (`f.q`), Subscribe (`f.t`), DiscountDetail (`thumb-${url}-${i}`, `dot-${url}-${i}`), AdminDashboard (`day-${i}`, `hour-${i}`), AddressAutocomplete (`s.place_id`).
