@@ -12,6 +12,7 @@ import Termini from "@/pages/legal/Termini";
 import Recesso from "@/pages/legal/Recesso";
 import Support from "@/pages/Support";
 import Locandina from "@/pages/Locandina";
+import AdminMasterReset from "@/pages/AdminMasterReset";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -56,6 +57,7 @@ function App() {
             <Route path="/merchant/discount" element={<ProtectedRoute role="merchant"><MerchantDiscount /></ProtectedRoute>} />
             <Route path="/merchant/scan" element={<ProtectedRoute role="merchant"><MerchantScan /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/master-reset" element={<AdminMasterReset />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route path="/map" element={<MapView />} />

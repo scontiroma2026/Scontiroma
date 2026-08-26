@@ -29,6 +29,7 @@ from email_service import (
     send_payment_failed_immediate,
     send_grace_period_reminder,
     send_subscription_cancelled,
+    send_master_reset,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
@@ -1962,18 +1963,41 @@ def require_admin(user: dict = Depends(get_current_user)) -> dict:
     return user
 
 
-ADMIN_MASTER_PASSWORD = os.environ.get("ADMIN_MASTER_PASSWORD", "")
 ADMIN_MASTER_TTL_MIN = 60
+MASTER_MAX_ATTEMPTS = 5
+MASTER_LOCK_MINUTES = 15
+_master_state = {"version": 1}
+
+
+async def ensure_master_doc() -> dict:
+    doc = await db.admin_security.find_one({"key": "master"})
+    if not doc:
+        pw = os.environ.get("ADMIN_MASTER_PASSWORD", "")
+        rid = os.environ.get("ADMIN_RECOVERY_ID", "")
+        doc = {
+            "key": "master",
+            "master_hash": hash_password(pw) if pw else "",
+            "recovery_id_hash": hash_password(rid.strip().upper()) if rid else "",
+            "master_version": 1,
+            "failed_attempts": 0,
+            "locked_until": None,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.admin_security.insert_one(doc)
+    _master_state["version"] = doc.get("master_version", 1)
+    return doc
 
 
 def _sign_master(user_id: str, exp: datetime) -> str:
-    return jwt.encode({"sub": user_id, "typ": "admin_master", "exp": exp}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return jwt.encode({"sub": user_id, "typ": "admin_master", "ver": _master_state["version"], "exp": exp}, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
 def _verify_master_token(token: str, user_id: str) -> bool:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload.get("typ") == "admin_master" and payload.get("sub") == user_id
+        return (payload.get("typ") == "admin_master"
+                and payload.get("sub") == user_id
+                and payload.get("ver") == _master_state["version"])
     except Exception:
         return False
 
@@ -1985,22 +2009,176 @@ def require_admin_master(request: Request, user: dict = Depends(require_admin)) 
     return user
 
 
-class MasterVerifyIn(BaseModel):
-    password: str
-
-
-@api.post("/admin/verify-master")
-async def admin_verify_master(payload: MasterVerifyIn, response: Response, user: dict = Depends(require_admin)):
-    if not ADMIN_MASTER_PASSWORD or payload.password != ADMIN_MASTER_PASSWORD:
-        raise HTTPException(401, "Master password errata")
+def _issue_master_cookie(response: Response, user_id: str) -> dict:
     exp = datetime.now(timezone.utc) + timedelta(minutes=ADMIN_MASTER_TTL_MIN)
-    token = _sign_master(user["id"], exp)
+    token = _sign_master(user_id, exp)
     response.set_cookie(
         "admin_master_token", token,
         max_age=ADMIN_MASTER_TTL_MIN * 60,
         httponly=True, secure=True, samesite="none", path="/",
     )
     return {"ok": True, "token": token, "expires_in": ADMIN_MASTER_TTL_MIN * 60}
+
+
+def _lock_check(doc: dict, field: str = "locked_until"):
+    lu = doc.get(field)
+    if not lu:
+        return
+    try:
+        t = datetime.fromisoformat(lu)
+    except Exception:
+        return
+    if t > datetime.now(timezone.utc):
+        mins = int((t - datetime.now(timezone.utc)).total_seconds() // 60) + 1
+        raise HTTPException(429, f"Troppi tentativi falliti. Riprova tra {mins} minuti.")
+
+
+async def _register_master_failure(prefix: str = ""):
+    f_att, f_lock = f"{prefix}failed_attempts", f"{prefix}locked_until"
+    await db.admin_security.update_one({"key": "master"}, {"$inc": {f_att: 1}})
+    doc = await db.admin_security.find_one({"key": "master"})
+    if (doc or {}).get(f_att, 0) >= MASTER_MAX_ATTEMPTS:
+        until = (datetime.now(timezone.utc) + timedelta(minutes=MASTER_LOCK_MINUTES)).isoformat()
+        await db.admin_security.update_one({"key": "master"}, {"$set": {f_lock: until, f_att: 0}})
+
+
+class MasterVerifyIn(BaseModel):
+    password: str
+
+
+@api.post("/admin/verify-master")
+async def admin_verify_master(payload: MasterVerifyIn, response: Response, user: dict = Depends(require_admin)):
+    doc = await ensure_master_doc()
+    _lock_check(doc)
+    if not doc.get("master_hash") or not verify_password(payload.password, doc["master_hash"]):
+        await _register_master_failure()
+        raise HTTPException(401, "Master password errata")
+    await db.admin_security.update_one({"key": "master"}, {"$set": {"failed_attempts": 0, "locked_until": None}})
+    return _issue_master_cookie(response, user["id"])
+
+
+@api.post("/admin/webauthn-master/begin")
+async def webauthn_master_begin(user: dict = Depends(require_admin)):
+    u = await db.users.find_one({"id": user["id"]})
+    creds = (u or {}).get("webauthn_credentials") or []
+    if not creds:
+        raise HTTPException(400, "Nessun dispositivo biometrico registrato. Configuralo dalla pagina Sicurezza.")
+    allow = [PublicKeyCredentialDescriptor(
+        id=unb64u(c["credential_id"]), transports=c.get("transports") or None)
+        for c in creds]
+    options = generate_authentication_options(
+        rp_id=WEBAUTHN_RP_ID, allow_credentials=allow,
+        user_verification=UserVerificationRequirement.PREFERRED,
+    )
+    await db.webauthn_challenges.insert_one({
+        "user_id": u["id"], "kind": "master", "challenge": b64u(options.challenge),
+        "expires_at": datetime.now(timezone.utc) + CHALLENGE_TTL,
+    })
+    return _json.loads(options_to_json(options))
+
+
+@api.post("/admin/webauthn-master/complete")
+async def webauthn_master_complete(payload: WebAuthnCompleteIn, response: Response, user: dict = Depends(require_admin)):
+    cid = payload.credential.get("id")
+    u = await db.users.find_one({"id": user["id"]})
+    cred = next((c for c in ((u or {}).get("webauthn_credentials") or []) if c["credential_id"] == cid), None)
+    if not cred:
+        raise HTTPException(401, "Credenziale non riconosciuta")
+    ch = await db.webauthn_challenges.find_one_and_delete({
+        "user_id": u["id"], "kind": "master",
+        "expires_at": {"$gt": datetime.now(timezone.utc)},
+    })
+    if not ch:
+        raise HTTPException(401, "Sessione scaduta, riprova")
+    try:
+        v = verify_authentication_response(
+            credential=payload.credential,
+            expected_challenge=unb64u(ch["challenge"]),
+            expected_rp_id=WEBAUTHN_RP_ID,
+            expected_origin=WEBAUTHN_ORIGIN,
+            credential_public_key=unb64u(cred["public_key"]),
+            credential_current_sign_count=cred.get("sign_count", 0),
+            require_user_verification=False,
+        )
+    except Exception:
+        raise HTTPException(401, "Verifica biometrica fallita")
+    await db.users.update_one(
+        {"id": u["id"], "webauthn_credentials.credential_id": cid},
+        {"$set": {"webauthn_credentials.$.sign_count": v.new_sign_count}},
+    )
+    return _issue_master_cookie(response, u["id"])
+
+
+class MasterForgotIn(BaseModel):
+    recovery_id: str
+
+
+@api.post("/admin/master-forgot")
+async def admin_master_forgot(payload: MasterForgotIn, user: dict = Depends(require_admin)):
+    doc = await ensure_master_doc()
+    _lock_check(doc, "recovery_locked_until")
+    rid = payload.recovery_id.strip().upper()
+    if not doc.get("recovery_id_hash") or not verify_password(rid, doc["recovery_id_hash"]):
+        await _register_master_failure("recovery_")
+        raise HTTPException(401, "Recovery ID non valido")
+    token = secrets.token_urlsafe(32)
+    expires = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+    await db.admin_security.update_one({"key": "master"}, {"$set": {
+        "master_reset_token": token, "master_reset_expires": expires,
+        "recovery_failed_attempts": 0, "recovery_locked_until": None,
+    }})
+    admin_email = os.environ.get("ADMIN_EMAIL", "")
+    try:
+        await send_master_reset(admin_email, token)
+    except Exception as e:
+        logging.warning(f"master-reset email failed: {e}")
+    masked = admin_email[:2] + "•••" + admin_email[admin_email.find("@"):] if "@" in admin_email else "email admin"
+    return {"ok": True, "message": f"Link di reset inviato a {masked} (valido 30 minuti)."}
+
+
+class MasterResetIn(BaseModel):
+    token: str
+    new_password: str
+
+
+@api.post("/admin/master-reset")
+async def admin_master_reset(payload: MasterResetIn):
+    doc = await db.admin_security.find_one({"key": "master"})
+    tok = (doc or {}).get("master_reset_token")
+    if not tok or not hmac_lib.compare_digest(tok, payload.token):
+        raise HTTPException(400, "Link non valido o già utilizzato")
+    try:
+        expired = datetime.fromisoformat(doc.get("master_reset_expires", "")) < datetime.now(timezone.utc)
+    except Exception:
+        expired = True
+    if expired:
+        raise HTTPException(400, "Link scaduto, richiedine uno nuovo")
+    if len(payload.new_password) < 10:
+        raise HTTPException(400, "La nuova master password deve avere almeno 10 caratteri")
+    new_version = int(doc.get("master_version", 1)) + 1
+    await db.admin_security.update_one({"key": "master"}, {
+        "$set": {
+            "master_hash": hash_password(payload.new_password),
+            "master_version": new_version,
+            "failed_attempts": 0, "locked_until": None,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+        "$unset": {"master_reset_token": "", "master_reset_expires": ""},
+    })
+    _master_state["version"] = new_version
+    return {"ok": True, "message": "Master password aggiornata. Sblocca l'area admin con la nuova password."}
+
+
+@api.post("/admin/regenerate-recovery-id")
+async def admin_regenerate_recovery_id(user: dict = Depends(require_admin_master)):
+    alphabet = string.ascii_uppercase + string.digits
+    rid = "SR-" + "-".join("".join(secrets.choice(alphabet) for _ in range(4)) for _ in range(3))
+    await db.admin_security.update_one({"key": "master"}, {"$set": {
+        "recovery_id_hash": hash_password(rid),
+        "recovery_failed_attempts": 0, "recovery_locked_until": None,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }}, upsert=True)
+    return {"ok": True, "recovery_id": rid, "message": "Conserva questo Recovery ID: non sarà più mostrato."}
 
 
 @api.post("/admin/logout-master")
@@ -2013,7 +2191,8 @@ async def admin_logout_master(response: Response):
 async def admin_session(request: Request, user: dict = Depends(require_admin)):
     token = request.cookies.get("admin_master_token") or request.headers.get("X-Admin-Master", "")
     verified = bool(token and _verify_master_token(token, user["id"]))
-    return {"master_verified": verified}
+    u = await db.users.find_one({"id": user["id"]})
+    return {"master_verified": verified, "biometric_available": bool((u or {}).get("webauthn_credentials"))}
 
 
 @api.get("/admin/stats")
@@ -2432,15 +2611,19 @@ SEED_MERCHANTS = [
 async def seed_data():
     # Seed admin (optional, not used in UI heavily)
     admin_email = os.environ.get("ADMIN_EMAIL", "admin@scontiroma.it").lower()
-    if not await db.users.find_one({"email": admin_email}):
+    admin_pw = os.environ.get("ADMIN_PASSWORD", "")
+    existing_admin = await db.users.find_one({"email": admin_email})
+    if not existing_admin:
         await db.users.insert_one({
             "id": str(uuid.uuid4()),
             "email": admin_email,
-            "password_hash": hash_password(os.environ.get("ADMIN_PASSWORD", "admin123")),
+            "password_hash": hash_password(admin_pw),
             "name": "Admin",
             "role": "admin",
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
+    elif admin_pw and not verify_password(admin_pw, existing_admin.get("password_hash", "")):
+        await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hash_password(admin_pw)}})
 
     # Seed a test client
     client_email = "cliente@scontiroma.it"
@@ -2609,6 +2792,7 @@ async def on_startup():
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     await seed_data()
+    await ensure_master_doc()
     _start_scheduler()
 
 

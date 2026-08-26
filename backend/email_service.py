@@ -69,6 +69,21 @@ async def send_password_reset(to: str, name: str, token: str) -> Optional[str]:
     return await _send(to, "Reimposta la tua password — Sconti Roma", _shell(inner))
 
 
+async def send_master_reset(to: str, token: str) -> Optional[str]:
+    link = f"{APP_URL}/admin/master-reset?token={token}"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Reset Master Password</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao Admin,</p>
+<p style="margin:0 0 24px;color:#d4d4d8">È stata richiesta la reimpostazione della <strong style="color:#00E5FF">Master Password</strong> dell'area amministrativa di Sconti Roma, verificata tramite Recovery ID. Clicca il pulsante qui sotto (link valido per 30 minuti):</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{link}" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Imposta nuova Master Password</a>
+</div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Se non sei stato tu, ignora questa mail e valuta di rigenerare il Recovery ID dalla dashboard admin.</p>
+<p style="margin:24px 0 0;color:#71717a;font-size:12px;word-break:break-all">Link diretto: {link}</p>
+"""
+    return await _send(to, "Reset Master Password — Sconti Roma", _shell(inner))
+
+
 async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str) -> Optional[str]:
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>

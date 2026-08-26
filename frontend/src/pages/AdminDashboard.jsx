@@ -16,6 +16,7 @@ import AdminPending from "@/components/admin/AdminPending";
 import AdminLog from "@/components/admin/AdminLog";
 import AdminMerchantsTable from "@/components/admin/AdminMerchantsTable";
 import AdminReferralsByMerchant from "@/components/admin/AdminReferralsByMerchant";
+import AdminRecoveryId from "@/components/admin/AdminRecoveryId";
 
 /**
  * AdminDashboard — orchestratore snello.
@@ -126,13 +127,16 @@ export default function AdminDashboard() {
           <div className="text-xs uppercase tracking-[0.2em] text-ciano">Admin · Cabina di regia</div>
           <h1 className="mt-2 font-serif text-5xl text-grad">Sconti Roma Insights</h1>
         </div>
-        <Button
-          variant="outline"
-          onClick={lockOut}
-          className="rounded-full border-white/20 text-white hover:bg-white/10"
-        >
-          <LogOut size={14} className="mr-2" /> Blocca
-        </Button>
+        <div className="flex gap-2">
+          <AdminRecoveryId hdrs={hdrs} />
+          <Button
+            variant="outline"
+            onClick={lockOut}
+            className="rounded-full border-white/20 text-white hover:bg-white/10"
+          >
+            <LogOut size={14} className="mr-2" /> Blocca
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4">

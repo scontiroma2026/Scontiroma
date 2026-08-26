@@ -170,6 +170,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
     Nasconde TUTTO il chrome dell'app senza doverlo taggare esplicitamente, poi riporta visibile solo il flyer e lo posiziona in alto-sinistra della pagina di stampa. Aggiunto anche `page-break-inside: avoid` + `break-inside: avoid` su `.flyer` e figli per garantire una singola pagina A5.
   - **🧪 Verificato dal testing_agent (iteration_16.json)**: 100% frontend, 0 issues. PDF generato con `page.pdf(format='A5', prefer_css_page_size=True)` per entrambe le route `/locandina` e `/locandina?ref=MERCHANT_ID`: `Pages: 1`, `Page size: 420 x 594.96 pts (A5)`. Tutto il contenuto del flyer estratto via pdftotext (Sconti Roma, tagline, 3 passaggi, 3 step, scontiroma.it, info@scontiroma.it). Nessuna navbar/footer/cookie stampata.
 
+- **[2026-08-26]** **Sicurezza admin P0 — credenziali default eliminate + recupero master**:
+  - Password admin `admin123` → sostituita con password forte (env `ADMIN_PASSWORD`, seed aggiorna hash se cambia). Master `ValeRoma2026` → sostituita e **spostata in DB** (`admin_security`, hash bcrypt, seed iniziale da env).
+  - **Recovery ID** `SR-XXXX-XXXX-XXXX` (hash bcrypt): gate /admin → "Master password dimenticata?" → Recovery ID → email Resend a admin con link `/admin/master-reset?token=` (30 min, monouso). Reset incrementa `master_version` → invalida tutti i master token esistenti.
+  - **Sblocco biometrico** del gate admin via WebAuthn (`/admin/webauthn-master/begin|complete`, challenge kind "master"); pulsante mostrato se l'admin ha passkey registrate (`/admin/session` ritorna `biometric_available`).
+  - Brute-force lockout: 5 tentativi falliti (master o recovery) → 15 min. Pulsante "Recovery ID" in dashboard rigenera l'ID (mostrato una sola volta, require_admin_master).
+  - Verificato E2E via curl (15 step: login vecchia/nuova pw, master vecchia/nuova, forgot errato/corretto, email Resend reale inviata, reset corto/valido/riuso, token invalidato, regenerate) + screenshot gate/forgot/dashboard/reset-page.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):
@@ -208,7 +215,7 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 - **P1**: Aggiungere autoresponder Aruba sulle 3 caselle (info/privacy/partner) con acknowledge "Abbiamo ricevuto, risposta entro 24h".
 - **P1**: Connect Stripe live (currently Sandbox)
 - **P2**: Filtri "nel raggio di X km" sulla mappa
-- **P2**: Recupero credenziali admin (via email + eventuale master password reset)
+- **P2**: ~~Recupero credenziali admin (via email + eventuale master password reset)~~ ✅ Fatto il 2026-08-26 (Recovery ID + email reset + biometria).
 - **P2**: Client saved/favoriti discounts.
 - **P2**: Mappa Roma con quartieri interattivi.
 - **P2**: Notifiche nuovi sconti nella tua zona.
