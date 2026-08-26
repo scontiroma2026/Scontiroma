@@ -183,6 +183,10 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Confermato: esiste UNA sola locandina — l'anteprima a schermo e la stampa sono lo stesso identico flyer (print CSS isola solo `.flyer-wrap`).
   - Verificato: curl `/merchants/me/referrals` + decodifica zbarimg del QR renderizzato → URL identici.
 
+- **[2026-08-26]** **Fix stampa locandina iOS + pulsante in basso**:
+  - **Bug "ROMA non si legge in stampa (mobile)"**: i 2 blob decorativi del flyer usano `filter: blur(20px)`, NON supportato dal print engine di iOS Safari → renderizzati come cerchi PIENI rosa/ciano che coprivano il contenuto ("Roma" rosa su rosa = invisibile). Fix: classe `.flyer-blob` + `@media print { .flyer-blob { display:none } }`. PDF ora identico all'anteprima (verificato con Playwright PDF A5 rasterizzato: 1 pagina, "Sconti Roma" leggibile, zero cerchi).
+  - Pulsante "Stampa / Salva PDF" spostato da top-right a **fixed bottom-center** (più comodo su mobile). Verificato: `position:fixed, bottom:24px` su viewport 390x844.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

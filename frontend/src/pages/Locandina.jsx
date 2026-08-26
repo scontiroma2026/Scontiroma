@@ -102,17 +102,22 @@ export default function Locandina() {
           }
 
           .no-print { display: none !important; }
+
+          /* 5) I blob decorativi usano filter:blur, NON supportato dai motori
+             di stampa mobile (iOS Safari li renderizza come cerchi PIENI rosa/ciano
+             che coprono il contenuto e rendono "Roma" illeggibile). In stampa via. */
+          .flyer-blob { display: none !important; }
         }
       `}</style>
 
-      {/* Controlli visibili solo a schermo */}
-      <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
+      {/* Controlli visibili solo a schermo — in basso al centro (comodo su mobile) */}
+      <div className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex gap-2">
         <button
           data-testid="flyer-print"
           onClick={openPrint}
-          className="rounded-full bg-fucsia text-white px-4 py-2 text-sm font-semibold flex items-center gap-2 hover:scale-105 transition shadow-lg"
+          className="rounded-full bg-fucsia text-white px-6 py-3 text-base font-semibold flex items-center gap-2 hover:scale-105 transition shadow-lg shadow-fucsia/40"
         >
-          <Printer size={16} /> Stampa / Salva PDF
+          <Printer size={18} /> Stampa / Salva PDF
         </button>
       </div>
 
@@ -129,8 +134,9 @@ export default function Locandina() {
             borderRadius: "8px",
           }}
         >
-          {/* Sfondo grafico astratto */}
+          {/* Sfondo grafico astratto (solo schermo: nascosto in stampa, vedi .flyer-blob) */}
           <div
+            className="flyer-blob"
             style={{
               position: "absolute",
               top: "-60mm",
@@ -142,6 +148,7 @@ export default function Locandina() {
             }}
           />
           <div
+            className="flyer-blob"
             style={{
               position: "absolute",
               bottom: "-50mm",
