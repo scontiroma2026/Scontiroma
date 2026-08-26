@@ -1084,37 +1084,17 @@ async def merchant_stats(user: dict = Depends(require_merchant)):
 
 @api.get("/merchants/me/referrals")
 async def merchant_referrals(user: dict = Depends(require_merchant)):
-    """Statistiche referral: quanti clienti si sono iscritti tramite il QR personalizzato
-    del commerciante (parametro ?ref=merchant_id sulla landing)."""
-    referrals = await db.users.find(
-        {"referred_by": user["id"], "role": "client"},
-        {"_id": 0, "id": 1, "name": 1, "email": 1, "created_at": 1, "referred_at": 1},
-    ).sort("referred_at", -1).to_list(length=None)
-
-    subscribed_count = 0
-    active_count = 0
-    if referrals:
-        ref_ids = [r["id"] for r in referrals]
-        subs = await db.subscriptions.find(
-            {"user_id": {"$in": ref_ids}},
-            {"_id": 0, "user_id": 1, "status": 1},
-        ).to_list(length=None)
-        subscribed_count = len({s["user_id"] for s in subs})
-        active_count = len({s["user_id"] for s in subs if s.get("status") == "active"})
-
+    """Ritorna solo il link e la locandina personalizzati del commerciante.
+    Le statistiche di attribuzione (chi si è iscritto tramite questo QR) sono
+    riservate all'admin: vedi `/api/admin/referrals-by-merchant`.
+    """
     # Priorità: FRONTEND_URL (canonical, aggiornato in .env) → APP_URL (fallback legacy).
-    # NB: APP_URL è iniettata da supervisord.conf con un valore hardcoded al bootstrap
-    # del container che può diventare stale — non usarla come sorgente principale.
     app_url = (os.environ.get("FRONTEND_URL") or os.environ.get("APP_URL") or "").rstrip("/")
     return {
         "merchant_id": user["id"],
         "shop_name": user.get("shop_name"),
-        "total_referrals": len(referrals),
-        "subscribed_count": subscribed_count,
-        "active_subscribers": active_count,
         "referral_url": f"{app_url}/?ref={user['id']}",
         "flyer_url": f"{app_url}/locandina?ref={user['id']}",
-        "referrals": referrals,
     }
 
 
@@ -2169,6 +2149,100 @@ async def admin_list_pending(user: dict = Depends(require_admin_master)):
     for d in docs:
         out.append(await enrich_discount(d))
     return {"discounts": out}
+
+
+
+@api.get("/admin/referrals-by-merchant")
+async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)):
+    """Attribuzione dei nuovi iscritti al QR personalizzato di ogni commerciante.
+    Per ogni merchant restituisce elenco clienti che si sono registrati con
+    `?ref=merchant_id` più conteggi di iscritti totali, abbonati e attivi ora.
+    Ordinato per numero di abbonati attivi (top performer prima).
+    """
+    # Tutti i client con un `referred_by` valorizzato
+    clients = await db.users.find(
+        {"role": "client", "referred_by": {"$exists": True, "$nin": [None, ""]}},
+        {"_id": 0, "id": 1, "name": 1, "email": 1, "created_at": 1,
+         "referred_at": 1, "referred_by": 1, "subscription_status": 1,
+         "data_scadenza_abbonamento": 1},
+    ).sort("referred_at", -1).to_list(length=None)
+
+    if not clients:
+        return {"merchants": [], "totals": {"merchants_with_referrals": 0,
+                                             "total_signups": 0,
+                                             "total_subscribed": 0,
+                                             "total_active": 0}}
+
+    # Lookup subscriptions per determinare "abbonato almeno una volta" e "attivo ora"
+    client_ids = [c["id"] for c in clients]
+    subs = await db.subscriptions.find(
+        {"user_id": {"$in": client_ids}},
+        {"_id": 0, "user_id": 1, "status": 1, "end_date": 1},
+    ).to_list(length=None)
+    subscribed_ids = {s["user_id"] for s in subs}
+    now_iso = datetime.now(timezone.utc).isoformat()
+    active_ids = {s["user_id"] for s in subs
+                  if s.get("status") == "active" and (s.get("end_date") or "") > now_iso}
+
+    # Group per merchant_id
+    by_merchant: dict = {}
+    for c in clients:
+        mid = c["referred_by"]
+        by_merchant.setdefault(mid, []).append(c)
+
+    # Merchant metadata
+    merchant_ids = list(by_merchant.keys())
+    merchants = await db.users.find(
+        {"id": {"$in": merchant_ids}, "role": "merchant"},
+        {"_id": 0, "id": 1, "shop_name": 1, "email": 1, "name": 1,
+         "zone": 1, "category": 1},
+    ).to_list(length=None)
+    merchants_map = {m["id"]: m for m in merchants}
+
+    rows = []
+    for mid, cl in by_merchant.items():
+        m = merchants_map.get(mid, {})
+        clients_enriched = []
+        subscribed = 0
+        active = 0
+        for c in cl:
+            is_sub = c["id"] in subscribed_ids
+            is_active = c["id"] in active_ids
+            if is_sub:
+                subscribed += 1
+            if is_active:
+                active += 1
+            clients_enriched.append({
+                **c,
+                "is_subscribed": is_sub,
+                "is_active_now": is_active,
+            })
+        rows.append({
+            "merchant_id": mid,
+            "shop_name": m.get("shop_name") or "(negozio eliminato)",
+            "merchant_email": m.get("email"),
+            "zone": m.get("zone"),
+            "category": m.get("category"),
+            "total_signups": len(cl),
+            "subscribed_count": subscribed,
+            "active_subscribers": active,
+            "conversion_rate": round((subscribed / len(cl)) * 100, 1) if cl else 0.0,
+            "clients": clients_enriched,
+        })
+
+    # Sort: prima chi ha più abbonati attivi, poi più iscritti totali
+    rows.sort(key=lambda r: (r["active_subscribers"], r["total_signups"]), reverse=True)
+
+    return {
+        "merchants": rows,
+        "totals": {
+            "merchants_with_referrals": len(rows),
+            "total_signups": len(clients),
+            "total_subscribed": len(subscribed_ids),
+            "total_active": len(active_ids),
+        },
+    }
+
 
 
 @api.post("/admin/discounts/{discount_id}/approve")

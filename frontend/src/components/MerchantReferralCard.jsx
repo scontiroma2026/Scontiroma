@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Copy, Check, ExternalLink, Users, TrendingUp, QrCode, Printer } from "lucide-react";
+import { Copy, Check, ExternalLink, QrCode, Printer } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
 /**
  * Card nella MerchantDashboard: mostra QR personalizzato del merchant per il
- * referral, stats degli iscritti arrivati dal suo negozio, e link alla locandina
- * personalizzata stampabile.
+ * referral e link alla locandina personalizzata stampabile.
+ * Le statistiche di attribuzione sono riservate all'admin.
  */
 export default function MerchantReferralCard() {
   const [data, setData] = useState(null);
@@ -67,7 +66,7 @@ export default function MerchantReferralCard() {
           <p className="text-sm text-white/80 leading-relaxed">
             Metti questo QR in cassa: ogni cliente che si iscrive scansionandolo
             verrà <strong className="text-fucsia">attribuito al tuo negozio</strong>.
-            Utile per bonus referral e statistiche.
+            Più clienti porti, più diventi un partner strategico di Sconti Roma.
           </p>
 
           {/* Link URL */}
@@ -84,28 +83,6 @@ export default function MerchantReferralCard() {
             >
               {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
             </button>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <Stat
-              testid="ref-total"
-              icon={<Users size={13} className="text-ciano" />}
-              label="Iscrizioni"
-              value={data.total_referrals}
-            />
-            <Stat
-              testid="ref-subscribed"
-              icon={<TrendingUp size={13} className="text-fucsia" />}
-              label="Abbonati"
-              value={data.subscribed_count}
-            />
-            <Stat
-              testid="ref-active"
-              icon={<Check size={13} className="text-green-400" />}
-              label="Attivi ora"
-              value={data.active_subscribers}
-            />
           </div>
 
           {/* CTA */}
@@ -132,19 +109,5 @@ export default function MerchantReferralCard() {
         </div>
       </div>
     </Card>
-  );
-}
-
-function Stat({ testid, icon, label, value }) {
-  return (
-    <div
-      data-testid={testid}
-      className="rounded-lg border border-white/10 bg-black/40 p-2 text-center"
-    >
-      <div className="flex items-center justify-center gap-1 text-[9px] uppercase text-white/50">
-        {icon} {label}
-      </div>
-      <div className="font-serif text-2xl text-white font-bold">{value ?? 0}</div>
-    </div>
   );
 }

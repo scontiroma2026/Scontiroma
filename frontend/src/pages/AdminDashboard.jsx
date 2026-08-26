@@ -15,6 +15,7 @@ import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminPending from "@/components/admin/AdminPending";
 import AdminLog from "@/components/admin/AdminLog";
 import AdminMerchantsTable from "@/components/admin/AdminMerchantsTable";
+import AdminReferralsByMerchant from "@/components/admin/AdminReferralsByMerchant";
 
 /**
  * AdminDashboard — orchestratore snello.
@@ -110,6 +111,7 @@ export default function AdminDashboard() {
   const tabs = [
     ["analytics", "Analytics"],
     ["subscribers", "Abbonati"],
+    ["referrals", "Referral QR"],
     ["pending", `Offerte in attesa (${pending.length})`],
     ["merchants", `Negozi (${merchants.length})`],
     ["fraud", "Registro Frodi"],
@@ -158,6 +160,7 @@ export default function AdminDashboard() {
 
       {tab === "analytics" && <AdminAnalytics stats={stats} />}
       {tab === "subscribers" && <AdminSubscribers hdrs={hdrs} />}
+      {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}
       {tab === "pending" && <AdminPending pending={pending} hdrs={hdrs} onRefresh={loadData} />}
       {tab === "merchants" && (
         <AdminMerchantsTable

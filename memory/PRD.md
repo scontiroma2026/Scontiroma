@@ -172,6 +172,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 
 ## Prioritized Backlog
 
+- **[2026-02-26 T13:54]** Referral analytics spostati da Merchant → Admin (per privacy iscritti):
+  - `/api/merchants/me/referrals` (backend) **non ritorna più** `total_referrals`, `subscribed_count`, `active_subscribers` e `referrals`. Restituisce solo `referral_url` e `flyer_url`. Il commerciante non può più vedere dati anagrafici o statistiche sugli abbonati arrivati tramite il suo QR.
+  - `MerchantReferralCard.jsx` (frontend) **rimossa la griglia di 3 stat** (Iscrizioni/Abbonati/Attivi ora). Restano solo QR + link + CTA "Stampa locandina" / "Prova il link".
+  - Nuovo endpoint admin `GET /api/admin/referrals-by-merchant`: per ogni merchant elenco clienti attribuiti + `total_signups`, `subscribed_count`, `active_subscribers`, `conversion_rate`. Ordinato per top-performer (abbonati attivi desc).
+  - Nuovo componente `AdminReferralsByMerchant.jsx` con tab "Referral QR" in Admin Dashboard: 4 KPI cards totali, search, righe espandibili con tabella clienti (nome, email, data iscrizione, stato Attivo/Scaduto/Solo registrato).
+  - **Test end-to-end verificato**: merchant vede solo QR/link, admin vede piena attribuzione (2 negozi con 2 iscritti, 1 abbonato attivo).
+
 - **[2026-02-26 T13:45]** Email dunning per pagamento fallito (P0 growth) — implementati **3 email + scheduler** per non perdere abbonati:
   - **Email #1 (immediata)** in `send_payment_failed_immediate`: triggerata dentro `suspend_subscription_on_payment_failed` quando lo webhook Stripe/PayPal marca `past_due` (giorno 0). Avvisa che sub è sospesa, mostra la scadenza dei 7gg, CTA su `/account`. Idempotente via `renewal_events`.
   - **Email #2 (promemoria giorno 5)** in `send_grace_period_reminder`: `AsyncIOScheduler` gira ogni giorno alle 10:00 Europe/Rome (`_start_scheduler`), scansiona sub `past_due` con `grace_expires_at` fra 36-60h da now, calcola `days_left` con ceil(hours/24), invia email urgente ("Ultimi 2 giorni"). Flag `users.grace_reminder_sent` per idempotenza. Endpoint manuale `POST /api/admin/run-grace-reminders`.
