@@ -62,7 +62,7 @@ REFRESH_TTL_DAYS = 7
 # Stripe
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "sk_test_emergent")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_3eur"
+STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_299eur"
 
 # WebAuthn
 WEBAUTHN_RP_ID = os.environ.get("WEBAUTHN_RP_ID", "localhost")
@@ -1239,9 +1239,17 @@ async def get_or_create_stripe_customer(user: dict) -> str:
 @api.post("/payments/checkout")
 async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(require_client)):
     prices = stripe.Price.list(lookup_keys=[STRIPE_PRICE_LOOKUP], active=True, limit=1).data
-    if not prices:
-        raise HTTPException(500, "Prezzo non configurato")
-    price = prices[0]
+    if prices:
+        price = prices[0]
+    else:
+        # Crea Price €2,99/mese (idempotente via lookup_key)
+        price = stripe.Price.create(
+            unit_amount=299,
+            currency="eur",
+            recurring={"interval": "month"},
+            lookup_key=STRIPE_PRICE_LOOKUP,
+            product_data={"name": "Sconti Roma Mensile"},
+        )
     customer_id = await get_or_create_stripe_customer(user)
     common_kwargs = dict(
         line_items=[{"price": price.id, "quantity": 1}],
@@ -1263,7 +1271,7 @@ async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(requir
         "session_id": session.id,
         "user_id": user["id"],
         "lookup_key": STRIPE_PRICE_LOOKUP,
-        "amount": 300, "currency": "eur",
+        "amount": 299, "currency": "eur",
         "status": "initiated", "payment_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -1365,7 +1373,7 @@ async def extend_subscription_on_renewal(
     provider: str,
     provider_event_id: str,
     provider_sub_id: str,
-    price_eur: float = 3.00,
+    price_eur: float = 2.99,
 ) -> Optional[str]:
     """Estende l'abbonamento di 30 giorni quando arriva un evento di rinnovo pagato
     (Stripe `invoice.payment_succeeded` o PayPal `PAYMENT.SALE.COMPLETED`).
@@ -1474,7 +1482,7 @@ async def mark_subscription_paid(session, user_id: str):
         "user_id": user_id,
         "plan": "monthly",
         "status": "active",
-        "price_eur": 3.00,
+        "price_eur": 2.99,
         "start_date": now.isoformat(),
         "end_date": end.isoformat(),
         "stripe_session_id": session_id,
@@ -1555,7 +1563,7 @@ async def stripe_webhook(request: Request):
             return {"status": "ok", "skipped": "first_charge_handled_by_checkout"}
         stripe_sub_id = obj.get("subscription")
         invoice_id = obj.get("id")
-        amount_paid = (obj.get("amount_paid") or 300) / 100.0  # cents → EUR
+        amount_paid = (obj.get("amount_paid") or 299) / 100.0  # cents → EUR
         if stripe_sub_id and invoice_id:
             sub = await db.subscriptions.find_one({"stripe_subscription_id": stripe_sub_id})
             if sub:
@@ -1644,7 +1652,7 @@ async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(requir
         "user_id": user["id"],
         "plan": "monthly",
         "status": "active",
-        "price_eur": 3.00,
+        "price_eur": 2.99,
         "start_date": now.isoformat(),
         "end_date": end.isoformat(),
         "paypal_subscription_id": payload.subscription_id,
@@ -1699,7 +1707,7 @@ async def paypal_webhook(request: Request):
         sale_id = resource.get("id")
         billing_agreement_id = resource.get("billing_agreement_id") or resource.get("supplementary_data", {}).get("related_ids", {}).get("subscription_id")
         amount = resource.get("amount", {})
-        price = float(amount.get("total") or amount.get("value") or 3.00)
+        price = float(amount.get("total") or amount.get("value") or 2.99)
         if sale_id and billing_agreement_id:
             sub = await db.subscriptions.find_one({"paypal_subscription_id": billing_agreement_id})
             if sub:
@@ -3489,7 +3497,7 @@ async def admin_simulate_payment_failed(
 async def admin_simulate_renewal(
     user_id: str,
     provider: str = "stripe",
-    price_eur: float = 3.00,
+    price_eur: float = 2.99,
     admin: dict = Depends(require_admin_master),
 ):
     """Simula un evento di rinnovo (Stripe invoice.payment_succeeded o PayPal

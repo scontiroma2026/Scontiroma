@@ -69,7 +69,7 @@ al servizio Sconti Roma.
         <h2 className="font-serif text-2xl text-white mt-8">3. Rimborso</h2>
         <p>
           A seguito del recesso esercitato entro i 14 giorni, Sconti Roma
-          rimborserà l'intera somma versata (€2,99 o €3,00 del mese corrente)
+          rimborserà l'intera somma versata (€2,99 del mese corrente)
           entro <strong>14 giorni</strong> dalla comunicazione, utilizzando lo
           stesso mezzo di pagamento impiegato per la transazione originaria
           (Stripe o PayPal). Nessun costo aggiuntivo per il rimborso.

@@ -57,8 +57,8 @@ export default function Termini() {
         </p>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Prezzo</strong>: €2,99 o €3,00 al mese (indicato al
-            checkout, IVA inclusa quando applicabile).
+            <strong>Prezzo</strong>: €2,99 al mese (IVA inclusa quando
+            applicabile).
           </li>
           <li>
             <strong>Pagamento</strong>: tramite Stripe o PayPal. Non

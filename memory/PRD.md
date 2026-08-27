@@ -222,6 +222,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - `GeocodeIssuesWidget.jsx`: pulsante verde "Conferma" per riga → pannello con input coordinate GPS facoltative (parse "41.8902, 12.4922" da Google Maps) + "Conferma comunque"/"Conferma con coordinate".
   - Testato via curl (conferma senza/con coords, issue sparisce, lat/lng salvate) + screenshot UI. Il negozio "Ristorante" (nino@gmail.com) è stato RIPRISTINATO a stato fallito così l'utente può confermarlo dal pannello.
 
+- **[2026-08-27]** **Prezzo €2,99 ovunque + MapPicker admin + restyle 3 bottoni + fix bottoni Subscribe**:
+  - **PREZZO**: Stripe ora usa lookup `sconti_roma_monthly_299eur` con auto-creazione Price 299 cent (verificato: checkout URL generato, Price 299 eur/month su Stripe). PayPal: nuovo piano "Sconti Roma Monthly 2.99EUR" (P-5V540079XM363244FNKIIMMA, verificato 2.99 EUR via API) — PAYPAL_PLAN_ID aggiornato in .env, vecchio piano 3.00 abbandonato. Tutti i fallback/record backend 3.00→2.99 (price_eur, amount 299, webhook fallbacks). Termini/Recesso: rimosso "o €3,00". NOTA: abbonamenti sandbox esistenti restano sul vecchio piano.
+  - **MapPicker** (`components/admin/MapPicker.jsx`): mini-mappa Leaflet cliccabile nel pannello Conferma del GeocodeIssuesWidget — click posiziona pin, "Conferma con posizione" salva lat/lng (sostituisce input coordinate testuali).
+  - GeocodeIssuesWidget: 3 bottoni ordinati full-width in griglia (Riprova ciano / Correggi fucsia / Conferma verde).
+  - Subscribe.jsx: bottoni "Sfoglia gli sconti"/"Gestisci abbonamento" ora impilati su mobile (flex-col sm:flex-row, w-full) per restare dentro la card.
+  - Testato: curl (Stripe checkout ok, piano PayPal 2.99 verificato) + screenshot E2E mappa cliccabile (pin + conferma + widget sparito). Merchant di test eliminato.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

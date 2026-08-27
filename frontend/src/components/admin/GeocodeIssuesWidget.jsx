@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import MapPicker from "@/components/admin/MapPicker";
 
 /**
  * Banner + lista dei merchant con indirizzi NON geocodificabili.
@@ -18,7 +19,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
   const [editAddress, setEditAddress] = useState("");
   const [retryingId, setRetryingId] = useState(null);
   const [confirmingId, setConfirmingId] = useState(null);
-  const [coordsText, setCoordsText] = useState("");
+  const [pickedCoords, setPickedCoords] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -66,17 +67,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
   };
 
   const confirmAddress = async (row) => {
-    // Coordinate facoltative incollate da Google Maps: "41.8902, 12.4922"
-    let body = {};
-    const t = coordsText.trim();
-    if (t) {
-      const mch = t.match(/(-?\d+[.,]\d+)\s*[,;\s]\s*(-?\d+[.,]\d+)/);
-      if (!mch) {
-        toast.error('Coordinate non valide. Formato: "41.8902, 12.4922" (da Google Maps: tasto destro sul punto → copia coordinate)');
-        return;
-      }
-      body = { lat: parseFloat(mch[1].replace(",", ".")), lng: parseFloat(mch[2].replace(",", ".")) };
-    }
+    const body = pickedCoords ? { lat: pickedCoords[0], lng: pickedCoords[1] } : {};
     setRetryingId(row.id);
     try {
       const r = await api.post(`/admin/merchants/${row.id}/geocode-confirm`, body, hdrs());
@@ -86,7 +77,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
           : `✅ ${row.shop_name}: indirizzo confermato (il negozio non comparirà sulla mappa)`
       );
       setConfirmingId(null);
-      setCoordsText("");
+      setPickedCoords(null);
       load();
     } catch (e) {
       toast.error("Errore durante la conferma");
@@ -210,65 +201,65 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm text-white/80 truncate">
+                    <>
+                      <div className="text-sm text-white/80">
                         {row.address || <span className="italic text-white/40">(vuoto)</span>}
                       </div>
-                      <div className="flex gap-1.5 shrink-0">
+                      {/* 3 azioni ordinate: Riprova / Correggi / Conferma */}
+                      <div className="mt-2.5 grid grid-cols-3 gap-2">
                         <Button
                           data-testid={`geo-issue-retry-${row.id}`}
                           onClick={() => retry(row, false)}
                           disabled={isRetrying}
                           variant="outline"
                           size="sm"
-                          className="h-8 border-ciano/30 bg-ciano/10 text-ciano hover:bg-ciano/20"
+                          className="h-9 w-full border-ciano/30 bg-ciano/10 text-ciano hover:bg-ciano/20"
                         >
                           {isRetrying ? (
                             <Loader2 size={12} className="animate-spin" />
                           ) : (
-                            <>
-                              <RefreshCw size={12} className="mr-1" /> Riprova
-                            </>
+                            <><RefreshCw size={12} className="mr-1" /> Riprova</>
                           )}
                         </Button>
                         <Button
                           data-testid={`geo-issue-edit-${row.id}`}
-                          onClick={() => startEdit(row)}
+                          onClick={() => { startEdit(row); setConfirmingId(null); }}
                           variant="outline"
                           size="sm"
-                          className="h-8 border-fucsia/30 bg-fucsia/10 text-fucsia hover:bg-fucsia/20"
+                          className="h-9 w-full border-fucsia/30 bg-fucsia/10 text-fucsia hover:bg-fucsia/20"
                         >
                           <Pencil size={12} className="mr-1" /> Correggi
                         </Button>
                         <Button
                           data-testid={`geo-issue-confirm-${row.id}`}
-                          onClick={() => { setConfirmingId(confirmingId === row.id ? null : row.id); setCoordsText(""); }}
+                          onClick={() => { setConfirmingId(confirmingId === row.id ? null : row.id); setPickedCoords(null); cancelEdit(); }}
                           variant="outline"
                           size="sm"
-                          className="h-8 border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                          className="h-9 w-full border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
                         >
                           <Check size={12} className="mr-1" /> Conferma
                         </Button>
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
 
-                {/* Pannello conferma manuale (indirizzo accettato anche se non trovato) */}
+                {/* Pannello conferma manuale con mappa cliccabile */}
                 {confirmingId === row.id && (
                   <div data-testid={`geo-confirm-panel-${row.id}`} className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
                     <div className="text-xs text-white/80">
                       L'indirizzo verrà <strong className="text-emerald-300">accettato così com'è</strong> e sparirà dagli avvisi.
-                      <br />Facoltativo: incolla le coordinate GPS da Google Maps (tasto destro sul punto → copia coordinate) per far comparire il negozio anche sulla mappa.
+                      <br />Facoltativo: <strong className="text-white">clicca sulla mappa</strong> il punto esatto del negozio per farlo comparire anche sulla mappa dell'app.
                     </div>
-                    <div className="mt-2 flex flex-col sm:flex-row gap-2">
-                      <Input
-                        data-testid={`geo-confirm-coords-${row.id}`}
-                        value={coordsText}
-                        onChange={(e) => setCoordsText(e.target.value)}
-                        placeholder="Es. 41.8902, 12.4922 (facoltativo)"
-                        className="text-sm bg-black/50 border-white/10 text-white flex-1"
-                      />
+                    <div className="mt-3">
+                      <MapPicker value={pickedCoords} onChange={setPickedCoords} />
+                    </div>
+                    <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div data-testid={`geo-confirm-coords-label-${row.id}`} className="flex-1 text-xs text-white/60">
+                        {pickedCoords
+                          ? <>📍 Punto scelto: <span className="font-mono text-emerald-300">{pickedCoords[0].toFixed(5)}, {pickedCoords[1].toFixed(5)}</span></>
+                          : "Nessun punto scelto — il negozio non comparirà sulla mappa."}
+                      </div>
                       <Button
                         data-testid={`geo-confirm-submit-${row.id}`}
                         onClick={() => confirmAddress(row)}
@@ -279,7 +270,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                         {retryingId === row.id ? (
                           <Loader2 size={14} className="animate-spin" />
                         ) : (
-                          <><Check size={14} className="mr-1" /> {coordsText.trim() ? "Conferma con coordinate" : "Conferma comunque"}</>
+                          <><Check size={14} className="mr-1" /> {pickedCoords ? "Conferma con posizione" : "Conferma comunque"}</>
                         )}
                       </Button>
                     </div>

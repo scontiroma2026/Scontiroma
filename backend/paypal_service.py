@@ -5,7 +5,7 @@ Doc: https://developer.paypal.com/docs/api/subscriptions/v1/
 
 Espone helper async per:
 - OAuth token
-- creazione/idempotente di Product + Billing Plan €3/mese
+- creazione/idempotente di Product + Billing Plan €2,99/mese
 - creazione subscription (frontend usa questo via PayPal Buttons)
 - cancel subscription
 - verify webhook signature
@@ -28,7 +28,7 @@ PAYPAL_WEBHOOK_ID = os.environ.get("PAYPAL_WEBHOOK_ID", "")
 PAYPAL_PLAN_ID_ENV = os.environ.get("PAYPAL_PLAN_ID", "")
 
 BASE = "https://api-m.sandbox.paypal.com" if PAYPAL_MODE == "sandbox" else "https://api-m.paypal.com"
-PLAN_LOOKUP_NAME = "Sconti Roma Monthly 3EUR"
+PLAN_LOOKUP_NAME = "Sconti Roma Monthly 2.99EUR"
 
 _cached_plan_id: Optional[str] = PAYPAL_PLAN_ID_ENV or None
 # Cache access token 5 min (PayPal tokens live ~9 hours; short cache avoids
@@ -107,18 +107,18 @@ async def ensure_plan() -> str:
         prod.raise_for_status()
         product_id = prod.json()["id"]
 
-        # crea Plan €3/mese
+        # crea Plan €2,99/mese
         plan_body = {
             "product_id": product_id,
             "name": PLAN_LOOKUP_NAME,
-            "description": "€3 al mese, ricorrente, cancellabile in ogni momento.",
+            "description": "€2,99 al mese, ricorrente, cancellabile in ogni momento.",
             "billing_cycles": [
                 {
                     "frequency": {"interval_unit": "MONTH", "interval_count": 1},
                     "tenure_type": "REGULAR",
                     "sequence": 1,
                     "total_cycles": 0,  # infinito
-                    "pricing_scheme": {"fixed_price": {"value": "3.00", "currency_code": "EUR"}},
+                    "pricing_scheme": {"fixed_price": {"value": "2.99", "currency_code": "EUR"}},
                 }
             ],
             "payment_preferences": {

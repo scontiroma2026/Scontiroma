@@ -102,13 +102,13 @@ export default function Subscribe() {
               <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Provider</span><span>{sub.provider === 'stripe' ? 'Stripe (test mode)' : 'Mock'}</span></div>
               <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Stato</span><span className="text-fucsia">Attivo</span></div>
             </div>
-            <div className="mt-6 flex gap-3">
-              <Button onClick={() => nav("/discounts")} className="grad-fucsia-viola text-white hover:scale-105 transition rounded-full">Sfoglia gli sconti</Button>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <Button onClick={() => nav("/discounts")} className="w-full sm:w-auto grad-fucsia-viola text-white hover:scale-105 transition rounded-full">Sfoglia gli sconti</Button>
               <Button
                 data-testid="cancel-sub-btn"
                 variant="outline"
                 onClick={() => setShowCancelDialog(true)}
-                className="rounded-full border-white/20 text-white hover:bg-white/10"
+                className="w-full sm:w-auto rounded-full border-white/20 text-white hover:bg-white/10"
               >
                 Gestisci abbonamento
               </Button>
