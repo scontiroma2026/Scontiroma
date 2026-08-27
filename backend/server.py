@@ -320,6 +320,7 @@ class DiscountIn(BaseModel):
 class MerchantProfileIn(BaseModel):
     shop_name: Optional[str] = None
     description: Optional[str] = None
+    shop_description: Optional[str] = Field(None, max_length=1500)
     zone: Optional[str] = None
     category: Optional[str] = None
     address: Optional[str] = None
@@ -757,6 +758,7 @@ async def enrich_discount(d: dict) -> dict:
             "address": merchant.get("address", ""),
             "image_url": merchant.get("image_url", ""),
             "description": merchant.get("description", ""),
+            "shop_description": merchant.get("shop_description", ""),
             "lat": merchant.get("lat"),
             "lng": merchant.get("lng"),
             "phone": merchant.get("phone", ""),
@@ -3122,75 +3124,7 @@ async def root():
     return {"message": "Sconti Roma API", "status": "ok"}
 
 
-# ---------- AI helper (Claude Sonnet 5 via Emergent LLM key) ----------
-
-class DescriptionImproveIn(BaseModel):
-    title: str = Field(min_length=2, max_length=140)
-    description: Optional[str] = ""
-    category: Optional[str] = ""
-    original_price: Optional[float] = None
-    discounted_price: Optional[float] = None
-
-
-@api.post("/discounts/improve-description")
-async def improve_description(payload: DescriptionImproveIn, user: dict = Depends(require_merchant)):
-    """Genera una descrizione migliorata per uno sconto usando Claude Sonnet 5.
-    Il testo è mirato al catalogo Sconti Roma (breve, invitante, senza claim ingannevoli)."""
-    llm_key = os.environ.get("EMERGENT_LLM_KEY")
-    if not llm_key:
-        raise HTTPException(503, "AI assistant non configurato (EMERGENT_LLM_KEY mancante)")
-
-    savings = ""
-    if payload.original_price and payload.discounted_price and payload.original_price > payload.discounted_price:
-        pct = round((1 - payload.discounted_price / payload.original_price) * 100)
-        savings = f"Il cliente risparmia il {pct}% (da €{payload.original_price:.2f} a €{payload.discounted_price:.2f})."
-
-    system_msg = (
-        "Sei un copywriter italiano esperto di food & retail, specializzato in offerte per "
-        "abbonati a una piattaforma di sconti a Roma. Il tuo compito è trasformare la descrizione "
-        "grezza di un'offerta commerciale in un testo INVITANTE, CHIARO e ONESTO. "
-        "REGOLE FERREE: "
-        "1) Massimo 220 caratteri (2-3 righe). "
-        "2) Italiano naturale, tono amichevole e locale-romano ma non volgare. "
-        "3) NIENTE claim ingannevoli, superlativi vuoti tipo 'il migliore del mondo'. "
-        "4) NIENTE emoji, NIENTE hashtag, NIENTE 'CLICCA ORA'. "
-        "5) Metti in evidenza UN dettaglio concreto (ingrediente, tecnica, tradizione, occasione). "
-        "6) NON menzionare prezzi né percentuali di sconto: sono mostrati separatamente. "
-        "7) Se la descrizione originale è vuota o troppo corta, usa il titolo + categoria per inventare "
-        "un dettaglio credibile ma neutro. "
-        "Ritorna SOLO il testo migliorato, senza virgolette, senza preamboli."
-    )
-
-    user_prompt = f"""Titolo offerta: {payload.title}
-Categoria: {payload.category or "generico"}
-{savings}
-Descrizione attuale (da migliorare): {payload.description or "(vuota)"}
-
-Restituisci la nuova descrizione ottimizzata per il catalogo."""
-
-    from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
-    session_id = f"sconti-improve-{user['id'][:8]}-{uuid.uuid4().hex[:6]}"
-    chat = LlmChat(
-        api_key=llm_key,
-        session_id=session_id,
-        system_message=system_msg,
-    ).with_model("anthropic", "claude-sonnet-5")
-
-    try:
-        collected = []
-        async for ev in chat.stream_message(UserMessage(text=user_prompt)):
-            if isinstance(ev, TextDelta):
-                collected.append(ev.content)
-            elif isinstance(ev, StreamDone):
-                break
-        improved = "".join(collected).strip().strip('"').strip("'").strip()
-        # Safety: taglia a 240 caratteri hard cap
-        if len(improved) > 240:
-            improved = improved[:237].rsplit(" ", 1)[0] + "…"
-        return {"improved_description": improved, "session_id": session_id}
-    except Exception as e:
-        logging.error(f"[ai-improve] failed for merchant {user['id'][:8]}: {e}")
-        raise HTTPException(502, f"Errore AI: {str(e)[:120]}")
+# ---------- AI description assistant RIMOSSO su richiesta utente (2026-08-27) ----------
 
 
 @api.get("/geocode/suggest")

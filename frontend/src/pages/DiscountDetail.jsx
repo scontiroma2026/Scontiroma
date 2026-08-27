@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { MapPin, Clock, ArrowLeft, TicketPercent, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
@@ -148,6 +148,9 @@ export default function DiscountDetail() {
                 </div>
                 {hasMulti && (
                   <>
+                    <div className="absolute bottom-3 right-3 rounded-lg bg-black/70 px-3 py-1.5 text-xs font-semibold text-white">
+                      +{gallery.length - 1} immagini
+                    </div>
                     <button
                       data-testid="gallery-prev"
                       onClick={() => setPhotoIdx((i) => (i - 1 + gallery.length) % gallery.length)}
@@ -204,20 +207,32 @@ export default function DiscountDetail() {
           </div>
           <h1 className="font-serif text-4xl leading-tight text-white">{discount.title}</h1>
           <div className="mt-2 text-lg text-white/70">{m.shop_name}</div>
-          <p className="mt-6 text-white/80">{discount.description}</p>
-
-          <Card className="mt-6 border-warm bg-white/5 p-6">
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="text-xs uppercase tracking-wider text-gold">Prezzo con sconto</div>
-                <div className="mt-1 flex items-baseline gap-3">
-                  <span className="font-serif text-5xl font-semibold text-terracotta">€{discount.discounted_price.toFixed(2)}</span>
-                  <span className="text-lg text-white/50 line-through">€{discount.original_price.toFixed(2)}</span>
-                </div>
-                <div className="mt-1 text-sm text-white/70">Risparmi <strong>€{savings}</strong></div>
-              </div>
-              <TicketPercent size={40} className="text-terracotta/40" />
+          {m.address && (
+            <div className="mt-1 flex items-center gap-1.5 text-sm text-white/60 underline underline-offset-4 decoration-white/30">
+              <MapPin size={13} className="text-terracotta shrink-0" /> {m.address}
             </div>
+          )}
+          <p className="mt-5 text-white/80">{discount.description}</p>
+
+          {/* Card offerta — stile Groupon (bordo marcato, prezzo barrato, badge %, CTA grande) */}
+          <Card className="mt-6 overflow-hidden rounded-2xl border-2 border-fucsia/50 bg-white/5 p-0">
+            <div className="p-5">
+              <div className="font-bold text-xl leading-snug text-white">{discount.title}</div>
+              {discount.sales_this_month > 0 && (
+                <div data-testid="social-proof" className="mt-1.5 text-sm text-white/50">
+                  {discount.sales_this_month}+ acquistati questo mese
+                </div>
+              )}
+            </div>
+            <div className="bg-black/30 p-5">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-lg text-white/45 line-through">€{discount.original_price.toFixed(2)}</span>
+                <span data-testid="discounted-price" className="font-serif text-4xl font-bold text-fucsia">€{discount.discounted_price.toFixed(2)}</span>
+                <span className="rounded-md bg-ciano/15 px-2.5 py-1 text-sm font-bold text-ciano">
+                  {discount.percent_off}% di sconto
+                </span>
+              </div>
+              <div className="mt-1 text-sm text-white/60">Risparmi <strong className="text-white">€{savings}</strong> con l'abbonamento Sconti Roma</div>
 
             {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
             {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (
@@ -251,7 +266,7 @@ export default function DiscountDetail() {
               onClick={redeem}
               disabled={alreadyUsed}
               size="lg"
-              className={`mt-6 w-full text-white hover:scale-105 transition ${alreadyUsed ? "bg-white/10 hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola"}`}
+              className={`mt-5 w-full rounded-full py-6 text-lg font-bold text-white hover:scale-[1.02] transition ${alreadyUsed ? "bg-white/10 hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30"}`}
             >
               {!user ? "Accedi per riscattare" :
                 user.role !== "client" ? "Riservato ai clienti" :
@@ -263,7 +278,19 @@ export default function DiscountDetail() {
                   ? `Genera QR (utilizzo ${usageInfo.used_count + 1} di ${usageInfo.max_uses})`
                   : "Mostra QR Code"}
             </Button>
+            </div>
           </Card>
+
+          {/* Il negozio — descrizione scritta dal commerciante (stile Groupon) */}
+          {m.shop_description && (
+            <Card data-testid="shop-description-section" className="mt-6 rounded-2xl border-white/10 bg-[#141414] p-6">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
+                <Store size={14} /> Il negozio
+              </div>
+              <div className="mt-2 font-serif text-2xl text-white">{m.shop_name}</div>
+              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/75">{m.shop_description}</p>
+            </Card>
+          )}
 
           {discount.terms && (
             <div className="mt-6 flex gap-3 rounded-lg border border-warm bg-[#141414] border border-white/10 p-4 text-sm text-white/70">
@@ -272,12 +299,6 @@ export default function DiscountDetail() {
                 <div className="mb-1 text-xs uppercase tracking-wider text-gold">Termini</div>
                 {discount.terms}
               </div>
-            </div>
-          )}
-
-          {m.address && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-white/70">
-              <MapPin size={14} className="text-terracotta" /> {m.address}
             </div>
           )}
 

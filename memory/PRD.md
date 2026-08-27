@@ -191,6 +191,12 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Nuove env: `REPLY_TO_EMAIL=info@scontiroma.it` (tutte le email Resend hanno ora reply_to → le risposte dei clienti arrivano nella casella Aruba info@), `ADMIN_NOTIFY_EMAIL=info@scontiroma.it` (destinatario del recupero master password, admin@ non esiste come casella).
   - **⚠️ PROBLEMA DNS TROVATO (da sistemare su pannello Aruba, USER ACTION)**: il record MX del dominio ROOT `scontiroma.it` punta a `feedback-smtp.eu-west-1.amazonses.com` (Resend) → la posta in arrivo a info@/privacy@/partner@ NON arriva alle caselle Aruba. Serve: 1) eliminare quel MX dal root (lasciarlo SOLO su `send.scontiroma.it`), 2) aggiungere MX root `mx.aruba.it` prio 10 (+ `mx2.aruba.it` prio 20), 3) SPF root unificato `v=spf1 include:_spf.aruba.it include:amazonses.com ~all`, 4) DMARC rua → info@ (ora punta ad admin@ inesistente).
 
+- **[2026-08-27]** **Restyle pagina sconto stile Groupon + descrizione negozio + rimozione AI descrizione**:
+  - `DiscountDetail.jsx`: card offerta stile Groupon (bordo fucsia marcato, titolo offerta + social proof "N+ acquistati questo mese" da `sales_this_month`, prezzo barrato grigio + prezzo grande fucsia + badge ciano "X% di sconto", CTA pill grande), indirizzo sottolineato sotto il titolo, badge "+N immagini" sull'hero, nuova sezione "Il negozio" con `merchant.shop_description`.
+  - **Descrizione negozio (stile Groupon)**: campo `shop_description` (max 1500) in `MerchantProfileIn` + `enrich_discount`; nuovo componente `ShopDescriptionCard.jsx` nella MerchantDashboard (textarea + contatore + salva via PUT /merchants/me/profile).
+  - **AI descrizione RIMOSSA**: eliminati endpoint `POST /discounts/improve-description` e pulsante "Migliora con AI" da MerchantDiscount.jsx (l'AI enhance FOTO resta attiva).
+  - Verificato: curl (PUT profile, GET detail con shop_description, endpoint AI → 405) + screenshot (pagina sconto, dashboard con card precompilata, form senza AI).
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):
