@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
 import { renderBold } from "@/lib/renderBold";
+import StarRating from "@/components/StarRating";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
 // Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
@@ -208,6 +209,11 @@ export default function DiscountDetail() {
           </div>
           <h1 className="font-serif text-4xl leading-tight text-white">{discount.title}</h1>
           <div className="mt-2 text-lg text-white/70">{m.shop_name}</div>
+          {discount.rating_count > 0 && (
+            <div className="mt-1.5">
+              <StarRating avg={discount.rating_avg} count={discount.rating_count} />
+            </div>
+          )}
           {m.address && (
             <div className="mt-1 flex items-center gap-1.5 text-sm text-white/60 underline underline-offset-4 decoration-white/30">
               <MapPin size={13} className="text-terracotta shrink-0" /> {m.address}

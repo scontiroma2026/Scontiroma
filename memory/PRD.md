@@ -204,6 +204,11 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - DNS Aruba: email in entrata CONFERMATE funzionanti dall'utente.
   - Verificato: curl API + screenshot (dettaglio con grassetto/sezioni, catalogo con 9 contatori, form precompilato).
 
+- **[2026-08-27]** **Stelle recensioni sulla pagina sconto (stile Groupon, solo stelle)**:
+  - `enrich_discount` ora ritorna `rating_avg` (1 decimale) e `rating_count` dalla collection `reviews` per merchant.
+  - Nuovo componente `StarRating.jsx` (stelle oro con riempimento parziale, media + conteggio, nessun commento pubblico) mostrato sotto il nome del negozio in DiscountDetail.
+  - Verificato: curl (rating_avg 3.0, count 1 da recensione reale) + screenshot.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

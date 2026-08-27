@@ -783,6 +783,13 @@ async def enrich_discount(d: dict) -> dict:
         })
     except Exception:
         d["sales_this_month"] = 0
+    # Rating medio del negozio (solo stelle, nessun commento pubblico)
+    try:
+        stars = [r["stars"] async for r in db.reviews.find({"merchant_id": d.get("merchant_id")})]
+        d["rating_count"] = len(stars)
+        d["rating_avg"] = round(sum(stars) / len(stars), 1) if stars else None
+    except Exception:
+        d["rating_count"], d["rating_avg"] = 0, None
     # Include approval + lock info for merchant/admin views
     d.setdefault("approval_status", "approved")
     d.setdefault("locked_month", None)
