@@ -197,6 +197,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **AI descrizione RIMOSSA**: eliminati endpoint `POST /discounts/improve-description` e pulsante "Migliora con AI" da MerchantDiscount.jsx (l'AI enhance FOTO resta attiva).
   - Verificato: curl (PUT profile, GET detail con shop_description, endpoint AI → 405) + screenshot (pagina sconto, dashboard con card precompilata, form senza AI).
 
+- **[2026-08-27]** **Contatore utilizzi + grassetto + sezioni info stile Groupon**:
+  - Badge "+N utilizzati questo mese" ora visibile a TUTTI su ogni card sconto (rimosso gate abbonati in `DiscountCard.jsx`) e nella card offerta del dettaglio.
+  - **Grassetto**: helper `renderBold` (`/lib/renderBold.js`) — `**parola**` → `<strong>` in descrizione sconto, shop_description e sezioni info. Hint nel form commerciante.
+  - **Sezioni Groupon** su DiscountDetail ("Da sapere prima di andare"): Pianifica in anticipo (`plan_ahead`, + telefono/WhatsApp auto se presente), Inclusioni ed esclusioni (`validity_info`), Informazioni aggiuntive (`additional_info`), Fine print (ex `terms`, vecchio box Termini rimosso), Informative legali (testo statico con link /support). Nuovi campi in `DiscountIn` + 3 textarea nel form MerchantDiscount.
+  - DNS Aruba: email in entrata CONFERMATE funzionanti dall'utente.
+  - Verificato: curl API + screenshot (dettaglio con grassetto/sezioni, catalogo con 9 contatori, form precompilato).
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

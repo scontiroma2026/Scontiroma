@@ -16,6 +16,7 @@ export default function MerchantDiscount() {
   const [form, setForm] = useState({
     title: "", description: "", original_price: "", discounted_price: "",
     image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
+    plan_ahead: "", validity_info: "", additional_info: "",
   });
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState(null);
@@ -34,6 +35,9 @@ export default function MerchantDiscount() {
         image_urls: Array.isArray(d.image_urls) ? d.image_urls : (d.image_url ? [d.image_url] : []),
         terms: d.terms || "", active: d.active,
         max_uses_per_month: d.max_uses_per_month || 1,
+        plan_ahead: d.plan_ahead || "",
+        validity_info: d.validity_info || "",
+        additional_info: d.additional_info || "",
       });
     }
   };
@@ -142,6 +146,9 @@ export default function MerchantDiscount() {
             <div>
               <Label>Descrizione</Label>
               <Textarea data-testid="disc-description" required value={form.description} onChange={upd("description")} className="mt-1 bg-black/40 border-white/10 text-white" rows={3} />
+              <p className="mt-1 text-xs text-white/50">
+                Suggerimento: racchiudi le parole chiave tra doppi asterischi per il <strong className="text-white">grassetto</strong> — es. <code className="text-ciano">**forno a legna**</code>
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -171,8 +178,26 @@ export default function MerchantDiscount() {
               />
             </div>
             <div>
-              <Label>Termini e condizioni</Label>
-              <Textarea data-testid="disc-terms" value={form.terms} onChange={upd("terms")} className="mt-1 bg-black/40 border-white/10 text-white" rows={2} />
+              <Label>Termini e condizioni (Fine print)</Label>
+              <Textarea data-testid="disc-terms" value={form.terms} onChange={upd("terms")} className="mt-1 bg-black/40 border-white/10 text-white" rows={2} placeholder="Es. Utilizzabile entro il mese. Max 1 coupon a persona." />
+            </div>
+
+            {/* Sezioni informative stile Groupon (opzionali) */}
+            <div className="rounded-lg border border-white/10 bg-black/40 p-4 space-y-4">
+              <div className="text-xs uppercase tracking-wider text-gold">Informazioni per il cliente (opzionali)</div>
+              <div>
+                <Label>Pianifica in anticipo</Label>
+                <Textarea data-testid="disc-plan-ahead" value={form.plan_ahead} onChange={upd("plan_ahead")} className="mt-1 bg-black/40 border-white/10 text-white" rows={2} placeholder="Es. Disdetta richiesta con 24 ore di preavviso. Appuntamento richiesto tramite telefono." />
+                <p className="mt-1 text-xs text-white/50">Il tuo numero di telefono e WhatsApp verranno aggiunti automaticamente.</p>
+              </div>
+              <div>
+                <Label>Inclusioni ed esclusioni</Label>
+                <Textarea data-testid="disc-validity-info" value={form.validity_info} onChange={upd("validity_info")} className="mt-1 bg-black/40 border-white/10 text-white" rows={2} placeholder="Es. Giorni e orari di validità: da lunedì a sabato 11-18:30." />
+              </div>
+              <div>
+                <Label>Informazioni aggiuntive</Label>
+                <Textarea data-testid="disc-additional-info" value={form.additional_info} onChange={upd("additional_info")} className="mt-1 bg-black/40 border-white/10 text-white" rows={3} placeholder="Es. È necessaria la prenotazione. In caso di mancata disdetta o mancato appuntamento la seduta si considera persa." />
+              </div>
             </div>
 
             {/* Utilizzi al mese per abbonato */}

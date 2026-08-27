@@ -9,6 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
+import { renderBold } from "@/lib/renderBold";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
 // Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
@@ -212,7 +213,7 @@ export default function DiscountDetail() {
               <MapPin size={13} className="text-terracotta shrink-0" /> {m.address}
             </div>
           )}
-          <p className="mt-5 text-white/80">{discount.description}</p>
+          <p className="mt-5 text-white/80">{renderBold(discount.description)}</p>
 
           {/* Card offerta — stile Groupon (bordo marcato, prezzo barrato, badge %, CTA grande) */}
           <Card className="mt-6 overflow-hidden rounded-2xl border-2 border-fucsia/50 bg-white/5 p-0">
@@ -220,7 +221,7 @@ export default function DiscountDetail() {
               <div className="font-bold text-xl leading-snug text-white">{discount.title}</div>
               {discount.sales_this_month > 0 && (
                 <div data-testid="social-proof" className="mt-1.5 text-sm text-white/50">
-                  {discount.sales_this_month}+ acquistati questo mese
+                  +{discount.sales_this_month} utilizzati questo mese
                 </div>
               )}
             </div>
@@ -288,19 +289,53 @@ export default function DiscountDetail() {
                 <Store size={14} /> Il negozio
               </div>
               <div className="mt-2 font-serif text-2xl text-white">{m.shop_name}</div>
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/75">{m.shop_description}</p>
+              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/75">{renderBold(m.shop_description)}</p>
             </Card>
           )}
 
-          {discount.terms && (
-            <div className="mt-6 flex gap-3 rounded-lg border border-warm bg-[#141414] border border-white/10 p-4 text-sm text-white/70">
-              <Clock size={16} className="mt-0.5 shrink-0 text-gold" />
-              <div>
-                <div className="mb-1 text-xs uppercase tracking-wider text-gold">Termini</div>
-                {discount.terms}
-              </div>
-            </div>
-          )}
+          {/* Sezioni informative stile Groupon */}
+          {(() => {
+            const p = normalizePhone(m.phone);
+            const sections = [
+              {
+                key: "plan-ahead",
+                title: "Pianifica in anticipo",
+                body: discount.plan_ahead,
+                extra: p ? `Appuntamento tramite telefono ${m.phone}, anche su WhatsApp.` : null,
+              },
+              { key: "validity", title: "Inclusioni ed esclusioni", body: discount.validity_info },
+              { key: "additional", title: "Informazioni aggiuntive", body: discount.additional_info },
+              { key: "terms", title: "Fine print", body: discount.terms },
+            ].filter((s) => s.body && s.body.trim());
+            if (sections.length === 0) return null;
+            return (
+              <Card data-testid="info-sections" className="mt-6 rounded-2xl border-white/10 bg-[#141414] p-6">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
+                  <Clock size={14} /> Da sapere prima di andare
+                </div>
+                <div className="mt-4 space-y-5">
+                  {sections.map((s) => (
+                    <div key={s.key} data-testid={`info-${s.key}`}>
+                      <div className="text-sm font-bold text-white">{s.title}</div>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-white/70">
+                        {renderBold(s.body)}
+                        {s.extra && <><br />{s.extra}</>}
+                      </p>
+                    </div>
+                  ))}
+                  <div data-testid="info-legal" className="border-t border-white/10 pt-4">
+                    <div className="text-sm font-bold text-white">Informative legali</div>
+                    <p className="mt-1 text-xs leading-relaxed text-white/50">
+                      Il commerciante è l'unico responsabile verso gli abbonati per la cura e la qualità dei
+                      prodotti e servizi pubblicizzati. Sconti Roma fornisce l'accesso allo sconto tramite
+                      abbonamento; il servizio è erogato dal commerciante. Per assistenza e domande, consulta la{" "}
+                      <a href="/support" className="text-ciano underline underline-offset-2">sezione Assistenza</a>.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            );
+          })()}
 
           {/* Pulsante Chiama e Prenota (+ WhatsApp) — visibile solo se il commerciante ha inserito il numero */}
           {(() => {

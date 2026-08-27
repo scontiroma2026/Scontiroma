@@ -292,6 +292,10 @@ class DiscountIn(BaseModel):
     # Galleria fino a 8 foto. La prima è la copertina (usata come thumbnail nelle liste).
     image_urls: Optional[List[str]] = None
     terms: Optional[str] = ""
+    # Sezioni informative stile Groupon (tutte opzionali)
+    plan_ahead: Optional[str] = ""       # "Pianifica in anticipo" (disdetta, prenotazione)
+    validity_info: Optional[str] = ""    # "Inclusioni ed esclusioni" (giorni/orari validità)
+    additional_info: Optional[str] = ""  # "Informazioni aggiuntive"
     active: bool = True
     # Numero massimo di volte che uno stesso abbonato può usare lo sconto nel mese in corso.
     # Default 1. Massimo 10 per prevenire abusi.
@@ -299,7 +303,7 @@ class DiscountIn(BaseModel):
 
     def cleaned(self) -> dict:
         d = self.model_dump()
-        for k in ("title", "description", "image_url", "terms"):
+        for k in ("title", "description", "image_url", "terms", "plan_ahead", "validity_info", "additional_info"):
             if isinstance(d.get(k), str):
                 d[k] = d[k].strip()
         # Normalizza image_urls: max 8, filtra vuoti
