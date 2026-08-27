@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import LegalFooter from "@/components/LegalFooter";
 import CookieBanner from "@/components/CookieBanner";
+import AppFeedbackBanner from "@/components/AppFeedbackBanner";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
@@ -81,6 +82,7 @@ function App() {
           </Routes>
           <LegalFooter />
           <CookieBanner />
+          <AppFeedbackBanner />
           <PWAInstallBanner />
           <Toaster position="top-center" richColors />
         </AuthProvider>

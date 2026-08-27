@@ -9,6 +9,7 @@ import secrets
 import string
 import uuid
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 from typing import List, Optional, Literal
 
 import bcrypt
@@ -1738,6 +1739,27 @@ async def paypal_webhook(request: Request):
 
 
 # ---------- Redemption ----------
+ROME_TZ = ZoneInfo("Europe/Rome")
+
+
+def _rome_day(dt_iso: Optional[str] = None) -> Optional[str]:
+    """Giorno (YYYY-MM-DD) in ora italiana — il limite giornaliero segue la mezzanotte di Roma."""
+    try:
+        dt = datetime.fromisoformat(dt_iso) if dt_iso else datetime.now(timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(ROME_TZ).strftime("%Y-%m-%d")
+    except Exception:
+        return None
+
+
+async def _last_redeemed(user_id: str, merchant_id: str, exclude_id: Optional[str] = None) -> Optional[dict]:
+    q = {"user_id": user_id, "merchant_id": merchant_id, "status": "redeemed"}
+    if exclude_id:
+        q["id"] = {"$ne": exclude_id}
+    return await db.redemptions.find_one(q, sort=[("redeemed_at", -1)])
+
+
 @api.post("/redemptions/create/{discount_id}")
 async def create_redemption(discount_id: str, user: dict = Depends(require_client)):
     if not await user_has_active_sub(user["id"]):
@@ -1775,6 +1797,13 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
             409,
             f"Hai già usato questo sconto {max_uses} volte questo mese. Torna il mese prossimo!",
         )
+
+    # 2b) LIMITE GIORNALIERO anti-abuso: max 1 utilizzo al giorno per sconto.
+    # Impedisce che i coupon multipli del mese vengano bruciati la stessa sera per amici non abbonati.
+    last = await _last_redeemed(user["id"], d["merchant_id"])
+    if last and _rome_day(last.get("redeemed_at")) == _rome_day():
+        await _log_scan(False, "Limite giornaliero: sconto già usato oggi", last)
+        raise HTTPException(429, "Hai già usato questo sconto oggi. Il prossimo utilizzo sarà disponibile da domani!")
 
     # 3) Genera nuovo codice/QR — ogni chiamata produce un codice DIVERSO.
     code = gen_code(8)
@@ -1818,11 +1847,15 @@ async def redemption_status(discount_id: str, user: dict = Depends(require_clien
     })
 
     remaining = max(0, max_uses - used_count)
+    last = await _last_redeemed(user["id"], d["merchant_id"])
+    used_today = bool(last and _rome_day(last.get("redeemed_at")) == _rome_day())
     return {
         "used_this_month": used_count >= max_uses,  # backward compat
         "used_count": used_count,
         "max_uses": max_uses,
         "remaining": remaining,
+        "used_today": used_today,
+        "last_used_at": last.get("redeemed_at") if last else None,
         "has_pending": bool(pending),
         "pending_redemption_id": pending.get("id") if pending else None,
         # legacy fields for old clients
@@ -1918,8 +1951,14 @@ async def qr_verify_public(token: str):
         except Exception:
             await _log_scan(False, "Codice già utilizzato", r)
             return {"valid": False, "reason": "Codice già utilizzato"}
+    # Utilizzo precedente (escluso il corrente) — serve per limite giornaliero e riepilogo merchant
+    prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
     # Consume on first successful scan
     if r.get("status") == "pending":
+        # LIMITE GIORNALIERO: il cliente non può usare lo stesso sconto 2 volte nello stesso giorno
+        if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
+            await _log_scan(False, "Limite giornaliero: cliente ha già usato lo sconto oggi", r)
+            return {"valid": False, "reason": "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi", "daily_limit": True}
         await db.redemptions.update_one(
             {"id": r["id"], "status": "pending"},
             {"$set": {"status": "redeemed",
@@ -1938,6 +1977,10 @@ async def qr_verify_public(token: str):
         "discount_title": disc.get("title") if disc else "-",
         "discount_percent": None if not disc or not disc.get("original_price") else round((1 - disc["discounted_price"]/disc["original_price"])*100),
         "redeemed_at": r.get("redeemed_at") or datetime.now(timezone.utc).isoformat(),
+        # Riepilogo utilizzi per il commerciante
+        "use_number": r.get("use_number") or 1,
+        "max_uses": r.get("max_uses_per_month") or 1,
+        "prev_used_at": prev.get("redeemed_at") if prev else None,
     }
 
 
@@ -1949,6 +1992,11 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
         raise HTTPException(404, "Codice non trovato")
     if r["status"] == "redeemed":
         raise HTTPException(400, "Codice già utilizzato")
+    # LIMITE GIORNALIERO anche sulla verifica manuale del commerciante
+    prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
+    if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
+        await _log_scan(False, "Limite giornaliero: cliente ha già usato lo sconto oggi", r)
+        raise HTTPException(429, "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi")
     # If rotating format supplied, validate freshness (±1 slot = 10-20s window)
     if slot is not None and token is not None:
         cur = current_slot()
@@ -2868,6 +2916,43 @@ async def create_review(payload: ReviewIn, user: dict = Depends(require_client))
     }
     await db.reviews.insert_one(doc)
     return {"ok": True, "review": {k: v for k, v in doc.items() if k != "_id"}}
+
+
+# ---------- Feedback sull'applicazione (banner stelle) ----------
+class AppFeedbackIn(BaseModel):
+    stars: int = Field(ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=500)
+
+
+@api.post("/app-feedback")
+async def submit_app_feedback(payload: AppFeedbackIn, user: dict = Depends(get_current_user)):
+    now = datetime.now(timezone.utc).isoformat()
+    await db.app_feedback.update_one(
+        {"user_id": user["id"]},
+        {"$set": {
+            "user_id": user["id"], "role": user.get("role"), "email": user.get("email"),
+            "stars": payload.stars, "comment": (payload.comment or "").strip(),
+            "updated_at": now,
+        }, "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": now}},
+        upsert=True,
+    )
+    return {"ok": True}
+
+
+@api.get("/app-feedback/me")
+async def my_app_feedback(user: dict = Depends(get_current_user)):
+    doc = await db.app_feedback.find_one({"user_id": user["id"]})
+    return {"given": bool(doc), "stars": doc.get("stars") if doc else None}
+
+
+@api.get("/admin/app-feedback")
+async def admin_app_feedback(user: dict = Depends(require_admin_master)):
+    out = []
+    async for f in db.app_feedback.find().sort("updated_at", -1).limit(500):
+        f.pop("_id", None)
+        out.append(f)
+    avg = round(sum(f["stars"] for f in out) / len(out), 1) if out else None
+    return {"feedback": out, "avg": avg, "count": len(out)}
 
 
 @api.get("/reviews/shop/{merchant_id}")

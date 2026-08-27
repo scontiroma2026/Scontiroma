@@ -50,7 +50,7 @@ export default function DiscountDetail() {
   const [countdown, setCountdown] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [alreadyUsed, setAlreadyUsed] = useState(false);
-  const [usageInfo, setUsageInfo] = useState({ used_count: 0, max_uses: 1, remaining: 1 });
+  const [usageInfo, setUsageInfo] = useState({ used_count: 0, max_uses: 1, remaining: 1, used_today: false });
   const [windowSec, setWindowSec] = useState(20);
   const [photoIdx, setPhotoIdx] = useState(0);
   const pollRef = useRef(null);
@@ -72,6 +72,7 @@ export default function DiscountDetail() {
           used_count: r.data.used_count || 0,
           max_uses: r.data.max_uses || 1,
           remaining: typeof r.data.remaining === "number" ? r.data.remaining : (r.data.used_this_month ? 0 : 1),
+          used_today: !!r.data.used_today,
         });
       }).catch(() => {});
     }
@@ -261,19 +262,26 @@ export default function DiscountDetail() {
                 </div>
               </div>
             )}
+            {/* Nota limite giornaliero per abbonati con sconto multi-uso */}
+            {user?.role === "client" && usageInfo.max_uses > 1 && (
+              <div data-testid="daily-limit-note" className="mt-2 text-xs text-white/50">
+                ⓘ Massimo <strong className="text-white/80">1 utilizzo al giorno</strong>: i {usageInfo.max_uses} utilizzi
+                mensili vanno usati in giornate diverse.
+              </div>
+            )}
             {/* Badge informativo per NON abbonati */}
             {(!user || user.role !== "client") && discount.max_uses_per_month > 1 && (
               <div className="mt-4 rounded-lg border border-fucsia/30 bg-fucsia/10 px-4 py-2 text-xs text-fucsia">
-                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per abbonato
+                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per abbonato (max 1 al giorno)
               </div>
             )}
 
             <Button
               data-testid="redeem-btn"
               onClick={redeem}
-              disabled={alreadyUsed}
+              disabled={alreadyUsed || (usageInfo.used_today && user?.role === "client")}
               size="lg"
-              className={`mt-5 w-full rounded-full py-6 text-lg font-bold text-white hover:scale-[1.02] transition ${alreadyUsed ? "bg-white/10 hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30"}`}
+              className={`mt-5 w-full rounded-full py-6 text-lg font-bold text-white hover:scale-[1.02] transition ${alreadyUsed || (usageInfo.used_today && user?.role === "client") ? "bg-white/10 hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30"}`}
             >
               {!user ? "Accedi per riscattare" :
                 user.role !== "client" ? "Riservato ai clienti" :
@@ -281,6 +289,7 @@ export default function DiscountDetail() {
                 alreadyUsed ? (usageInfo.max_uses > 1
                   ? `Hai già usato tutti i ${usageInfo.max_uses} utilizzi del mese`
                   : "Sconto già utilizzato questo mese. Torna il mese prossimo!") :
+                usageInfo.used_today ? "Già usato oggi — torna domani!" :
                 usageInfo.max_uses > 1 && usageInfo.used_count > 0
                   ? `Genera QR (utilizzo ${usageInfo.used_count + 1} di ${usageInfo.max_uses})`
                   : "Mostra QR Code"}

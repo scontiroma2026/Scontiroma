@@ -46,6 +46,16 @@ export default function QRVerify() {
               −{result.discount_percent}%
             </div>
           )}
+          {result.max_uses > 1 && (
+            <div data-testid="usage-summary" className="mt-4 rounded-xl bg-black/25 px-4 py-2.5 text-sm">
+              <div className="font-bold">Utilizzo {result.use_number} di {result.max_uses} questo mese</div>
+              {result.prev_used_at && (
+                <div className="mt-0.5 text-xs text-white/75">
+                  Utilizzo precedente: {new Date(result.prev_used_at).toLocaleDateString("it-IT")}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <p className="mt-6 text-sm text-white/80">
           Applica lo sconto e concludi il pagamento.
@@ -78,14 +88,29 @@ export default function QRVerify() {
 
       {/* Full explanation */}
       <div className="mt-8 w-full max-w-lg rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 p-5 text-white text-center">
-        <p className="text-lg font-bold uppercase leading-snug">
-          L'utente non risulta abbonato<br/>o il codice è scaduto.
-        </p>
-        <div className="my-4 h-px bg-white/25" />
-        <p className="text-base font-semibold leading-snug">
-          Riscandere un nuovo codice<br/>
-          <span className="text-2xl uppercase tracking-wide">o applicare il prezzo pieno del menu.</span>
-        </p>
+        {result?.daily_limit || (result?.reason || "").toLowerCase().includes("giornaliero") ? (
+          <>
+            <p className="text-lg font-bold uppercase leading-snug" data-testid="daily-limit-msg">
+              Limite giornaliero raggiunto:<br/>il cliente ha già usato questo sconto oggi.
+            </p>
+            <div className="my-4 h-px bg-white/25" />
+            <p className="text-base font-semibold leading-snug">
+              Gli utilizzi multipli valgono <span className="uppercase">1 al giorno</span>.<br/>
+              <span className="text-2xl uppercase tracking-wide">Applicare il prezzo pieno del menu.</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-bold uppercase leading-snug">
+              L'utente non risulta abbonato<br/>o il codice è scaduto.
+            </p>
+            <div className="my-4 h-px bg-white/25" />
+            <p className="text-base font-semibold leading-snug">
+              Riscandere un nuovo codice<br/>
+              <span className="text-2xl uppercase tracking-wide">o applicare il prezzo pieno del menu.</span>
+            </p>
+          </>
+        )}
       </div>
 
       {/* Small staff note */}

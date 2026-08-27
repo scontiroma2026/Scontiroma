@@ -210,6 +210,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Verificato: curl (rating_avg 3.0, count 1 da recensione reale) + screenshot.
   - **Stelle anche sulle card catalogo** (`DiscountCard.jsx`, size 13, sotto shop_name) — verificato con screenshot (6 card con stelle).
 
+- **[2026-08-27]** **ANTI-ABUSO: Limite giornaliero 1 utilizzo/giorno per sconto** (scenario: abbonato brucia i 3 coupon mensili in una sera per amici non abbonati):
+  - Backend: helper `_rome_day()` (mezzanotte Europe/Rome) + `_last_redeemed()`. Blocchi in: `create_redemption` (429 "Hai già usato questo sconto oggi"), `qr_verify_public` (schermata rossa `daily_limit: true` se pending scansionato con uso già consumato oggi), `verify_redemption` merchant (429). Tutti i blocchi loggati in `qr_scans` → Registro Frodi admin.
+  - `redemption_status` ritorna `used_today` + `last_used_at`; `qr_verify` verde ritorna `use_number`/`max_uses`/`prev_used_at`.
+  - Frontend: DiscountDetail (bottone disabilitato "Già usato oggi — torna domani!", nota "max 1 utilizzo al giorno", badge non-abbonati aggiornato); QRVerify verde mostra "Utilizzo X di Y questo mese + utilizzo precedente" al commerciante, rossa con messaggio dedicato limite giornaliero; FraudLog admin con badge conteggio "blocchi limite giornaliero" e colori dedicati.
+  - Termini.jsx: clausole aggiunte sia sez. 4 (utenti: max 1/giorno, sconto personale non estendibile ad accompagnatori) sia sez. 5 (commercianti: applicare solo a schermata verde).
+  - Testato E2E via curl (7 step: genera→scansiona→2° tentativo bloccato 429→used_today→scan pending bloccato→giorno dopo ok uso 2→fraud log 2 blocchi) + screenshot Termini/dettaglio. Sconto trattoria demo lasciato a 3 usi/mese.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

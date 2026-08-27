@@ -9,6 +9,8 @@ const REASON_COLOR = {
   "Codice non trovato": "bg-red-500/15 text-red-300 border-red-500/40",
   "Codice già utilizzato": "bg-orange-500/15 text-orange-300 border-orange-500/40",
   "Formato codice non valido": "bg-red-500/15 text-red-300 border-red-500/40",
+  "Limite giornaliero: sconto già usato oggi": "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40",
+  "Limite giornaliero: cliente ha già usato lo sconto oggi": "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40",
 };
 
 export default function FraudLog() {
@@ -26,7 +28,14 @@ export default function FraudLog() {
       <div className="flex items-center gap-2 mb-4">
         <ShieldAlert className="text-red-400" size={20} />
         <h2 className="font-serif text-2xl text-white">Tentativi di Abuso Sventati</h2>
-        <span className="ml-auto text-xs text-white/50">{scans.length} tentativi registrati</span>
+        <span className="ml-auto text-xs text-white/50">
+          {scans.length} tentativi registrati
+          {scans.filter((s) => (s.reason || "").includes("giornaliero")).length > 0 && (
+            <span className="ml-2 rounded-full border border-fuchsia-500/40 bg-fuchsia-500/15 px-2 py-0.5 text-fuchsia-300" data-testid="daily-limit-count">
+              {scans.filter((s) => (s.reason || "").includes("giornaliero")).length} blocchi limite giornaliero
+            </span>
+          )}
+        </span>
       </div>
 
       {loading && (

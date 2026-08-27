@@ -99,6 +99,20 @@ export default function Termini() {
             mese</strong> per esercente, salvo diversa indicazione.
           </li>
           <li>
+            Se il Commerciante consente <strong>più utilizzi nello stesso
+            mese</strong>, vale comunque il limite di <strong>massimo 1 utilizzo
+            al giorno</strong> per lo stesso sconto: gli utilizzi devono
+            avvenire in giornate diverse. Il sistema blocca automaticamente la
+            generazione di un secondo codice QR nello stesso giorno.
+          </li>
+          <li>
+            Gli sconti sono riservati <strong>esclusivamente al titolare
+            dell'abbonamento</strong>: non possono essere utilizzati per
+            estendere il beneficio ad accompagnatori, amici o familiari non
+            abbonati. L'uso improprio ripetuto può comportare la sospensione
+            dell'account.
+          </li>
+          <li>
             La condivisione del codice QR con terzi è vietata e comporta la
             chiusura immediata dell'account senza rimborso.
           </li>
@@ -127,6 +141,16 @@ export default function Termini() {
           <li>
             Non discriminare gli abbonati Sconti Roma rispetto agli altri
             clienti.
+          </li>
+          <li>
+            Verificare sempre la <strong>schermata di scansione</strong>: lo
+            sconto va applicato solo a schermata verde. In caso di schermata
+            rossa (incluso il messaggio "limite giornaliero raggiunto": il
+            cliente ha già usato lo sconto lo stesso giorno) applicare il
+            prezzo pieno. Gli utilizzi multipli mensili valgono per{" "}
+            <strong>massimo 1 utilizzo al giorno per abbonato</strong> e non
+            sono cumulabili nella stessa visita per coprire persone non
+            abbonate.
           </li>
         </ul>
 

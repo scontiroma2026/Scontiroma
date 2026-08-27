@@ -17,6 +17,7 @@ import AdminLog from "@/components/admin/AdminLog";
 import AdminMerchantsTable from "@/components/admin/AdminMerchantsTable";
 import AdminReferralsByMerchant from "@/components/admin/AdminReferralsByMerchant";
 import AdminRecoveryId from "@/components/admin/AdminRecoveryId";
+import AdminAppFeedback from "@/components/admin/AdminAppFeedback";
 
 /**
  * AdminDashboard — orchestratore snello.
@@ -117,6 +118,7 @@ export default function AdminDashboard() {
     ["merchants", `Negozi (${merchants.length})`],
     ["fraud", "Registro Frodi"],
     ["reviews", "Feedback"],
+    ["appfeedback", "Feedback App"],
     ["log", "Log completo"],
   ];
 
@@ -180,6 +182,7 @@ export default function AdminDashboard() {
       )}
       {tab === "fraud" && <FraudLog />}
       {tab === "reviews" && <ReviewsCenter />}
+      {tab === "appfeedback" && <AdminAppFeedback hdrs={hdrs} />}
       {tab === "log" && <AdminLog recent={stats.recent} />}
 
       <MerchantDiscountsDialog
