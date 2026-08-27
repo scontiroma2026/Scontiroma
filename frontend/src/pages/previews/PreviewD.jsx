@@ -70,8 +70,8 @@ export default function PreviewD() {
                   { l: "50+ locali", c: "grad-1" },
                   { l: "12 quartieri", c: "grad-2" },
                   { l: "Cancelli quando vuoi", c: "grad-3" },
-                ].map((s, i) => (
-                  <div key={i} className={`${s.c} rounded-full px-5 py-2 text-white font-semibold text-sm shadow-lg`}>
+                ].map((s) => (
+                  <div key={s.l} className={`${s.c} rounded-full px-5 py-2 text-white font-semibold text-sm shadow-lg`}>
                     {s.l}
                   </div>
                 ))}
@@ -115,8 +115,8 @@ export default function PreviewD() {
               { img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500", t: "Cappu + Cornetto", s: "Caffè del Corso", price: "€2", from: "€4,50", g: "grad-1", emoji: "☕" },
               { img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", t: "Menu completo", s: "Trattoria Marco", price: "€22,50", from: "€45", g: "grad-2", emoji: "🍝" },
               { img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500", t: "Massaggio SPA", s: "Aurora SPA", price: "€40", from: "€80", g: "grad-3", emoji: "💆" },
-            ].map((d, i) => (
-              <div key={i} className="group rounded-3xl bg-white p-5 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition duration-300">
+            ].map((d) => (
+              <div key={d.t} className="group rounded-3xl bg-white p-5 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition duration-300">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
                   <img src={d.img} className="h-full w-full object-cover" alt="" />
                   <div className={`${d.g} absolute right-3 top-3 rounded-full h-14 w-14 flex items-center justify-center text-white font-black text-xs shadow-lg`}>

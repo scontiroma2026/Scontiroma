@@ -27,7 +27,7 @@ export default function AdminGate({ onVerified }) {
   }, []);
 
   const unlock = (data) => {
-    localStorage.setItem("admin_master_token", data.token);
+    // Il token master vive SOLO nel cookie httpOnly impostato dal backend — mai in localStorage.
     toast.success("Sblocco riuscito ✦");
     onVerified(data.token);
   };

@@ -15,8 +15,8 @@ def _env(key: str, default: str) -> str:
 
 # Credenziali test — mai usare in produzione, i fallback sono per lo sviluppo locale
 ADMIN_EMAIL = _env("TEST_ADMIN_EMAIL", "admin@scontiroma.it")
-ADMIN_PASSWORD = _env("TEST_ADMIN_PASSWORD", "admin123")
-MASTER_PW = _env("TEST_ADMIN_MASTER_PASSWORD", "ValeRoma2026")
+ADMIN_PASSWORD = _env("TEST_ADMIN_PASSWORD", "")
+MASTER_PW = _env("TEST_ADMIN_MASTER_PASSWORD", "")
 CLIENT_EMAIL = _env("TEST_CLIENT_EMAIL", "francesco@gmail.com")
 CLIENT_PASSWORD = _env("TEST_CLIENT_PASSWORD", "francesco123")
 

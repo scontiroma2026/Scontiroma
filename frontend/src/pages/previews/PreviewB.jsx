@@ -107,8 +107,8 @@ export default function PreviewB() {
               { img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500", t: "Cappuccino + Cornetto", s: "Caffè del Corso", price: "€2", from: "€4,50", c: "#FF5CA8" },
               { img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", t: "Menu Degustazione", s: "Trattoria da Marco", price: "€22,50", from: "€45", c: "#7A5CFF" },
               { img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500", t: "Massaggio Rilassante", s: "Aurora SPA", price: "€40", from: "€80", c: "#29D9B6" },
-            ].map((d, i) => (
-              <div key={i} className="group rounded-3xl bg-white p-4 shadow-xl hover:-translate-y-2 transition duration-300">
+            ].map((d) => (
+              <div key={d.t} className="group rounded-3xl bg-white p-4 shadow-xl hover:-translate-y-2 transition duration-300">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
                   <img src={d.img} className="h-full w-full object-cover" alt="" />
                   <div className="absolute right-3 top-3 rounded-full px-3 py-1 text-white text-xs font-bold shadow-lg" style={{background: d.c}}>

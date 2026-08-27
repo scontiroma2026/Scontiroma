@@ -41,7 +41,7 @@ def merchant_tratt_token():
 
 @pytest.fixture(scope="module")
 def admin_token():
-    return _login("admin@scontiroma.it", "admin123")
+    return _login("admin@scontiroma.it", os.environ.get("TEST_ADMIN_PASSWORD", ""))
 
 
 @pytest.fixture(scope="module")

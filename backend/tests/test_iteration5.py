@@ -18,8 +18,8 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL").rstrip("/")
 API = f"{BASE_URL}/api"
 
 ADMIN_EMAIL = "admin@scontiroma.it"
-ADMIN_PASS = "admin123"
-MASTER_PASS = "ValeRoma2026"
+ADMIN_PASS = os.environ.get("TEST_ADMIN_PASSWORD", "")
+MASTER_PASS = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "")
 
 TEST_EMAIL_PREFIX = "trim_test_"
 _created_emails: list[str] = []

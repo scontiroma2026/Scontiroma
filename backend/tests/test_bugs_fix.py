@@ -94,7 +94,7 @@ class TestAuthHttpOnlyCookies:
 class TestAdminLogin:
     def test_admin_login(self):
         s = requests.Session()
-        r = _login(s, "admin@scontiroma.it", "admin123")
+        r = _login(s, "admin@scontiroma.it", os.environ.get("TEST_ADMIN_PASSWORD", ""))
         assert r.status_code == 200, f"admin login failed: {r.status_code} {r.text}"
         me = s.get(f"{BASE_URL}/api/auth/me")
         assert me.status_code == 200

@@ -31,8 +31,8 @@ def _load_backend_url():
 
 BASE = _load_backend_url()
 ADMIN_EMAIL = os.environ.get("TEST_ADMIN_EMAIL", "admin@scontiroma.it")
-ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "admin123")
-MASTER = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "ValeRoma2026")
+ADMIN_PASSWORD = os.environ.get("TEST_ADMIN_PASSWORD", "")
+MASTER = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "")
 
 
 @pytest.fixture(scope="module")

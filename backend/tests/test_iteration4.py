@@ -11,7 +11,7 @@ import requests
 
 BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://deal-bundle.preview.emergentagent.com").rstrip("/")
 API = f"{BASE}/api"
-MASTER_PW = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "ValeRoma2026")
+MASTER_PW = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "")
 JWT_SECRET = os.environ.get(
     "TEST_JWT_SECRET",
     "7bf1620c584ce701c6eaa055faa0d7599172631b3a4203ad6d68e950d50b1e6b",
@@ -41,7 +41,7 @@ def login(email, password):
 
 @pytest.fixture(scope="module")
 def admin_session():
-    s = login("admin@scontiroma.it", "admin123")
+    s = login("admin@scontiroma.it", os.environ.get("TEST_ADMIN_PASSWORD", ""))
     r = s.post(f"{API}/admin/verify-master", json={"password": MASTER_PW})
     assert r.status_code == 200
     tok = r.json()["token"]

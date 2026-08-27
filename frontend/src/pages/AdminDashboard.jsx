@@ -29,8 +29,7 @@ import AdminAppFeedback from "@/components/admin/AdminAppFeedback";
  *  - dialog "storico offerte" del merchant
  */
 export default function AdminDashboard() {
-  const [masterToken, setMasterToken] = useState(() => localStorage.getItem("admin_master_token") || "");
-  const [gated, setGated] = useState(!masterToken);
+  const [gated, setGated] = useState(true);
   const [stats, setStats] = useState(null);
   const [merchants, setMerchants] = useState([]);
   const [pending, setPending] = useState([]);
@@ -38,14 +37,15 @@ export default function AdminDashboard() {
   const [selectedMerchantId, setSelectedMerchantId] = useState(null);
   const [discountsOpen, setDiscountsOpen] = useState(false);
 
-  const hdrs = () => (masterToken ? { headers: { "X-Admin-Master": masterToken } } : {});
+  // L'auth master viaggia SOLO via cookie httpOnly (withCredentials): niente header extra.
+  // Manteniamo hdrs() per compatibilità con i sotto-componenti che lo ricevono come prop.
+  const hdrs = () => ({});
 
-  // Verifica al mount se il master token salvato è ancora valido; se sì, sblocca e carica.
+  // Verifica al mount se la sessione master (cookie) è ancora valida; se sì, sblocca e carica.
   useEffect(() => {
-    if (!masterToken) return;
     (async () => {
       try {
-        const { data } = await api.get("/admin/session", hdrs());
+        const { data } = await api.get("/admin/session");
         if (data.master_verified) {
           setGated(false);
           loadData();
@@ -57,11 +57,10 @@ export default function AdminDashboard() {
         setGated(true);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount (masterToken presence)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- verifica sessione una sola volta al mount
   }, []);
 
-  const onVerified = (token) => {
-    setMasterToken(token);
+  const onVerified = () => {
     setGated(false);
     loadData();
   };
@@ -69,8 +68,6 @@ export default function AdminDashboard() {
   const lockOut = async () => {
     try { await api.post("/admin/logout-master"); }
     catch (err) { console.warn("[admin] logout master failed:", err?.message || err); }
-    localStorage.removeItem("admin_master_token");
-    setMasterToken("");
     setGated(true);
     setStats(null);
   };
@@ -88,10 +85,8 @@ export default function AdminDashboard() {
     } catch (err) {
       const status = err?.response?.status;
       if (status === 403) {
-        // Master token scaduto o invalido → torna al gate
+        // Sessione master scaduta o invalida → torna al gate
         setGated(true);
-        localStorage.removeItem("admin_master_token");
-        setMasterToken("");
       } else {
         toast.error(formatApiError(err));
       }

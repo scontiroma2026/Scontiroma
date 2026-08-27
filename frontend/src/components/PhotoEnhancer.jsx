@@ -112,7 +112,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
       onChange && onChange(dataUrl);
       setTimeout(() => setShowBadge(false), 4000);
     } catch (e) {
-      console.error(e);
+      console.warn("[photo-enhancer] enhance failed:", e?.message || e);
       setError("Errore durante l'ottimizzazione. Riprova con un'altra foto.");
     } finally {
       setProcessing(false);

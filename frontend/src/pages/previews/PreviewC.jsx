@@ -131,8 +131,8 @@ export default function PreviewC() {
               { img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", t: "TRATTORIA MARCO", z: "Trastevere", off: "50%" },
               { img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500", t: "CAFFÈ CORSO", z: "Centro", off: "56%" },
               { img: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=500", t: "EUR FITNESS", z: "EUR", off: "75%" },
-            ].map((d, i) => (
-              <div key={i} className="group border border-white/10 hover:border-[#FF6B00] transition">
+            ].map((d) => (
+              <div key={d.t} className="group border border-white/10 hover:border-[#FF6B00] transition">
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={d.img} className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition duration-500" alt="" />
                   <div className="absolute right-0 top-0 bg-[#FF6B00] px-3 py-1">

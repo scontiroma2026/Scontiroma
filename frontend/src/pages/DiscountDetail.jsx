@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api, { formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -93,16 +93,16 @@ export default function DiscountDetail() {
     }
   };
 
-  const fetchToken = async (rid) => {
+  const fetchToken = useCallback(async (rid) => {
     try {
       const { data } = await api.get(`/redemptions/${rid}/token`);
       setTokenData(data);
       setCountdown(data.expires_in);
       setWindowSec(data.window_sec || 20);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.warn("[discount-detail] token fetch failed:", err?.message || err);
     }
-  };
+  }, []);
 
   // Poll token every window_sec while dialog is open + tick down countdown every 1s
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function DiscountDetail() {
         clearInterval(tickRef.current);
       };
     }
-  }, [dialogOpen, redemption, windowSec]);
+  }, [dialogOpen, redemption, windowSec, fetchToken]);
 
   if (loading || !discount) {
     return <div className="mx-auto max-w-7xl px-6 py-16 text-white/60">Caricamento…</div>;

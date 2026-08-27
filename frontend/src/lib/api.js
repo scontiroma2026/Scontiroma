@@ -3,35 +3,25 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
-// withCredentials: invia SEMPRE i cookie httpOnly (access_token, refresh_token)
-// impostati dal backend al login. Il JWT NON è mai leggibile da JS → immune a XSS.
+// withCredentials: invia SEMPRE i cookie httpOnly (access_token, refresh_token,
+// admin_master_token) impostati dal backend. Nessun token è mai leggibile da
+// JavaScript → immune a XSS. localStorage NON contiene credenziali.
 const api = axios.create({
   baseURL: API,
   withCredentials: true,
 });
 
-// Cleanup legacy: se un utente ha ancora `access_token` in localStorage da
-// versioni precedenti dell'app, lo rimuoviamo al primo boot. Non lo leggiamo
-// più — l'auth passa solo via cookie httpOnly.
+// Cleanup legacy: rimuove eventuali token salvati in localStorage da versioni
+// precedenti dell'app. L'auth (inclusa la master admin) passa SOLO via cookie httpOnly.
 try {
-  if (typeof window !== "undefined" && localStorage.getItem("access_token")) {
-    localStorage.removeItem("access_token");
+  if (typeof window !== "undefined") {
+    ["access_token", "admin_master_token"].forEach((k) => {
+      if (localStorage.getItem(k)) localStorage.removeItem(k);
+    });
   }
 } catch (_) {
-  /* localStorage disabled — non è un problema */
+  /* localStorage disabilitato (es. Safari private) — nessun impatto: usiamo solo cookie */
 }
-
-// Header X-Admin-Master: token master di sessione admin (NON un JWT auth).
-// Verrà anch'esso migrato a cookie httpOnly (`admin_master_token` esiste già
-// lato backend), ma per ora lo teniamo come fallback fino al prossimo giro.
-api.interceptors.request.use((config) => {
-  const master = localStorage.getItem("admin_master_token");
-  if (master) {
-    config.headers = config.headers || {};
-    if (!config.headers["X-Admin-Master"]) config.headers["X-Admin-Master"] = master;
-  }
-  return config;
-});
 
 export function formatApiError(err) {
   const detail = err?.response?.data?.detail;

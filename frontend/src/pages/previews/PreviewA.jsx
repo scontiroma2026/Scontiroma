@@ -95,8 +95,8 @@ export default function PreviewA() {
               { img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", t: "Menu Degustazione", s: "Trattoria da Marco", off: "50%", c: "#FFE94A" },
               { img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500", t: "Cappuccino + Cornetto", s: "Caffè del Corso", off: "56%", c: "#FF3355" },
               { img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=500", t: "Massaggio 60min", s: "Aurora SPA", off: "50%", c: "#2E4BFF" },
-            ].map((d, i) => (
-              <div key={i} className="rounded-3xl border-4 border-black bg-white shadow-pop-lg overflow-hidden hover:-translate-y-1 transition">
+            ].map((d) => (
+              <div key={d.t} className="rounded-3xl border-4 border-black bg-white shadow-pop-lg overflow-hidden hover:-translate-y-1 transition">
                 <div className="relative aspect-video overflow-hidden">
                   <img src={d.img} className="h-full w-full object-cover" alt="" />
                   <div className={`absolute right-3 top-3 flex h-16 w-16 items-center justify-center rounded-full border-4 border-black text-white pop-a-display text-lg`} style={{background: d.c === '#FFE94A' ? '#000' : d.c}}>

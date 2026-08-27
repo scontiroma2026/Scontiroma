@@ -57,7 +57,7 @@ export default function Login() {
     // piccolo delay per permettere al render di stabilizzarsi
     const t = setTimeout(() => { goBiometric(); }, 400);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-tentativo Face ID SOLO al mount: rieseguirlo su cambio deps aprirebbe prompt biometrici indesiderati
   }, []);
 
   const submitPin = async (e) => {

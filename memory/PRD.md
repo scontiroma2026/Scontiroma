@@ -229,6 +229,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Subscribe.jsx: bottoni "Sfoglia gli sconti"/"Gestisci abbonamento" ora impilati su mobile (flex-col sm:flex-row, w-full) per restare dentro la card.
   - Testato: curl (Stripe checkout ok, piano PayPal 2.99 verificato) + screenshot E2E mappa cliccabile (pin + conferma + widget sparito). Merchant di test eliminato.
 
+- **[2026-08-27]** **Code review fixes applicati**:
+  - **Sicurezza**: token master admin ora SOLO cookie httpOnly — rimosso da localStorage (api.js interceptor eliminato + cleanup legacy, AdminGate, AdminDashboard riscritti; hdrs() ritorna {} per compat sotto-componenti). Verificato E2E: unlock, reload persiste via cookie, Blocca funziona, localStorage=None.
+  - **Test**: rimossi tutti i segreti hardcoded ("admin123"/"ValeRoma2026") da 7 file test → env TEST_ADMIN_PASSWORD/TEST_ADMIN_MASTER_PASSWORD senza default.
+  - **React**: fix index-as-key nei 4 Preview (key={d.t}/{s.l}); fetchToken in useCallback + dep nell'effect di DiscountDetail; commenti espliciti sugli eslint-disable intenzionali (Login auto-FaceID, AdminDashboard mount); console.error bare → console.warn taggati.
+  - **Verificati NON riproducibili** (segnalazioni stale del report): variabili Python non definite (ruff F821 pulito), `is` su letterali (0 occorrenze), empty catch (tutti hanno warn/commento).
+  - **RINVIATI deliberatamente** (rischio regressione > beneficio, tracciati come P3): refactor funzioni lunghe server.py (extend_subscription_on_renewal, stripe_webhook, geocode_suggest), split componenti grandi (DiscountDetail 400+ righe, Locandina, AddressAutocomplete), rimozione console.warn nei catch (sono l'error handling richiesto). I localStorage restanti (cookie-consent, PWA dismissed, feedback dismissed, last_email) sono flag UI non sensibili — corretti così.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):
