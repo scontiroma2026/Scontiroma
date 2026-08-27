@@ -208,6 +208,7 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - `enrich_discount` ora ritorna `rating_avg` (1 decimale) e `rating_count` dalla collection `reviews` per merchant.
   - Nuovo componente `StarRating.jsx` (stelle oro con riempimento parziale, media + conteggio, nessun commento pubblico) mostrato sotto il nome del negozio in DiscountDetail.
   - Verificato: curl (rating_avg 3.0, count 1 da recensione reale) + screenshot.
+  - **Stelle anche sulle card catalogo** (`DiscountCard.jsx`, size 13, sotto shop_name) — verificato con screenshot (6 card con stelle).
 
 ## Prioritized Backlog
 

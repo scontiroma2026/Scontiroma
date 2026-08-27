@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { MapPin, ArrowRight, Zap, TrendingUp } from "lucide-react";
+import StarRating from "@/components/StarRating";
 
 export default function DiscountCard({ discount }) {
   const m = discount.merchant || {};
@@ -40,6 +41,9 @@ export default function DiscountCard({ discount }) {
             {discount.title}
           </h3>
           <p className="text-sm text-white/60">{m.shop_name}</p>
+          {discount.rating_count > 0 && (
+            <StarRating avg={discount.rating_avg} count={discount.rating_count} size={13} />
+          )}
           <div className="flex items-end justify-between pt-2 border-t border-white/10">
             <div>
               <div className="flex items-baseline gap-2">
