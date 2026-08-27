@@ -217,6 +217,11 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Termini.jsx: clausole aggiunte sia sez. 4 (utenti: max 1/giorno, sconto personale non estendibile ad accompagnatori) sia sez. 5 (commercianti: applicare solo a schermata verde).
   - Testato E2E via curl (7 step: genera→scansiona→2° tentativo bloccato 429→used_today→scan pending bloccato→giorno dopo ok uso 2→fraud log 2 blocchi) + screenshot Termini/dettaglio. Sconto trattoria demo lasciato a 3 usi/mese.
 
+- **[2026-08-27]** **Conferma manuale indirizzo non geocodificabile (admin)**:
+  - Nuovo endpoint `POST /admin/merchants/{id}/geocode-confirm` (require_admin_master): setta `address_confirmed=true` (esce dagli avvisi); body opzionale `{lat,lng}` per posizionare comunque il negozio sulla mappa (flag `geocode_manual`). Query `geocode-issues` esclude i confermati.
+  - `GeocodeIssuesWidget.jsx`: pulsante verde "Conferma" per riga → pannello con input coordinate GPS facoltative (parse "41.8902, 12.4922" da Google Maps) + "Conferma comunque"/"Conferma con coordinate".
+  - Testato via curl (conferma senza/con coords, issue sparisce, lat/lng salvate) + screenshot UI. Il negozio "Ristorante" (nino@gmail.com) è stato RIPRISTINATO a stato fallito così l'utente può confermarlo dal pannello.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

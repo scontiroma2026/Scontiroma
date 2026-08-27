@@ -3637,6 +3637,7 @@ async def admin_geocode_issues(user: dict = Depends(require_admin_master)):
     query = {
         "role": "merchant",
         "address": {"$exists": True, "$ne": ""},
+        "address_confirmed": {"$ne": True},
         "$or": [
             {"geocode_failed": True},
             {"lat": {"$exists": False}},
@@ -3698,6 +3699,39 @@ async def admin_geocode_retry(
             {"$set": {"geocode_failed": True, "geocode_failed_at": now_iso, "geocode_failed_address": new_address}},
         )
         return {"ok": False, "status": "still_failed", "address": new_address}
+
+
+class AdminGeocodeConfirmIn(BaseModel):
+    lat: Optional[float] = Field(None, ge=-90, le=90)
+    lng: Optional[float] = Field(None, ge=-180, le=180)
+
+
+@api.post("/admin/merchants/{merchant_id}/geocode-confirm")
+async def admin_geocode_confirm(
+    merchant_id: str,
+    payload: Optional[AdminGeocodeConfirmIn] = None,
+    user: dict = Depends(require_admin_master),
+):
+    """Conferma manualmente un indirizzo non geocodificabile: l'admin accetta
+    l'indirizzo così com'è (sparisce dagli avvisi). Se fornisce lat/lng
+    (es. copiate da Google Maps) il negozio compare anche sulla mappa."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
+        raise HTTPException(404, "Merchant non trovato")
+    if not m.get("address"):
+        raise HTTPException(400, "Il merchant non ha un indirizzo da confermare")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    set_fields = {"address_confirmed": True, "address_confirmed_at": now_iso}
+    has_coords = payload is not None and payload.lat is not None and payload.lng is not None
+    if has_coords:
+        set_fields.update({"lat": payload.lat, "lng": payload.lng, "geocoded_at": now_iso, "geocode_manual": True})
+    await db.users.update_one(
+        {"id": merchant_id},
+        {"$set": set_fields,
+         "$unset": {"geocode_failed": "", "geocode_failed_at": "", "geocode_failed_address": ""}},
+    )
+    return {"ok": True, "on_map": bool(has_coords or (m.get("lat") is not None and m.get("lng") is not None))}
 
 
 # ---------- Include Router & CORS (LAST) ----------

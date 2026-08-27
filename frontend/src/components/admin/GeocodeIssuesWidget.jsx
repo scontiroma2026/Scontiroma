@@ -17,6 +17,8 @@ export default function GeocodeIssuesWidget({ hdrs }) {
   const [editingId, setEditingId] = useState(null);
   const [editAddress, setEditAddress] = useState("");
   const [retryingId, setRetryingId] = useState(null);
+  const [confirmingId, setConfirmingId] = useState(null);
+  const [coordsText, setCoordsText] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -63,6 +65,36 @@ export default function GeocodeIssuesWidget({ hdrs }) {
     }
   };
 
+  const confirmAddress = async (row) => {
+    // Coordinate facoltative incollate da Google Maps: "41.8902, 12.4922"
+    let body = {};
+    const t = coordsText.trim();
+    if (t) {
+      const mch = t.match(/(-?\d+[.,]\d+)\s*[,;\s]\s*(-?\d+[.,]\d+)/);
+      if (!mch) {
+        toast.error('Coordinate non valide. Formato: "41.8902, 12.4922" (da Google Maps: tasto destro sul punto → copia coordinate)');
+        return;
+      }
+      body = { lat: parseFloat(mch[1].replace(",", ".")), lng: parseFloat(mch[2].replace(",", ".")) };
+    }
+    setRetryingId(row.id);
+    try {
+      const r = await api.post(`/admin/merchants/${row.id}/geocode-confirm`, body, hdrs());
+      toast.success(
+        r.data.on_map
+          ? `✅ ${row.shop_name}: indirizzo confermato e negozio posizionato sulla mappa`
+          : `✅ ${row.shop_name}: indirizzo confermato (il negozio non comparirà sulla mappa)`
+      );
+      setConfirmingId(null);
+      setCoordsText("");
+      load();
+    } catch (e) {
+      toast.error("Errore durante la conferma");
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
   if (loading) return null;
   if (issues.length === 0) return null; // Nessun problema → widget nascosto
 
@@ -88,7 +120,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
               : `${issues.length} negozi hanno indirizzi non geocodificabili`}
           </div>
           <div className="text-xs text-white/60 mt-0.5">
-            Questi negozi NON compaiono sulla mappa. Correggi l'indirizzo e riprova.
+            Questi negozi NON compaiono sulla mappa. Correggi l'indirizzo e riprova, oppure confermalo manualmente.
           </div>
         </div>
         {open ? (
@@ -208,10 +240,51 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                         >
                           <Pencil size={12} className="mr-1" /> Correggi
                         </Button>
+                        <Button
+                          data-testid={`geo-issue-confirm-${row.id}`}
+                          onClick={() => { setConfirmingId(confirmingId === row.id ? null : row.id); setCoordsText(""); }}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                        >
+                          <Check size={12} className="mr-1" /> Conferma
+                        </Button>
                       </div>
                     </div>
                   )}
                 </div>
+
+                {/* Pannello conferma manuale (indirizzo accettato anche se non trovato) */}
+                {confirmingId === row.id && (
+                  <div data-testid={`geo-confirm-panel-${row.id}`} className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+                    <div className="text-xs text-white/80">
+                      L'indirizzo verrà <strong className="text-emerald-300">accettato così com'è</strong> e sparirà dagli avvisi.
+                      <br />Facoltativo: incolla le coordinate GPS da Google Maps (tasto destro sul punto → copia coordinate) per far comparire il negozio anche sulla mappa.
+                    </div>
+                    <div className="mt-2 flex flex-col sm:flex-row gap-2">
+                      <Input
+                        data-testid={`geo-confirm-coords-${row.id}`}
+                        value={coordsText}
+                        onChange={(e) => setCoordsText(e.target.value)}
+                        placeholder="Es. 41.8902, 12.4922 (facoltativo)"
+                        className="text-sm bg-black/50 border-white/10 text-white flex-1"
+                      />
+                      <Button
+                        data-testid={`geo-confirm-submit-${row.id}`}
+                        onClick={() => confirmAddress(row)}
+                        disabled={retryingId === row.id}
+                        size="sm"
+                        className="h-9 bg-emerald-600 hover:bg-emerald-500 text-white"
+                      >
+                        {retryingId === row.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <><Check size={14} className="mr-1" /> {coordsText.trim() ? "Conferma con coordinate" : "Conferma comunque"}</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {row.geocode_failed_at && (
                   <div className="mt-2 text-[10px] text-white/40">
