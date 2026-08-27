@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+REPLY_TO_EMAIL = os.environ.get("REPLY_TO_EMAIL", "")
 APP_URL = (os.environ.get("FRONTEND_URL") or os.environ.get("APP_URL") or "http://localhost:3000").rstrip("/")
 
 _configured = bool(RESEND_API_KEY) and not RESEND_API_KEY.startswith("re_placeholder")
@@ -29,6 +30,8 @@ async def _send(to: str, subject: str, html: str) -> Optional[str]:
         return None
     try:
         params = {"from": SENDER_EMAIL, "to": [to], "subject": subject, "html": html}
+        if REPLY_TO_EMAIL:
+            params["reply_to"] = [REPLY_TO_EMAIL]
         res = await asyncio.to_thread(resend.Emails.send, params)
         eid = res.get("id") if isinstance(res, dict) else getattr(res, "id", None)
         log.info(f"[email:sent] to={to} id={eid}")

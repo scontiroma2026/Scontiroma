@@ -187,6 +187,10 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Bug "ROMA non si legge in stampa (mobile)"**: i 2 blob decorativi del flyer usano `filter: blur(20px)`, NON supportato dal print engine di iOS Safari → renderizzati come cerchi PIENI rosa/ciano che coprivano il contenuto ("Roma" rosa su rosa = invisibile). Fix: classe `.flyer-blob` + `@media print { .flyer-blob { display:none } }`. PDF ora identico all'anteprima (verificato con Playwright PDF A5 rasterizzato: 1 pagina, "Sconti Roma" leggibile, zero cerchi).
   - Pulsante "Stampa / Salva PDF" spostato da top-right a **fixed bottom-center** (più comodo su mobile). Verificato: `position:fixed, bottom:24px` su viewport 390x844.
 
+- **[2026-08-27]** **Email verso caselle Aruba + reply-to**:
+  - Nuove env: `REPLY_TO_EMAIL=info@scontiroma.it` (tutte le email Resend hanno ora reply_to → le risposte dei clienti arrivano nella casella Aruba info@), `ADMIN_NOTIFY_EMAIL=info@scontiroma.it` (destinatario del recupero master password, admin@ non esiste come casella).
+  - **⚠️ PROBLEMA DNS TROVATO (da sistemare su pannello Aruba, USER ACTION)**: il record MX del dominio ROOT `scontiroma.it` punta a `feedback-smtp.eu-west-1.amazonses.com` (Resend) → la posta in arrivo a info@/privacy@/partner@ NON arriva alle caselle Aruba. Serve: 1) eliminare quel MX dal root (lasciarlo SOLO su `send.scontiroma.it`), 2) aggiungere MX root `mx.aruba.it` prio 10 (+ `mx2.aruba.it` prio 20), 3) SPF root unificato `v=spf1 include:_spf.aruba.it include:amazonses.com ~all`, 4) DMARC rua → info@ (ora punta ad admin@ inesistente).
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

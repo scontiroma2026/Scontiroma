@@ -2127,7 +2127,7 @@ async def admin_master_forgot(payload: MasterForgotIn, user: dict = Depends(requ
         "master_reset_token": token, "master_reset_expires": expires,
         "recovery_failed_attempts": 0, "recovery_locked_until": None,
     }})
-    admin_email = os.environ.get("ADMIN_EMAIL", "")
+    admin_email = os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
     try:
         await send_master_reset(admin_email, token)
     except Exception as e:
