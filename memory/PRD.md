@@ -236,6 +236,11 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - **Verificati NON riproducibili** (segnalazioni stale del report): variabili Python non definite (ruff F821 pulito), `is` su letterali (0 occorrenze), empty catch (tutti hanno warn/commento).
   - **RINVIATI deliberatamente** (rischio regressione > beneficio, tracciati come P3): refactor funzioni lunghe server.py (extend_subscription_on_renewal, stripe_webhook, geocode_suggest), split componenti grandi (DiscountDetail 400+ righe, Locandina, AddressAutocomplete), rimozione console.warn nei catch (sono l'error handling richiesto). I localStorage restanti (cookie-consent, PWA dismissed, feedback dismissed, last_email) sono flag UI non sensibili — corretti così.
 
+- **[2026-08-27]** **Badge "affiliato" sulla locandina**:
+  - Aggiunta fascia ben visibile sopra il box QR: mini-logo Colosseo SVG + "Questo locale è un affiliato Sconti Roma" (Fraunces, Roma in fucsia, bordo fucsia, sfondo gradiente tri-colore).
+  - Spazi compressi (divider 3mm, passaggi 3.5mm, QR padding 4mm, footer 2mm) per mantenere il formato A5 su 1 pagina.
+  - Verificato con PDF A5 reale (Playwright): Pages 1, size 420x595pt, badge leggibile.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

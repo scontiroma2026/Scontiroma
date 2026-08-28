@@ -254,7 +254,7 @@ export default function Locandina() {
                 width: "20mm",
                 height: "2px",
                 background: "linear-gradient(90deg, #FF2E93, #00E5FF)",
-                margin: "4mm auto",
+                margin: "3mm auto",
               }}
             />
 
@@ -278,7 +278,7 @@ export default function Locandina() {
             </div>
 
             {/* 3 passaggi */}
-            <div style={{ marginTop: "5mm", flex: 1 }}>
+            <div style={{ marginTop: "3.5mm", flex: 1 }}>
               <div
                 style={{
                   fontFamily: "'Fraunces', Georgia, serif",
@@ -355,16 +355,59 @@ export default function Locandina() {
               ))}
             </div>
 
+            {/* Badge AFFILIATO — ben visibile, con logo e caratteri dell'app */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "3mm",
+                margin: "0 0 2.5mm",
+                padding: "2.5mm 4mm",
+                border: "1.5px solid #FF2E93",
+                borderRadius: "8px",
+                background: "linear-gradient(90deg, rgba(255,46,147,0.14) 0%, rgba(122,92,255,0.14) 50%, rgba(0,229,255,0.14) 100%)",
+              }}
+            >
+              <svg
+                viewBox="0 0 40 32"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                style={{ width: "9mm", height: "7.2mm", display: "block", flexShrink: 0 }}
+              >
+                <path d="M 34.5 3 L 35.8 5.7 L 38.5 7 L 35.8 8.3 L 34.5 11 L 33.2 8.3 L 30.5 7 L 33.2 5.7 Z" fill="#00E5FF" />
+                <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#FF2E93" strokeWidth="2" strokeLinecap="round" />
+                <path d="M 4 27 L 4 11 L 18 11 L 18 14 L 30 14 L 30 27" fill="none" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M 6 26.5 L 6 20 Q 6 16.5 9 16.5 Q 12 16.5 12 20 L 12 26.5" fill="none" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" />
+                <path d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z" fill="#FF2E93" />
+                <path d="M 21 26.5 L 21 20 Q 21 16.5 23.5 16.5 Q 26 16.5 26 20 L 26 26.5" fill="none" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" />
+                <path d="M 27 26.5 L 27 21.5 Q 27 18.5 29 18.5 Q 31 18.5 31 21.5 L 31 26.5" fill="none" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              <div
+                data-testid="affiliate-badge-text"
+                style={{
+                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontSize: "12pt",
+                  fontWeight: 700,
+                  color: "#fff",
+                  lineHeight: 1.15,
+                  textAlign: "center",
+                }}
+              >
+                Questo locale è un affiliato{" "}
+                <span style={{ whiteSpace: "nowrap" }}>Sconti <span style={{ color: "#FF2E93" }}>Roma</span></span>
+              </div>
+            </div>
+
             {/* QR Code + call to action */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "6mm",
-                padding: "5mm",
+                padding: "4mm",
                 background: "rgba(255,255,255,0.98)",
                 borderRadius: "10px",
-                marginTop: "auto",
               }}
             >
               <div
@@ -427,7 +470,7 @@ export default function Locandina() {
             {/* Footer */}
             <div
               style={{
-                marginTop: "2.5mm",
+                marginTop: "2mm",
                 textAlign: "center",
                 fontSize: "7.5pt",
                 color: "rgba(244,244,245,0.4)",
