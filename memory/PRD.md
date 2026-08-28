@@ -241,6 +241,11 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Spazi compressi (divider 3mm, passaggi 3.5mm, QR padding 4mm, footer 2mm) per mantenere il formato A5 su 1 pagina.
   - Verificato con PDF A5 reale (Playwright): Pages 1, size 420x595pt, badge leggibile.
 
+- **[2026-08-28]** **Dashboard Economics (admin)**:
+  - Endpoint `GET /admin/economics` (require_admin_master): abbonati attivi per provider (esclusi scaduti), nuovi del mese, MRR lordo (n×2,99), commissioni stimate (Stripe 1,5%+0,25 / PayPal 3,4%+0,35), netto stimato, netto per abbonato.
+  - Nuovo tab "Economics" in AdminDashboard (`AdminEconomics.jsx`): 4 card KPI + card netto-per-abbonato + card costi fissi (hosting 50 crediti, Resend, OSM, Aruba).
+  - Testato: curl (12 attivi, MRR €35,88, fees €2,96, netto €32,92) + screenshot tab.
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):

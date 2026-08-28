@@ -3638,6 +3638,48 @@ async def admin_geocode_backfill(
     }
 
 
+@api.get("/admin/economics")
+async def admin_economics(user: dict = Depends(require_admin_master)):
+    """Riepilogo economico: abbonati attivi per provider, MRR, commissioni stimate, netto."""
+    PRICE = 2.99
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+    by_provider = {"stripe": 0, "paypal": 0, "other": 0}
+    new_this_month = 0
+    async for s in db.subscriptions.find({"status": "active"}):
+        end = s.get("end_date")
+        try:
+            if end and datetime.fromisoformat(end) < now:
+                continue
+        except Exception:
+            pass
+        p = (s.get("provider") or "other").lower()
+        by_provider[p if p in by_provider else "other"] += 1
+        if (s.get("start_date") or "") >= month_start:
+            new_this_month += 1
+
+    active = sum(by_provider.values())
+    gross = round(active * PRICE, 2)
+    # Commissioni: Stripe carte EU 1.5% + €0.25 · PayPal ~3.4% + €0.35
+    fee_stripe = round(by_provider["stripe"] * (PRICE * 0.015 + 0.25), 2)
+    fee_paypal = round(by_provider["paypal"] * (PRICE * 0.034 + 0.35), 2)
+    fees = round(fee_stripe + fee_paypal, 2)
+    return {
+        "price_eur": PRICE,
+        "active_total": active,
+        "by_provider": by_provider,
+        "new_this_month": new_this_month,
+        "mrr_gross": gross,
+        "fees": {"stripe": fee_stripe, "paypal": fee_paypal, "total": fees},
+        "net_estimated": round(gross - fees, 2),
+        "net_per_sub": {
+            "stripe": round(PRICE - (PRICE * 0.015 + 0.25), 2),
+            "paypal": round(PRICE - (PRICE * 0.034 + 0.35), 2),
+        },
+    }
+
+
 @api.get("/admin/merchants/geocode-issues")
 async def admin_geocode_issues(user: dict = Depends(require_admin_master)):
     """Lista dei merchant che hanno un indirizzo NON geocodificabile (o mai geocodificato).
