@@ -3638,6 +3638,97 @@ async def admin_geocode_backfill(
     }
 
 
+# ---------- Analytics first-party (anonima, GDPR-friendly) ----------
+class TrackEvent(BaseModel):
+    type: Literal["open", "pageview", "click"]
+    name: Optional[str] = Field(None, max_length=60)
+    path: Optional[str] = Field(None, max_length=120)
+
+
+class TrackIn(BaseModel):
+    vid: str = Field(min_length=4, max_length=64)
+    events: List[TrackEvent] = Field(max_length=20)
+
+
+@api.post("/track")
+async def track_events(payload: TrackIn):
+    """Riceve eventi anonimi (nessun dato personale, vid casuale non legato all'account)."""
+    if not payload.events:
+        return {"ok": True}
+    day = _rome_day()
+    now = datetime.now(timezone.utc).isoformat()
+    docs = [{
+        "id": str(uuid.uuid4()),
+        "vid": payload.vid,
+        "type": e.type,
+        "name": e.name or "",
+        "path": e.path or "",
+        "day": day,
+        "created_at": now,
+    } for e in payload.events]
+    await db.analytics_events.insert_many(docs)
+    return {"ok": True}
+
+
+@api.get("/admin/traffic")
+async def admin_traffic(user: dict = Depends(require_admin_master)):
+    """Aggregati ultimi 30 giorni: aperture, visitatori unici, pagine viste, click chiave."""
+    days = [(datetime.now(ROME_TZ) - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(29, -1, -1)]
+    start_day = days[0]
+    match30 = {"day": {"$gte": start_day}}
+
+    counts = {d: {"opens": 0, "pageviews": 0, "clicks": 0} for d in days}
+    async for r in db.analytics_events.aggregate([
+        {"$match": match30},
+        {"$group": {"_id": {"day": "$day", "type": "$type"}, "n": {"$sum": 1}}},
+    ]):
+        d, t = r["_id"]["day"], r["_id"]["type"]
+        if d in counts:
+            counts[d]["opens" if t == "open" else "pageviews" if t == "pageview" else "clicks"] = r["n"]
+
+    visitors = {d: 0 for d in days}
+    async for r in db.analytics_events.aggregate([
+        {"$match": match30},
+        {"$group": {"_id": "$day", "v": {"$addToSet": "$vid"}}},
+        {"$project": {"n": {"$size": "$v"}}},
+    ]):
+        if r["_id"] in visitors:
+            visitors[r["_id"]] = r["n"]
+
+    top_pages = []
+    async for r in db.analytics_events.aggregate([
+        {"$match": {**match30, "type": "pageview"}},
+        {"$group": {"_id": "$path", "n": {"$sum": 1}}},
+        {"$sort": {"n": -1}}, {"$limit": 10},
+    ]):
+        top_pages.append({"path": r["_id"] or "/", "count": r["n"]})
+
+    clicks = []
+    async for r in db.analytics_events.aggregate([
+        {"$match": {**match30, "type": "click"}},
+        {"$group": {"_id": "$name", "n": {"$sum": 1}}},
+        {"$sort": {"n": -1}}, {"$limit": 15},
+    ]):
+        clicks.append({"name": r["_id"] or "?", "count": r["n"]})
+
+    today = days[-1]
+    return {
+        "days": days,
+        "series": {
+            "opens": [counts[d]["opens"] for d in days],
+            "pageviews": [counts[d]["pageviews"] for d in days],
+            "visitors": [visitors[d] for d in days],
+        },
+        "today": {"opens": counts[today]["opens"], "visitors": visitors[today], "pageviews": counts[today]["pageviews"]},
+        "totals_30d": {
+            "opens": sum(c["opens"] for c in counts.values()),
+            "pageviews": sum(c["pageviews"] for c in counts.values()),
+        },
+        "top_pages": top_pages,
+        "clicks": clicks,
+    }
+
+
 @api.get("/admin/economics")
 async def admin_economics(user: dict = Depends(require_admin_master)):
     """Riepilogo economico: abbonati attivi per provider, MRR, commissioni stimate, netto."""

@@ -1,3 +1,4 @@
+import { trackClick } from "@/lib/analytics";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api, { formatApiError } from "@/lib/api";
@@ -84,6 +85,7 @@ export default function DiscountDetail() {
     if (!subActive) return nav("/subscribe");
     try {
       const { data } = await api.post(`/redemptions/create/${id}`);
+      trackClick("qr_generated");
       setRedemption(data.redemption);
       setDialogOpen(true);
       // Immediately fetch first token

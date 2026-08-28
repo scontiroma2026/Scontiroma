@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import LegalFooter from "@/components/LegalFooter";
 import CookieBanner from "@/components/CookieBanner";
 import AppFeedbackBanner from "@/components/AppFeedbackBanner";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
@@ -44,6 +45,7 @@ function App() {
   return (
     <div className="App bg-cream min-h-screen">
       <BrowserRouter>
+        <AnalyticsTracker />
         <AuthProvider>
           <Navbar />
           <Routes>

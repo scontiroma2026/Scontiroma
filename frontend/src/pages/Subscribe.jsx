@@ -1,3 +1,4 @@
+import { trackClick } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api, { formatApiError } from "@/lib/api";
@@ -23,6 +24,7 @@ export default function Subscribe() {
   useEffect(() => { refresh(); }, []);
 
   const startCheckout = async () => {
+    trackClick("subscribe_click");
     setLoading(true);
     try {
       const { data } = await api.post("/payments/checkout", { origin_url: window.location.origin });

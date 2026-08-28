@@ -1,3 +1,4 @@
+import { trackClick } from "@/lib/analytics";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { MapPin, ArrowRight, Zap, TrendingUp } from "lucide-react";
@@ -8,7 +9,7 @@ export default function DiscountCard({ discount }) {
   const savings = (discount.original_price - discount.discounted_price).toFixed(2);
   const sales = discount.sales_this_month ?? 0;
   return (
-    <Link to={`/discounts/${discount.id}`} data-testid={`discount-card-${discount.id}`} className="group block">
+    <Link to={`/discounts/${discount.id}`} data-testid={`discount-card-${discount.id}`} className="group block" onClick={() => trackClick("discount_click")}>
       <Card className="overflow-hidden border-white/10 bg-white/5 backdrop-blur transition-all hover:-translate-y-1 hover:border-fucsia hover:shadow-[0_0_40px_rgba(255,46,147,0.3)]">
         <div className="relative aspect-[4/3] overflow-hidden">
           <img

@@ -1,3 +1,4 @@
+import { trackClick } from "@/lib/analytics";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -22,6 +23,7 @@ export default function Locandina() {
   // altrimenti il browser ricade su serif di sistema e "Sconti Roma" cambia
   // completamente aspetto (utente ha segnalato "non si legge neanche ROMA").
   const openPrint = async () => {
+    trackClick("flyer_print");
     try {
       if (document?.fonts?.load) {
         await Promise.all([

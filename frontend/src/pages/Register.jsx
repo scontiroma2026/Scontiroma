@@ -1,3 +1,4 @@
+import { trackClick } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -46,6 +47,7 @@ export default function Register() {
 
   const submit = async (e) => {
     e.preventDefault();
+    trackClick("register_started");
     if (!acceptedLegal) {
       toast.error("Devi accettare Termini, Privacy e Cookie Policy per continuare");
       return;

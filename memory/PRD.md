@@ -246,6 +246,13 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
   - Nuovo tab "Economics" in AdminDashboard (`AdminEconomics.jsx`): 4 card KPI + card netto-per-abbonato + card costi fissi (hosting 50 crediti, Resend, OSM, Aruba).
   - Testato: curl (12 attivi, MRR €35,88, fees €2,96, netto €32,92) + screenshot tab.
 
+- **[2026-08-28]** **Analytics first-party (aperture, pagine, click)**:
+  - `POST /api/track` (pubblico, batch max 20, eventi Literal open/pageview/click, vid anonimo) → collection `analytics_events` (day = Rome). `GET /admin/traffic` (require_admin_master): serie 30gg (aperture, visitatori unici via addToSet, pageviews), top 10 pagine, click chiave, KPI oggi.
+  - Frontend: `lib/analytics.js` (vid casuale in localStorage NON legato all'account, coda batch + sendBeacon su pagehide, apertura 1x per sessione), `AnalyticsTracker` nel router (open + pageview per rotta).
+  - Click tracciati: subscribe_click (Subscribe), qr_generated (redeem), register_started (Register), flyer_print (Locandina), discount_click (DiscountCard).
+  - Nuovo tab admin "Traffico" (`AdminTraffic.jsx`): 4 KPI, 2 grafici a barre CSS 30gg, top pagine, click chiave con label italiane.
+  - Testato: curl (track ok, validazione 422, aggregati corretti) + screenshot con dati LIVE (3 visitatori, pagine e click reali).
+
 ## Prioritized Backlog
 
 - **[2026-02-26 T14:09]** Locandina print fix + QR redirect (bug commerciante):
