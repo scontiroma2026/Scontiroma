@@ -16,6 +16,7 @@ import bcrypt
 import base64
 import hmac as hmac_lib
 import hashlib
+import calendar
 import json as _json
 import stripe
 import jwt
@@ -31,6 +32,7 @@ from email_service import (
     send_grace_period_reminder,
     send_subscription_cancelled,
     send_master_reset,
+    send_next_offer_reminder,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
@@ -381,6 +383,51 @@ def parse_rotating_code(raw: str):
 
 def current_month_key() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m")
+
+
+# ---------- Offerta Mese Prossimo: helpers ----------
+NEXT_OFFER_WINDOW_DAYS = 7
+
+MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+           "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+
+DISCOUNT_CONTENT_FIELDS = ("title", "description", "original_price", "discounted_price",
+                           "image_url", "image_urls", "terms", "plan_ahead", "validity_info",
+                           "additional_info", "active", "max_uses_per_month")
+
+
+def next_month_key() -> str:
+    now = datetime.now(ZoneInfo("Europe/Rome"))
+    y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
+    return f"{y}-{m:02d}"
+
+
+def month_label_it(key: str) -> str:
+    y, m = key.split("-")
+    return f"{MESI_IT[int(m) - 1]} {y}"
+
+
+async def next_offer_window() -> dict:
+    """Finestra caricamento offerta mese prossimo: ultimi 7 giorni del mese corrente.
+    Override manuale admin via db.settings {key: 'next_offer_window_override'}."""
+    now = datetime.now(ZoneInfo("Europe/Rome"))
+    last_day = calendar.monthrange(now.year, now.month)[1]
+    opens_day = last_day - (NEXT_OFFER_WINDOW_DAYS - 1)
+    is_open = now.day >= opens_day
+    override = await db.settings.find_one({"key": "next_offer_window_override"})
+    overridden = bool(override and isinstance(override.get("value"), bool))
+    if overridden:
+        is_open = override["value"]
+    nk = next_month_key()
+    return {
+        "open": is_open,
+        "overridden": overridden,
+        "opens_on": f"{opens_day:02d}/{now.month:02d}/{now.year}",
+        "days_to_month_end": last_day - now.day,
+        "current_month": current_month_key(),
+        "next_month": nk,
+        "next_month_label": month_label_it(nk),
+    }
 
 
 # ---------- Auth Routes ----------
@@ -797,6 +844,7 @@ async def enrich_discount(d: dict) -> dict:
     d.setdefault("approval_note", "")
     d.setdefault("force_editable", False)
     d.setdefault("max_uses_per_month", 1)
+    d.setdefault("expired_at", None)
     # Galleria foto (max 8) — se mancante, fallback al singolo image_url
     if not isinstance(d.get("image_urls"), list) or not d.get("image_urls"):
         d["image_urls"] = [d["image_url"]] if d.get("image_url") else []
@@ -1050,6 +1098,7 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data["locked_month"] = None
         data["approved_at"] = None
         data["force_editable"] = False
+        data["expired_at"] = None
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
     else:
@@ -1071,6 +1120,45 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         await db.discounts.insert_one(doc)
         d = doc
     return {"discount": await enrich_discount(d)}
+
+
+# ---------- Offerta Mese Prossimo (merchant) ----------
+def _enrich_next(nd: dict) -> dict:
+    d = {k: v for k, v in nd.items() if k != "_id"}
+    try:
+        d["percent_off"] = round(((d["original_price"] - d["discounted_price"]) / d["original_price"]) * 100)
+    except Exception:
+        d["percent_off"] = 0
+    return d
+
+
+@api.get("/merchants/me/next-discount")
+async def merchant_get_next_discount(user: dict = Depends(require_merchant)):
+    window = await next_offer_window()
+    nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
+    return {"next_discount": _enrich_next(nd) if nd else None, "window": window}
+
+
+@api.post("/merchants/me/next-discount")
+async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depends(require_merchant)):
+    window = await next_offer_window()
+    if not window["open"]:
+        raise HTTPException(423, f"La finestra per caricare l'offerta di {window['next_month_label']} si apre il {window['opens_on']} (ultimi 7 giorni del mese).")
+    data = payload.cleaned()
+    if not data.get("title") or not data.get("description"):
+        raise HTTPException(422, "Titolo e descrizione sono obbligatori")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    data.update({"approval_status": "pending", "approval_note": "", "approved_at": None, "updated_at": now_iso})
+    existing = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
+    if existing:
+        await db.next_discounts.update_one({"id": existing["id"]}, {"$set": data})
+        nd = await db.next_discounts.find_one({"id": existing["id"]})
+    else:
+        data.update({"id": str(uuid.uuid4()), "merchant_id": user["id"],
+                     "target_month": window["next_month"], "created_at": now_iso})
+        await db.next_discounts.insert_one(data)
+        nd = data
+    return {"next_discount": _enrich_next(nd), "window": window}
 
 
 @api.put("/merchants/me/profile")
@@ -2546,6 +2634,103 @@ async def admin_force_edit(discount_id: str, user: dict = Depends(require_admin_
     return {"ok": True}
 
 
+# ---------- Admin: Offerte Mese Prossimo ----------
+class WindowOverrideIn(BaseModel):
+    open: Optional[bool] = None  # None = torna alla regola automatica (ultimi 7 giorni)
+
+
+@api.get("/admin/next-offers")
+async def admin_next_offers(user: dict = Depends(require_admin_master)):
+    window = await next_offer_window()
+    nm = window["next_month"]
+    merchants = await db.users.find({"role": "merchant"}).sort("shop_name", 1).to_list(1000)
+    next_by_mid = {d["merchant_id"]: d async for d in db.next_discounts.find({"target_month": nm})}
+    curr_by_mid = {d["merchant_id"]: d async for d in db.discounts.find({})}
+    rows = []
+    summary = {"total": 0, "approved": 0, "pending": 0, "rejected": 0, "missing": 0}
+    for m in merchants:
+        mid = m["id"]
+        nd = next_by_mid.get(mid)
+        cd = curr_by_mid.get(mid)
+        st = (nd.get("approval_status") if nd else "missing") or "pending"
+        summary["total"] += 1
+        summary[st if st in summary else "missing"] += 1
+        rows.append({
+            "merchant_id": mid,
+            "shop_name": m.get("shop_name") or m.get("name"),
+            "zone": m.get("zone"),
+            "category": m.get("category"),
+            "email": m.get("email"),
+            "reminder_sent": m.get("next_offer_reminder_month") == nm,
+            "current_offer": ({
+                "title": cd.get("title"),
+                "active": cd.get("active", True),
+                "approval_status": cd.get("approval_status", "approved"),
+            } if cd else None),
+            "next_offer": _enrich_next(nd) if nd else None,
+            "next_status": st,
+        })
+    order = {"pending": 0, "rejected": 1, "missing": 2, "approved": 3}
+    rows.sort(key=lambda r: order.get(r["next_status"], 4))
+    return {"window": window, "rows": rows, "summary": summary}
+
+
+@api.post("/admin/next-offers/{next_id}/approve")
+async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_admin_master)):
+    now_iso = datetime.now(timezone.utc).isoformat()
+    result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
+        "approval_status": "approved", "approved_at": now_iso, "approval_note": ""}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Offerta non trovata")
+    nd = await db.next_discounts.find_one({"id": next_id})
+    try:
+        m = await db.users.find_one({"id": nd.get("merchant_id")})
+        if m and m.get("email"):
+            await send_merchant_approved(m["email"], m.get("name") or "commerciante",
+                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "")
+    except Exception as e:
+        logging.warning(f"next-offer approve email failed: {e}")
+    return {"next_discount": _enrich_next(nd)}
+
+
+@api.post("/admin/next-offers/{next_id}/reject")
+async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = Depends(require_admin_master)):
+    result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
+        "approval_status": "rejected", "approval_note": payload.reason or "", "approved_at": None}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Offerta non trovata")
+    try:
+        nd = await db.next_discounts.find_one({"id": next_id})
+        m = await db.users.find_one({"id": nd.get("merchant_id")}) if nd else None
+        if m and m.get("email"):
+            await send_merchant_rejected(m["email"], m.get("name") or "commerciante",
+                                         m.get("shop_name") or "il tuo negozio",
+                                         nd.get("title") or "", payload.reason or "")
+    except Exception as e:
+        logging.warning(f"next-offer reject email failed: {e}")
+    return {"ok": True}
+
+
+@api.post("/admin/next-offers/window-override")
+async def admin_next_window_override(payload: WindowOverrideIn, user: dict = Depends(require_admin_master)):
+    if payload.open is None:
+        await db.settings.delete_one({"key": "next_offer_window_override"})
+    else:
+        await db.settings.update_one({"key": "next_offer_window_override"},
+                                     {"$set": {"value": bool(payload.open)}}, upsert=True)
+    return {"window": await next_offer_window()}
+
+
+@api.post("/admin/next-offers/run-rollover")
+async def admin_run_rollover(user: dict = Depends(require_admin_master)):
+    return await _run_month_rollover(force=True)
+
+
+@api.post("/admin/next-offers/run-reminders")
+async def admin_run_next_reminders(user: dict = Depends(require_admin_master)):
+    return await _run_next_offer_reminders()
+
+
 @api.get("/admin/merchants")
 async def admin_list_merchants(user: dict = Depends(require_admin_master)):
     docs = await db.users.find({"role": "merchant"}).sort("created_at", -1).to_list(500)
@@ -2822,6 +3007,101 @@ async def _run_grace_reminders() -> dict:
     return {"checked": len(subs), "sent": sent}
 
 
+# ============================================================
+# Offerta Mese Prossimo — rollover mensile + promemoria
+# ============================================================
+
+async def _run_month_rollover(force: bool = False) -> dict:
+    """Passaggio mese (1° alle 00:05 Europe/Rome):
+    - offerta mese prossimo APPROVATA → sostituisce quella corrente (attiva + locked)
+    - offerta mese prossimo pending/rejected → diventa la bozza in revisione del nuovo mese
+    - offerta corrente senza sostituzione → scade (negozio senza offerta finché non ne carica una)
+    Le versioni sostituite/scadute vengono archiviate in `discounts_archive`.
+    Idempotente via `rollover_runs` (bypass con force=True)."""
+    month = current_month_key()
+    if not force and await db.rollover_runs.find_one({"month": month}):
+        return {"skipped": True, "month": month}
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
+
+    async def _archive(old: dict, reason: str):
+        doc = {k: v for k, v in old.items() if k != "_id"}
+        doc.update({"archived_at": now_iso, "archive_reason": reason})
+        await db.discounts_archive.insert_one(doc)
+
+    handled = set()
+    promoted = migrated = expired = 0
+    next_docs = await db.next_discounts.find({"target_month": month}).to_list(None)
+    for nd in next_docs:
+        mid = nd["merchant_id"]
+        handled.add(mid)
+        content = {k: nd.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in nd}
+        st = nd.get("approval_status") or "pending"
+        if st == "approved":
+            sets = {**content, "updated_at": now_iso, "approval_status": "approved",
+                    "approved_at": nd.get("approved_at") or now_iso, "locked_month": month,
+                    "approval_note": "", "force_editable": False, "expired_at": None}
+            promoted += 1
+        else:
+            sets = {**content, "updated_at": now_iso, "approval_status": st,
+                    "approval_note": nd.get("approval_note", ""), "approved_at": None,
+                    "locked_month": None, "force_editable": False, "expired_at": None}
+            migrated += 1
+        existing = await db.discounts.find_one({"merchant_id": mid})
+        if existing:
+            await _archive(existing, "replaced_by_next_month")
+            await db.discounts.update_one({"id": existing["id"]}, {"$set": sets})
+        else:
+            sets.update({"id": str(uuid.uuid4()), "merchant_id": mid, "created_at": now_iso})
+            await db.discounts.insert_one(sets)
+        await db.next_discounts.delete_one({"id": nd["id"]})
+
+    # Offerte del mese precedente senza sostituzione → scadono
+    stale = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
+    for d in stale:
+        if d["merchant_id"] in handled or d.get("locked_month") == month:
+            continue
+        await _archive(d, "expired_no_replacement")
+        await db.discounts.update_one({"id": d["id"]}, {"$set": {
+            "active": False, "approval_status": "expired", "expired_at": now_iso,
+            "locked_month": None, "updated_at": now_iso}})
+        expired += 1
+    logging.info(f"[rollover] month={month} promoted={promoted} migrated={migrated} expired={expired}")
+    return {"skipped": False, "month": month, "promoted": promoted,
+            "migrated_pending": migrated, "expired": expired}
+
+
+async def _run_next_offer_reminders() -> dict:
+    """Email 'la tua offerta scade tra N giorni' ai merchant con offerta attiva che
+    non hanno ancora caricato quella del mese prossimo. Idempotente via
+    users.next_offer_reminder_month. Invia solo a finestra aperta."""
+    window = await next_offer_window()
+    if not window["open"]:
+        return {"window_open": False, "sent": 0}
+    nm = window["next_month"]
+    uploaded = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
+    days_left = window["days_to_month_end"] + 1
+    sent = checked = 0
+    actives = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
+    for d in actives:
+        mid = d["merchant_id"]
+        checked += 1
+        if mid in uploaded:
+            continue
+        m = await db.users.find_one({"id": mid})
+        if not m or not m.get("email") or m.get("next_offer_reminder_month") == nm:
+            continue
+        try:
+            await send_next_offer_reminder(m["email"], m.get("name") or "",
+                                           m.get("shop_name") or "il tuo negozio",
+                                           window["next_month_label"], days_left)
+            await db.users.update_one({"id": mid}, {"$set": {"next_offer_reminder_month": nm}})
+            sent += 1
+        except Exception as e:
+            logging.error(f"[next-offer-reminder] send failed merchant={mid[:8]}: {e}")
+    return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm}
+
+
 def _start_scheduler() -> None:
     global _scheduler
     if _scheduler is not None:
@@ -2834,8 +3114,22 @@ def _start_scheduler() -> None:
         id="grace_reminders_daily",
         replace_existing=True,
     )
+    # Promemoria "carica offerta mese prossimo" — ogni giorno 09:30 (invia solo in finestra, idempotente)
+    _scheduler.add_job(
+        _run_next_offer_reminders,
+        CronTrigger(hour=9, minute=30),
+        id="next_offer_reminders_daily",
+        replace_existing=True,
+    )
+    # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
+    _scheduler.add_job(
+        _run_month_rollover,
+        CronTrigger(day=1, hour=0, minute=5),
+        id="month_rollover",
+        replace_existing=True,
+    )
     _scheduler.start()
-    logging.info("[scheduler] AsyncIOScheduler avviato — grace reminders alle 10:00 Europe/Rome")
+    logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, next-offer reminders 09:30, rollover 1° 00:05 Europe/Rome")
 
 
 def _stop_scheduler() -> None:

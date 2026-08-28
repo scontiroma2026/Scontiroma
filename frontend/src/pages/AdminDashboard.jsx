@@ -20,6 +20,7 @@ import AdminRecoveryId from "@/components/admin/AdminRecoveryId";
 import AdminAppFeedback from "@/components/admin/AdminAppFeedback";
 import AdminEconomics from "@/components/admin/AdminEconomics";
 import AdminTraffic from "@/components/admin/AdminTraffic";
+import AdminNextMonth from "@/components/admin/AdminNextMonth";
 
 /**
  * AdminDashboard — orchestratore snello.
@@ -114,6 +115,7 @@ export default function AdminDashboard() {
     ["subscribers", "Abbonati"],
     ["referrals", "Referral QR"],
     ["pending", `Offerte in attesa (${pending.length})`],
+    ["nextmonth", "Prossimo Mese"],
     ["merchants", `Negozi (${merchants.length})`],
     ["fraud", "Registro Frodi"],
     ["reviews", "Feedback"],
@@ -167,6 +169,7 @@ export default function AdminDashboard() {
       {tab === "subscribers" && <AdminSubscribers hdrs={hdrs} />}
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}
       {tab === "pending" && <AdminPending pending={pending} hdrs={hdrs} onRefresh={loadData} />}
+      {tab === "nextmonth" && <AdminNextMonth hdrs={hdrs} />}
       {tab === "merchants" && (
         <AdminMerchantsTable
           merchants={merchants}

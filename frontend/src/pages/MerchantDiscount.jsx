@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
@@ -8,39 +9,62 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle, CalendarClock, CalendarPlus } from "lucide-react";
 import PhotoGallery from "@/components/PhotoGallery";
+
+const EMPTY_FORM = {
+  title: "", description: "", original_price: "", discounted_price: "",
+  image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
+  plan_ahead: "", validity_info: "", additional_info: "",
+};
+
+const formFrom = (d) => ({
+  title: d.title, description: d.description,
+  original_price: d.original_price, discounted_price: d.discounted_price,
+  image_url: d.image_url || "",
+  image_urls: Array.isArray(d.image_urls) ? d.image_urls : (d.image_url ? [d.image_url] : []),
+  terms: d.terms || "", active: d.active,
+  max_uses_per_month: d.max_uses_per_month || 1,
+  plan_ahead: d.plan_ahead || "",
+  validity_info: d.validity_info || "",
+  additional_info: d.additional_info || "",
+});
 
 export default function MerchantDiscount() {
   const { user } = useAuth();
-  const [form, setForm] = useState({
-    title: "", description: "", original_price: "", discounted_price: "",
-    image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
-    plan_ahead: "", validity_info: "", additional_info: "",
-  });
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState(searchParams.get("tab") === "next" ? "next" : "current");
+  const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState(null);
+  const [nextOffer, setNextOffer] = useState(null);
+  const [win, setWin] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(mode); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
-  const load = async () => {
-    const r = await api.get("/merchants/me/discount");
-    const d = r.data.discount;
-    if (d) {
-      setExisting(d);
-      setForm({
-        title: d.title, description: d.description,
-        original_price: d.original_price, discounted_price: d.discounted_price,
-        image_url: d.image_url || "",
-        image_urls: Array.isArray(d.image_urls) ? d.image_urls : (d.image_url ? [d.image_url] : []),
-        terms: d.terms || "", active: d.active,
-        max_uses_per_month: d.max_uses_per_month || 1,
-        plan_ahead: d.plan_ahead || "",
-        validity_info: d.validity_info || "",
-        additional_info: d.additional_info || "",
-      });
-    }
+  const load = async (targetMode) => {
+    const [cur, nxt] = await Promise.all([
+      api.get("/merchants/me/discount"),
+      api.get("/merchants/me/next-discount"),
+    ]);
+    const c = cur.data.discount;
+    const n = nxt.data.next_discount;
+    setExisting(c);
+    setNextOffer(n);
+    setWin(nxt.data.window);
+    if (targetMode === "next") setForm(n ? formFrom(n) : (c ? formFrom(c) : EMPTY_FORM));
+    else setForm(c ? formFrom(c) : EMPTY_FORM);
   };
+
+  const switchMode = (m) => {
+    if (m === mode) return;
+    setMode(m);
+    if (m === "next") setForm(nextOffer ? formFrom(nextOffer) : (existing ? formFrom(existing) : EMPTY_FORM));
+    else setForm(existing ? formFrom(existing) : EMPTY_FORM);
+  };
+
+  const isNext = mode === "next";
+  const monthLabel = win?.next_month_label || "il mese prossimo";
 
   const submit = async (e) => {
     e.preventDefault();
@@ -58,9 +82,14 @@ export default function MerchantDiscount() {
       if (payload.discounted_price >= payload.original_price) {
         toast.error("Il prezzo scontato deve essere inferiore all'originale"); setLoading(false); return;
       }
-      await api.post("/merchants/me/discount", payload);
-      toast.success("Offerta inviata! Attende approvazione dell'amministratore.");
-      load();
+      if (isNext) {
+        await api.post("/merchants/me/next-discount", payload);
+        toast.success(`Offerta di ${monthLabel} inviata! Attende approvazione dell'amministratore.`);
+      } else {
+        await api.post("/merchants/me/discount", payload);
+        toast.success("Offerta inviata! Attende approvazione dell'amministratore.");
+      }
+      load(mode);
     } catch (err) {
       toast.error(formatApiError(err));
     } finally { setLoading(false); }
@@ -68,19 +97,48 @@ export default function MerchantDiscount() {
 
   const upd = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-  const status = existing?.approval_status;
-  const locked = existing?.locked_this_month;
-  const readOnly = locked;
+  const status = isNext ? nextOffer?.approval_status : existing?.approval_status;
+  const locked = !isNext && existing?.locked_this_month;
+  const windowClosed = isNext && win && !win.open;
+  const readOnly = isNext ? windowClosed : locked;
 
   return (
     <main data-testid="merchant-discount-page" className="mx-auto max-w-3xl px-6 py-12 text-white">
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">Il tuo sconto</div>
-        <h1 className="mt-2 font-serif text-5xl">{existing ? "La tua offerta" : "Crea la tua offerta"}</h1>
+        <h1 className="mt-2 font-serif text-5xl">
+          {isNext ? `Offerta di ${monthLabel}` : (existing ? "La tua offerta" : "Crea la tua offerta")}
+        </h1>
       </div>
 
-      {/* Status banner */}
-      {status === "pending" && (
+      {/* Tab: offerta corrente vs mese prossimo */}
+      <div className="mb-6 inline-flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
+        <button
+          type="button"
+          data-testid="offer-tab-current"
+          onClick={() => switchMode("current")}
+          className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+            !isNext ? "grad-fucsia-viola text-white" : "text-white/60 hover:text-white"
+          }`}
+        >
+          Offerta del mese
+        </button>
+        <button
+          type="button"
+          data-testid="offer-tab-next"
+          onClick={() => switchMode("next")}
+          className={`relative rounded-full px-5 py-2 text-sm font-semibold transition ${
+            isNext ? "bg-ciano text-black" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <CalendarPlus size={14} className="inline mr-1.5 -mt-0.5" />
+          Mese prossimo{win ? ` · ${monthLabel}` : ""}
+          {nextOffer && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-fucsia" />}
+        </button>
+      </div>
+
+      {/* ---- Banner offerta corrente ---- */}
+      {!isNext && status === "pending" && (
         <Card data-testid="banner-pending" className="mb-6 border-neon/40 bg-neon/10 p-5">
           <div className="flex items-start gap-3">
             <Clock className="text-neon shrink-0 mt-0.5" size={20} />
@@ -93,20 +151,33 @@ export default function MerchantDiscount() {
           </div>
         </Card>
       )}
-      {status === "approved" && locked && (
+      {!isNext && status === "approved" && locked && (
         <Card data-testid="banner-locked" className="mb-6 border-fucsia/40 bg-fucsia/10 p-5">
           <div className="flex items-start gap-3">
             <Lock className="text-fucsia shrink-0 mt-0.5" size={20} />
             <div>
               <div className="font-serif text-xl text-white">Offerta attiva per questo mese</div>
               <p className="text-sm text-white/70 mt-1">
-                Potrai inserire o modificare la nuova offerta a partire dal <strong className="text-fucsia">1° del mese prossimo</strong>. Se hai un errore grave, contatta l'amministratore per uno sblocco.
+                Negli <strong className="text-ciano">ultimi 7 giorni del mese</strong> potrai caricare qui l'offerta per {monthLabel} dal tab "Mese prossimo". Se hai un errore grave, contatta l'amministratore per uno sblocco.
               </p>
             </div>
           </div>
         </Card>
       )}
-      {status === "rejected" && (
+      {!isNext && status === "expired" && (
+        <Card data-testid="banner-expired" className="mb-6 border-gold/40 bg-gold/10 p-5">
+          <div className="flex items-start gap-3">
+            <CalendarClock className="text-gold shrink-0 mt-0.5" size={20} />
+            <div>
+              <div className="font-serif text-xl text-white">Offerta scaduta a fine mese</div>
+              <p className="text-sm text-white/70 mt-1">
+                Il tuo negozio è senza offerta attiva. Compila e invia una nuova offerta per tornare visibile nel catalogo.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+      {!isNext && status === "rejected" && (
         <Card data-testid="banner-rejected" className="mb-6 border-destructive/40 bg-destructive/10 p-5">
           <div className="flex items-start gap-3">
             <XCircle className="text-destructive shrink-0 mt-0.5" size={20} />
@@ -124,13 +195,85 @@ export default function MerchantDiscount() {
           </div>
         </Card>
       )}
-      {status === "approved" && !locked && existing?.force_editable && (
+      {!isNext && status === "approved" && !locked && existing?.force_editable && (
         <Card data-testid="banner-override" className="mb-6 border-ciano/40 bg-ciano/10 p-5">
           <div className="flex items-start gap-3">
             <AlertTriangle className="text-ciano shrink-0 mt-0.5" size={20} />
             <div>
               <div className="font-serif text-xl text-white">Sblocco amministratore</div>
               <p className="text-sm text-white/70 mt-1">L'amministratore ti ha concesso una modifica straordinaria. Salvando, l'offerta tornerà in revisione.</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* ---- Banner offerta mese prossimo ---- */}
+      {isNext && windowClosed && (
+        <Card data-testid="banner-next-closed" className="mb-6 border-gold/40 bg-gold/10 p-5">
+          <div className="flex items-start gap-3">
+            <CalendarClock className="text-gold shrink-0 mt-0.5" size={20} />
+            <div>
+              <div className="font-serif text-xl text-white">Finestra di caricamento chiusa</div>
+              <p className="text-sm text-white/70 mt-1">
+                Potrai caricare l'offerta di <strong className="text-gold">{monthLabel}</strong> a partire dal <strong className="text-gold">{win?.opens_on}</strong>, negli ultimi 7 giorni del mese.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+      {isNext && !windowClosed && !nextOffer && (
+        <Card data-testid="banner-next-new" className="mb-6 border-ciano/40 bg-ciano/10 p-5">
+          <div className="flex items-start gap-3">
+            <CalendarPlus className="text-ciano shrink-0 mt-0.5" size={20} />
+            <div>
+              <div className="font-serif text-xl text-white">Prepara l'offerta di {monthLabel}</div>
+              <p className="text-sm text-white/70 mt-1">
+                Il modulo è precompilato con l'offerta attuale: modifica quello che vuoi. Dopo l'approvazione dell'amministratore, <strong className="text-ciano">il 1° del mese sostituirà automaticamente</strong> l'offerta corrente. Se non la carichi, il negozio resterà senza offerta.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+      {isNext && !windowClosed && nextOffer?.approval_status === "pending" && (
+        <Card data-testid="banner-next-pending" className="mb-6 border-neon/40 bg-neon/10 p-5">
+          <div className="flex items-start gap-3">
+            <Clock className="text-neon shrink-0 mt-0.5" size={20} />
+            <div>
+              <div className="font-serif text-xl text-white">Offerta di {monthLabel} in revisione</div>
+              <p className="text-sm text-white/70 mt-1">
+                L'amministratore la sta esaminando. Una volta approvata, diventerà attiva automaticamente il 1° del mese. Puoi ancora modificarla.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+      {isNext && !windowClosed && nextOffer?.approval_status === "approved" && (
+        <Card data-testid="banner-next-approved" className="mb-6 border-fucsia/40 bg-fucsia/10 p-5">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="text-fucsia shrink-0 mt-0.5" size={20} />
+            <div>
+              <div className="font-serif text-xl text-white">Offerta di {monthLabel} approvata ✓</div>
+              <p className="text-sm text-white/70 mt-1">
+                Il 1° del mese sostituirà automaticamente l'offerta corrente. Se la modifichi ora, tornerà in revisione.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+      {isNext && !windowClosed && nextOffer?.approval_status === "rejected" && (
+        <Card data-testid="banner-next-rejected" className="mb-6 border-destructive/40 bg-destructive/10 p-5">
+          <div className="flex items-start gap-3">
+            <XCircle className="text-destructive shrink-0 mt-0.5" size={20} />
+            <div>
+              <div className="font-serif text-xl text-white">Offerta di {monthLabel} rifiutata</div>
+              <p className="text-sm text-white/70 mt-1">
+                Modifica i dati e ri-invia per una nuova revisione.
+                {nextOffer?.approval_note && (
+                  <span className="block mt-2 rounded-md bg-black/40 border border-white/10 p-2 text-white/80">
+                    <strong className="text-destructive">Motivo:</strong> {nextOffer.approval_note}
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         </Card>
@@ -235,16 +378,20 @@ export default function MerchantDiscount() {
               </div>
               <Switch data-testid="disc-active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
-            <Button data-testid="disc-submit" type="submit" disabled={loading || readOnly} size="lg" className="w-full grad-fucsia-viola text-white rounded-full py-6">
-              {readOnly ? <><Lock size={16} className="mr-2" /> Modifiche bloccate questo mese</> :
-                loading ? "Salvataggio…" :
-                existing ? "Aggiorna e ri-invia in revisione" : "Pubblica (in revisione)"}
+            <Button data-testid="disc-submit" type="submit" disabled={loading || readOnly} size="lg" className={`w-full text-white rounded-full py-6 ${isNext ? "bg-ciano text-black hover:bg-ciano/90" : "grad-fucsia-viola"}`}>
+              {isNext
+                ? (windowClosed ? <><Lock size={16} className="mr-2" /> Finestra chiusa — apre il {win?.opens_on}</>
+                  : loading ? "Salvataggio…"
+                  : nextOffer ? `Aggiorna offerta di ${monthLabel} (torna in revisione)` : `Invia offerta di ${monthLabel} (in revisione)`)
+                : (readOnly ? <><Lock size={16} className="mr-2" /> Modifiche bloccate questo mese</>
+                  : loading ? "Salvataggio…"
+                  : existing ? "Aggiorna e ri-invia in revisione" : "Pubblica (in revisione)")}
             </Button>
           </form>
         </fieldset>
       </Card>
 
-      {status === "approved" && !locked && (
+      {!isNext && status === "approved" && !locked && (
         <p className="mt-4 text-center text-xs text-white/50">
           <CheckCircle2 size={12} className="inline mr-1 text-fucsia" /> Offerta approvata e visibile agli utenti
         </p>

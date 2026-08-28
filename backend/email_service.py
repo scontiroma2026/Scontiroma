@@ -115,6 +115,20 @@ async def send_merchant_rejected(to: str, name: str, shop_name: str, discount_ti
     return await _send(to, "Offerta da rivedere — Sconti Roma", _shell(inner))
 
 
+async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_label: str, days_left: int = 7) -> Optional[str]:
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La tua offerta scadrà tra {days_left} giorni ⏳</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8">L'offerta di <strong>{shop_name}</strong> su Sconti Roma è valida solo fino alla fine del mese. La finestra di caricamento è aperta: <strong style="color:#00E5FF">inserisci ora la nuova offerta per {month_label}</strong>.</p>
+<p style="margin:0 0 24px;color:#d4d4d8">Se non carichi la nuova offerta entro la fine del mese, il tuo negozio resterà <strong style="color:#FF2E93">senza offerta attiva</strong> finché non ne pubblichi una.</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/merchant/discount?tab=next" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Carica l'offerta di {month_label}</a>
+</div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">L'offerta nuova sarà revisionata dall'amministratore e diventerà attiva il 1° del mese.</p>
+"""
+    return await _send(to, f"La tua offerta scade tra {days_left} giorni — carica quella di {month_label}", _shell(inner))
+
+
 async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optional[str] = None) -> Optional[str]:
     """Email mensile agli abbonati per annunciare i nuovi sconti del mese.
     Usa un template bulletproof (table-based) compatibile con Gmail / Outlook / Apple Mail,

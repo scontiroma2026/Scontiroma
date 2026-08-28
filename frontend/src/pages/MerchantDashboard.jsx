@@ -8,6 +8,7 @@ import { QrCode, TicketPercent, Users, TrendingUp } from "lucide-react";
 import GdprSection from "@/components/GdprSection";
 import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
+import NextOfferCard from "@/components/NextOfferCard";
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
@@ -94,6 +95,10 @@ export default function MerchantDashboard() {
             </div>
           )}
         </Card>
+      </div>
+
+      <div className="mt-6">
+        <NextOfferCard />
       </div>
 
       <div className="mt-10">
