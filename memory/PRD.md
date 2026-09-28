@@ -255,6 +255,14 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 
 ## Prioritized Backlog
 
+- **[2026-09-28]** Revisione completa offerte mese prossimo + ricerca admin globale:
+  - **Vista completa (admin, tab Prossimo Mese)**: riga espandibile "Rivedi offerta completa" → mostra PRIMA i dati del commerciante (referente, email, telefono+WhatsApp, indirizzo, P.IVA se presente), poi TUTTA l'offerta (galleria foto, descrizione con grassetto, prezzi/%/usi mese/attiva, termini, pianifica in anticipo, inclusioni, info aggiuntive), e SOLO in fondo i pulsanti Approva/Rifiuta/Modifica (scelta utente: dati visibili prima di approvare).
+  - **Modifica manuale admin**: `PUT /api/admin/next-offers/{id}` (`AdminNextOfferUpdate`, tutti i campi) — salvando torna SEMPRE `pending` e va ri-approvata (scelta utente). Modale completa in `AdminNextMonth.jsx`.
+  - **Ricerca in tutti i tab admin**: nuovo componente `AdminSearchInput.jsx` aggiunto a Prossimo Mese, Offerte in attesa, Negozi, Registro Frodi, Feedback, Feedback App, Log completo (Abbonati e Referral QR l'avevano già). Filtri client-side per nome/zona/email/titolo/motivo/commento.
+  - **FIX CRITICO — rollover catch-up al riavvio**: il pod era spento il 1° settembre → il cron rollover era andato perso e le offerte di settembre approvate erano rimaste orfane. Ora `on_startup` esegue `_run_month_rollover()` (idempotente via `rollover_runs`) e la query promuove `target_month <= mese corrente`. Al riavvio: 2 promosse (Trattoria, Ristorante celiaco), 18 offerte di agosto non rinnovate scadute (regola scelta dall'utente).
+  - GET `/admin/next-offers` arricchito con blocco `merchant` {name, email, phone, address, piva, zone, category}.
+  - Test: PUT→pending verificato via curl; screenshot UI: ricerca (trattoria→1 riga; aurora→1 riga in Negozi), dettaglio espanso completo, modale modifica. Offerta demo di ottobre creata per la Trattoria (pending).
+
 - **[2026-08-28]** Offerta Mese Prossimo (ciclo mensile completo):
   - **Merchant**: tab "Mese prossimo" in `MerchantDiscount.jsx` (stesso form, precompilato dall'offerta corrente) + `NextOfferCard.jsx` nella dashboard. Caricabile solo negli **ultimi 7 giorni del mese** (altrimenti 423). Ogni salvataggio → `pending`.
   - **Backend**: collection `next_discounts` (target_month), endpoint `GET/POST /api/merchants/me/next-discount`, helper `next_offer_window()` (override admin via `db.settings`), `_run_month_rollover()` (cron 1° del mese 00:05 Europe/Rome: approvate → sostituiscono l'offerta corrente attiva+locked; pending/rejected → migrate come bozza in revisione; correnti senza sostituzione → `approval_status=expired`, active=False; vecchie versioni archiviate in `discounts_archive`; idempotente via `rollover_runs`), `_run_next_offer_reminders()` (cron 09:30: email "la tua offerta scade tra N giorni" ai merchant attivi senza offerta nuova, idempotente via `users.next_offer_reminder_month`), email `send_next_offer_reminder`.

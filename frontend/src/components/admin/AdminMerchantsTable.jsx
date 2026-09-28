@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Check, X, Trash2, Edit3 } from "lucide-react";
 import { toast } from "sonner";
+import AdminSearchInput from "@/components/admin/AdminSearchInput";
 
 /**
  * Tab "Negozi" — tabella gestione commercianti & sconti con azioni inline
@@ -23,6 +24,14 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   const [form, setForm] = useState({});
   const [discEdit, setDiscEdit] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [q, setQ] = useState("");
+
+  const needle = q.trim().toLowerCase();
+  const filteredMerchants = needle
+    ? merchants.filter((m) =>
+        [m.shop_name, m.email, m.zone, m.category, m.address, m.discount_title, m.phone]
+          .filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
+    : merchants;
 
   const startEdit = (m) => {
     setEditing(m.id);
@@ -135,10 +144,15 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
 
   return (
     <Card className="border-white/10 bg-white/5 p-6">
-      <h3 className="font-serif text-2xl">Gestione commercianti & offerte</h3>
-      <p className="text-xs text-white/50 mt-1">
-        Modifica, elimina, approva/rifiuta. Tutte le azioni sono immediate.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-serif text-2xl">Gestione commercianti & offerte</h3>
+          <p className="text-xs text-white/50 mt-1">
+            Modifica, elimina, approva/rifiuta. Tutte le azioni sono immediate.
+          </p>
+        </div>
+        <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio, email, zona…" testId="merchants-search" />
+      </div>
 
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-sm">
@@ -153,7 +167,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             </tr>
           </thead>
           <tbody>
-            {merchants.map((m) => (
+            {filteredMerchants.map((m) => (
               <MerchantRow
                 key={m.id}
                 m={m}

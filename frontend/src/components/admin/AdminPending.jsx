@@ -1,14 +1,17 @@
+import { useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
+import AdminSearchInput from "@/components/admin/AdminSearchInput";
 
 /**
  * Tab "Offerte in attesa": lista degli sconti pending con Approva / Rifiuta inline.
  * `hdrs` è la factory di headers admin master del parent. `onRefresh` ricarica i dati.
  */
 export default function AdminPending({ pending, hdrs, onRefresh }) {
+  const [q, setQ] = useState("");
   const approve = async (id) => {
     try {
       await api.post(`/admin/discounts/${id}/approve`, {}, hdrs());
@@ -30,19 +33,31 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
     }
   };
 
+  const needle = q.trim().toLowerCase();
+  const filtered = needle
+    ? pending.filter((d) =>
+        [d.title, d.description, d.merchant?.shop_name, d.merchant?.zone, d.category]
+          .filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
+    : pending;
+
   return (
     <Card className="border-white/10 bg-white/5 p-6">
-      <h3 className="font-serif text-2xl">Offerte in attesa di approvazione</h3>
-      <p className="text-xs text-white/50 mt-1">
-        Approva per pubblicare subito, o rifiuta per rimandare in bozza al commerciante.
-      </p>
-      {pending.length === 0 ? (
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-serif text-2xl">Offerte in attesa di approvazione</h3>
+          <p className="text-xs text-white/50 mt-1">
+            Approva per pubblicare subito, o rifiuta per rimandare in bozza al commerciante.
+          </p>
+        </div>
+        <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio o offerta…" testId="pending-search" />
+      </div>
+      {filtered.length === 0 ? (
         <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-10 text-center text-white/60">
-          🎉 Nessuna offerta in attesa. Ottimo lavoro!
+          {q ? `Nessuna offerta trovata per "${q}".` : "🎉 Nessuna offerta in attesa. Ottimo lavoro!"}
         </div>
       ) : (
         <div className="mt-4 space-y-3">
-          {pending.map((d) => (
+          {filtered.map((d) => (
             <div
               key={d.id}
               data-testid={`pending-${d.id}`}

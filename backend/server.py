@@ -2661,6 +2661,15 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
             "zone": m.get("zone"),
             "category": m.get("category"),
             "email": m.get("email"),
+            "merchant": {
+                "name": m.get("name"),
+                "email": m.get("email"),
+                "phone": m.get("phone"),
+                "address": m.get("address"),
+                "piva": m.get("piva") or m.get("vat_number"),
+                "zone": m.get("zone"),
+                "category": m.get("category"),
+            },
             "reminder_sent": m.get("next_offer_reminder_month") == nm,
             "current_offer": ({
                 "title": cd.get("title"),
@@ -2709,6 +2718,40 @@ async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = 
     except Exception as e:
         logging.warning(f"next-offer reject email failed: {e}")
     return {"ok": True}
+
+
+class AdminNextOfferUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    original_price: Optional[float] = None
+    discounted_price: Optional[float] = None
+    image_url: Optional[str] = None
+    image_urls: Optional[List[str]] = None
+    terms: Optional[str] = None
+    plan_ahead: Optional[str] = None
+    validity_info: Optional[str] = None
+    additional_info: Optional[str] = None
+    active: Optional[bool] = None
+    max_uses_per_month: Optional[int] = Field(default=None, ge=1, le=10)
+
+
+@api.put("/admin/next-offers/{next_id}")
+async def admin_update_next_offer(next_id: str, payload: AdminNextOfferUpdate, user: dict = Depends(require_admin_master)):
+    """Modifica manuale admin: l'offerta torna sempre in revisione (pending)."""
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(400, "Nessuna modifica")
+    updates.update({
+        "approval_status": "pending",
+        "approved_at": None,
+        "approval_note": "",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    })
+    result = await db.next_discounts.update_one({"id": next_id}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Offerta non trovata")
+    nd = await db.next_discounts.find_one({"id": next_id})
+    return {"next_discount": _enrich_next(nd)}
 
 
 @api.post("/admin/next-offers/window-override")
@@ -3031,7 +3074,8 @@ async def _run_month_rollover(force: bool = False) -> dict:
 
     handled = set()
     promoted = migrated = expired = 0
-    next_docs = await db.next_discounts.find({"target_month": month}).to_list(None)
+    # $lte: recupera anche eventuali offerte di mesi mai promossi (pod spento al 1°)
+    next_docs = await db.next_discounts.find({"target_month": {"$lte": month}}).to_list(None)
     for nd in next_docs:
         mid = nd["merchant_id"]
         handled.add(mid)
@@ -3157,6 +3201,14 @@ async def on_startup():
     await seed_data()
     await ensure_master_doc()
     _start_scheduler()
+    # Catch-up rollover: se il pod era spento il 1° del mese alle 00:05, il job cron
+    # è andato perso. Idempotente via rollover_runs: gira solo se non già eseguito.
+    try:
+        res = await _run_month_rollover()
+        if not res.get("skipped"):
+            logging.info(f"[rollover:catchup] eseguito al riavvio: {res}")
+    except Exception as e:
+        logging.error(f"[rollover:catchup] failed: {e}")
 
 
 @app.on_event("shutdown")
