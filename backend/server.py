@@ -39,8 +39,10 @@ from email_service import (
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 from pydantic import BaseModel, EmailStr, Field
 from webauthn import (
@@ -586,14 +588,65 @@ async def set_pin(payload: PinIn, user: dict = Depends(get_current_user)):
     return {"ok": True}
 
 
+PIN_MAX_ATTEMPTS = 5
+PIN_LOCK_MINUTES = 15
+PIN_RESET_MAX_ATTEMPTS = 5
+RESET_REQ_MIN_GAP_SEC = 60
+RESET_REQ_MAX_PER_HOUR = 5
+
+
+async def _register_user_failure(user_id: str, prefix: str, max_attempts: int, lock_minutes: int) -> None:
+    """Conta un tentativo fallito in modo atomico ($inc con ritorno del documento)
+    e blocca l'account per `lock_minutes` al raggiungimento di `max_attempts`."""
+    doc = await db.users.find_one_and_update(
+        {"id": user_id},
+        {"$inc": {f"{prefix}_failed_attempts": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if doc and doc.get(f"{prefix}_failed_attempts", 0) >= max_attempts:
+        until = (datetime.now(timezone.utc) + timedelta(minutes=lock_minutes)).isoformat()
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {f"{prefix}_locked_until": until, f"{prefix}_failed_attempts": 0}},
+        )
+
+
+async def _reset_request_allowed(user: dict, key: str) -> bool:
+    """Anti-abuso sulle richieste di reset (password/PIN): almeno RESET_REQ_MIN_GAP_SEC
+    secondi tra due richieste e al massimo RESET_REQ_MAX_PER_HOUR all'ora, per account.
+    Evita di inondare di email un utente e di consumare il limite giornaliero di Resend."""
+    now = datetime.now(timezone.utc)
+    stamps = []
+    for raw in (user.get(key) or []):
+        try:
+            t = datetime.fromisoformat(raw)
+        except Exception:
+            continue
+        if (now - t).total_seconds() < 3600:
+            stamps.append(t)
+    stamps.sort()
+    if stamps and (now - stamps[-1]).total_seconds() < RESET_REQ_MIN_GAP_SEC:
+        return False
+    if len(stamps) >= RESET_REQ_MAX_PER_HOUR:
+        return False
+    stamps.append(now)
+    await db.users.update_one({"id": user["id"]}, {"$set": {key: [t.isoformat() for t in stamps]}})
+    return True
+
+
 @api.post("/auth/pin-login")
 async def pin_login(payload: PinLoginIn, response: Response):
     if not payload.pin.isdigit():
         raise HTTPException(422, "PIN non valido")
     email = payload.email.lower().strip()
     u = await db.users.find_one({"email": email})
+    if u:
+        _lock_check(u, "pin_locked_until")
     if not u or not u.get("pin_hash") or not verify_password(payload.pin, u["pin_hash"]):
+        if u and u.get("pin_hash"):
+            await _register_user_failure(u["id"], "pin", PIN_MAX_ATTEMPTS, PIN_LOCK_MINUTES)
         raise HTTPException(401, "Credenziali non valide")
+    await db.users.update_one({"id": u["id"]}, {"$set": {"pin_failed_attempts": 0, "pin_locked_until": None}})
     access = create_token(u["id"], u["email"], "access")
     refresh = create_token(u["id"], u["email"], "refresh")
     set_auth_cookies(response, access, refresh)
@@ -614,12 +667,13 @@ class PinResetIn(BaseModel):
 async def pin_forgot(payload: PinForgotIn):
     email = payload.email.lower().strip()
     u = await db.users.find_one({"email": email})
-    if u:
+    if u and await _reset_request_allowed(u, "pin_reset_req_log"):
         code = f"{secrets.randbelow(1_000_000):06d}"
         expires = datetime.now(timezone.utc) + timedelta(minutes=10)
         await db.users.update_one({"id": u["id"]}, {"$set": {
             "pin_reset_code_hash": hash_password(code),
             "pin_reset_expires": expires.isoformat(),
+            "pin_reset_attempts": 0,
         }})
         try:
             from email_service import send_pin_reset_code
@@ -644,10 +698,21 @@ async def pin_reset(payload: PinResetIn):
     if exp < datetime.now(timezone.utc):
         raise HTTPException(400, "Codice scaduto, richiedine uno nuovo.")
     if not verify_password(payload.code, u["pin_reset_code_hash"]):
+        upd = await db.users.find_one_and_update(
+            {"id": u["id"]}, {"$inc": {"pin_reset_attempts": 1}},
+            return_document=ReturnDocument.AFTER,
+        )
+        if (upd or {}).get("pin_reset_attempts", 0) >= PIN_RESET_MAX_ATTEMPTS:
+            # Troppi tentativi: il codice viene invalidato, serve richiederne uno nuovo.
+            await db.users.update_one({"id": u["id"]}, {
+                "$unset": {"pin_reset_code_hash": "", "pin_reset_expires": ""},
+            })
+            raise HTTPException(429, "Troppi tentativi. Richiedi un nuovo codice.")
         raise HTTPException(401, "Codice non valido.")
     await db.users.update_one({"id": u["id"]}, {
-        "$set": {"pin_hash": hash_password(payload.new_pin), "pin_set": True},
-        "$unset": {"pin_reset_code_hash": "", "pin_reset_expires": ""},
+        "$set": {"pin_hash": hash_password(payload.new_pin), "pin_set": True,
+                 "pin_failed_attempts": 0, "pin_locked_until": None},
+        "$unset": {"pin_reset_code_hash": "", "pin_reset_expires": "", "pin_reset_attempts": ""},
     })
     return {"ok": True, "message": "PIN aggiornato. Ora puoi accedere."}
 
@@ -776,7 +841,7 @@ async def forgot_password(payload: ForgotIn):
     u = await db.users.find_one({"email": email})
     # Risposta identica sia se l'utente esiste sia se no (anti-enumeration).
     # Il token viene SOLO inviato per email tramite Resend, MAI restituito nella response.
-    if u:
+    if u and await _reset_request_allowed(u, "reset_req_log"):
         token = secrets.token_urlsafe(32)
         expires = datetime.now(timezone.utc) + timedelta(hours=1)
         await db.users.update_one({"id": u["id"]}, {"$set": {
@@ -2110,12 +2175,14 @@ async def qr_verify_public(token: str):
         if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
             await _log_scan(False, "Limite giornaliero: cliente ha già usato lo sconto oggi", r)
             return {"valid": False, "reason": "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi", "daily_limit": True}
-        await db.redemptions.update_one(
+        res = await db.redemptions.update_one(
             {"id": r["id"], "status": "pending"},
             {"$set": {"status": "redeemed",
                       "redeemed_at": datetime.now(timezone.utc).isoformat()}}
         )
-        await _log_scan(True, "OK", r)
+        # Con due scansioni simultanee vince una sola: il log di successo va scritto una volta.
+        if res.modified_count == 1:
+            await _log_scan(True, "OK", r)
     # Fetch enriched data
     disc = await db.discounts.find_one({"id": r.get("discount_id")})
     m = await db.users.find_one({"id": r.get("merchant_id")})
@@ -4348,6 +4415,33 @@ if not cors_origins:
     # combinazione. In sviluppo locale accetta il frontend classico su :3000.
     logging.warning("CORS_ORIGINS non impostato: uso fallback dev http://localhost:3000")
     cors_origins = ["http://localhost:3000"]
+CSRF_ORIGIN_MODE = os.environ.get("CSRF_ORIGIN_MODE", "log").strip().lower()  # off | log | enforce
+
+
+@app.middleware("http")
+async def origin_check_middleware(request: Request, call_next):
+    """Difesa CSRF: i cookie sono SameSite=None, quindi un sito terzo potrebbe far
+    partire richieste POST/PUT/PATCH/DELETE a nome di un utente loggato. I browser
+    inviano sempre l'header Origin su queste richieste: se non e' il nostro sito
+    (stesso host o CORS_ORIGINS) la richiesta e' sospetta. Le chiamate server-to-server
+    (webhook Stripe/PayPal) non hanno Origin e passano.
+    Modalita': off | log (default, solo avviso nei log) | enforce (blocca con 403)."""
+    if CSRF_ORIGIN_MODE != "off" and request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        origin = request.headers.get("origin")
+        if origin and origin not in cors_origins:
+            from urllib.parse import urlparse as _urlparse
+            o_host = (_urlparse(origin).netloc or "").lower()
+            hosts = {
+                (request.headers.get("host") or "").lower(),
+                (request.headers.get("x-forwarded-host") or "").split(",")[0].strip().lower(),
+            }
+            if o_host not in hosts:
+                logging.warning(f"[csrf] Origin non riconosciuto: {origin} su {request.method} {request.url.path}")
+                if CSRF_ORIGIN_MODE == "enforce":
+                    return JSONResponse({"detail": "Origine non consentita"}, status_code=403)
+    return await call_next(request)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
