@@ -22,6 +22,9 @@ import stripe
 import jwt
 import asyncio
 import httpx
+import ipaddress
+import socket
+from urllib.parse import urlparse, urljoin
 from email_service import (
     send_password_reset,
     send_merchant_approved,
@@ -3610,6 +3613,52 @@ class ImageEnhanceIn(BaseModel):
     category: Optional[str] = None  # es. "Ristorante", "Palestra" — aiuta il prompt
 
 
+_MAX_REMOTE_IMAGE_BYTES = 8 * 1024 * 1024
+
+
+async def _assert_public_http_url(url: str) -> None:
+    """Anti-SSRF: accetta solo http(s) verso host che risolvono a IP pubblici.
+    Blocca localhost, reti private, link-local (es. metadata cloud 169.254.169.254)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise HTTPException(400, "URL immagine non valido")
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(
+            parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80),
+            type=socket.SOCK_STREAM,
+        )
+    except socket.gaierror:
+        raise HTTPException(400, "Host immagine non raggiungibile")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+                or ip.is_multicast or ip.is_unspecified):
+            raise HTTPException(400, "URL immagine non consentito")
+
+
+async def _fetch_public_image(url: str, max_redirects: int = 3) -> bytes:
+    """Scarica un'immagine da un URL pubblico. I redirect sono seguiti a mano
+    e ogni salto viene ri-validato; il download e' limitato in dimensione."""
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+        for _ in range(max_redirects + 1):
+            await _assert_public_http_url(url)
+            async with client.stream("GET", url, headers={"User-Agent": "ScontiRomaBot/1.0"}) as r:
+                if r.is_redirect:
+                    loc = r.headers.get("location")
+                    if not loc:
+                        raise HTTPException(400, "Redirect non valido")
+                    url = urljoin(url, loc)
+                    continue
+                r.raise_for_status()
+                buf = bytearray()
+                async for chunk in r.aiter_bytes():
+                    buf.extend(chunk)
+                    if len(buf) > _MAX_REMOTE_IMAGE_BYTES:
+                        raise HTTPException(413, "Immagine troppo grande (max 8MB)")
+                return bytes(buf)
+    raise HTTPException(400, "Troppi redirect")
+
+
 @api.post("/ai/enhance-image")
 async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require_merchant)):
     """Riottimizza una foto usando Gemini Nano Banana (image-to-image).
@@ -3629,10 +3678,7 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
             header, b64 = raw_url.split(",", 1)
             image_bytes = _b64.b64decode(b64)
         else:
-            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-                r = await client.get(raw_url, headers={"User-Agent": "ScontiRomaBot/1.0"})
-                r.raise_for_status()
-                image_bytes = r.content
+            image_bytes = await _fetch_public_image(raw_url)
         if len(image_bytes) > 8 * 1024 * 1024:
             raise HTTPException(413, "Immagine troppo grande (max 8MB)")
         if len(image_bytes) < 200:

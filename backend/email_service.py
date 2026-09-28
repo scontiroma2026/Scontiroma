@@ -7,12 +7,21 @@ e loggano soltanto (non blocca il flusso applicativo).
 """
 import os
 import asyncio
+import html
 import logging
 from typing import Optional
 
 import resend
 
 log = logging.getLogger(__name__)
+
+
+def _esc(value) -> str:
+    """Escape testo fornito dall'utente prima di inserirlo in un template HTML
+    email (nome, nome negozio, titolo offerta, motivo di rifiuto...). Senza
+    questo, un commerciante potrebbe mettere HTML/link di phishing in un campo
+    e farlo finire intatto in un'email ufficiale inviata a tutti gli abbonati."""
+    return html.escape(str(value or ""), quote=True)
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
@@ -58,6 +67,7 @@ def _shell(inner: str, title: str = "Sconti Roma") -> str:
 
 
 async def send_password_reset(to: str, name: str, token: str) -> Optional[str]:
+    name = _esc(name)
     link = f"{APP_URL}/reset-password?token={token}"
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Recupera la tua password</h2>
@@ -88,6 +98,7 @@ async def send_master_reset(to: str, token: str) -> Optional[str]:
 
 
 async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str) -> Optional[str]:
+    name, shop_name, discount_title = _esc(name), _esc(shop_name), _esc(discount_title)
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
@@ -101,6 +112,7 @@ async def send_merchant_approved(to: str, name: str, shop_name: str, discount_ti
 
 
 async def send_merchant_rejected(to: str, name: str, shop_name: str, discount_title: str, reason: str) -> Optional[str]:
+    name, shop_name, discount_title, reason = _esc(name), _esc(shop_name), _esc(discount_title), _esc(reason)
     reason_html = f'<div style="background:#1a1a20;border:1px solid #ef4444;border-radius:8px;padding:12px 16px;margin:12px 0;color:#fecaca"><strong>Motivo:</strong> {reason}</div>' if reason else ""
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta rifiutata</h2>
@@ -116,6 +128,7 @@ async def send_merchant_rejected(to: str, name: str, shop_name: str, discount_ti
 
 
 async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_label: str, days_left: int = 7) -> Optional[str]:
+    name, shop_name, month_label = _esc(name), _esc(shop_name), _esc(month_label)
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La tua offerta scadrà tra {days_left} giorni ⏳</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
@@ -134,7 +147,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
     Usa un template bulletproof (table-based) compatibile con Gmail / Outlook / Apple Mail,
     con bottone arancione (#FF6B35) grande e cliccabile su tutti i client.
     """
-    safe_name = (name or "").strip() or "abbonato"
+    safe_name = _esc((name or "").strip() or "abbonato")
     link = cta_url or f"{APP_URL}/discounts"
     html = f"""<!doctype html>
 <html lang="it">
@@ -214,7 +227,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
 
 async def send_pin_reset_code(to: str, name: str, code: str) -> Optional[str]:
     """Email con codice OTP a 6 cifre per resettare il PIN. Valido 10 minuti."""
-    safe_name = (name or "").strip() or "utente"
+    safe_name = _esc((name or "").strip() or "utente")
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Recupero PIN</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {safe_name},</p>
@@ -238,7 +251,7 @@ async def send_payment_failed_immediate(
     Informa l'utente che l'abbonamento è sospeso ma può ancora essere salvato
     entro 7 giorni aggiornando il metodo di pagamento.
     """
-    safe_name = (name or "").strip() or "abbonato"
+    safe_name = _esc((name or "").strip() or "abbonato")
     try:
         from datetime import datetime as _dt
         dt = _dt.fromisoformat(grace_expires_iso.replace("Z", "+00:00"))
@@ -293,7 +306,7 @@ async def send_grace_period_reminder(
     Ultimo push per convincere l'utente ad aggiornare il metodo di pagamento
     prima della cancellazione automatica.
     """
-    safe_name = (name or "").strip() or "abbonato"
+    safe_name = _esc((name or "").strip() or "abbonato")
     try:
         from datetime import datetime as _dt
         dt = _dt.fromisoformat(grace_expires_iso.replace("Z", "+00:00"))
@@ -344,7 +357,7 @@ async def send_subscription_cancelled(
     """Email finale inviata quando la grace period scade e l'abbonamento
     viene cancellato definitivamente. Include CTA per riabbonarsi.
     """
-    safe_name = (name or "").strip() or "abbonato"
+    safe_name = _esc((name or "").strip() or "abbonato")
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il tuo abbonamento è stato annullato</h2>
 <p style="margin:0 0 16px;color:#d4d4d8;font-size:16px">Ciao {safe_name},</p>
@@ -388,7 +401,7 @@ async def send_renewal_receipt(
     """Email di ricevuta mensile inviata quando l'abbonamento si rinnova con successo.
     Chiamata dai webhook Stripe (invoice.payment_succeeded) e PayPal (PAYMENT.SALE.COMPLETED).
     """
-    safe_name = (name or "").strip() or "abbonato"
+    safe_name = _esc((name or "").strip() or "abbonato")
     # Formatta la nuova data di scadenza in italiano leggibile
     try:
         from datetime import datetime as _dt
