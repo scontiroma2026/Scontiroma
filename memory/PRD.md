@@ -255,6 +255,17 @@ Vorrei creare un app di sconti. Raggruppare uno prodotto scontato per ogni eserc
 
 ## Prioritized Backlog
 
+- **[2026-09-28 T2]** 8 correzioni di sicurezza backend (da repo GitHub utente, diff 149e7fc→7a0b80b, applicate in modo mirato):
+  1. Anti brute-force login: `LOGIN_MAX_ATTEMPTS=5`, `LOGIN_LOCK_MINUTES=15`, `_register_login_failure()`, `_lock_check(user,"login_locked_until")`, reset contatori a login ok.
+  2. `extend_subscription_on_renewal`: idempotenza atomica via insert_one iniziale + `DuplicateKeyError`; update finale di `new_end_date`.
+  3. `create_redemption`: insert in try/except DuplicateKeyError → ritorna il pending vincente o 409.
+  4. `verify_redemption`: update atomico con filtro `status:"pending"`; modified_count==0 → 400 "Codice già utilizzato".
+  5. Indici unique in on_startup: `renewal_events.provider_event_id` + `redemptions(user_id,merchant_id,month_key)` partial su status=pending. Nessun duplicato trovato nei dati (0 rimossi).
+  6. Rimosso import `status` inutilizzato; logging.warning nel fallback Stripe checkout-status.
+  7. `paypal_service.verify_webhook` fail-closed: `_require()` prima, PAYPAL_WEBHOOK_ID mancante → log.error + False.
+  8. `email_service._esc()` (html.escape) su nome/shop/titolo/reason/month_label in tutte le send_*; anti-SSRF su `/ai/enhance-image` con `_assert_public_http_url` + `_fetch_public_image` (redirect manuali max 3, streaming 8MB/413).
+  - **Verificato**: avvio pulito, indici creati, 5 login errati → blocco 15 min (anche con pw giusta), 127.0.0.1/169.254.169.254/file:// → 400. Test user sbloccato dopo il test.
+
 - **[2026-09-28]** Revisione completa offerte mese prossimo + ricerca admin globale:
   - **Vista completa (admin, tab Prossimo Mese)**: riga espandibile "Rivedi offerta completa" → mostra PRIMA i dati del commerciante (referente, email, telefono+WhatsApp, indirizzo, P.IVA se presente), poi TUTTA l'offerta (galleria foto, descrizione con grassetto, prezzi/%/usi mese/attiva, termini, pianifica in anticipo, inclusioni, info aggiuntive), e SOLO in fondo i pulsanti Approva/Rifiuta/Modifica (scelta utente: dati visibili prima di approvare).
   - **Modifica manuale admin**: `PUT /api/admin/next-offers/{id}` (`AdminNextOfferUpdate`, tutti i campi) — salvando torna SEMPRE `pending` e va ri-approvata (scelta utente). Modale completa in `AdminNextMonth.jsx`.

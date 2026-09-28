@@ -159,10 +159,16 @@ async def cancel_subscription(sub_id: str, reason: str = "User cancel"):
 
 
 async def verify_webhook(headers: dict, body_json: dict) -> bool:
-    """Verifica firma webhook. In assenza di PAYPAL_WEBHOOK_ID accetta senza verifica (dev)."""
-    if not PAYPAL_WEBHOOK_ID:
-        return True
+    """Verifica la firma del webhook PayPal (fail-closed).
+
+    Se PayPal non è configurato solleva PayPalNotConfigured; se manca
+    PAYPAL_WEBHOOK_ID rifiuta la richiesta. Accettare eventi non verificati
+    permetterebbe a chiunque di falsificare un pagamento e ottenere rinnovi
+    gratuiti."""
     _require()
+    if not PAYPAL_WEBHOOK_ID:
+        log.error("[paypal] PAYPAL_WEBHOOK_ID non configurato: webhook rifiutato")
+        return False
     payload = {
         "transmission_id": headers.get("paypal-transmission-id"),
         "transmission_time": headers.get("paypal-transmission-time"),

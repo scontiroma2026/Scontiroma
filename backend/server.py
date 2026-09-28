@@ -22,6 +22,9 @@ import stripe
 import jwt
 import asyncio
 import httpx
+import ipaddress
+import socket
+from urllib.parse import urlparse, urljoin
 from email_service import (
     send_password_reset,
     send_merchant_approved,
@@ -35,9 +38,10 @@ from email_service import (
     send_next_offer_reminder,
 )
 import paypal_service
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import DuplicateKeyError
 from pydantic import BaseModel, EmailStr, Field
 from webauthn import (
     generate_registration_options, verify_registration_response,
@@ -489,13 +493,39 @@ async def register(payload: RegisterIn, response: Response):
     return {"user": sanitize_user(doc), "access_token": access}
 
 
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_LOCK_MINUTES = 15
+
+
+async def _register_login_failure(email: str) -> None:
+    """Contatore di tentativi falliti per account, stesso pattern usato per la
+    master password admin. Dopo LOGIN_MAX_ATTEMPTS tentativi, blocca l'account
+    per LOGIN_LOCK_MINUTES minuti (anti brute-force)."""
+    await db.users.update_one({"email": email}, {"$inc": {"login_failed_attempts": 1}})
+    u = await db.users.find_one({"email": email})
+    if (u or {}).get("login_failed_attempts", 0) >= LOGIN_MAX_ATTEMPTS:
+        until = (datetime.now(timezone.utc) + timedelta(minutes=LOGIN_LOCK_MINUTES)).isoformat()
+        await db.users.update_one(
+            {"email": email},
+            {"$set": {"login_locked_until": until, "login_failed_attempts": 0}},
+        )
+
+
 @api.post("/auth/login")
 async def login(payload: LoginIn, response: Response):
     email = payload.email.lower().strip()
     user = await db.users.find_one({"email": email})
+    if user:
+        _lock_check(user, "login_locked_until")
     if not user or not verify_password(payload.password, user["password_hash"]):
+        if user:
+            await _register_login_failure(email)
         raise HTTPException(401, "Credenziali non valide")
 
+    await db.users.update_one(
+        {"email": email},
+        {"$set": {"login_failed_attempts": 0, "login_locked_until": None}},
+    )
     access = create_token(user["id"], user["email"], "access")
     refresh = create_token(user["id"], user["email"], "refresh")
     set_auth_cookies(response, access, refresh)
@@ -1471,9 +1501,22 @@ async def extend_subscription_on_renewal(
     - Aggiorna `users.data_scadenza_abbonamento` per lookup rapido.
     - Ritorna l'ID email Resend (o None).
     """
-    existing = await db.renewal_events.find_one({"provider_event_id": provider_event_id})
-    if existing:
-        logging.info(f"[renewal] event {provider_event_id} già processato, skip")
+    # Prenotazione atomica dell'evento: l'insert fallisce con DuplicateKeyError
+    # se un'altra richiesta concorrente (es. webhook ri-consegnato da Stripe/PayPal)
+    # ha già reclamato lo stesso provider_event_id.
+    try:
+        await db.renewal_events.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "provider": provider,
+            "provider_event_id": provider_event_id,
+            "provider_sub_id": provider_sub_id,
+            "amount_eur": price_eur,
+            "processed_at": datetime.now(timezone.utc).isoformat(),
+            "new_end_date": None,  # aggiornato sotto una volta calcolato
+        })
+    except DuplicateKeyError:
+        logging.info(f"[renewal] event {provider_event_id} già processato (race), skip")
         return None
 
     u = await db.users.find_one({"id": user_id})
@@ -1528,16 +1571,10 @@ async def extend_subscription_on_renewal(
             "grace_expires_at": "",
         }},
     )
-    await db.renewal_events.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "provider": provider,
-        "provider_event_id": provider_event_id,
-        "provider_sub_id": provider_sub_id,
-        "amount_eur": price_eur,
-        "processed_at": now.isoformat(),
-        "new_end_date": new_end_iso,
-    })
+    await db.renewal_events.update_one(
+        {"provider_event_id": provider_event_id},
+        {"$set": {"new_end_date": new_end_iso}},
+    )
 
     email_id = None
     try:
@@ -1612,8 +1649,10 @@ async def payment_status(session_id: str):
                 if result.modified_count > 0 and record.get("user_id"):
                     await mark_subscription_paid(s, record["user_id"])
                 record = await db.payment_transactions.find_one({"session_id": session_id})
-        except Exception:
-            pass
+        except Exception as e:
+            # best-effort: se Stripe non risponde restituiamo comunque lo stato
+            # in DB, ma se questo fallisce ripetutamente vogliamo saperlo.
+            logging.warning(f"[checkout-status] Stripe retrieve fallback failed for session={session_id}: {e}")
     return {
         "session_id": record["session_id"],
         "status": record["status"],
@@ -1916,7 +1955,19 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
         "created_at": datetime.now(timezone.utc).isoformat(),
         "redeemed_at": None,
     }
-    await db.redemptions.insert_one(doc)
+    try:
+        await db.redemptions.insert_one(doc)
+    except DuplicateKeyError:
+        # Due richieste concorrenti (doppio tap, retry di rete): l'indice unique
+        # parziale su (user_id, merchant_id, month_key, status="pending") ha
+        # bloccato la seconda. Restituisci quella che ha vinto la race.
+        pending = await db.redemptions.find_one({
+            "user_id": user["id"], "merchant_id": d["merchant_id"],
+            "month_key": month_key, "status": "pending",
+        })
+        if pending:
+            return {"redemption": {k: v for k, v in pending.items() if k != "_id"}}
+        raise HTTPException(409, "Sconto già in elaborazione, riprova tra poco.")
     return {"redemption": {k: v for k, v in doc.items() if k != "_id"}}
 
 
@@ -2100,10 +2151,15 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
             raise HTTPException(400, "QR code scaduto, chiedi al cliente di aggiornarlo")
         if not hmac_lib.compare_digest(_rotating_hmac(code, slot), token):
             raise HTTPException(400, "QR code non valido (possibile screenshot)")
-    await db.redemptions.update_one(
-        {"id": r["id"]},
+    # Update atomico: la condizione status="pending" è nel filtro. Se due scan
+    # concorrenti dello stesso codice arrivano insieme, solo una vince — la
+    # seconda vede modified_count == 0 e riceve "già utilizzato".
+    result = await db.redemptions.update_one(
+        {"id": r["id"], "status": "pending"},
         {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat()}}
     )
+    if result.modified_count == 0:
+        raise HTTPException(400, "Codice già utilizzato")
     r = await db.redemptions.find_one({"id": r["id"]})
     r = {k: v for k, v in r.items() if k != "_id"}
     disc = await db.discounts.find_one({"id": r["discount_id"]})
@@ -3198,6 +3254,16 @@ async def on_startup():
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
+    # Idempotenza reale dei webhook di rinnovo: l'indice unique fa fallire a
+    # livello DB il secondo insert concorrente dello stesso evento.
+    await db.renewal_events.create_index("provider_event_id", unique=True)
+    # Un solo redemption "pending" per utente/negozio/mese: chiude a livello DB
+    # la race condition di create_redemption.
+    await db.redemptions.create_index(
+        ["user_id", "merchant_id", "month_key"],
+        unique=True,
+        partialFilterExpression={"status": "pending"},
+    )
     await seed_data()
     await ensure_master_doc()
     _start_scheduler()
@@ -3590,6 +3656,52 @@ class ImageEnhanceIn(BaseModel):
     category: Optional[str] = None  # es. "Ristorante", "Palestra" — aiuta il prompt
 
 
+_MAX_REMOTE_IMAGE_BYTES = 8 * 1024 * 1024
+
+
+async def _assert_public_http_url(url: str) -> None:
+    """Anti-SSRF: accetta solo http(s) verso host che risolvono a IP pubblici.
+    Blocca localhost, reti private, link-local (es. metadata cloud 169.254.169.254)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise HTTPException(400, "URL immagine non valido")
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(
+            parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80),
+            type=socket.SOCK_STREAM,
+        )
+    except socket.gaierror:
+        raise HTTPException(400, "Host immagine non raggiungibile")
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+                or ip.is_multicast or ip.is_unspecified):
+            raise HTTPException(400, "URL immagine non consentito")
+
+
+async def _fetch_public_image(url: str, max_redirects: int = 3) -> bytes:
+    """Scarica un'immagine da un URL pubblico. I redirect sono seguiti a mano
+    e ogni salto viene ri-validato; il download è limitato in dimensione."""
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as client:
+        for _ in range(max_redirects + 1):
+            await _assert_public_http_url(url)
+            async with client.stream("GET", url, headers={"User-Agent": "ScontiRomaBot/1.0"}) as r:
+                if r.is_redirect:
+                    loc = r.headers.get("location")
+                    if not loc:
+                        raise HTTPException(400, "Redirect non valido")
+                    url = urljoin(url, loc)
+                    continue
+                r.raise_for_status()
+                buf = bytearray()
+                async for chunk in r.aiter_bytes():
+                    buf.extend(chunk)
+                    if len(buf) > _MAX_REMOTE_IMAGE_BYTES:
+                        raise HTTPException(413, "Immagine troppo grande (max 8MB)")
+                return bytes(buf)
+    raise HTTPException(400, "Troppi redirect")
+
+
 @api.post("/ai/enhance-image")
 async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require_merchant)):
     """Riottimizza una foto usando Gemini Nano Banana (image-to-image).
@@ -3609,10 +3721,7 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
             header, b64 = raw_url.split(",", 1)
             image_bytes = _b64.b64decode(b64)
         else:
-            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-                r = await client.get(raw_url, headers={"User-Agent": "ScontiRomaBot/1.0"})
-                r.raise_for_status()
-                image_bytes = r.content
+            image_bytes = await _fetch_public_image(raw_url)
         if len(image_bytes) > 8 * 1024 * 1024:
             raise HTTPException(413, "Immagine troppo grande (max 8MB)")
         if len(image_bytes) < 200:
