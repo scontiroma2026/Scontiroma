@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, Star, Loader2, Phone } from "lucide-react";
+import AdminSearchInput from "@/components/admin/AdminSearchInput";
 
 function StarsRow({ n }) {
   return (
@@ -16,12 +17,20 @@ function StarsRow({ n }) {
 export default function ReviewsCenter() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     api.get("/admin/reviews")
       .then((r) => setReviews(r.data.reviews || []))
       .finally(() => setLoading(false));
   }, []);
+
+  const needle = q.trim().toLowerCase();
+  const filtered = needle
+    ? reviews.filter((r) =>
+        [r.shop_name, r.discount_title, r.user_name, r.user_email, r.private_comment]
+          .filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
+    : reviews;
 
   return (
     <Card data-testid="reviews-center" className="border-white/10 bg-white/5 p-6">
@@ -31,16 +40,20 @@ export default function ReviewsCenter() {
         <span className="ml-auto text-xs text-white/50">{reviews.length} recensioni · &lt;3⭐ evidenziate in rosso</span>
       </div>
 
+      <div className="mb-4">
+        <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio, utente, commento…" testId="reviews-search" />
+      </div>
+
       {loading && (
         <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-fucsia" size={24}/></div>
       )}
 
-      {!loading && reviews.length === 0 && (
-        <div className="text-center py-10 text-white/50">Ancora nessun feedback ricevuto.</div>
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-10 text-white/50">{q ? `Nessun feedback trovato per "${q}".` : "Ancora nessun feedback ricevuto."}</div>
       )}
 
       <div className="space-y-3">
-        {reviews.map((r) => {
+        {filtered.map((r) => {
           const isNegative = r.stars < 3 && (r.private_comment || "").trim().length > 0;
           const dt = r.created_at ? new Date(r.created_at) : null;
           return (

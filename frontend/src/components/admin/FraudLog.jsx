@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { ShieldAlert, Loader2, AlertTriangle } from "lucide-react";
+import AdminSearchInput from "@/components/admin/AdminSearchInput";
 
 const REASON_COLOR = {
   "QR code scaduto": "bg-yellow-500/15 text-yellow-300 border-yellow-500/40",
@@ -16,12 +17,18 @@ const REASON_COLOR = {
 export default function FraudLog() {
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     api.get("/admin/fraud-log")
       .then((r) => setScans(r.data.scans || []))
       .finally(() => setLoading(false));
   }, []);
+
+  const needle = q.trim().toLowerCase();
+  const filtered = needle
+    ? scans.filter((s) => [s.shop_name, s.reason].filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
+    : scans;
 
   return (
     <Card data-testid="fraud-log-section" className="border-white/10 bg-white/5 p-6">
@@ -38,18 +45,22 @@ export default function FraudLog() {
         </span>
       </div>
 
+      <div className="mb-4">
+        <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio o motivo…" testId="fraud-search" />
+      </div>
+
       {loading && (
         <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-fucsia" size={24}/></div>
       )}
 
-      {!loading && scans.length === 0 && (
+      {!loading && filtered.length === 0 && (
         <div className="text-center py-10 text-white/50">
           <AlertTriangle className="mx-auto mb-2 text-green-400" size={28}/>
-          Nessun tentativo di abuso registrato. Ottimo lavoro!
+          {q ? `Nessun tentativo trovato per "${q}".` : "Nessun tentativo di abuso registrato. Ottimo lavoro!"}
         </div>
       )}
 
-      {!loading && scans.length > 0 && (
+      {!loading && filtered.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -60,7 +71,7 @@ export default function FraudLog() {
               </tr>
             </thead>
             <tbody>
-              {scans.map((s) => {
+              {filtered.map((s) => {
                 const dt = s.timestamp ? new Date(s.timestamp) : null;
                 const color = REASON_COLOR[s.reason] || "bg-red-500/15 text-red-300 border-red-500/40";
                 return (
