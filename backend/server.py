@@ -68,7 +68,7 @@ ACCESS_TTL_MIN = 60 * 24  # 1 day
 REFRESH_TTL_DAYS = 7
 
 # Stripe
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "sk_test_emergent")
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or None
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_299eur"
 
@@ -1498,14 +1498,28 @@ async def suspend_subscription_on_payment_failed(
         arriva, `extend_subscription_on_renewal` rimette status='active' + 30gg)
       - IDEMPOTENTE via collection `renewal_events` chiave `provider_event_id`
     """
-    existing = await db.renewal_events.find_one({"provider_event_id": provider_event_id})
-    if existing:
-        logging.info(f"[payment-failed] event {provider_event_id} già processato, skip")
-        return
-
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
     grace_expires_iso = (now + timedelta(days=7)).isoformat()
+
+    # Prenotazione atomica dell'evento (stesso schema di extend_subscription_on_renewal):
+    # l'insert fallisce con DuplicateKeyError se un webhook ri-consegnato in parallelo
+    # ha già reclamato lo stesso provider_event_id, così la sospensione e l'email
+    # partono una volta sola.
+    try:
+        await db.renewal_events.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "provider": provider,
+            "provider_event_id": provider_event_id,
+            "provider_sub_id": provider_sub_id,
+            "type": "payment_failed",
+            "processed_at": now_iso,
+            "grace_expires_at": grace_expires_iso,
+        })
+    except DuplicateKeyError:
+        logging.info(f"[payment-failed] event {provider_event_id} già processato, skip")
+        return
 
     match = {"user_id": user_id, "provider": provider}
     if provider == "stripe":
@@ -1540,16 +1554,6 @@ async def suspend_subscription_on_payment_failed(
             "grace_expires_at": grace_expires_iso,
         }},
     )
-    await db.renewal_events.insert_one({
-        "id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "provider": provider,
-        "provider_event_id": provider_event_id,
-        "provider_sub_id": provider_sub_id,
-        "type": "payment_failed",
-        "processed_at": now_iso,
-        "grace_expires_at": grace_expires_iso,
-    })
     logging.info(f"[payment-failed] user={user_id[:8]} suspended via {provider} (grace until {grace_expires_iso})")
 
     # Email #1: notifica immediata di pagamento fallito (idempotente via renewal_events)
@@ -3068,6 +3072,12 @@ async def seed_data():
     elif admin_pw and not verify_password(admin_pw, existing_admin.get("password_hash", "")):
         await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hash_password(admin_pw)}})
 
+    # Account demo (cliente + commercianti con password note, scritte nel codice):
+    # creati SOLO se SEED_DEMO_DATA=true. Assente o qualsiasi altro valore → saltati,
+    # così non compaiono mai in un ambiente dove la variabile non è impostata.
+    if os.environ.get("SEED_DEMO_DATA", "").strip().lower() != "true":
+        return
+
     # Seed a test client
     client_email = "cliente@scontiroma.it"
     if not await db.users.find_one({"email": client_email}):
@@ -3335,6 +3345,8 @@ def _stop_scheduler() -> None:
 
 @app.on_event("startup")
 async def on_startup():
+    if not stripe.api_key:
+        logging.warning("STRIPE_SECRET_KEY non impostata: i pagamenti Stripe non funzioneranno")
     await db.users.create_index("email", unique=True)
     await db.users.create_index("id", unique=True)
     await db.discounts.create_index("merchant_id")
@@ -3799,9 +3811,9 @@ async def _fetch_public_image(url: str, max_redirects: int = 3) -> bytes:
 async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require_merchant)):
     """Riottimizza una foto usando Gemini Nano Banana (image-to-image).
     Restituisce un data URL base64 pronto per essere salvato al posto dell'originale."""
-    llm_key = os.environ.get("EMERGENT_LLM_KEY")
-    if not llm_key:
-        raise HTTPException(503, "AI enhancer non configurato (EMERGENT_LLM_KEY mancante)")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key:
+        raise HTTPException(503, "AI enhancer non configurato (GEMINI_API_KEY mancante)")
 
     raw_url = (payload.image_url or "").strip()
     if not raw_url:
@@ -3824,7 +3836,15 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
     except Exception as e:
         raise HTTPException(400, f"Impossibile scaricare l'immagine: {str(e)[:100]}")
 
-    image_b64 = _b64.b64encode(image_bytes).decode("utf-8")
+    # Gemini vuole il MIME type dell'immagine in ingresso: lo ricaviamo dai magic bytes.
+    if image_bytes[:8] == b"\x89PNG\r\n\x1a\n":
+        in_mime = "image/png"
+    elif image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP":
+        in_mime = "image/webp"
+    elif image_bytes[:3] == b"\xff\xd8\xff":
+        in_mime = "image/jpeg"
+    else:
+        raise HTTPException(422, "Formato immagine non supportato (usa JPG, PNG o WEBP)")
 
     # Prompt category-aware
     cat = (payload.category or "").lower()
@@ -3847,23 +3867,32 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
         "Output must look like the same scene shot by a professional photographer with premium equipment."
     )
 
-    from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+    from google import genai
+    from google.genai import types as genai_types
     session_id = f"sconti-enhance-{user['id'][:8]}-{uuid.uuid4().hex[:6]}"
-    chat = LlmChat(
-        api_key=llm_key,
-        session_id=session_id,
-        system_message="You are a professional photo retoucher AI.",
-    ).with_model("gemini", "gemini-3.1-flash-image-preview").with_params(modalities=["image", "text"])
+    client = genai.Client(api_key=gemini_key)
 
     try:
-        _, images = await chat.send_message_multimodal_response(
-            UserMessage(text=prompt, file_contents=[ImageContent(image_b64)])
+        resp = await client.aio.models.generate_content(
+            model="gemini-3.1-flash-image-preview",
+            contents=[prompt, genai_types.Part.from_bytes(data=image_bytes, mime_type=in_mime)],
+            config=genai_types.GenerateContentConfig(
+                system_instruction="You are a professional photo retoucher AI.",
+                response_modalities=["IMAGE", "TEXT"],
+            ),
         )
-        if not images:
+        img = None
+        for cand in resp.candidates or []:
+            for part in (cand.content.parts if cand.content else None) or []:
+                if part.inline_data and part.inline_data.data:
+                    img = part.inline_data
+                    break
+            if img:
+                break
+        if not img:
             raise HTTPException(502, "AI non ha restituito immagini. Riprova con una foto diversa.")
-        img = images[0]
-        mime = img.get("mime_type") or "image/png"
-        data_url = f"data:{mime};base64,{img['data']}"
+        mime = img.mime_type or "image/png"
+        data_url = f"data:{mime};base64,{_b64.b64encode(img.data).decode('utf-8')}"
         return {"enhanced_image_url": data_url, "session_id": session_id, "mime_type": mime}
     except HTTPException:
         raise
