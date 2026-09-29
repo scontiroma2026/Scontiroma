@@ -8,11 +8,12 @@ Alla fine avrai:
 | Cosa | Dove | Indirizzo |
 |---|---|---|
 | Sito | Render (sito statico, gratuito) | `https://scontiroma.it` |
-| Server | Render (Web Service "Starter", ~7 $/mese) | `https://api.scontiroma.it` |
+| Server | Render (Web Service: **Free** in demo, **Starter** al lancio) | `https://api.scontiroma.it` |
 | Database | MongoDB Atlas (piano gratuito M0) | — |
 | Dominio | Aruba (resta dov'è) | — |
 
-> I prezzi sono indicativi: controllali su render.com e mongodb.com prima di confermare.
+> **In demo costa 0 €**: server, sito e database sono tutti su piani gratuiti.
+> Al lancio si passa ai piani a pagamento (vedi *Checklist del lancio* in fondo). I prezzi sono indicativi: controllali su render.com e mongodb.com.
 
 ---
 
@@ -87,7 +88,9 @@ La Pull Request va **unita su `main`** prima della Fase 3.
    - `scontiroma.it` → record **A** con l'IP indicato da Render
    - `www` → record **CNAME** verso l'indirizzo indicato da Render
    - `api` → record **CNAME** verso l'indirizzo indicato da Render
-5. ⚠️ **Non toccare** i record **MX** (le caselle email Aruba) né i record di **Resend** (TXT/CNAME con `resend` o `_domainkey`): servono per le email.
+5. ⚠️ **Non toccare** questi record, servono per le email:
+   - i record **MX** di `scontiroma.it` (le caselle email Aruba)
+   - `resend._domainkey` (TXT), `send` (MX) e `send` (TXT): sono quelli di **Resend**, già verificati
 6. Attendi da pochi minuti a qualche ora. Quando in Render compare *Verified* e il lucchetto, il sito risponde su `https://scontiroma.it`.
 
 > Prova l'app sul telefono **dopo** questo passo. Sugli indirizzi provvisori `…onrender.com` Safari su iPhone blocca i cookie tra sito e server e il login non funziona. Con `scontiroma.it` + `api.scontiroma.it` funziona.
@@ -140,3 +143,32 @@ In Render, servizio `scontiroma-web` → *Settings* → **Pull Request Previews*
 Da quel momento ogni Pull Request su GitHub riceve un link di anteprima del sito da aprire sul telefono prima di unirla.
 
 Limite: l'anteprima mostra la **grafica e i testi** nuovi, ma per sicurezza il server accetta chiamate solo da `scontiroma.it`, quindi nell'anteprima login e dati non funzionano. Per provare anche quelli ti mando le schermate come ora.
+
+---
+
+## Checklist del lancio (quando arrivano i clienti veri)
+
+Obiettivo: stare tranquilli su affidabilità, dati, pagamenti ed email. Costo indicativo al lancio: circa 90–110 €/mese.
+
+### Servizi a pagamento
+- [ ] **Render → `scontiroma-api` → Settings → Instance Type → Starter** (~7 $/mese). Server sempre acceso: i promemoria automatici non saltano più e la prima visita non aspetta.
+- [ ] **MongoDB Atlas → passa a M10** (~57 $/mese) con **backup continui** attivi: se qualcosa va storto si recuperano i dati fino al minuto.
+- [ ] **Resend → piano Pro** (~20 $/mese): il piano gratuito si ferma a 100 email al giorno, e l'email mensile agli abbonati lo supera.
+- [ ] **Google Cloud → budget e avviso di spesa** sul progetto della chiave Gemini.
+
+### Pagamenti veri
+- [ ] **Stripe**: attiva l'account (dati aziendali e IBAN), passa alla modalità **Live**, crea un nuovo webhook Live (stesso indirizzo ed eventi della Fase 5) e aggiorna in Render `STRIPE_SECRET_KEY` (`sk_live_…`) e `STRIPE_WEBHOOK_SECRET`.
+- [ ] **PayPal**: crea l'app **Live**, il webhook Live e aggiorna `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` e `PAYPAL_MODE=live`.
+- [ ] Un abbonamento vero da 2,99 € fatto da te, poi disdetto, per verificare tutto il giro.
+
+### Sicurezza
+- [ ] In Render imposta `CSRF_ORIGIN_MODE=enforce`, dopo aver controllato nei log di qualche giorno che non compaiano righe `[csrf] Origin non riconosciuto` per richieste legittime.
+- [ ] Password admin e master password nuove e lunghe, Recovery ID salvato in un password manager.
+- [ ] Autenticazione a due fattori attiva su GitHub, Render, MongoDB Atlas, Stripe, PayPal, Resend, Google e Aruba.
+
+### Email
+- [ ] Su Aruba aggiungi un record **TXT** `_dmarc` con valore `v=DMARC1; p=none; rua=mailto:info@scontiroma.it`: migliora la consegna delle email (meno spam) ed è richiesto da Gmail per chi invia molte email.
+
+### Controllo
+- [ ] Monitor gratuito (es. UptimeRobot) su `https://api.scontiroma.it/api/` ogni 5 minuti, con avviso via email se il server non risponde.
+- [ ] Render → *Notifications*: avviso via email se un deploy fallisce.

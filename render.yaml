@@ -5,12 +5,15 @@
 # Guida passo passo: MIGRAZIONE.md
 
 services:
-  # ---------- Server FastAPI (sempre acceso: gira lo scheduler dei promemoria) ----------
+  # ---------- Server FastAPI ----------
+  # DEMO: piano "free" (si addormenta dopo ~15 min senza visite, i promemoria
+  # automatici delle 9:30/10:00 possono saltare). AL LANCIO passare a "starter"
+  # o superiore: sempre acceso, così lo scheduler dei promemoria gira sempre.
   - type: web
     name: scontiroma-api
     runtime: python
     region: frankfurt
-    plan: starter
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
