@@ -9,14 +9,14 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://deal-bundle.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
 MASTER_PW = os.environ.get("TEST_ADMIN_MASTER_PASSWORD", "")
 JWT_SECRET = os.environ.get(
     "TEST_JWT_SECRET",
     "7bf1620c584ce701c6eaa055faa0d7599172631b3a4203ad6d68e950d50b1e6b",
 )
-FRONTEND_URL = "https://deal-bundle.preview.emergentagent.com"
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
 
 
 def month_key():

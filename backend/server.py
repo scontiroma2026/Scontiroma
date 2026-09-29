@@ -517,9 +517,13 @@ LOGIN_LOCK_MINUTES = 15
 async def _register_login_failure(email: str) -> None:
     """Contatore di tentativi falliti per account, stesso pattern usato per la
     master password admin. Dopo LOGIN_MAX_ATTEMPTS tentativi, blocca l'account
-    per LOGIN_LOCK_MINUTES minuti (anti brute-force)."""
-    await db.users.update_one({"email": email}, {"$inc": {"login_failed_attempts": 1}})
-    u = await db.users.find_one({"email": email})
+    per LOGIN_LOCK_MINUTES minuti (anti brute-force). Incremento e lettura in
+    un'unica operazione atomica, come per il PIN (_register_user_failure)."""
+    u = await db.users.find_one_and_update(
+        {"email": email},
+        {"$inc": {"login_failed_attempts": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
     if (u or {}).get("login_failed_attempts", 0) >= LOGIN_MAX_ATTEMPTS:
         until = (datetime.now(timezone.utc) + timedelta(minutes=LOGIN_LOCK_MINUTES)).isoformat()
         await db.users.update_one(

@@ -1,0 +1,90 @@
+# Configurazione Render (Blueprint) per Sconti Roma.
+# Render legge questo file e crea i due servizi: il server (API) e il sito.
+# Le chiavi segrete (sync: false) NON stanno qui: Render le chiede alla
+# prima creazione e poi si modificano da Dashboard → servizio → Environment.
+# Guida passo passo: MIGRAZIONE.md
+
+services:
+  # ---------- Server FastAPI ----------
+  # DEMO: piano "free" (si addormenta dopo ~15 min senza visite, i promemoria
+  # automatici delle 9:30/10:00 possono saltare). AL LANCIO passare a "starter"
+  # o superiore: sempre acceso, così lo scheduler dei promemoria gira sempre.
+  - type: web
+    name: scontiroma-api
+    runtime: python
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.15
+      - key: DB_NAME
+        value: scontiroma
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CSRF_ORIGIN_MODE
+        value: log
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: WEBAUTHN_RP_NAME
+        value: Sconti Roma
+      # Segreti e indirizzi: da compilare in Render (vedi MIGRAZIONE.md)
+      - key: MONGO_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: WEBAUTHN_RP_ID
+        sync: false
+      - key: WEBAUTHN_ORIGIN
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SENDER_EMAIL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_NOTIFY_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_MASTER_PASSWORD
+        sync: false
+      - key: ADMIN_RECOVERY_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # ---------- Sito React (statico, gratuito) ----------
+  - type: web
+    name: scontiroma-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: yarn install --frozen-lockfile && CI=false yarn build
+    staticPublishPath: build
+    routes:
+      # App a pagina singola: ogni indirizzo (/login, /dashboard…) apre index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: REACT_APP_BACKEND_URL
+        sync: false

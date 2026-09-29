@@ -62,7 +62,8 @@ export default function AdminEconomics({ hdrs }) {
             <Info size={14} /> Costi fissi mensili
           </div>
           <ul className="mt-3 space-y-2 text-sm text-white/70">
-            <li className="flex justify-between"><span>Hosting Emergent</span><span className="text-white">50 crediti/mese</span></li>
+            <li className="flex justify-between"><span>Hosting server (Render)</span><span className="text-white">~$7/mese</span></li>
+            <li className="flex justify-between"><span>Sito (Render) + database (MongoDB Atlas)</span><span className="text-white">€0 (piani gratuiti)</span></li>
             <li className="flex justify-between"><span>Email Resend</span><span className="text-white">€0 (fino a 3.000/mese)</span></li>
             <li className="flex justify-between"><span>Mappe (OSM/Nominatim)</span><span className="text-white">€0</span></li>
             <li className="flex justify-between"><span>Dominio + caselle Aruba</span><span className="text-white">~€10-30/anno</span></li>
