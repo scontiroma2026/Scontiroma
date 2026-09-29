@@ -256,9 +256,24 @@ async def _cancel_expired_grace(user_id: str) -> None:
         logging.error(f"[grace-expired] email send failed: {e}")
 
 
+async def _expire_stale_active_subscriptions(user_id: str) -> None:
+    """Cleanup lazy: senza un vero rinnovo (Stripe/PayPal non configurati, o
+    provider offline), un abbonamento 'active' resta scritto così anche dopo
+    che end_date è passata — nessun evento arriva a correggerlo da solo.
+    Qui lo marchiamo 'expired' non appena qualcuno guarda quell'utente, così la
+    pagina account non mostra più 'Attivo' con una data già passata."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.subscriptions.update_many(
+        {"user_id": user_id, "status": "active", "end_date": {"$lt": now_iso}},
+        {"$set": {"status": "expired", "expired_at": now_iso}},
+    )
+
+
 async def user_has_active_sub(user_id: str) -> bool:
-    # Cleanup lazy: se la grace di 7gg è scaduta, marca la sub come cancellata
+    # Cleanup lazy: se la grace di 7gg è scaduta, marca la sub come cancellata;
+    # se l'abbonamento è scaduto senza rinnovo, marcalo 'expired'.
     await _cancel_expired_grace(user_id)
+    await _expire_stale_active_subscriptions(user_id)
     now_iso = datetime.now(timezone.utc).isoformat()
     sub = await db.subscriptions.find_one({
         "user_id": user_id,
@@ -1313,8 +1328,10 @@ async def merchant_redemptions(user: dict = Depends(require_merchant)):
 # ---------- Subscription ----------
 @api.get("/subscription/me")
 async def my_subscription(user: dict = Depends(get_current_user)):
-    # Lazy cleanup: se la grace di 7gg è scaduta, marca past_due → cancelled
+    # Lazy cleanup: se la grace di 7gg è scaduta, marca past_due → cancelled;
+    # se l'abbonamento è scaduto senza un vero rinnovo, marcalo 'expired'.
     await _cancel_expired_grace(user["id"])
+    await _expire_stale_active_subscriptions(user["id"])
     now_iso = datetime.now(timezone.utc).isoformat()
     sub = await db.subscriptions.find_one({"user_id": user["id"], "status": "active"})
     if sub:
