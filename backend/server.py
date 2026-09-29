@@ -3072,6 +3072,12 @@ async def seed_data():
     elif admin_pw and not verify_password(admin_pw, existing_admin.get("password_hash", "")):
         await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hash_password(admin_pw)}})
 
+    # Account demo (cliente + commercianti con password note, scritte nel codice):
+    # creati SOLO se SEED_DEMO_DATA=true. Assente o qualsiasi altro valore → saltati,
+    # così non compaiono mai in un ambiente dove la variabile non è impostata.
+    if os.environ.get("SEED_DEMO_DATA", "").strip().lower() != "true":
+        return
+
     # Seed a test client
     client_email = "cliente@scontiroma.it"
     if not await db.users.find_one({"email": client_email}):
