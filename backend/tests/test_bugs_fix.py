@@ -3,8 +3,8 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://deal-bundle.preview.emergentagent.com").rstrip("/")
-EXPECTED_HOST = "https://deal-bundle.preview.emergentagent.com"
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
+EXPECTED_HOST = os.environ.get("FRONTEND_URL", "http://localhost:3000").rstrip("/")
 STALE_HOST = "https://68074b6b-8089-4395-a1ca-2291114b108b.preview.emergentagent.com"
 
 

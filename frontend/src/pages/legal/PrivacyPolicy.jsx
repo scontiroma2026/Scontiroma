@@ -141,13 +141,19 @@ export default function PrivacyPolicy() {
             all'interno dell'Unione Europea.
           </li>
           <li>
-            <strong>Emergent Cloud</strong> — Hosting dell'applicazione.
+            <strong>Render Services, Inc.</strong> (USA, region EU-Francoforte) —
+            Hosting dell'applicazione.
+          </li>
+          <li>
+            <strong>Google LLC</strong> (Gemini API) — Miglioramento automatico
+            delle foto delle offerte caricate dai commercianti, solo su loro
+            richiesta.
           </li>
         </ul>
 
         <h2 className="font-serif text-2xl text-white mt-8">5. Trasferimenti extra-UE</h2>
         <p>
-          Alcuni fornitori (Stripe, PayPal, Resend) possono elaborare dati
+          Alcuni fornitori (Stripe, PayPal, Resend, Render, Google) possono elaborare dati
           anche al di fuori dell'UE. In tal caso il trasferimento è protetto
           dalle Clausole Contrattuali Standard approvate dalla Commissione
           Europea (SCC) o da decisioni di adeguatezza. Puoi richiedere copia
