@@ -42,7 +42,17 @@ function saveConsent(prefs, action) {
     .catch(() => {
       /* silent — banner still works if backend is down */
     });
+  // Avvisa il resto dell'app (es. AnalyticsTracker) che il consenso è
+  // cambiato, senza bisogno di ricaricare la pagina.
+  window.dispatchEvent(new CustomEvent("sr:consent-updated", { detail: payload }));
   return payload;
+}
+
+// Usato da chi deve attivarsi solo dopo consenso esplicito (es. tracciamento
+// analytics funzionale): true solo se l'utente ha accettato quella categoria.
+export function hasFunctionalConsent() {
+  const c = readConsent();
+  return !!c?.prefs?.functional;
 }
 
 const HIDE_ROUTES = ["/qr", "/preview"];

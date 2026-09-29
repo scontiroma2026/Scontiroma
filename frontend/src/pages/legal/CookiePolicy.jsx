@@ -66,6 +66,36 @@ export default function CookiePolicy() {
           </table>
         </div>
 
+        <h3 className="font-serif text-xl text-white mt-6">2.1bis Cookie funzionali (richiedono consenso)</h3>
+        <p>
+          Si attivano solo se accetti la categoria "funzionali" nel banner
+          cookie. Servono a capire, in forma anonima, quante persone usano
+          l'app e quali pagine visitano — nessun dato è collegato alla tua
+          identità.
+        </p>
+        <div className="overflow-x-auto mt-3">
+          <table className="w-full text-sm border border-white/10">
+            <thead className="bg-white/5">
+              <tr>
+                <th className="border border-white/10 p-2 text-left">Nome</th>
+                <th className="border border-white/10 p-2 text-left">Scopo</th>
+                <th className="border border-white/10 p-2 text-left">Durata</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-white/10 p-2 font-mono">sr_vid</td>
+                <td className="border border-white/10 p-2">
+                  Identificativo anonimo generato a caso, usato solo per
+                  contare visite e pagine viste (analytics interna, nessun
+                  fornitore esterno)
+                </td>
+                <td className="border border-white/10 p-2">Fino a cancellazione manuale</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <h3 className="font-serif text-xl text-white mt-6">2.2 Cookie di terze parti (richiedono consenso)</h3>
         <p>
           Vengono attivati solo dopo il tuo consenso esplicito nel banner
