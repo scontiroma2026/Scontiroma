@@ -96,6 +96,8 @@ logger = logging.getLogger(__name__)
 
 # ---------- Constants ----------
 ZONES = [
+    # Zone pilota (lancio): per prime nei menu di iscrizione e nei filtri
+    "Garbatella", "San Paolo", "Marconi",
     "Centro Storico", "Trastevere", "Prati", "Testaccio", "Monti",
     "Ostiense", "EUR", "Parioli", "San Giovanni", "Trieste-Salario",
     "Pigneto", "Flaminio",
