@@ -433,7 +433,7 @@ export default function DiscountDetail() {
                 <div className="mt-1 font-mono text-2xl tracking-[0.3em] text-white">{redemption.code}</div>
               </div>
               <p className="text-center text-sm text-white/60">
-                Il QR cambia ogni 10 secondi per la tua sicurezza. Mostralo al commerciante di <strong className="text-white">{m.shop_name}</strong>.
+                Il QR cambia ogni 20 secondi per la tua sicurezza. Mostralo al commerciante di <strong className="text-white">{m.shop_name}</strong>.
               </p>
             </div>
           )}
