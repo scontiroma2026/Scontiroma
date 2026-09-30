@@ -72,6 +72,7 @@ class TestAuthMeSubscriptionFlag:
         email = f"TEST_nosub_{uuid.uuid4().hex[:8]}@scontiroma.it"
         s = requests.Session()
         r = s.post(f"{BASE_URL}/api/auth/register", json={
+            "legal_accepted": True,
             "email": email, "password": "pass1234", "name": "TEST NoSub", "role": "client",
         }, timeout=15)
         assert r.status_code in (200, 201), r.text

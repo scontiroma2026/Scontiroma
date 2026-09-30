@@ -34,6 +34,7 @@ def _s():
 def _register_merchant(session, email, name="  Mario  ", shop_name="  Test Shop  ",
                        zone="  Trastevere  ", category="Ristorante"):
     r = session.post(f"{API}/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "merch123", "name": name,
         "role": "merchant", "shop_name": shop_name, "zone": zone,
         "category": category,

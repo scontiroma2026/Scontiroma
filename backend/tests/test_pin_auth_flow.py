@@ -47,6 +47,7 @@ def test_register_new_client_with_full_name():
     ts = int(time.time())
     email = f"test_pin_{ts}@example.com"
     r = requests.post(f"{BASE_URL}/api/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "password123",
         "name": "Mario Rossi", "role": "client"
     })
