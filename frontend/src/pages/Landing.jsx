@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, MapPin, ArrowRight, Zap, Heart } from "lucide-react";
+import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
@@ -53,8 +53,8 @@ export default function Landing() {
                 <span className="italic">A metà prezzo.</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg text-white/70">
-                Un abbonamento e ti sblocchiamo la città. Dal caffè a Trastevere alla pizza a Testaccio,
-                dalla SPA a Prati alla palestra all'EUR: <strong className="text-neon">tutto scontato</strong>.
+                Un abbonamento e ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
+                <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link to="/register">
@@ -79,21 +79,17 @@ export default function Landing() {
             {/* Right: Rome collage */}
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
-                <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Trevi" />
+                <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-6">
-                  <div className="text-xs uppercase tracking-widest text-ciano">In evidenza</div>
-                  <div className="font-serif text-3xl mt-1">Trevi, Centro Storico</div>
-                  <div className="text-sm text-white/70">Aperitivo a €4 · −60%</div>
+                  <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
+                  <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
+                  <div className="text-sm text-white/70">Si parte da Garbatella, San Paolo e Marconi</div>
                 </div>
               </div>
               {/* Floating deal cards */}
               <div className="absolute -left-6 top-10 rotate-[-6deg] rounded-2xl bg-fucsia p-4 shadow-2xl glow-fucsia" style={{animation: 'float 4s ease-in-out infinite'}}>
                 <div className="text-[10px] uppercase text-white/80 tracking-widest">Membership</div>
                 <div className="font-serif text-3xl text-white">€2,99<span className="text-sm">/mese</span></div>
-              </div>
-              <div className="absolute -right-4 bottom-20 rotate-[6deg] rounded-2xl bg-ciano p-4 text-black shadow-2xl glow-ciano" style={{animation: 'float 5s ease-in-out infinite'}}>
-                <div className="flex items-center gap-1 text-xs font-bold"><Zap size={12} /> Sconto attivo</div>
-                <div className="font-serif text-xl leading-tight">−50% Aurora SPA</div>
               </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
             </div>
@@ -104,7 +100,7 @@ export default function Landing() {
       {/* Ticker */}
       <section className="relative border-y border-white/10 bg-fucsia py-3 overflow-hidden">
         <div className="whitespace-nowrap font-serif text-2xl text-white" style={{animation: 'marquee 30s linear infinite'}}>
-          {"★ TRASTEVERE −50% ★ TESTACCIO −55% ★ MONTI −64% ★ EUR −75% ★ PRATI −50% ★ CENTRO −60% ★ ".repeat(4)}
+          {"★ GARBATELLA ★ SAN PAOLO ★ MARCONI ★ SI PARTE DA QUI ".repeat(6)}
         </div>
       </section>
 
@@ -195,7 +191,7 @@ export default function Landing() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { n: "+40%", l: "clienti nuovi" },
+                { n: "0€", l: "iscrizione" },
                 { n: "0€", l: "commissioni" },
                 { n: "24h", l: "attivazione" },
                 { n: "1 clic", l: "per pubblicare" },
