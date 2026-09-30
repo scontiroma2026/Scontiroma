@@ -55,7 +55,7 @@ export function hasFunctionalConsent() {
   return !!c?.prefs?.functional;
 }
 
-const HIDE_ROUTES = ["/qr", "/preview"];
+const HIDE_ROUTES = ["/qr"];
 
 export default function CookieBanner() {
   const { pathname } = useLocation();
@@ -85,7 +85,7 @@ export default function CookieBanner() {
   }, []);
 
   const hideOnRoute =
-    pathname.startsWith("/qr") || pathname.startsWith("/preview");
+    pathname.startsWith("/qr");
   if (hideOnRoute) return null;
   if (!visible) return null;
 
