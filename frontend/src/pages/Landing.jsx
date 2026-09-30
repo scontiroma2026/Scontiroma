@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, MapPin, ArrowRight, Zap, Heart } from "lucide-react";
+import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
@@ -10,8 +10,6 @@ import BrandMark from "@/components/BrandMark";
 // Rome landmark imagery (Unsplash direct URLs)
 const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80"; // Colosseo
 const ROMA_TREVI = "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&q=80"; // Trevi
-const ROMA_TRAST = "https://images.unsplash.com/photo-1555992828-ca4dbe41d294?w=800&q=80"; // Trastevere alley
-const ROMA_PIAZZA = "https://images.unsplash.com/photo-1525874684015-58379d421a52?w=800&q=80"; // Piazza
 
 export default function Landing() {
   const [featured, setFeatured] = useState([]);
@@ -55,8 +53,8 @@ export default function Landing() {
                 <span className="italic">A metà prezzo.</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg text-white/70">
-                Un abbonamento e ti sblocchiamo la città. Dal caffè a Trastevere alla pizza a Testaccio,
-                dalla SPA a Prati alla palestra all'EUR: <strong className="text-neon">tutto scontato</strong>.
+                Un abbonamento e ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
+                <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link to="/register">
@@ -73,7 +71,6 @@ export default function Landing() {
 
               {/* Chip stats */}
               <div className="mt-10 flex flex-wrap gap-3">
-                <Chip label="50+ locali" grad="grad-fucsia-viola" />
                 <Chip label="Cancelli quando vuoi" grad="grad-ciano-fucsia" />
                 <Chip label="No commissioni" grad="grad-neon" dark />
               </div>
@@ -82,21 +79,17 @@ export default function Landing() {
             {/* Right: Rome collage */}
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
-                <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Trevi" />
+                <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-6">
-                  <div className="text-xs uppercase tracking-widest text-ciano">In evidenza</div>
-                  <div className="font-serif text-3xl mt-1">Trevi, Centro Storico</div>
-                  <div className="text-sm text-white/70">Aperitivo a €4 · −60%</div>
+                  <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
+                  <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
+                  <div className="text-sm text-white/70">Si parte da Garbatella, San Paolo e Marconi</div>
                 </div>
               </div>
               {/* Floating deal cards */}
               <div className="absolute -left-6 top-10 rotate-[-6deg] rounded-2xl bg-fucsia p-4 shadow-2xl glow-fucsia" style={{animation: 'float 4s ease-in-out infinite'}}>
                 <div className="text-[10px] uppercase text-white/80 tracking-widest">Membership</div>
                 <div className="font-serif text-3xl text-white">€2,99<span className="text-sm">/mese</span></div>
-              </div>
-              <div className="absolute -right-4 bottom-20 rotate-[6deg] rounded-2xl bg-ciano p-4 text-black shadow-2xl glow-ciano" style={{animation: 'float 5s ease-in-out infinite'}}>
-                <div className="flex items-center gap-1 text-xs font-bold"><Zap size={12} /> Sconto attivo</div>
-                <div className="font-serif text-xl leading-tight">−50% Aurora SPA</div>
               </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
             </div>
@@ -107,7 +100,7 @@ export default function Landing() {
       {/* Ticker */}
       <section className="relative border-y border-white/10 bg-fucsia py-3 overflow-hidden">
         <div className="whitespace-nowrap font-serif text-2xl text-white" style={{animation: 'marquee 30s linear infinite'}}>
-          {"★ TRASTEVERE −50% ★ TESTACCIO −55% ★ MONTI −64% ★ EUR −75% ★ PRATI −50% ★ CENTRO −60% ★ ".repeat(4)}
+          {"★ GARBATELLA ★ SAN PAOLO ★ MARCONI ★ SI PARTE DA QUI ".repeat(6)}
         </div>
       </section>
 
@@ -138,19 +131,18 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <div className="text-xs uppercase tracking-[0.2em] text-neon">I quartieri</div>
-            <h2 className="mt-2 font-serif text-5xl">Ogni angolo di <span className="text-grad">Roma</span></h2>
+            <h2 className="mt-2 font-serif text-5xl">Partiamo da <span className="text-grad">tre quartieri</span></h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              { img: ROMA_TRAST, name: "Trastevere", deals: "12 sconti", c: "text-fucsia" },
-              { img: ROMA_HERO, name: "Centro Storico", deals: "18 sconti", c: "text-ciano" },
-              { img: ROMA_PIAZZA, name: "Testaccio", deals: "8 sconti", c: "text-neon" },
+              { name: "Garbatella", grad: "grad-fucsia-viola", c: "text-fucsia" },
+              { name: "San Paolo", grad: "grad-ciano-fucsia", c: "text-ciano" },
+              { name: "Marconi", grad: "grad-neon", c: "text-neon" },
             ].map((q) => (
-              <Link key={q.name} to="/discounts" className="group relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10">
-                <img src={q.img} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" alt={q.name} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <Link key={q.name} to="/discounts" className="group relative aspect-[5/3] md:aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-[#141414]">
+                <div className={`absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 ${q.grad}`} />
                 <div className="absolute inset-x-0 bottom-0 p-6">
-                  <div className={`text-xs uppercase tracking-widest ${q.c}`}>{q.deals}</div>
+                  <div className={`text-xs uppercase tracking-widest ${q.c}`}>Si parte da qui</div>
                   <div className="font-serif text-4xl text-white">{q.name}</div>
                   <div className="mt-2 flex items-center gap-1 text-xs text-white/60">
                     <MapPin size={12} /> Roma
@@ -199,7 +191,7 @@ export default function Landing() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { n: "+40%", l: "clienti nuovi" },
+                { n: "0€", l: "iscrizione" },
                 { n: "0€", l: "commissioni" },
                 { n: "24h", l: "attivazione" },
                 { n: "1 clic", l: "per pubblicare" },
@@ -230,7 +222,7 @@ export default function Landing() {
             { q: "Posso cancellare quando voglio?", a: "Sì. Vai in 'Il mio account' → 'Gestisci abbonamento' → 'Annulla abbonamento' e conferma. Nessuna penale, nessuna domanda, nessuna telefonata imbarazzante di retention." },
             { q: "Come posso pagare?", a: "Tramite Stripe: carta di credito, debito o wallet (Apple Pay, Google Pay). Pagamento sicuro, i tuoi dati non passano dai nostri server." },
             { q: "Sono un commerciante, come partecipo?", a: "Registrati come commerciante, crea la tua singola offerta e comparirai nel catalogo. Zero commissioni, zero costi di ingresso, solo nuovi clienti." },
-            { q: "In quali quartieri di Roma funziona?", a: "Trastevere, Centro Storico, Prati, Testaccio, Monti, EUR, Ostiense, Parioli, San Giovanni, Trieste-Salario, Pigneto, Flaminio — e continuiamo ad aggiungerne." },
+            { q: "In quali quartieri di Roma funziona?", a: "Stiamo partendo adesso da Garbatella, San Paolo e Marconi, con le prime attività di questi quartieri. Poi arriveremo nel resto di Roma." },
           ].map((f) => (
             <details key={f.q} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
               <summary className="flex cursor-pointer items-center justify-between text-white font-semibold">

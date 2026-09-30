@@ -34,11 +34,6 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ForgotPin from "@/pages/ForgotPin";
 import ResetPassword from "@/pages/ResetPassword";
 import QRVerify from "@/pages/QRVerify";
-import PreviewGallery from "@/pages/PreviewGallery";
-import PreviewA from "@/pages/previews/PreviewA";
-import PreviewB from "@/pages/previews/PreviewB";
-import PreviewC from "@/pages/previews/PreviewC";
-import PreviewD from "@/pages/previews/PreviewD";
 import "@/App.css";
 
 function App() {
@@ -70,11 +65,6 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/qr/:token" element={<QRVerify />} />
             <Route path="/qr" element={<QRVerify />} />
-            <Route path="/preview" element={<PreviewGallery />} />
-            <Route path="/preview/a" element={<PreviewA />} />
-            <Route path="/preview/b" element={<PreviewB />} />
-            <Route path="/preview/c" element={<PreviewC />} />
-            <Route path="/preview/d" element={<PreviewD />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/termini" element={<Termini />} />
