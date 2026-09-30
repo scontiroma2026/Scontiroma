@@ -24,10 +24,10 @@ export default function MerchantDashboard() {
 
   return (
     <main data-testid="merchant-dashboard" className="mx-auto max-w-6xl px-6 py-12">
-      <div className="mb-8 flex items-end justify-between">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-gold">Commerciante</div>
-          <h1 className="mt-2 font-serif text-5xl">{user?.shop_name || user?.name}</h1>
+          <h1 className="mt-2 font-serif text-4xl sm:text-5xl break-words">{user?.shop_name || user?.name}</h1>
           <div className="mt-1 text-sm text-white/60">{user?.zone} · {user?.category}</div>
         </div>
         <Link to="/merchant/scan">
