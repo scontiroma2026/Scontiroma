@@ -460,6 +460,10 @@ async def next_offer_window() -> dict:
 # ---------- Auth Routes ----------
 @api.post("/auth/register")
 async def register(payload: RegisterIn, response: Response):
+    # Termini, Privacy e Cookie Policy vanno accettati: il sito lo impone già, il server ora lo verifica.
+    # Gli account demo/admin creati all'avvio (seed_data) non passano da qui e non sono toccati.
+    if not payload.legal_accepted:
+        raise HTTPException(400, "Devi accettare Termini, Privacy e Cookie Policy per registrarti")
     email = payload.email.lower().strip()
     if await db.users.find_one({"email": email}):
         raise HTTPException(400, "Email già registrata")

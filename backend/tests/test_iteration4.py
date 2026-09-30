@@ -54,6 +54,7 @@ def fresh_merchant():
     email = f"TEST_merch_{uuid.uuid4().hex[:8]}@t.it"
     s = requests.Session()
     r = s.post(f"{API}/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "merchant123", "name": "Test Merchant",
         "role": "merchant", "shop_name": f"TEST Shop {email[:6]}",
         "zone": "Trastevere", "category": "Ristorante",
@@ -67,6 +68,7 @@ def fresh_client():
     email = f"TEST_cli_{uuid.uuid4().hex[:8]}@t.it"
     s = requests.Session()
     r = s.post(f"{API}/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "cliente123", "name": "Test Client",
         "role": "client",
     })
@@ -183,6 +185,7 @@ class TestRedemptionAndQR:
         me = f"TEST_rm_{uuid.uuid4().hex[:8]}@t.it"
         ms = requests.Session()
         assert ms.post(f"{API}/auth/register", json={
+            "legal_accepted": True,
             "email": me, "password": "merchant123", "name": "M",
             "role": "merchant", "shop_name": f"TEST Redemp {me[:6]}",
             "zone": "Monti", "category": "Bar & Caffè",
@@ -200,6 +203,7 @@ class TestRedemptionAndQR:
         ce = f"TEST_rc_{uuid.uuid4().hex[:8]}@t.it"
         cs = requests.Session()
         assert cs.post(f"{API}/auth/register", json={
+            "legal_accepted": True,
             "email": ce, "password": "cliente123", "name": "C", "role": "client",
         }).status_code == 200
         assert cs.post(f"{API}/subscription/subscribe", json={"plan": "monthly"}).status_code == 200

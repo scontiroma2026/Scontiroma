@@ -126,6 +126,7 @@ class TestForgotReset:
         # Create a throwaway user
         email = f"TEST_reset_{uuid.uuid4().hex[:8]}@example.com"
         rr = requests.post(f"{API}/auth/register", json={
+            "legal_accepted": True,
             "email": email, "password": "oldpass123", "name": "T", "role": "client"
         }, timeout=30)
         assert rr.status_code == 200, rr.text
@@ -218,6 +219,7 @@ class TestAdminMerchants:
         # Create test merchant + discount via register + merchant login
         email = f"TEST_merch_{uuid.uuid4().hex[:6]}@example.com"
         rr = requests.post(f"{API}/auth/register", json={
+            "legal_accepted": True,
             "email": email, "password": "merchant123", "name": "TM",
             "role": "merchant", "shop_name": "TEST_Shop", "zone": "Monti", "category": "Pizzeria"
         }, timeout=30)

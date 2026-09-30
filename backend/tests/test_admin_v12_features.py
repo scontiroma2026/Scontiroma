@@ -58,6 +58,7 @@ def admin_headers(s):
 def test_merchant_register_no_phone_returns_422():
     email = f"TEST_merch_nophone_{int(time.time()*1000)}@example.com"
     r = requests.post(f"{BASE}/api/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "password123", "name": "MerchNoPhone",
         "role": "merchant", "shop_name": "T", "zone": "Centro Storico", "category": "Ristorante"
     })
@@ -68,6 +69,7 @@ def test_merchant_register_no_phone_returns_422():
 def test_merchant_register_with_phone_ok(admin_headers):
     email = f"TEST_merch_phone_{int(time.time()*1000)}@example.com"
     r = requests.post(f"{BASE}/api/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "password123", "name": "MerchPhone",
         "role": "merchant", "shop_name": "TShop", "zone": "Centro Storico",
         "category": "Ristorante", "phone": "+393331234567"
@@ -89,6 +91,7 @@ def test_merchant_register_with_phone_ok(admin_headers):
 def test_client_register_no_phone_ok():
     email = f"TEST_client_nophone_{int(time.time()*1000)}@example.com"
     r = requests.post(f"{BASE}/api/auth/register", json={
+        "legal_accepted": True,
         "email": email, "password": "password123", "name": "ClientOk", "role": "client"
     })
     assert r.status_code == 200, r.text
