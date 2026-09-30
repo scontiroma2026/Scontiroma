@@ -95,6 +95,10 @@ logger = logging.getLogger(__name__)
 
 
 # ---------- Constants ----------
+# Versione corrente di Termini, Privacy e Cookie Policy accettati alla registrazione.
+# Unico punto da aggiornare quando cambiano i testi legali (es. "2026-11").
+LEGAL_VERSION = "2026-10"
+
 ZONES = [
     # Zone pilota (lancio): per prime nei menu di iscrizione e nei filtri
     "Garbatella", "San Paolo", "Marconi",
@@ -480,6 +484,7 @@ async def register(payload: RegisterIn, response: Response):
         "consents": {
             "legal_accepted": bool(payload.legal_accepted),
             "legal_accepted_at": now_iso if payload.legal_accepted else None,
+            "legal_version": LEGAL_VERSION if payload.legal_accepted else None,
             "marketing_opt_in": bool(payload.marketing_opt_in),
             "marketing_opt_in_at": now_iso if payload.marketing_opt_in else None,
         },
