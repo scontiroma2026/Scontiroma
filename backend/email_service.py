@@ -50,7 +50,17 @@ async def _send(to: str, subject: str, html: str) -> Optional[str]:
         return None
 
 
-def _shell(inner: str, title: str = "Sconti Roma") -> str:
+# Marchio e prezzo usati in tutte le email (un solo punto da cambiare).
+BRAND = "Sconti Roma"
+PRICE_EUR = 2.99
+
+
+def _eur(value: float) -> str:
+    """Importo in formato italiano: 2.99 -> "2,99 €"."""
+    return f"{value:.2f}".replace(".", ",") + " €"
+
+
+def _shell(inner: str, title: str = BRAND) -> str:
     return f"""<!doctype html><html><body style="margin:0;padding:0;background:#0b0b0f;font-family:Inter,Arial,sans-serif;color:#f4f4f5">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0b0f;padding:32px 0">
 <tr><td align="center">
@@ -154,7 +164,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sconti Quartiere</title>
+<title>{BRAND}</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111">
 <!-- preheader nascosto -->
@@ -168,7 +178,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
         <!-- header -->
         <tr>
           <td align="center" style="padding:28px 32px;background:linear-gradient(90deg,#FF6B35,#FF2E93);color:#ffffff">
-            <div style="font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:0.3px">Sconti Quartiere</div>
+            <div style="font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:0.3px">{BRAND}</div>
             <div style="margin-top:6px;font-size:13px;opacity:0.9">🛍️ Il tuo abbonamento è attivo!</div>
           </td>
         </tr>
@@ -178,7 +188,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
           <td style="padding:36px 40px 8px 40px">
             <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:24px;color:#111">Ciao {safe_name},</h1>
             <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333">
-              Il tuo abbonamento mensile da <strong>3€</strong> è attivo e si è rinnovato con successo!
+              Il tuo abbonamento mensile da <strong>{_eur(PRICE_EUR)}</strong> è attivo e si è rinnovato con successo!
             </p>
             <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#333">
               I commercianti del tuo quartiere hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
@@ -209,13 +219,13 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
         <tr>
           <td style="padding:24px 40px 32px 40px;background:#fafafa;border-top:1px solid #e5e5e5">
             <p style="margin:0;font-size:12px;line-height:1.6;color:#71717a;text-align:center">
-              Ricevi questa email perché sei un abbonato attivo di <strong>Sconti Quartiere</strong>. Puoi gestire le tue preferenze o disdire il rinnovo in qualsiasi momento dalla sezione <strong>Profilo</strong> dentro l'app.
+              Ricevi questa email perché sei un abbonato attivo di <strong>{BRAND}</strong>. Puoi gestire le tue preferenze o disdire il rinnovo in qualsiasi momento dalla sezione <strong>Profilo</strong> dentro l'app.
             </p>
           </td>
         </tr>
       </table>
       <div style="margin-top:16px;font-size:11px;color:#a1a1aa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-        © 2026 Sconti Quartiere · Roma
+        © 2026 {BRAND}
       </div>
     </td>
   </tr>
@@ -375,7 +385,7 @@ async def send_subscription_cancelled(
 </div>
 
 <p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
-  Cambiato idea? Puoi <strong>riattivare il tuo abbonamento</strong> in qualsiasi momento — solo 3€/mese e torni subito a risparmiare sui commercianti del tuo quartiere.
+  Cambiato idea? Puoi <strong>riattivare il tuo abbonamento</strong> in qualsiasi momento — solo {_eur(PRICE_EUR)} al mese e torni subito a risparmiare sui commercianti del tuo quartiere.
 </p>
 
 <div style="text-align:center;margin:28px 0">
@@ -395,7 +405,7 @@ async def send_renewal_receipt(
     to: str,
     name: str,
     next_end_date_iso: str,
-    price_eur: float = 3.00,
+    price_eur: float = PRICE_EUR,
     provider: str = "stripe",
 ) -> Optional[str]:
     """Email di ricevuta mensile inviata quando l'abbonamento si rinnova con successo.
@@ -433,7 +443,7 @@ async def send_renewal_receipt(
       <div style="display:flex;justify-content:space-between;margin-bottom:12px">
         <span style="color:#71717a;font-size:13px;text-transform:uppercase;letter-spacing:1px">Importo</span>
       </div>
-      <div style="font-family:Georgia,serif;font-size:32px;color:#FF2E93;font-weight:700;margin-bottom:20px">€{price_eur:.2f}</div>
+      <div style="font-family:Georgia,serif;font-size:32px;color:#FF2E93;font-weight:700;margin-bottom:20px">{_eur(price_eur)}</div>
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
