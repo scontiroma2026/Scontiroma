@@ -1,0 +1,41 @@
+# Smoke test di SOLA LETTURA su https://scontiroma.it e https://api.scontiroma.it:
+# nessun login, nessuna scrittura (solo GET/HEAD/OPTIONS e una visita alla home).
+name: Smoke produzione
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * *" # ogni mattina (ora UTC)
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "e2e/tests/produzione/**"
+      - "e2e/playwright.produzione.config.js"
+      - ".github/workflows/smoke-produzione.yml"
+
+jobs:
+  smoke:
+    name: Smoke produzione (sola lettura)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test -c playwright.produzione.config.js
+      - name: Report (se qualcosa fallisce)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: e2e/playwright-report
+          retention-days: 7

@@ -87,3 +87,9 @@ credentials.json
 *.key
 .credentials
 frontend/node_modules/.cache/default-development/0.pack
+
+# Test end-to-end (Playwright)
+/frontend/build-e2e
+/e2e/node_modules
+/e2e/test-results
+/e2e/playwright-report
