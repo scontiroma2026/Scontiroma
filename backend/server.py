@@ -4338,8 +4338,12 @@ async def admin_geocode_confirm(
 # ---------- Include Router & CORS (LAST) ----------
 app.include_router(api)
 
-# Stessa forma che il browser mette nell'header Origin: senza spazi e senza barra finale.
-cors_origins = [o.strip().rstrip("/") for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip().rstrip("/")]
+def _parse_cors_origins(raw: str) -> list:
+    """Stessa forma che il browser mette nell'header Origin: senza spazi e senza barra finale."""
+    return [o.strip().rstrip("/") for o in (raw or "").split(",") if o.strip().rstrip("/")]
+
+
+cors_origins = _parse_cors_origins(os.environ.get("CORS_ORIGINS", ""))
 if not cors_origins:
     # Non usare mai wildcard `*` con credentials — i browser rifiutano la
     # combinazione. In sviluppo locale accetta il frontend classico su :3000.

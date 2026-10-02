@@ -62,7 +62,7 @@ def _preflight_ok(origin):
 
 @pytest.fixture(autouse=True)
 def produzione(monkeypatch):
-    origins = [o.strip().rstrip("/") for o in PRODUZIONE.split(",") if o.strip().rstrip("/")]
+    origins = server._parse_cors_origins(PRODUZIONE)
     monkeypatch.setattr(server, "cors_origins", origins)
     monkeypatch.setattr(server, "CSRF_ORIGIN_MODE", "enforce")
     # Il CORSMiddleware ha la sua copia della lista: la allineiamo per il controllo del preflight.
@@ -75,7 +75,10 @@ def produzione(monkeypatch):
 
 
 def test_lista_normalizzata_come_l_header_origin():
-    assert server.cors_origins == ["https://scontiroma.it", "https://www.scontiroma.it"]
+    # Il valore di Render scritto con spazi e barra finale diventa uguale all'header Origin.
+    assert server._parse_cors_origins(PRODUZIONE) == ["https://scontiroma.it", "https://www.scontiroma.it"]
+    assert server._parse_cors_origins("") == []
+    assert server._parse_cors_origins(" , /") == []
 
 
 @pytest.mark.parametrize("origin", ACCETTATE)
