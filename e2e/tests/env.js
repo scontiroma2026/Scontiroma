@@ -8,7 +8,6 @@ module.exports = {
   ADMIN_PASSWORD: env.ADMIN_PASSWORD || 'e2e-admin-password',
   ADMIN_MASTER_PASSWORD: env.ADMIN_MASTER_PASSWORD || 'e2e-master-password',
   STRIPE_WEBHOOK_SECRET: 'whsec_e2e_solo_test', // forzato da server_e2e.py
-  STRIPE_TEST_KEY: (env.STRIPE_SECRET_KEY || '').startsWith('sk_test_') ? env.STRIPE_SECRET_KEY : '',
   PROD_WEB: env.PROD_WEB_URL || 'https://scontiroma.it',
   PROD_API: env.PROD_API_URL || 'https://api.scontiroma.it',
 };

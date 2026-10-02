@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useAppConfig } from "@/context/ConfigContext";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { ScanFace, KeyRound, Check, Sparkles } from "lucide-react";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function SetupSecurity() {
+  const { subscriptionRequired } = useAppConfig();
   const nav = useNavigate();
   const { user, refresh } = useAuth();
   const [pin, setPin] = useState("");
@@ -68,7 +70,7 @@ export default function SetupSecurity() {
 
   const finish = () => {
     if (user?.role === "merchant") nav("/merchant/discount");
-    else nav("/subscribe");
+    else nav(subscriptionRequired ? "/subscribe" : "/discounts");
   };
 
   return (

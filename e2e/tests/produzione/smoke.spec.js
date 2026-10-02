@@ -1,5 +1,6 @@
 // Smoke test di SOLA LETTURA sulla produzione: nessun login, nessun dato scritto.
-// Solo richieste GET/HEAD/OPTIONS e una visita alla home come un visitatore qualunque.
+// Solo richieste GET/HEAD/OPTIONS, una visita alla home come un visitatore qualunque e
+// POST /api/auth/logout senza essere collegati (cancella solo cookie inesistenti, non scrive nulla).
 const tls = require('tls');
 const { test, expect } = require('@playwright/test');
 const { PROD_WEB, PROD_API } = require('../env');
@@ -79,3 +80,20 @@ for (const url of [PROD_WEB, PROD_API, PROD_WEB.replace('://', '://www.')]) {
     expect(giorni, `il certificato scade il ${cert.validTo.toISOString()}`).toBeGreaterThan(14);
   });
 }
+
+test('CSRF: le richieste dal nostro sito non vengono bloccate (anche con CSRF_ORIGIN_MODE=enforce)', async ({ request }) => {
+  // Come fa Safari/Chrome su iPhone o dall'icona sulla schermata Home: Origin = indirizzo del sito.
+  const nostro = await request.post(`${PROD_API}/api/auth/logout`, { headers: { Origin: PROD_WEB } });
+  expect(nostro.status(), 'il sito non deve ricevere "Origine non consentita"').not.toBe(403);
+
+  // www: accettato sia dal CORS sia dal controllo CSRF, oppure da nessuno dei due (oggi www
+  // reindirizza al sito, quindi dal browser non parte mai una richiesta con Origin www).
+  const www = PROD_WEB.replace('://', '://www.');
+  const pre = await request.fetch(`${PROD_API}/api/auth/login`, {
+    method: 'OPTIONS',
+    headers: { Origin: www, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' },
+  });
+  const corsOk = pre.headers()['access-control-allow-origin'] === www;
+  const post = await request.post(`${PROD_API}/api/auth/logout`, { headers: { Origin: www } });
+  if (corsOk) expect(post.status()).not.toBe(403);
+});

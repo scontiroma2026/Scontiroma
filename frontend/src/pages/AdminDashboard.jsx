@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
+import { useAppConfig } from "@/context/ConfigContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
@@ -37,6 +38,9 @@ export default function AdminDashboard() {
   const [merchants, setMerchants] = useState([]);
   const [pending, setPending] = useState([]);
   const [tab, setTab] = useState("analytics");
+  // Economics e Abbonati servono solo con l'abbonamento cliente acceso
+  // (CLIENT_SUBSCRIPTION_REQUIRED): nella fase di lancio restano nascoste, non cancellate.
+  const { subscriptionRequired } = useAppConfig();
   const [selectedMerchantId, setSelectedMerchantId] = useState(null);
   const [discountsOpen, setDiscountsOpen] = useState(false);
 
@@ -108,6 +112,7 @@ export default function AdminDashboard() {
   if (gated) return <AdminGate onVerified={onVerified} />;
   if (!stats) return <div className="mx-auto max-w-7xl px-6 py-16 text-white/60">Caricamento…</div>;
 
+  const SUBSCRIPTION_TABS = ["economics", "subscribers"];
   const tabs = [
     ["analytics", "Analytics"],
     ["economics", "Economics"],
@@ -121,7 +126,7 @@ export default function AdminDashboard() {
     ["reviews", "Feedback"],
     ["appfeedback", "Feedback App"],
     ["log", "Log completo"],
-  ];
+  ].filter(([k]) => subscriptionRequired || !SUBSCRIPTION_TABS.includes(k));
 
   return (
     <main data-testid="admin-dashboard" className="mx-auto max-w-7xl px-6 py-12 text-white">
@@ -166,7 +171,7 @@ export default function AdminDashboard() {
       </div>
 
       {tab === "analytics" && <AdminAnalytics stats={stats} />}
-      {tab === "subscribers" && <AdminSubscribers hdrs={hdrs} />}
+      {tab === "subscribers" && subscriptionRequired && <AdminSubscribers hdrs={hdrs} />}
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}
       {tab === "pending" && <AdminPending pending={pending} hdrs={hdrs} onRefresh={loadData} />}
       {tab === "nextmonth" && <AdminNextMonth hdrs={hdrs} />}
@@ -185,7 +190,7 @@ export default function AdminDashboard() {
       {tab === "fraud" && <FraudLog />}
       {tab === "reviews" && <ReviewsCenter />}
       {tab === "appfeedback" && <AdminAppFeedback hdrs={hdrs} />}
-      {tab === "economics" && <AdminEconomics hdrs={hdrs} />}
+      {tab === "economics" && subscriptionRequired && <AdminEconomics hdrs={hdrs} />}
       {tab === "traffic" && <AdminTraffic hdrs={hdrs} />}
       {tab === "log" && <AdminLog recent={stats.recent} />}
 

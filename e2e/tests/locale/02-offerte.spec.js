@@ -29,7 +29,11 @@ test('commerciante crea l\'offerta, admin approva, il cliente la vede', async ({
 
   await page.getByTestId('disc-validity-info').fill('Solo mercoledì e venerdì');
   await page.getByTestId('disc-uses-1').click();
+  // Prima la risposta del server (esito certo), poi l'avviso a comparsa, che sparisce da solo.
+  const salvataggio = page.waitForResponse((r) => r.url().endsWith('/api/merchants/me/discount') && r.request().method() === 'POST');
   await page.getByTestId('disc-submit').click();
+  const salvato = await salvataggio;
+  expect(salvato.status(), await salvato.text()).toBe(200);
   await expect(page.getByText(/Attende approvazione/i).first()).toBeVisible();
 
   // 3. Prima dell'approvazione non è pubblica

@@ -1,6 +1,11 @@
 # Sconti Roma
 
-App di abbonamento (€2,99/mese) per sconti nei negozi di Roma, con QR dinamico anti-frode per il riscatto.
+App di sconti nei negozi di Roma, con QR dinamico anti-frode per il riscatto.
+
+**Fase di lancio**: con `CLIENT_SUBSCRIPTION_REQUIRED=false` (predefinito) l'app è gratuita per i
+clienti: niente abbonamento per il QR, nessun nuovo pagamento, webhook Stripe/PayPal accettati
+ma senza effetti. Con `true` torna l'abbonamento a pagamento. Il sito legge lo stato da
+`GET /api/config/public`, quindi basta cambiare la variabile su Render.
 
 - **Backend**: FastAPI + MongoDB (Motor) — `backend/server.py`, `backend/email_service.py`, `backend/paypal_service.py`
 - **Frontend**: React (CRA + craco) — `frontend/src`
@@ -15,11 +20,12 @@ Backend (serve un MongoDB raggiungibile):
 cd backend
 pip install -r requirements.txt
 MONGO_URL=mongodb://localhost:27017 DB_NAME=scontiroma JWT_SECRET=dev \
-  SEED_DEMO_DATA=true CORS_ORIGINS=http://localhost:3000 \
+  CORS_ORIGINS=http://localhost:3000 \
   uvicorn server:app --port 8001 --reload
 ```
 
-`SEED_DEMO_DATA=true` crea gli account demo (cliente e commercianti). Non impostarlo mai in produzione.
+Gli account demo (cliente e commercianti con le offerte) non sono più nel server: li crea
+solo il server di test, `python e2e/server_e2e.py`, su un database locale.
 
 Frontend:
 
@@ -35,8 +41,8 @@ REACT_APP_BACKEND_URL=http://localhost:8001 yarn start
 
 Provano i flussi completi nel browser, contro un server e un database **locali**:
 registrazione cliente e commerciante, login, password dimenticata, creazione dell'offerta
-con "Migliora foto", approvazione admin, offerta visibile al cliente, abbonamento Stripe,
-QR (scadenza dopo 20 s e doppia scansione), limite di tentativi sul login, difesa CSRF,
+con "Migliora foto", approvazione admin, offerta visibile al cliente, fase di lancio gratuita
+(nessun pagamento possibile, webhook senza effetti), QR (scadenza dopo 20 s e doppia scansione), limite di tentativi sul login, difesa CSRF,
 Face ID con autenticatore virtuale.
 
 ```bash
@@ -54,9 +60,6 @@ npm test                    # avvia da solo server di test (porta 8001) e sito (
   localhost viene bloccata.
 - **Credenziali**: admin e segreti di prova valgono solo per il database locale (vedi
   `e2e/tests/env.js`). Email, PayPal e Gemini non vengono chiamati: Gemini è simulato.
-- **Stripe**: con `STRIPE_SECRET_KEY=sk_test_...` in ambiente il test paga davvero sulla pagina
-  di Stripe con la carta `4242 4242 4242 4242`; senza chiave quel test viene saltato e
-  l'attivazione dell'abbonamento si prova con un webhook firmato come lo firma Stripe.
 - `E2E_LOG=1 npm test` mostra i log del server; `npm run report` apre il report dopo un errore.
 
 ### Smoke test di sola lettura in produzione
@@ -77,10 +80,12 @@ cd backend
 python -m pytest tests/test_webauthn_config.py tests/test_dati_riservati.py -o addopts=""   # unitari
 MONGO_URL=mongomock://localhost \
   python -m pytest tests/test_campi_riservati_risposte.py -o addopts=""  # nessun campo riservato nelle risposte
+MONGO_URL=mongomock://localhost \
+  python -m pytest tests/test_interruttore_abbonamento.py -o addopts=""  # interruttore acceso e spento
 ```
 
-`test_campi_riservati_risposte.py` usa un MongoDB locale (o l'emulatore `mongomock-motor`) e
-rifiuta qualsiasi database remoto.
+`test_campi_riservati_risposte.py` e `test_interruttore_abbonamento.py` usano un MongoDB locale (o l'emulatore `mongomock-motor`) e
+rifiutano qualsiasi database remoto.
 
 `tests/test_legal_consent.py` invece richiede il server di test avviato
 (`python e2e/server_e2e.py`) con `TEST_BASE_URL=http://localhost:8001`,
@@ -93,8 +98,7 @@ rifiuta qualsiasi database remoto.
 - **Server (FastAPI)**: il server si installa e si avvia, test unitari WebAuthn;
 - **Sito (React)**: build di produzione;
 - **Test end-to-end**: MongoDB in un container, sito compilato per localhost, tutti i test
-  Playwright locali, poi `test_legal_consent.py`. Il test Stripe reale gira solo se nel
-  repository è impostato il secret `STRIPE_TEST_SECRET_KEY` (chiave `sk_test_...`).
+  Playwright locali, poi `test_legal_consent.py` e `test_interruttore_abbonamento.py`.
 
 `.github/workflows/smoke-produzione.yml` lancia gli smoke test di sola lettura dopo ogni
 unione su `main`, ogni mattina e a richiesta (Actions → Smoke produzione → Run workflow).

@@ -96,16 +96,6 @@ async function webhookCheckoutCompletato(request, sessionId, userId) {
   });
 }
 
-// Abbonamento attivato come in produzione dopo il pagamento: sessione registrata + webhook firmato.
-async function abbonamentoSimulato(request, email, userId) {
-  const s = await request.post(`${API}/__e2e/stripe/sessione-finta`, { params: { email } });
-  expect(s.status()).toBe(200);
-  const { session_id } = await s.json();
-  const w = await webhookCheckoutCompletato(request, session_id, userId);
-  expect(w.status(), await w.text()).toBe(200);
-  return session_id;
-}
-
 // ---------- Browser ----------
 // Login come lo fa il sito (cookie httpOnly), chiamando l'API dalla pagina.
 async function loginNelBrowser(page, email, password) {
@@ -117,4 +107,4 @@ async function loginNelBrowser(page, email, password) {
   expect(st).toBe(200);
 }
 
-module.exports = { test, expect, API, WEB, PASSWORD, MERCHANT, unico, chiama, registra, login, admin, creaOffertaApprovata, firmaStripe, webhookCheckoutCompletato, abbonamentoSimulato, loginNelBrowser };
+module.exports = { test, expect, API, WEB, PASSWORD, MERCHANT, unico, chiama, registra, login, admin, creaOffertaApprovata, firmaStripe, webhookCheckoutCompletato, loginNelBrowser };

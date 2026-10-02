@@ -15,10 +15,13 @@ export default function ClientDashboard() {
   const [pastDue, setPastDue] = useState(false);
   const [graceExpiresAt, setGraceExpiresAt] = useState(null);
   const [redemptions, setRedemptions] = useState([]);
+  // required=false: fase di lancio, Sconti Roma è gratuito per i clienti.
+  const [required, setRequired] = useState(true);
 
   useEffect(() => {
     api.get("/subscription/me").then((r) => {
       setSub(r.data.subscription);
+      setRequired(r.data.required !== false);
       setPastDue(!!r.data.past_due);
       setGraceExpiresAt(r.data.grace_expires_at || r.data.subscription?.grace_expires_at || null);
     });
@@ -44,7 +47,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* BANNER SOSPENSIONE — visibile solo se past_due entro la finestra di 7gg */}
-      {pastDue && graceExpiresAt && (
+      {required && pastDue && graceExpiresAt && (
         <SuspendedBanner graceExpiresAt={graceExpiresAt} />
       )}
 
@@ -53,7 +56,16 @@ export default function ClientDashboard() {
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
             <Sparkles size={12} /> Abbonamento
           </div>
-          {isActive ? (
+          {!required ? (
+            <>
+              <div data-testid="launch-free" className="mt-3 font-serif text-3xl text-terracotta">Gratis durante la fase di lancio</div>
+              <p className="mt-1 text-sm text-white/70">Per usare gli sconti non serve nessun abbonamento.</p>
+              <div className="mt-4 flex gap-2">
+                <Link to="/discounts"><Button className="grad-fucsia-viola text-white hover:scale-105 transition">Sfoglia sconti</Button></Link>
+                {isActive && <Link to="/subscribe"><Button variant="outline">Gestisci abbonamento</Button></Link>}
+              </div>
+            </>
+          ) : isActive ? (
             <>
               <div className="mt-3 font-serif text-3xl text-terracotta">Attivo</div>
               <div className="mt-1 text-sm text-white/70">
