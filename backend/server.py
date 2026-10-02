@@ -2079,6 +2079,16 @@ def _rome_day(dt_iso: Optional[str] = None) -> Optional[str]:
         return None
 
 
+def short_client_name(name: Optional[str]) -> str:
+    """Nome mostrato al commerciante alla scansione del QR: nome di battesimo e
+    iniziale del cognome ("Mario Rossi" -> "Mario R."), mai il nome completo."""
+    parts = (name or "").split()
+    if not parts:
+        return "Cliente"
+    first = parts[0][:1].upper() + parts[0][1:]
+    return f"{first} {parts[-1][:1].upper()}." if len(parts) > 1 else first
+
+
 async def _last_redeemed(user_id: str, merchant_id: str, exclude_id: Optional[str] = None) -> Optional[dict]:
     q = {"user_id": user_id, "merchant_id": merchant_id, "status": "redeemed"}
     if exclude_id:
@@ -2314,7 +2324,7 @@ async def qr_verify_public(token: str):
     c = await db.users.find_one({"id": r.get("user_id")})
     return {
         "valid": True,
-        "client_name": (c.get("name") if c else "").split(" ")[0] if c else "Cliente",
+        "client_name": short_client_name(c.get("name") if c else None),
         "client_initial": ((c.get("name","?")[:1] or "?").upper()) if c else "?",
         "shop_name": m.get("shop_name") if m else "-",
         "discount_title": disc.get("title") if disc else "-",
@@ -2359,11 +2369,12 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
     if result.modified_count == 0:
         raise HTTPException(400, "Codice già utilizzato")
     r = await db.redemptions.find_one({"id": r["id"]})
-    r = {k: v for k, v in r.items() if k != "_id"}
     disc = await db.discounts.find_one({"id": r["discount_id"]})
     cu = await db.users.find_one({"id": r["user_id"]})
+    # Al commerciante niente id del cliente e solo nome + iniziale del cognome.
+    r = {k: v for k, v in r.items() if k not in ("_id", "user_id")}
     r["discount_title"] = disc.get("title") if disc else ""
-    r["client_name"] = cu.get("name") if cu else ""
+    r["client_name"] = short_client_name(cu.get("name") if cu else None)
     return {"redemption": r}
 
 
@@ -4327,7 +4338,8 @@ async def admin_geocode_confirm(
 # ---------- Include Router & CORS (LAST) ----------
 app.include_router(api)
 
-cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+# Stessa forma che il browser mette nell'header Origin: senza spazi e senza barra finale.
+cors_origins = [o.strip().rstrip("/") for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip().rstrip("/")]
 if not cors_origins:
     # Non usare mai wildcard `*` con credentials — i browser rifiutano la
     # combinazione. In sviluppo locale accetta il frontend classico su :3000.
@@ -4352,8 +4364,8 @@ async def origin_check_middleware(request: Request, call_next):
             hosts = {
                 (request.headers.get("host") or "").lower(),
                 (request.headers.get("x-forwarded-host") or "").split(",")[0].strip().lower(),
-            }
-            if o_host not in hosts:
+            } - {""}  # un header mancante non deve far passare un Origin senza host ("null")
+            if not o_host or o_host not in hosts:
                 logging.warning(f"[csrf] Origin non riconosciuto: {origin} su {request.method} {request.url.path}")
                 if CSRF_ORIGIN_MODE == "enforce":
                     return JSONResponse({"detail": "Origine non consentita"}, status_code=403)
