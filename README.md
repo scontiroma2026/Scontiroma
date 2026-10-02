@@ -74,8 +74,13 @@ principale, certificati validi per almeno 14 giorni.
 
 ```bash
 cd backend
-python -m pytest tests/test_webauthn_config.py -o addopts=""        # unitari, senza server
+python -m pytest tests/test_webauthn_config.py tests/test_dati_riservati.py -o addopts=""   # unitari
+MONGO_URL=mongomock://localhost \
+  python -m pytest tests/test_campi_riservati_risposte.py -o addopts=""  # nessun campo riservato nelle risposte
 ```
+
+`test_campi_riservati_risposte.py` usa un MongoDB locale (o l'emulatore `mongomock-motor`) e
+rifiuta qualsiasi database remoto.
 
 `tests/test_legal_consent.py` invece richiede il server di test avviato
 (`python e2e/server_e2e.py`) con `TEST_BASE_URL=http://localhost:8001`,

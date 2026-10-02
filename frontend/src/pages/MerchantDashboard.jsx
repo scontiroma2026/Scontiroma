@@ -4,7 +4,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { QrCode, TicketPercent, Users, TrendingUp } from "lucide-react";
+import { QrCode, TicketPercent, Users, TrendingUp, ShieldCheck } from "lucide-react";
 import GdprSection from "@/components/GdprSection";
 import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
@@ -30,11 +30,18 @@ export default function MerchantDashboard() {
           <h1 className="mt-2 font-serif text-4xl sm:text-5xl break-words">{user?.shop_name || user?.name}</h1>
           <div className="mt-1 text-sm text-white/60">{user?.zone} · {user?.category}</div>
         </div>
-        <Link to="/merchant/scan">
-          <Button data-testid="go-scan-btn" size="lg" className="grad-fucsia-viola text-white hover:scale-105 transition">
-            <QrCode size={18} className="mr-2" /> Scansiona codice
-          </Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/setup-security?da=account">
+            <Button data-testid="security-link" size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <ShieldCheck size={18} className="mr-2" /> Sicurezza
+            </Button>
+          </Link>
+          <Link to="/merchant/scan">
+            <Button data-testid="go-scan-btn" size="lg" className="grad-fucsia-viola text-white hover:scale-105 transition">
+              <QrCode size={18} className="mr-2" /> Scansiona codice
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
