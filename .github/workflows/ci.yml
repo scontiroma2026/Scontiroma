@@ -100,9 +100,12 @@ jobs:
           cd backend
           TEST_BASE_URL=http://localhost:8001 TEST_ADMIN_EMAIL=admin@example.com TEST_ADMIN_PASSWORD=e2e-admin-password \
             python -m pytest tests/test_legal_consent.py -o addopts="" -q -p no:cacheprovider
+      - name: Nessuna risposta contiene campi riservati (server in-process, MongoDB del runner)
+        working-directory: backend
+        run: python -m pytest tests/test_campi_riservati_risposte.py -o addopts="" -q -p no:cacheprovider
       - name: Test dell'interruttore abbonamento (server in-process, MongoDB del runner)
         working-directory: backend
-        run: python -m pytest tests/test_interruttore_abbonamento.py tests/test_ultimi_codici.py tests/test_campi_riservati_risposte.py -o addopts="" -q -p no:cacheprovider
+        run: python -m pytest tests/test_interruttore_abbonamento.py tests/test_ultimi_codici.py -o addopts="" -q -p no:cacheprovider
       - name: Report Playwright (se qualcosa fallisce)
         if: failure()
         uses: actions/upload-artifact@v4

@@ -6,14 +6,50 @@ Prepara un cliente e un commerciante con tutti i campi riservati valorizzati con
 marcatore riconoscibile, poi chiama OGNI rotta GET del server (più login e modifiche
 profilo) da anonimo, cliente, commerciante e admin con master password, e controlla che
 nessuna risposta contenga né il nome di un campo riservato né il marcatore.
-Database locale come negli altri test (rifiuta database remoti).
+Gira in-process contro un MongoDB locale o l'emulatore (rifiuta database remoti).
 """
+import asyncio
 import json
 import os
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
-from test_interruttore_abbonamento import run, server
+import pytest
+
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+_u = urlparse(MONGO_URL)
+if not (_u.scheme == "mongomock" or (_u.scheme == "mongodb" and (_u.hostname or "") in ("localhost", "127.0.0.1", "::1"))):
+    pytest.exit(f"MONGO_URL non locale ({_u.scheme}://{_u.hostname}): test rifiutati.", returncode=2)
+USE_MOCK = _u.scheme == "mongomock"
+DB_NAME = "e2e_unit_campi_riservati"
+
+os.environ["MONGO_URL"] = "mongodb://localhost:27017" if USE_MOCK else MONGO_URL
+os.environ.setdefault("DB_NAME", DB_NAME)
+os.environ.setdefault("JWT_SECRET", "test-unit-secret-0123456789abcdef")
+os.environ["RESEND_API_KEY"] = ""
+
+import httpx  # noqa: E402
+
+import server  # noqa: E402
+
+
+def run(test_body):
+    """Esegue `test_body(client)` in-process contro un database di test vuoto."""
+    async def main():
+        if USE_MOCK:
+            import mongomock_motor
+            server.db = mongomock_motor.AsyncMongoMockClient()[DB_NAME]
+        else:
+            from motor.motor_asyncio import AsyncIOMotorClient
+            cli = AsyncIOMotorClient(MONGO_URL)
+            await cli.drop_database(DB_NAME)
+            server.db = cli[DB_NAME]
+        transport = httpx.ASGITransport(app=server.app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+            await test_body(c)
+    asyncio.run(main())
+
 
 MARK = "SEGRETO-TEST"
 PASSWORD = "password-test-123456"
@@ -136,4 +172,4 @@ def test_nessuna_risposta_contiene_campi_riservati(monkeypatch):
                         ("/api/admin/merchants", admin_h), ("/api/admin/subscribers", admin_h)]:
             assert (await c.get(path, headers=h)).status_code == 200, path
         assert controllate > 100
-    run(body, required=False)
+    run(body)
