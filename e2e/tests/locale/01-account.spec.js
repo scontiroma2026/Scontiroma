@@ -98,3 +98,35 @@ test('CSRF: una richiesta da un altro sito viene bloccata, dal nostro sito passa
   const senza = await chiama(request, 'POST', '/auth/login', { body }); // server-to-server (es. webhook)
   expect(senza.status).toBe(401);
 });
+
+test('PIN: dopo 5 tentativi sbagliati la pagina mostra il blocco e disattiva il campo', async ({ page, request }) => {
+  const u = await registra(request, 'client');
+  expect((await chiama(request, 'POST', '/auth/pin', { token: u.token, body: { pin: '135790' } })).status).toBe(200);
+  await page.goto('/login');
+  await page.getByTestId('login-email').fill(u.email);
+  await page.getByTestId('use-pin-btn').click();
+  for (let i = 0; i < 6; i++) {
+    await page.getByTestId('pin-input').fill('000000');
+    const risposta = page.waitForResponse((r) => r.url().endsWith('/api/auth/pin-login'));
+    await page.getByTestId('pin-submit').click();
+    if ((await risposta).status() === 429) break;
+    await expect(page.getByTestId('pin-input')).toHaveValue(''); // svuotato dopo ogni errore
+  }
+  await expect(page.getByTestId('pin-locked')).toContainText('PIN bloccato per sicurezza');
+  await expect(page.getByTestId('pin-locked')).toContainText(/Riprova tra \d+ minut/);
+  await expect(page.getByTestId('pin-input')).toBeDisabled();
+  await expect(page.getByTestId('pin-submit')).toBeDisabled();
+  // Durante il blocco anche il PIN giusto è rifiutato dal server
+  expect((await chiama(request, 'POST', '/auth/pin-login', { body: { email: u.email, pin: '135790' } })).status).toBe(429);
+  await page.getByTestId('pin-locked-use-password').click();
+  await expect(page.getByTestId('login-password')).toBeVisible();
+});
+
+test('PIN: blocco anche per un account senza PIN o un\'email inesistente', async ({ request }) => {
+  const senzaPin = (await registra(request, 'client')).email;
+  for (const email of [senzaPin, unico('nessuno')]) {
+    const esiti = [];
+    for (let i = 0; i < 6; i++) esiti.push((await chiama(request, 'POST', '/auth/pin-login', { body: { email, pin: '000000' } })).status);
+    expect(esiti).toEqual([401, 401, 401, 401, 401, 429]);
+  }
+});

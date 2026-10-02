@@ -21,6 +21,16 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [autoTried, setAutoTried] = useState(false);
+  // PIN bloccato dal server dopo troppi tentativi: fino a quando (ms) e minuti rimasti.
+  const [pinLockedUntil, setPinLockedUntil] = useState(0);
+  const [now, setNow] = useState(Date.now());
+  const pinLocked = pinLockedUntil > now;
+  const lockMinutes = Math.max(1, Math.ceil((pinLockedUntil - now) / 60000));
+  useEffect(() => {
+    if (!pinLockedUntil) return undefined;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [pinLockedUntil]);
 
   const goBiometric = async () => {
     if (!email) return toast.error("Inserisci l'email");
@@ -70,7 +80,14 @@ export default function Login() {
       toast.success("Accesso effettuato");
       nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
     } catch (err) {
-      toast.error(formatApiError(err));
+      setPin("");
+      if (err?.response?.status === 429) {
+        const m = /(\d+)\s*minut/.exec(formatApiError(err) || "");
+        setPinLockedUntil(Date.now() + (m ? parseInt(m[1], 10) : 15) * 60000);
+        setNow(Date.now());
+      } else {
+        toast.error(formatApiError(err));
+      }
     } finally { setBusy(false); }
   };
 
@@ -155,9 +172,21 @@ export default function Login() {
             </button>
             <h1 className="font-serif text-4xl text-white">Il tuo PIN</h1>
             <p className="mt-2 text-sm text-white/60">6 cifre per {email || "il tuo account"}</p>
+            {pinLocked && (
+              <div data-testid="pin-locked" role="alert" className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+                <strong className="block text-red-100">PIN bloccato per sicurezza</strong>
+                Troppi tentativi sbagliati. Riprova tra {lockMinutes} {lockMinutes === 1 ? "minuto" : "minuti"},
+                oppure usa "Hai dimenticato il PIN?" o accedi con la password.
+                <button type="button" data-testid="pin-locked-use-password" onClick={() => setStep("password")}
+                  className="mt-2 block font-semibold text-white underline-offset-4 hover:underline">
+                  Accedi con la password
+                </button>
+              </div>
+            )}
             <form onSubmit={submitPin} className="mt-6 space-y-4">
               <PasswordInput
                 data-testid="pin-input"
+                disabled={pinLocked}
                 inputMode="numeric"
                 pattern="[0-9]{6}"
                 maxLength={6}
@@ -166,7 +195,7 @@ export default function Login() {
                 className="text-center text-3xl tracking-[0.5em] font-mono bg-black/40 border-white/10 text-white py-6"
                 autoFocus
               />
-              <Button data-testid="pin-submit" type="submit" disabled={pin.length !== 6 || busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
+              <Button data-testid="pin-submit" type="submit" disabled={pin.length !== 6 || busy || pinLocked} className="w-full grad-fucsia-viola text-white rounded-full py-6">
                 {busy ? "Attendi…" : "Entra"}
               </Button>
               <div className="text-center text-xs space-y-2">
