@@ -1,0 +1,15 @@
+{
+  "name": "scontiroma-e2e",
+  "private": true,
+  "description": "Test end-to-end di Sconti Roma (Playwright): flussi completi in locale e smoke test di sola lettura in produzione.",
+  "scripts": {
+    "build:sito": "bash scripts/build-sito.sh",
+    "test": "playwright test",
+    "test:produzione": "playwright test -c playwright.produzione.config.js",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "serve": "14.2.4"
+  }
+}

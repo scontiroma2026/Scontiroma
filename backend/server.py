@@ -53,7 +53,7 @@ from webauthn import (
 from webauthn.helpers.structs import (
     AuthenticatorAttachment, AuthenticatorSelectionCriteria,
     ResidentKeyRequirement, UserVerificationRequirement,
-    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialDescriptor, AuthenticatorTransport,
 )
 
 
@@ -73,8 +73,23 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_299eur"
 
 # WebAuthn
-WEBAUTHN_RP_ID = os.environ.get("WEBAUTHN_RP_ID", "localhost")
-WEBAUTHN_ORIGIN = os.environ.get("WEBAUTHN_ORIGIN", "http://localhost:3000")
+def _webauthn_origins(raw: str) -> list:
+    """Origini accettate per Face ID / impronta, normalizzate come le invia il browser:
+    senza spazi e senza barra finale ("https://scontiroma.it/" -> "https://scontiroma.it").
+    Se ne possono indicare più di una separate da virgola."""
+    return [o.strip().rstrip("/") for o in (raw or "").split(",") if o.strip().rstrip("/")]
+
+
+def _webauthn_rp_id(raw: str) -> str:
+    """RP ID = solo il dominio: tollera "https://", barra finale e maiuscole."""
+    rp = (raw or "").strip().lower()
+    if "://" in rp:
+        rp = urlparse(rp).hostname or ""
+    return rp.strip("/")
+
+
+WEBAUTHN_RP_ID = _webauthn_rp_id(os.environ.get("WEBAUTHN_RP_ID", "localhost")) or "localhost"
+WEBAUTHN_ORIGIN = _webauthn_origins(os.environ.get("WEBAUTHN_ORIGIN", "http://localhost:3000")) or ["http://localhost:3000"]
 WEBAUTHN_RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "Sconti Roma")
 CHALLENGE_TTL = timedelta(minutes=5)
 
@@ -747,6 +762,42 @@ async def pin_reset(payload: PinResetIn):
     return {"ok": True, "message": "PIN aggiornato. Ora puoi accedere."}
 
 
+def _transports(raw) -> Optional[List[AuthenticatorTransport]]:
+    """I transports salvati nel DB sono stringhe ("internal", "hybrid"...): la libreria
+    vuole i valori dell'enum, altrimenti /login/begin va in errore 500 appena il telefono
+    li ha comunicati (cioè sempre su iPhone). I valori sconosciuti vengono ignorati."""
+    out = []
+    for t in raw or []:
+        try:
+            out.append(AuthenticatorTransport(t))
+        except ValueError:
+            pass
+    return out or None
+
+
+async def _verify_with_challenge(user_id: str, kind: str, verify):
+    """Verifica la risposta biometrica con le sfide ancora valide dell'utente, dalla più
+    recente. Se /begin è stato chiamato più volte (doppio tocco, nuovo tentativo dopo un
+    annullamento) restano più sfide: prima veniva presa una qualsiasi, spesso la vecchia,
+    e la verifica falliva. Le sfide provate vengono poi cancellate (sono monouso).
+    Ritorna (risultato, errore); (None, None) se non c'è nessuna sfida valida."""
+    chs = await db.webauthn_challenges.find({
+        "user_id": user_id, "kind": kind,
+        "expires_at": {"$gt": datetime.now(timezone.utc)},
+    }).sort("expires_at", -1).to_list(length=10)
+    if not chs:
+        return None, None
+    result, err = None, None
+    for ch in chs:
+        try:
+            result = verify(unb64u(ch["challenge"]))
+            break
+        except Exception as exc:  # sfida sbagliata o risposta non valida: prova la successiva
+            err = exc
+    await db.webauthn_challenges.delete_many({"_id": {"$in": [c["_id"] for c in chs]}})
+    return result, err
+
+
 @api.post("/webauthn/register/begin")
 async def webauthn_register_begin(user: dict = Depends(get_current_user)):
     u = await db.users.find_one({"id": user["id"]})
@@ -776,22 +827,17 @@ async def webauthn_register_begin(user: dict = Depends(get_current_user)):
 
 @api.post("/webauthn/register/complete")
 async def webauthn_register_complete(payload: WebAuthnCompleteIn, user: dict = Depends(get_current_user)):
-    ch = await db.webauthn_challenges.find_one_and_delete({
-        "user_id": user["id"], "kind": "register",
-        "expires_at": {"$gt": datetime.now(timezone.utc)},
-    })
-    if not ch:
+    v, err = await _verify_with_challenge(user["id"], "register", lambda challenge: verify_registration_response(
+        credential=payload.credential,
+        expected_challenge=challenge,
+        expected_rp_id=WEBAUTHN_RP_ID,
+        expected_origin=WEBAUTHN_ORIGIN,
+        require_user_verification=False,
+    ))
+    if v is None and err is None:
         raise HTTPException(400, "Sessione scaduta, riprova")
-    try:
-        v = verify_registration_response(
-            credential=payload.credential,
-            expected_challenge=unb64u(ch["challenge"]),
-            expected_rp_id=WEBAUTHN_RP_ID,
-            expected_origin=WEBAUTHN_ORIGIN,
-            require_user_verification=False,
-        )
-    except Exception as exc:
-        raise HTTPException(400, f"Registrazione biometrica fallita: {exc}")
+    if v is None:
+        raise HTTPException(400, f"Registrazione biometrica fallita: {err}")
     transports = payload.credential.get("response", {}).get("transports", [])
     record = {
         "credential_id": b64u(v.credential_id),
@@ -811,7 +857,7 @@ async def webauthn_login_begin(payload: WebAuthnLoginBeginIn):
     if not u or not u.get("webauthn_credentials"):
         raise HTTPException(400, "Nessun dispositivo biometrico registrato")
     allow = [PublicKeyCredentialDescriptor(
-        id=unb64u(c["credential_id"]), transports=c.get("transports") or None)
+        id=unb64u(c["credential_id"]), transports=_transports(c.get("transports")))
         for c in u["webauthn_credentials"]]
     options = generate_authentication_options(
         rp_id=WEBAUTHN_RP_ID, allow_credentials=allow,
@@ -832,24 +878,19 @@ async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Respons
     u = await db.users.find_one({"webauthn_credentials.credential_id": cid})
     if not u:
         raise HTTPException(401, "Autenticazione fallita")
-    ch = await db.webauthn_challenges.find_one_and_delete({
-        "user_id": u["id"], "kind": "login",
-        "expires_at": {"$gt": datetime.now(timezone.utc)},
-    })
-    if not ch:
-        raise HTTPException(401, "Sessione scaduta, riprova")
     cred = next(c for c in u["webauthn_credentials"] if c["credential_id"] == cid)
-    try:
-        v = verify_authentication_response(
-            credential=payload.credential,
-            expected_challenge=unb64u(ch["challenge"]),
-            expected_rp_id=WEBAUTHN_RP_ID,
-            expected_origin=WEBAUTHN_ORIGIN,
-            credential_public_key=unb64u(cred["public_key"]),
-            credential_current_sign_count=cred.get("sign_count", 0),
-            require_user_verification=False,
-        )
-    except Exception:
+    v, err = await _verify_with_challenge(u["id"], "login", lambda challenge: verify_authentication_response(
+        credential=payload.credential,
+        expected_challenge=challenge,
+        expected_rp_id=WEBAUTHN_RP_ID,
+        expected_origin=WEBAUTHN_ORIGIN,
+        credential_public_key=unb64u(cred["public_key"]),
+        credential_current_sign_count=cred.get("sign_count", 0),
+        require_user_verification=False,
+    ))
+    if v is None and err is None:
+        raise HTTPException(401, "Sessione scaduta, riprova")
+    if v is None:
         raise HTTPException(401, "Autenticazione fallita")
     await db.users.update_one(
         {"id": u["id"], "webauthn_credentials.credential_id": cid},
@@ -2386,7 +2427,7 @@ async def webauthn_master_begin(user: dict = Depends(require_admin)):
     if not creds:
         raise HTTPException(400, "Nessun dispositivo biometrico registrato. Configuralo dalla pagina Sicurezza.")
     allow = [PublicKeyCredentialDescriptor(
-        id=unb64u(c["credential_id"]), transports=c.get("transports") or None)
+        id=unb64u(c["credential_id"]), transports=_transports(c.get("transports")))
         for c in creds]
     options = generate_authentication_options(
         rp_id=WEBAUTHN_RP_ID, allow_credentials=allow,
@@ -2406,23 +2447,18 @@ async def webauthn_master_complete(payload: WebAuthnCompleteIn, response: Respon
     cred = next((c for c in ((u or {}).get("webauthn_credentials") or []) if c["credential_id"] == cid), None)
     if not cred:
         raise HTTPException(401, "Credenziale non riconosciuta")
-    ch = await db.webauthn_challenges.find_one_and_delete({
-        "user_id": u["id"], "kind": "master",
-        "expires_at": {"$gt": datetime.now(timezone.utc)},
-    })
-    if not ch:
+    v, err = await _verify_with_challenge(u["id"], "master", lambda challenge: verify_authentication_response(
+        credential=payload.credential,
+        expected_challenge=challenge,
+        expected_rp_id=WEBAUTHN_RP_ID,
+        expected_origin=WEBAUTHN_ORIGIN,
+        credential_public_key=unb64u(cred["public_key"]),
+        credential_current_sign_count=cred.get("sign_count", 0),
+        require_user_verification=False,
+    ))
+    if v is None and err is None:
         raise HTTPException(401, "Sessione scaduta, riprova")
-    try:
-        v = verify_authentication_response(
-            credential=payload.credential,
-            expected_challenge=unb64u(ch["challenge"]),
-            expected_rp_id=WEBAUTHN_RP_ID,
-            expected_origin=WEBAUTHN_ORIGIN,
-            credential_public_key=unb64u(cred["public_key"]),
-            credential_current_sign_count=cred.get("sign_count", 0),
-            require_user_verification=False,
-        )
-    except Exception:
+    if v is None:
         raise HTTPException(401, "Verifica biometrica fallita")
     await db.users.update_one(
         {"id": u["id"], "webauthn_credentials.credential_id": cid},
