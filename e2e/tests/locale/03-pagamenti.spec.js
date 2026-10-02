@@ -59,3 +59,15 @@ test('webhook Stripe: firma sbagliata rifiutata, evento firmato accettato senza 
   const exp = await chiama(request, 'GET', '/gdpr/export', { token: c.token });
   expect(exp.data.subscriptions).toHaveLength(0);
 });
+
+test('pannello admin: "Economics" e "Abbonati" nascoste nella fase di lancio', async ({ page }) => {
+  const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_MASTER_PASSWORD } = require('../env');
+  await loginNelBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+  await page.goto('/admin');
+  await page.getByTestId('master-pw').fill(ADMIN_MASTER_PASSWORD);
+  await page.getByTestId('master-submit').click();
+  await expect(page.getByTestId('tab-analytics')).toBeVisible();
+  await expect(page.getByTestId('tab-traffic')).toBeVisible();
+  await expect(page.getByTestId('tab-economics')).toHaveCount(0);
+  await expect(page.getByTestId('tab-subscribers')).toHaveCount(0);
+});
