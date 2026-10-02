@@ -66,7 +66,7 @@ La Pull Request va **unita su `main`** prima della Fase 3.
 | `GEMINI_API_KEY` | la chiave di Google AI Studio |
 
 `JWT_SECRET`, `DB_NAME`, `PAYPAL_MODE` e gli altri li imposta Render da solo.
-**Non** impostare `SEED_DEMO_DATA`: senza, gli account demo non vengono creati.
+Gli account demo non sono più nel server (esistono solo nei test locali, `e2e/seed_demo.py`).
 
 ### Sito `scontiroma-web`
 

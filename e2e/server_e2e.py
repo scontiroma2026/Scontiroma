@@ -9,6 +9,7 @@ Cosa fa in più rispetto a `uvicorn server:app`:
   (admin di test, segreto JWT di test, segreto webhook Stripe di test...);
 - spegne email, PayPal e Gemini veri: Gemini è simulato e restituisce
   un'immagine fissa, così "Migliora foto" si prova senza chiamare Google;
+- crea gli account e le offerte demo (e2e/seed_demo.py);
 - aggiunge due rotte /__e2e/... usate solo dai test (leggere il token di
   reset password dal DB locale e creare una sessione di pagamento finta).
 
@@ -44,7 +45,6 @@ if STRIPE_KEY and not STRIPE_KEY.startswith(("sk_test_", "rk_test_")):
 os.environ.update({
     "MONGO_URL": MONGO_URL if not USE_MOCK else "mongodb://localhost:27017",
     "DB_NAME": DB_NAME,
-    "SEED_DEMO_DATA": "true",
     "APP_URL": WEB, "FRONTEND_URL": WEB, "CORS_ORIGINS": WEB,
     "CSRF_ORIGIN_MODE": "enforce",
     "WEBAUTHN_RP_ID": "localhost",
@@ -117,6 +117,13 @@ import uvicorn  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 
 import server  # noqa: E402
+from seed_demo import seed_demo  # noqa: E402
+
+
+@server.app.on_event("startup")
+async def _e2e_seed_demo():
+    """Account e offerte demo (e2e/seed_demo.py): esistono solo nel database di test."""
+    await seed_demo(server.db, server.hash_password)
 
 
 @server.app.get("/__e2e/reset-token")
