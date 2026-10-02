@@ -156,12 +156,24 @@ def set_auth_cookies(response: Response, access: str, refresh: str):
     response.set_cookie("refresh_token", refresh, max_age=REFRESH_TTL_DAYS * 86400, **common)
 
 
+# Campi che non devono mai uscire dal server (hash, token monouso, contatori di sicurezza).
+_PRIVATE_USER_FIELDS = (
+    "_id", "password_hash", "pin_hash", "master_hash", "recovery_id_hash",
+    "reset_token", "reset_expires", "reset_req_log",
+    "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log",
+    "login_failed_attempts", "pin_failed_attempts", "recovery_failed_attempts",
+    "webauthn_credentials", "webauthn_user_id",
+)
+
+
 def sanitize_user(u: dict) -> dict:
     if not u:
         return u
     u = dict(u)
-    u.pop("password_hash", None)
-    u.pop("_id", None)
+    # Per la pagina Sicurezza basta sapere quanti dispositivi Face ID sono registrati.
+    u["biometric_devices"] = len(u.get("webauthn_credentials") or [])
+    for k in _PRIVATE_USER_FIELDS:
+        u.pop(k, None)
     return u
 
 
@@ -2980,7 +2992,7 @@ async def admin_list_merchants(user: dict = Depends(require_admin_master)):
     docs = await db.users.find({"role": "merchant"}).sort("created_at", -1).to_list(500)
     out = []
     for m in docs:
-        m = {k: v for k, v in m.items() if k not in ("_id", "password_hash", "pin_hash", "webauthn_credentials", "webauthn_user_id")}
+        m = sanitize_user(m)
         m["approved"] = m.get("approved", True)  # default True for existing
         disc = await db.discounts.find_one({"merchant_id": m["id"]})
         m["has_discount"] = disc is not None
@@ -3993,7 +4005,8 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
     uid = user["id"]
 
     # Fetch collections (only what belongs to this user)
-    profile = await db.users.find_one({"id": uid}, {"_id": 0, "password_hash": 0, "pin_hash": 0, "reset_token": 0, "webauthn_credentials": 0})
+    # Dati personali sì, segreti tecnici no (hash, token monouso, contatori di sicurezza).
+    profile = sanitize_user(await db.users.find_one({"id": uid}))
 
     redemptions = await db.redemptions.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     qr_scans = await db.qr_scans.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
