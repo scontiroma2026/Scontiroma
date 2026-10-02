@@ -72,11 +72,13 @@ test('pannello admin: "Economics" e "Abbonati" nascoste nella fase di lancio', a
   await expect(page.getByTestId('tab-subscribers')).toHaveCount(0);
 });
 
-test('assistenza: fase di lancio gratuita, contatto info@scontiroma.it, nessun prezzo', async ({ page }) => {
+test('assistenza: fase di lancio gratuita, nessun prezzo, annullamento solo per chi ha un abbonamento', async ({ page }) => {
   await page.goto('/support');
   const testo = page.getByTestId('support-launch-free');
-  await expect(testo).toContainText('Durante la fase di lancio Sconti Roma è gratuito');
-  await expect(testo).toContainText('info@scontiroma.it');
-  await expect(testo).toContainText('Hai già un abbonamento attivo?');
+  await expect(testo).toContainText('Abbonamento e recesso');
+  await expect(testo).toContainText('durante la fase di lancio Sconti Roma è gratuito e non serve nessun abbonamento');
+  await expect(testo).toContainText('Se hai un abbonamento attivo (per esempio di prova)');
+  await expect(page.getByTestId('row-info')).toContainText('Problemi di accesso, uso dei QR, domande sugli sconti');
+  await expect(page.getByTestId('row-info')).not.toContainText('pagamento');
   await expect(page.getByText(/€\s*\d|per sempre/i)).toHaveCount(0);
 });

@@ -124,16 +124,13 @@ export default function Support() {
             </li>
           ) : (
             <li data-testid="support-launch-free">
-              <p className="text-white/80">
-                Durante la fase di lancio Sconti Roma è gratuito: per usare gli sconti non serve
-                nessun abbonamento. Per qualsiasi domanda scrivi a{" "}
-                <a href="mailto:info@scontiroma.it" className="text-white underline-offset-4 hover:underline">info@scontiroma.it</a>.
-              </p>
               <Link
                 to="/recesso"
-                className="mt-1 inline-block text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+                className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
               >
-                → Hai già un abbonamento attivo? Come annullarlo da "Il mio account" (Diritto di Recesso 14 giorni)
+                → <strong>Abbonamento e recesso</strong>: durante la fase di lancio Sconti Roma è
+                gratuito e non serve nessun abbonamento. Se hai un abbonamento attivo (per esempio
+                di prova), puoi annullarlo da "Il mio account".
               </Link>
             </li>
           )}
