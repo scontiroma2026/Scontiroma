@@ -691,17 +691,50 @@ async def _reset_request_allowed(user: dict, key: str) -> bool:
     return True
 
 
+# Hash bcrypt di un PIN che nessuno può avere: serve a fare lo stesso lavoro (e metterci lo
+# stesso tempo) anche quando l'account non esiste o non ha un PIN.
+_DUMMY_PIN_HASH = hash_password(secrets.token_hex(16))
+
+
+def _pin_guard_key(email: str) -> str:
+    # Si conserva solo l'impronta dell'email digitata, non l'email: può non essere di nessuno.
+    return hashlib.sha256(email.encode()).hexdigest()
+
+
+async def _pin_guard_fail(email: str) -> None:
+    """Tentativo di PIN fallito per un'email senza account o senza PIN: stesso limite
+    (PIN_MAX_ATTEMPTS, poi blocco di PIN_LOCK_MINUTES) degli account con PIN, così il
+    comportamento è identico e non rivela se l'account esiste o ha un PIN."""
+    now = datetime.now(timezone.utc)
+    doc = await db.pin_login_guard.find_one_and_update(
+        {"key": _pin_guard_key(email)},
+        {"$inc": {"failed_attempts": 1}, "$set": {"expires_at": now + timedelta(days=1)}},
+        upsert=True, return_document=ReturnDocument.AFTER,
+    )
+    if doc and doc.get("failed_attempts", 0) >= PIN_MAX_ATTEMPTS:
+        await db.pin_login_guard.update_one({"key": doc["key"]}, {"$set": {
+            "locked_until": (now + timedelta(minutes=PIN_LOCK_MINUTES)).isoformat(),
+            "failed_attempts": 0}})
+
+
 @api.post("/auth/pin-login")
 async def pin_login(payload: PinLoginIn, response: Response):
     if not payload.pin.isdigit():
         raise HTTPException(422, "PIN non valido")
     email = payload.email.lower().strip()
     u = await db.users.find_one({"email": email})
-    if u:
+    has_pin = bool(u and u.get("pin_hash"))
+    if has_pin:
         _lock_check(u, "pin_locked_until")
-    if not u or not u.get("pin_hash") or not verify_password(payload.pin, u["pin_hash"]):
-        if u and u.get("pin_hash"):
+    else:
+        guard = await db.pin_login_guard.find_one({"key": _pin_guard_key(email)})
+        if guard:
+            _lock_check(guard, "locked_until")
+    if not verify_password(payload.pin, u["pin_hash"] if has_pin else _DUMMY_PIN_HASH) or not has_pin:
+        if has_pin:
             await _register_user_failure(u["id"], "pin", PIN_MAX_ATTEMPTS, PIN_LOCK_MINUTES)
+        else:
+            await _pin_guard_fail(email)
         raise HTTPException(401, "Credenziali non valide")
     await db.users.update_one({"id": u["id"]}, {"$set": {"pin_failed_attempts": 0, "pin_locked_until": None}})
     access = create_token(u["id"], u["email"], "access")
@@ -3411,6 +3444,8 @@ async def on_startup():
     if not stripe.api_key:
         logging.warning("STRIPE_SECRET_KEY non impostata: i pagamenti Stripe non funzioneranno")
     await db.users.create_index("email", unique=True)
+    await db.pin_login_guard.create_index("key", unique=True)
+    await db.pin_login_guard.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("id", unique=True)
     await db.discounts.create_index("merchant_id")
     await db.subscriptions.create_index("user_id")
