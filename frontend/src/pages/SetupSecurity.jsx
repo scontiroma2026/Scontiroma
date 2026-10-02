@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useAppConfig } from "@/context/ConfigContext";
 import api, { formatApiError } from "@/lib/api";
@@ -21,6 +21,13 @@ export default function SetupSecurity() {
   const [pinSaved, setPinSaved] = useState(false);
   const [bioEnrolled, setBioEnrolled] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Aperta dal "Il mio account" (?da=account): stessa pagina, ma per chi è già registrato.
+  const [params] = useSearchParams();
+  const fromAccount = params.get("da") === "account";
+  const [changingPin, setChangingPin] = useState(false);
+  const pinReady = pinSaved || !!user?.pin_set;
+  const devices = user?.biometric_devices || 0;
+  const showPinForm = !pinReady || changingPin;
 
   const savePin = async (e) => {
     e.preventDefault();
@@ -29,8 +36,12 @@ export default function SetupSecurity() {
     setBusy(true);
     try {
       await api.post("/auth/pin", { pin });
+      toast.success(pinReady ? "PIN aggiornato ✓" : "PIN impostato ✓");
       setPinSaved(true);
-      toast.success("PIN impostato ✓");
+      setChangingPin(false);
+      setPin("");
+      setPinConfirm("");
+      await refresh();
     } catch (err) {
       toast.error(formatApiError(err));
     } finally { setBusy(false); }
@@ -55,6 +66,8 @@ export default function SetupSecurity() {
     } finally { setBusy(false); }
   };
 
+  const backToAccount = () => nav(user?.role === "merchant" ? "/merchant/dashboard" : "/dashboard");
+
   const finish = () => {
     if (user?.role === "merchant") nav("/merchant/discount");
     else nav(subscriptionRequired ? "/subscribe" : "/discounts");
@@ -63,16 +76,26 @@ export default function SetupSecurity() {
   return (
     <main data-testid="setup-security-page" className="mx-auto max-w-lg px-6 py-12">
       <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.2em] text-ciano">Un ultimo passo</div>
-        <h1 className="mt-2 font-serif text-5xl text-white">Rendi l'accesso <span className="italic text-grad">più rapido</span></h1>
-        <p className="mt-3 text-white/70">Imposta un PIN e attiva il Face ID: mai più email e password.</p>
+        {fromAccount ? (
+          <>
+            <div className="text-xs uppercase tracking-[0.2em] text-ciano">Il mio account</div>
+            <h1 className="mt-2 font-serif text-5xl text-white">Sicurezza</h1>
+            <p className="mt-3 text-white/70">Cambia il PIN e attiva il Face ID su questo telefono.</p>
+          </>
+        ) : (
+          <>
+            <div className="text-xs uppercase tracking-[0.2em] text-ciano">Un ultimo passo</div>
+            <h1 className="mt-2 font-serif text-5xl text-white">Rendi l'accesso <span className="italic text-grad">più rapido</span></h1>
+            <p className="mt-3 text-white/70">Imposta un PIN e attiva il Face ID: mai più email e password.</p>
+          </>
+        )}
       </div>
 
       {/* Step 1: PIN */}
-      <Card className={`border-white/10 bg-white/5 p-6 ${pinSaved ? "opacity-60" : ""}`}>
+      <Card className={`border-white/10 bg-white/5 p-6 ${pinReady && !fromAccount && !changingPin ? "opacity-60" : ""}`}>
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-fucsia/20 text-fucsia">
-            {pinSaved ? <Check size={22} /> : <KeyRound size={22} />}
+            {pinReady ? <Check size={22} /> : <KeyRound size={22} />}
           </div>
           <div>
             <div className="text-xs uppercase text-ciano tracking-wider">Passo 1</div>
@@ -80,7 +103,16 @@ export default function SetupSecurity() {
             <p className="text-xs text-white/60">Usalo se il Face ID non funziona</p>
           </div>
         </div>
-        {!pinSaved && (
+        {pinReady && !changingPin && (
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <span data-testid="pin-status" className="text-sm text-white/80">PIN impostato</span>
+            <Button data-testid="pin-change" variant="outline" onClick={() => setChangingPin(true)}
+              className="rounded-full border-white/20 text-white hover:bg-white/10">
+              Cambia PIN
+            </Button>
+          </div>
+        )}
+        {showPinForm && (
           <form onSubmit={savePin} className="mt-4 grid grid-cols-2 gap-3">
             <div>
               <Label className="text-white/80">Nuovo PIN</Label>
@@ -110,7 +142,7 @@ export default function SetupSecurity() {
       </Card>
 
       {/* Step 2: Biometric */}
-      <Card className={`mt-4 border-white/10 bg-white/5 p-6 ${!pinSaved ? "opacity-40 pointer-events-none" : ""}`}>
+      <Card className={`mt-4 border-white/10 bg-white/5 p-6 ${!pinReady ? "opacity-40 pointer-events-none" : ""}`}>
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ciano/20 text-ciano">
             {bioEnrolled ? <Check size={22} /> : <ScanFace size={22} />}
@@ -121,26 +153,39 @@ export default function SetupSecurity() {
             <p className="text-xs text-white/60">Accesso istantaneo, sicuro. Zero password.</p>
           </div>
         </div>
+        {devices > 0 && (
+          <p data-testid="bio-status" className="mt-4 text-sm text-white/80">
+            Face ID attivo su {devices === 1 ? "1 dispositivo" : `${devices} dispositivi`}.
+          </p>
+        )}
         {!bioEnrolled && (
           <Button
             data-testid="enroll-biometric-btn"
             onClick={enrollBiometric}
-            disabled={busy || !pinSaved}
+            disabled={busy || !pinReady}
             className="mt-4 w-full grad-ciano-fucsia text-white rounded-full py-6"
           >
-            <Sparkles size={16} className="mr-2" /> Attiva Face ID adesso
+            <Sparkles size={16} className="mr-2" /> {devices > 0 ? "Attiva Face ID su questo telefono" : "Attiva Face ID adesso"}
           </Button>
         )}
       </Card>
 
-      <div className="mt-6 flex justify-between">
-        <button data-testid="skip-security" onClick={finish} className="text-sm text-white/60 hover:text-white">
-          Salta per ora
-        </button>
-        <Button data-testid="finish-security" onClick={finish} disabled={!pinSaved} className="grad-fucsia-viola text-white rounded-full px-6">
-          Continua →
-        </Button>
-      </div>
+      {fromAccount ? (
+        <div className="mt-6 flex justify-end">
+          <Button data-testid="back-account" onClick={backToAccount} className="grad-fucsia-viola text-white rounded-full px-6">
+            Torna al mio account
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-6 flex justify-between">
+          <button data-testid="skip-security" onClick={finish} className="text-sm text-white/60 hover:text-white">
+            Salta per ora
+          </button>
+          <Button data-testid="finish-security" onClick={finish} disabled={!pinReady} className="grad-fucsia-viola text-white rounded-full px-6">
+            Continua →
+          </Button>
+        </div>
+      )}
     </main>
   );
 }

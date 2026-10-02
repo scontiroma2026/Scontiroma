@@ -163,12 +163,24 @@ def set_auth_cookies(response: Response, access: str, refresh: str):
     response.set_cookie("refresh_token", refresh, max_age=REFRESH_TTL_DAYS * 86400, **common)
 
 
+# Campi che non devono mai uscire dal server (hash, token monouso, contatori di sicurezza).
+_PRIVATE_USER_FIELDS = (
+    "_id", "password_hash", "pin_hash", "master_hash", "recovery_id_hash",
+    "reset_token", "reset_expires", "reset_req_log",
+    "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log",
+    "login_failed_attempts", "pin_failed_attempts", "recovery_failed_attempts",
+    "webauthn_credentials", "webauthn_user_id",
+)
+
+
 def sanitize_user(u: dict) -> dict:
     if not u:
         return u
     u = dict(u)
-    u.pop("password_hash", None)
-    u.pop("_id", None)
+    # Per la pagina Sicurezza basta sapere quanti dispositivi Face ID sono registrati.
+    u["biometric_devices"] = len(u.get("webauthn_credentials") or [])
+    for k in _PRIVATE_USER_FIELDS:
+        u.pop(k, None)
     return u
 
 

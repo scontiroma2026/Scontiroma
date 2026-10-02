@@ -29,12 +29,12 @@ jobs:
           DB_NAME: ci
           JWT_SECRET: ci-only-secret
         run: python -c "import server, email_service, paypal_service; print('ok')"
-      - name: Test unitari WebAuthn
+      - name: Test unitari (WebAuthn, dati riservati)
         env:
           MONGO_URL: mongodb://localhost:27017
           DB_NAME: ci
           JWT_SECRET: ci-only-secret
-        run: python -m pytest tests/test_webauthn_config.py -o addopts="" -q -p no:cacheprovider
+        run: python -m pytest tests/test_webauthn_config.py tests/test_dati_riservati.py -o addopts="" -q -p no:cacheprovider
 
   frontend:
     name: Sito (React)

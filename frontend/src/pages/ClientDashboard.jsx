@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, TicketCheck, Sparkles, Star, AlertTriangle, CreditCard } from "lucide-react";
+import { CalendarDays, TicketCheck, Sparkles, Star, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
 import MyUsedDiscounts from "@/components/MyUsedDiscounts";
 import GdprSection from "@/components/GdprSection";
 
@@ -34,9 +34,16 @@ export default function ClientDashboard() {
 
   return (
     <main data-testid="client-dashboard" className="mx-auto max-w-6xl px-6 py-12">
-      <div className="mb-8">
-        <div className="text-xs uppercase tracking-[0.2em] text-gold">Ciao {user?.name?.split(" ")[0]}</div>
-        <h1 className="mt-2 font-serif text-5xl">Il tuo account</h1>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="text-xs uppercase tracking-[0.2em] text-gold">Ciao {user?.name?.split(" ")[0]}</div>
+          <h1 className="mt-2 font-serif text-5xl">Il tuo account</h1>
+        </div>
+        <Link to="/setup-security?da=account">
+          <Button data-testid="security-link" variant="outline" className="rounded-full border-white/20 text-white hover:bg-white/10">
+            <ShieldCheck size={16} className="mr-2" /> Sicurezza: PIN e Face ID
+          </Button>
+        </Link>
       </div>
 
       {/* BANNER SOSPENSIONE — visibile solo se past_due entro la finestra di 7gg */}
