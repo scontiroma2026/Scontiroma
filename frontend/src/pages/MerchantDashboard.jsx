@@ -92,7 +92,11 @@ export default function MerchantDashboard() {
                 <div key={r.id} className="flex items-center justify-between rounded-lg border border-warm bg-white/5/50 p-3 text-sm">
                   <div>
                     <div className="font-mono text-white">{r.code}</div>
-                    <div className="text-xs text-white/60">{r.client_name}</div>
+                    <div className="text-xs text-white/60" data-testid={`redemption-info-${r.id}`}>
+                      {new Date(r.redeemed_at || r.created_at).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      {" · "}{r.discount_title}
+                      {" · "}{r.client_type === "returning" ? "Cliente di ritorno" : "Cliente nuovo"}
+                    </div>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs ${r.status === "redeemed" ? "bg-terracotta/10 text-terracotta" : "bg-gold/20 text-white"}`}>
                     {r.status === "redeemed" ? "Utilizzato" : "In attesa"}

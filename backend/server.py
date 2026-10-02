@@ -1387,13 +1387,39 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
 
 @api.get("/merchants/me/redemptions")
 async def merchant_redemptions(user: dict = Depends(require_merchant)):
+    """Ultimi codici del negozio, senza dati personali del cliente: niente nome né id,
+    solo se è un cliente nuovo (mai riscattato qui prima) o di ritorno."""
     docs = await db.redemptions.find({"merchant_id": user["id"]}).sort("created_at", -1).to_list(200)
+    # Primo riscatto di ogni cliente in questo negozio (per "nuovo" / "di ritorno").
+    first_redeemed: dict = {}
+    async for r in db.redemptions.find(
+        {"merchant_id": user["id"], "status": "redeemed"}, {"user_id": 1, "redeemed_at": 1}
+    ):
+        uid, at = r.get("user_id"), r.get("redeemed_at") or ""
+        if uid and (uid not in first_redeemed or at < first_redeemed[uid]):
+            first_redeemed[uid] = at
+    titles: dict = {}
     out = []
     for d in docs:
-        d = {k: v for k, v in d.items() if k != "_id"}
-        cu = await db.users.find_one({"id": d.get("user_id")})
-        d["client_name"] = cu.get("name") if cu else "Utente"
-        out.append(d)
+        did = d.get("discount_id")
+        if did not in titles:
+            disc = await db.discounts.find_one({"id": did}, {"title": 1}) or \
+                await db.discounts_archive.find_one({"id": did}, {"title": 1})
+            titles[did] = (disc or {}).get("title") or "Offerta"
+        first = first_redeemed.get(d.get("user_id"))
+        if d.get("status") == "redeemed":
+            returning = bool(first) and first < (d.get("redeemed_at") or "")
+        else:
+            returning = bool(first)
+        out.append({
+            "id": d.get("id"),
+            "code": d.get("code"),
+            "status": d.get("status"),
+            "created_at": d.get("created_at"),
+            "redeemed_at": d.get("redeemed_at"),
+            "discount_title": titles[did],
+            "client_type": "returning" if returning else "new",
+        })
     return {"redemptions": out}
 
 
