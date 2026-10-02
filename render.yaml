@@ -26,7 +26,10 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CSRF_ORIGIN_MODE
-        value: log
+        value: enforce
+      # Abbonamento del cliente: "false" = app gratuita (fase di lancio), "true" = a pagamento.
+      - key: CLIENT_SUBSCRIPTION_REQUIRED
+        value: "false"
       - key: PAYPAL_MODE
         value: sandbox
       - key: WEBAUTHN_RP_NAME

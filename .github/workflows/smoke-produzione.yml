@@ -1,5 +1,6 @@
 # Smoke test di SOLA LETTURA su https://scontiroma.it e https://api.scontiroma.it:
-# nessun login, nessuna scrittura (solo GET/HEAD/OPTIONS e una visita alla home).
+# nessun login, nessuna scrittura (GET/HEAD/OPTIONS, una visita alla home e un POST di logout
+# senza essere collegati, che cancella solo cookie inesistenti).
 name: Smoke produzione
 
 on:

@@ -66,7 +66,8 @@ export default function DiscountDetail() {
 
   useEffect(() => {
     if (user && user.role === "client") {
-      api.get("/subscription/me").then((r) => setSubActive(r.data.active));
+      // required=false (fase di lancio): il QR si genera senza abbonamento.
+      api.get("/subscription/me").then((r) => setSubActive(r.data.active || r.data.required === false));
       api.get(`/redemptions/discount/${id}/status`).then((r) => {
         setAlreadyUsed(!!r.data.used_this_month);
         setUsageInfo({

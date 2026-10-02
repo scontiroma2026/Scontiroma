@@ -1,6 +1,6 @@
-// QR: il cliente abbonato genera il QR dal sito, il commerciante lo scansiona (pagina di
+// QR: il cliente (registrato, senza abbonamento: fase di lancio) genera il QR dal sito, il commerciante lo scansiona (pagina di
 // conferma), la seconda scansione è bloccata e il QR scade dopo la finestra di 20 secondi.
-const { test, expect, API, chiama, registra, creaOffertaApprovata, abbonamentoSimulato, loginNelBrowser } = require('../fixtures');
+const { test, expect, API, chiama, registra, creaOffertaApprovata, loginNelBrowser } = require('../fixtures');
 
 const FINESTRA = 20; // secondi, ROTATION_WINDOW_SEC nel server
 
@@ -9,11 +9,6 @@ test('QR: generazione, scansione del commerciante, doppia scansione bloccata, sc
   const m = await registra(request, 'merchant');
   const offerta = await creaOffertaApprovata(request, m.token, { title: `QR e2e ${Date.now()}` });
   const c = await registra(request, 'client');
-
-  // Senza abbonamento il QR non si genera
-  const senza = await chiama(request, 'POST', `/redemptions/create/${offerta.id}`, { token: c.token });
-  expect(senza.status).toBe(402);
-  await abbonamentoSimulato(request, c.email, c.user.id);
 
   // 1. Il cliente apre l'offerta e mostra il QR
   await loginNelBrowser(page, c.email, c.password);
@@ -37,7 +32,7 @@ test('QR: generazione, scansione del commerciante, doppia scansione bloccata, sc
 
   // 3. Il commerciante inquadra il QR: si apre la pagina di conferma
   await page.goto(tk.data.qr_value);
-  await expect(page.getByRole('heading', { name: /ABBONAMENTO\s*VALIDO/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /SCONTO\s*VALIDO/i })).toBeVisible();
   await expect(page.getByText(offerta.title)).toBeVisible();
 
   // 4. Seconda scansione dello stesso codice: bloccata

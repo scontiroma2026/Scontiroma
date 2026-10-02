@@ -67,6 +67,13 @@ JWT_ALGORITHM = "HS256"
 ACCESS_TTL_MIN = 60 * 24  # 1 day
 REFRESH_TTL_DAYS = 7
 
+# Abbonamento del cliente. Spento (predefinito) = l'app è gratuita per i clienti:
+# QR e riscatti senza abbonamento, nessun nuovo pagamento, webhook senza effetti,
+# promemoria di pagamento spenti. Acceso ("true") = tutto torna come prima.
+def client_subscription_required() -> bool:
+    return os.environ.get("CLIENT_SUBSCRIPTION_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
 # Stripe
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or None
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
@@ -389,14 +396,10 @@ class MerchantProfileIn(BaseModel):
     phone: Optional[str] = None
 
 
-class SubscribeIn(BaseModel):
-    plan: Literal["monthly"] = "monthly"
-    # mock payment - we accept any card info
-    card_last4: Optional[str] = "4242"
-
-
 class StripeCheckoutIn(BaseModel):
-    origin_url: str
+    # Ignorato: gli indirizzi di ritorno da Stripe vengono da FRONTEND_URL, non dal browser
+    # (altrimenti chiunque potrebbe far tornare il cliente su un sito qualsiasi).
+    origin_url: Optional[str] = None
 
 
 class RedeemVerifyIn(BaseModel):
@@ -607,7 +610,8 @@ async def me(user: dict = Depends(get_current_user)):
         has_sub = await db.subscriptions.count_documents({
             "user_id": user["id"], "status": "active",
         }) > 0
-    return {"user": {**user, "has_active_subscription": has_sub}}
+    return {"user": {**user, "has_active_subscription": has_sub,
+                     "subscription_required": client_subscription_required()}}
 
 
 # ---------- PIN & WebAuthn ----------
@@ -1383,17 +1387,56 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
 
 @api.get("/merchants/me/redemptions")
 async def merchant_redemptions(user: dict = Depends(require_merchant)):
+    """Ultimi codici del negozio, senza dati personali del cliente: niente nome né id,
+    solo se è un cliente nuovo (mai riscattato qui prima) o di ritorno."""
     docs = await db.redemptions.find({"merchant_id": user["id"]}).sort("created_at", -1).to_list(200)
+    # Primo riscatto di ogni cliente in questo negozio (per "nuovo" / "di ritorno").
+    first_redeemed: dict = {}
+    async for r in db.redemptions.find(
+        {"merchant_id": user["id"], "status": "redeemed"}, {"user_id": 1, "redeemed_at": 1}
+    ):
+        uid, at = r.get("user_id"), r.get("redeemed_at") or ""
+        if uid and (uid not in first_redeemed or at < first_redeemed[uid]):
+            first_redeemed[uid] = at
+    titles: dict = {}
     out = []
     for d in docs:
-        d = {k: v for k, v in d.items() if k != "_id"}
-        cu = await db.users.find_one({"id": d.get("user_id")})
-        d["client_name"] = cu.get("name") if cu else "Utente"
-        out.append(d)
+        did = d.get("discount_id")
+        if did not in titles:
+            disc = await db.discounts.find_one({"id": did}, {"title": 1}) or \
+                await db.discounts_archive.find_one({"id": did}, {"title": 1})
+            titles[did] = (disc or {}).get("title") or "Offerta"
+        first = first_redeemed.get(d.get("user_id"))
+        if d.get("status") == "redeemed":
+            returning = bool(first) and first < (d.get("redeemed_at") or "")
+        else:
+            returning = bool(first)
+        out.append({
+            "id": d.get("id"),
+            "code": d.get("code"),
+            "status": d.get("status"),
+            "created_at": d.get("created_at"),
+            "redeemed_at": d.get("redeemed_at"),
+            "discount_title": titles[did],
+            "client_type": "returning" if returning else "new",
+        })
     return {"redemptions": out}
 
 
 # ---------- Subscription ----------
+PAYMENTS_OFF_MSG = "Sconti Roma è gratuito durante la fase di lancio: nessun pagamento necessario."
+
+
+def _frontend_url() -> str:
+    return (os.environ.get("FRONTEND_URL") or os.environ.get("APP_URL") or "").strip().rstrip("/")
+
+
+@api.get("/config/public")
+async def public_config():
+    """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
+    return {"client_subscription_required": client_subscription_required()}
+
+
 @api.get("/subscription/me")
 async def my_subscription(user: dict = Depends(get_current_user)):
     # Lazy cleanup: se la grace di 7gg è scaduta, marca past_due → cancelled;
@@ -1401,10 +1444,13 @@ async def my_subscription(user: dict = Depends(get_current_user)):
     await _cancel_expired_grace(user["id"])
     await _expire_stale_active_subscriptions(user["id"])
     now_iso = datetime.now(timezone.utc).isoformat()
+    # required=False: l'abbonamento non serve (fase di lancio). Chi ne ha uno lo vede
+    # comunque e può annullarlo.
+    required = client_subscription_required()
     sub = await db.subscriptions.find_one({"user_id": user["id"], "status": "active"})
     if sub:
         sub = {k: v for k, v in sub.items() if k != "_id"}
-        return {"subscription": sub, "active": True, "past_due": False}
+        return {"subscription": sub, "active": True, "past_due": False, "required": required}
     # Nessuna sub attiva: controlla se c'è una past_due ancora nella finestra di 7gg
     # (utente sospeso ma può ancora salvare l'abbonamento pagando entro grace_expires_at).
     past = await db.subscriptions.find_one(
@@ -1414,33 +1460,8 @@ async def my_subscription(user: dict = Depends(get_current_user)):
     if past:
         past = {k: v for k, v in past.items() if k != "_id"}
         return {"subscription": past, "active": False, "past_due": True,
-                "grace_expires_at": past.get("grace_expires_at")}
-    return {"subscription": None, "active": False, "past_due": False}
-
-
-@api.post("/subscription/subscribe")
-async def subscribe(payload: SubscribeIn, user: dict = Depends(require_client)):
-    # Mock payment: always succeeds
-    now = datetime.now(timezone.utc)
-    end = now + timedelta(days=30)
-    doc = {
-        "id": str(uuid.uuid4()),
-        "user_id": user["id"],
-        "plan": payload.plan,
-        "status": "active",
-        "price_eur": 2.99,
-        "start_date": now.isoformat(),
-        "end_date": end.isoformat(),
-        "card_last4": payload.card_last4 or "4242",
-        "mock_payment_id": f"mock_{uuid.uuid4().hex[:12]}",
-    }
-    # Deactivate any previous active sub
-    await db.subscriptions.update_many(
-        {"user_id": user["id"], "status": "active"},
-        {"$set": {"status": "replaced"}}
-    )
-    await db.subscriptions.insert_one(doc)
-    return {"subscription": {k: v for k, v in doc.items() if k != "_id"}}
+                "grace_expires_at": past.get("grace_expires_at"), "required": required}
+    return {"subscription": None, "active": False, "past_due": False, "required": required}
 
 
 class CancelSubIn(BaseModel):
@@ -1505,7 +1526,12 @@ async def get_or_create_stripe_customer(user: dict) -> str:
 
 
 @api.post("/payments/checkout")
-async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(require_client)):
+async def create_checkout(payload: Optional[StripeCheckoutIn] = None, user: dict = Depends(require_client)):
+    if not client_subscription_required():
+        raise HTTPException(409, PAYMENTS_OFF_MSG)
+    site = _frontend_url()
+    if not site:
+        raise HTTPException(500, "FRONTEND_URL non configurato")
     prices = stripe.Price.list(lookup_keys=[STRIPE_PRICE_LOOKUP], active=True, limit=1).data
     if prices:
         price = prices[0]
@@ -1522,8 +1548,8 @@ async def create_checkout(payload: StripeCheckoutIn, user: dict = Depends(requir
     common_kwargs = dict(
         line_items=[{"price": price.id, "quantity": 1}],
         mode="subscription",
-        success_url=f"{payload.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{payload.origin_url}/payment/cancel",
+        success_url=f"{site}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{site}/payment/cancel",
         customer=customer_id,
         # Force plain card to avoid Stripe Link auth loop (OTP "Confirm it's you")
         payment_method_types=["card"],
@@ -1825,6 +1851,9 @@ async def stripe_webhook(request: Request):
         event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
     except Exception:
         raise HTTPException(400, "Invalid signature")
+    if not client_subscription_required():
+        # Fase di lancio: evento autentico ma senza effetti (nessun abbonamento da gestire).
+        return {"received": True, "ignored": "subscription_not_required"}
     obj = event["data"]["object"]
     t = event["type"]
     if t == "checkout.session.completed":
@@ -1896,7 +1925,7 @@ class PayPalActivateIn(BaseModel):
 @api.get("/paypal/config")
 async def paypal_config():
     """Ritorna client_id + plan_id per il frontend (PayPal Buttons SDK)."""
-    if not paypal_service.is_configured():
+    if not client_subscription_required() or not paypal_service.is_configured():
         return {"enabled": False}
     try:
         plan_id = await paypal_service.ensure_plan()
@@ -1915,6 +1944,8 @@ async def paypal_config():
 async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(require_client)):
     """Chiamato dal frontend dopo `onApprove` di PayPal Buttons. Verifica lo stato reale
     su PayPal e crea la subscription attiva localmente."""
+    if not client_subscription_required():
+        raise HTTPException(409, PAYMENTS_OFF_MSG)
     if not paypal_service.is_configured():
         raise HTTPException(400, "PayPal non configurato")
     try:
@@ -1972,6 +2003,9 @@ async def paypal_webhook(request: Request):
             raise HTTPException(400, "Firma webhook non valida")
     except paypal_service.PayPalNotConfigured:
         raise HTTPException(400, "PayPal non configurato")
+    if not client_subscription_required():
+        # Fase di lancio: evento autentico ma senza effetti (nessun abbonamento da gestire).
+        return {"status": "ignored", "reason": "subscription_not_required"}
     etype = event.get("event_type", "")
     resource = event.get("resource", {})
     sub_id = resource.get("id") or resource.get("billing_agreement_id")
@@ -2045,6 +2079,16 @@ def _rome_day(dt_iso: Optional[str] = None) -> Optional[str]:
         return None
 
 
+def short_client_name(name: Optional[str]) -> str:
+    """Nome mostrato al commerciante alla scansione del QR: nome di battesimo e
+    iniziale del cognome ("Mario Rossi" -> "Mario R."), mai il nome completo."""
+    parts = (name or "").split()
+    if not parts:
+        return "Cliente"
+    first = parts[0][:1].upper() + parts[0][1:]
+    return f"{first} {parts[-1][:1].upper()}." if len(parts) > 1 else first
+
+
 async def _last_redeemed(user_id: str, merchant_id: str, exclude_id: Optional[str] = None) -> Optional[dict]:
     q = {"user_id": user_id, "merchant_id": merchant_id, "status": "redeemed"}
     if exclude_id:
@@ -2054,7 +2098,9 @@ async def _last_redeemed(user_id: str, merchant_id: str, exclude_id: Optional[st
 
 @api.post("/redemptions/create/{discount_id}")
 async def create_redemption(discount_id: str, user: dict = Depends(require_client)):
-    if not await user_has_active_sub(user["id"]):
+    # Fase di lancio (interruttore spento): basta essere registrati come clienti.
+    # I limiti per negozio (al mese e al giorno) qui sotto valgono comunque.
+    if client_subscription_required() and not await user_has_active_sub(user["id"]):
         raise HTTPException(402, "Serve un abbonamento attivo")
     d = await db.discounts.find_one({"id": discount_id})
     if not d:
@@ -2278,7 +2324,7 @@ async def qr_verify_public(token: str):
     c = await db.users.find_one({"id": r.get("user_id")})
     return {
         "valid": True,
-        "client_name": (c.get("name") if c else "").split(" ")[0] if c else "Cliente",
+        "client_name": short_client_name(c.get("name") if c else None),
         "client_initial": ((c.get("name","?")[:1] or "?").upper()) if c else "?",
         "shop_name": m.get("shop_name") if m else "-",
         "discount_title": disc.get("title") if disc else "-",
@@ -2323,11 +2369,12 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
     if result.modified_count == 0:
         raise HTTPException(400, "Codice già utilizzato")
     r = await db.redemptions.find_one({"id": r["id"]})
-    r = {k: v for k, v in r.items() if k != "_id"}
     disc = await db.discounts.find_one({"id": r["discount_id"]})
     cu = await db.users.find_one({"id": r["user_id"]})
+    # Al commerciante niente id del cliente e solo nome + iniziale del cognome.
+    r = {k: v for k, v in r.items() if k not in ("_id", "user_id")}
     r["discount_title"] = disc.get("title") if disc else ""
-    r["client_name"] = cu.get("name") if cu else ""
+    r["client_name"] = short_client_name(cu.get("name") if cu else None)
     return {"redemption": r}
 
 
@@ -3048,80 +3095,21 @@ async def admin_delete_discount(discount_id: str, user: dict = Depends(require_a
 
 
 # ---------- Seeding ----------
-SEED_MERCHANTS = [
-    {"email": "trattoria@scontiroma.it", "name": "Marco Rossi", "shop_name": "Trattoria da Marco",
-     "zone": "Trastevere", "category": "Ristorante",
-     "description": "Cucina romana tradizionale nel cuore di Trastevere.",
-     "address": "Via del Moro 12, Roma",
-     "lat": 41.8896, "lng": 12.4681,
-     "image_url": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800",
-     "discount": {"title": "Menu degustazione a metà prezzo",
-                  "description": "Antipasto, primo, secondo e dolce con vino della casa.",
-                  "original_price": 45.0, "discounted_price": 22.5,
-                  "image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
-                  "terms": "Valido dal lunedì al giovedì, cena. Massimo 4 persone.", "active": True}},
-    {"email": "caffe@scontiroma.it", "name": "Giulia Bianchi", "shop_name": "Caffè del Corso",
-     "zone": "Centro Storico", "category": "Bar & Caffè",
-     "description": "Caffè storico dal 1954, torrefazione artigianale.",
-     "address": "Via del Corso 88, Roma",
-     "lat": 41.9028, "lng": 12.4796,
-     "image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
-     "discount": {"title": "Cappuccino + Cornetto a €2",
-                  "description": "Colazione italiana con cappuccino e cornetto artigianale.",
-                  "original_price": 4.5, "discounted_price": 2.0,
-                  "image_url": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800",
-                  "terms": "Valido dalle 7:00 alle 11:00 tutti i giorni.", "active": True}},
-    {"email": "spa@scontiroma.it", "name": "Elena Conti", "shop_name": "Aurora SPA",
-     "zone": "Prati", "category": "Beauty & SPA",
-     "description": "Centro benessere con percorso termale e massaggi.",
-     "address": "Via Cola di Rienzo 200, Roma",
-     "lat": 41.9086, "lng": 12.4620,
-     "image_url": "https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=800",
-     "discount": {"title": "Massaggio 60min -50%",
-                  "description": "Massaggio rilassante di 60 minuti con oli essenziali.",
-                  "original_price": 80.0, "discounted_price": 40.0,
-                  "image_url": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800",
-                  "terms": "Su prenotazione. Un utilizzo per abbonamento.", "active": True}},
-    {"email": "pizza@scontiroma.it", "name": "Luca Ferrari", "shop_name": "Pizzeria Testaccio",
-     "zone": "Testaccio", "category": "Pizzeria",
-     "description": "Pizza romana sottile e croccante, forno a legna.",
-     "address": "Via Galvani 24, Roma",
-     "lat": 41.8759, "lng": 12.4756,
-     "image_url": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800",
-     "discount": {"title": "Pizza + Birra a €7",
-                  "description": "Una pizza a scelta con birra artigianale media.",
-                  "original_price": 15.0, "discounted_price": 7.0,
-                  "image_url": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800",
-                  "terms": "Cena dal martedì al giovedì.", "active": True}},
-    {"email": "gelato@scontiroma.it", "name": "Sofia Greco", "shop_name": "Gelateria Monti",
-     "zone": "Monti", "category": "Gelateria",
-     "description": "Gelato artigianale con ingredienti biologici a km 0.",
-     "address": "Via dei Serpenti 45, Roma",
-     "lat": 41.8951, "lng": 12.4905,
-     "image_url": "https://images.unsplash.com/photo-1567206563064-6f60f40a2b57?w=800",
-     "discount": {"title": "Coppa media a €2",
-                  "description": "Coppa 3 gusti a scelta con panna inclusa.",
-                  "original_price": 5.5, "discounted_price": 2.0,
-                  "image_url": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=800",
-                  "terms": "Tutti i giorni fino alle 20:00.", "active": True}},
-    {"email": "gym@scontiroma.it", "name": "Andrea Marchetti", "shop_name": "EUR Fitness Club",
-     "zone": "EUR", "category": "Sport & Fitness",
-     "description": "Palestra premium con piscina, sauna e corsi.",
-     "address": "Viale Europa 100, Roma",
-     "lat": 41.8330, "lng": 12.4682,
-     "image_url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
-     "discount": {"title": "Ingresso singolo a €5",
-                  "description": "Accesso libero a sala pesi, cardio e piscina.",
-                  "original_price": 20.0, "discounted_price": 5.0,
-                  "image_url": "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800",
-                  "terms": "Lun-Ven 9-18. Un utilizzo a settimana.", "active": True}},
-]
+ADMIN_PASSWORD_MIN_LEN = 12
 
 
 async def seed_data():
-    # Seed admin (optional, not used in UI heavily)
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@scontiroma.it").lower()
+    """Crea l'account admin da ADMIN_EMAIL / ADMIN_PASSWORD, o ne riallinea la password.
+    Senza email o con una password vuota o corta non crea nulla: un admin con password
+    vuota sarebbe accessibile a chiunque."""
+    admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
     admin_pw = os.environ.get("ADMIN_PASSWORD", "")
+    if not admin_email or len(admin_pw) < ADMIN_PASSWORD_MIN_LEN:
+        logging.warning(
+            f"[seed] ADMIN_EMAIL mancante o ADMIN_PASSWORD più corta di {ADMIN_PASSWORD_MIN_LEN} "
+            "caratteri: account admin non creato né aggiornato."
+        )
+        return
     existing_admin = await db.users.find_one({"email": admin_email})
     if not existing_admin:
         await db.users.insert_one({
@@ -3132,78 +3120,8 @@ async def seed_data():
             "role": "admin",
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-    elif admin_pw and not verify_password(admin_pw, existing_admin.get("password_hash", "")):
+    elif not verify_password(admin_pw, existing_admin.get("password_hash", "")):
         await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hash_password(admin_pw)}})
-
-    # Account demo (cliente + commercianti con password note, scritte nel codice):
-    # creati SOLO se SEED_DEMO_DATA=true. Assente o qualsiasi altro valore → saltati,
-    # così non compaiono mai in un ambiente dove la variabile non è impostata.
-    if os.environ.get("SEED_DEMO_DATA", "").strip().lower() != "true":
-        return
-
-    # Seed a test client
-    client_email = "cliente@scontiroma.it"
-    if not await db.users.find_one({"email": client_email}):
-        await db.users.insert_one({
-            "id": str(uuid.uuid4()),
-            "email": client_email,
-            "password_hash": hash_password("cliente123"),
-            "name": "Mario Cliente",
-            "role": "client",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-
-    # Seed merchants + discounts
-    for m in SEED_MERCHANTS:
-        existing = await db.users.find_one({"email": m["email"]})
-        if not existing:
-            uid = str(uuid.uuid4())
-            await db.users.insert_one({
-                "id": uid,
-                "email": m["email"],
-                "password_hash": hash_password("merchant123"),
-                "name": m["name"],
-                "role": "merchant",
-                "shop_name": m["shop_name"],
-                "zone": m["zone"],
-                "category": m["category"],
-                "description": m["description"],
-                "address": m["address"],
-                "lat": m.get("lat"),
-                "lng": m.get("lng"),
-                "image_url": m["image_url"],
-                "phone": "",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
-            merchant_id = uid
-        else:
-            # Backfill lat/lng if missing
-            if m.get("lat") and not existing.get("lat"):
-                await db.users.update_one({"id": existing["id"]}, {"$set": {"lat": m.get("lat"), "lng": m.get("lng")}})
-            merchant_id = existing["id"]
-
-        if not await db.discounts.find_one({"merchant_id": merchant_id}):
-            d = m["discount"]
-            now_iso = datetime.now(timezone.utc).isoformat()
-            await db.discounts.insert_one({
-                "id": str(uuid.uuid4()),
-                "merchant_id": merchant_id,
-                "title": d["title"],
-                "description": d["description"],
-                "original_price": d["original_price"],
-                "discounted_price": d["discounted_price"],
-                "image_url": d["image_url"],
-                "terms": d["terms"],
-                "active": d["active"],
-                "created_at": now_iso,
-                "updated_at": now_iso,
-                "approval_status": "approved",
-                "approved_at": now_iso,
-                "locked_month": datetime.now(timezone.utc).strftime("%Y-%m"),
-                "approval_note": "",
-                "force_editable": False,
-            })
-
 
 
 # ============================================================
@@ -3225,6 +3143,8 @@ async def _run_grace_reminders() -> dict:
     (finestra centrata sul giorno 5 di 7) e invia email #2. Ritorna un
     riepilogo con `checked` e `sent`.
     """
+    if not client_subscription_required():
+        return {"checked": 0, "sent": 0, "skipped": "subscription_not_required"}
     now = datetime.now(timezone.utc)
     window_start = (now + timedelta(hours=36)).isoformat()
     window_end = (now + timedelta(hours=60)).isoformat()
@@ -4084,109 +4004,8 @@ async def gdpr_update_marketing(opt_in: bool, user: dict = Depends(get_current_u
 
 
 # =====================================================================
-# QA / Testing: Simulazione rinnovo abbonamento
+# Abbonamenti: job manuali per l'admin
 # =====================================================================
-
-@api.post("/admin/simulate-payment-failed/{user_id}")
-async def admin_simulate_payment_failed(
-    user_id: str,
-    provider: str = "stripe",
-    admin: dict = Depends(require_admin_master),
-):
-    """Simula un evento di pagamento FALLITO al rinnovo (Stripe `invoice.payment_failed`
-    o PayPal `PAYMENT.SALE.DENIED`) senza dover forzare un fallimento reale sul gateway.
-
-    Attiva `suspend_subscription_on_payment_failed()`: la subscription passa a
-    `past_due`, end_date → ora, grace_expires_at → +7 giorni.
-    """
-    if provider not in ("stripe", "paypal"):
-        raise HTTPException(400, "provider deve essere 'stripe' o 'paypal'")
-    sub = await db.subscriptions.find_one(
-        {"user_id": user_id, "provider": provider},
-        sort=[("start_date", -1)],
-    )
-    if not sub:
-        sub = await db.subscriptions.find_one({"user_id": user_id}, sort=[("start_date", -1)])
-    if not sub:
-        raise HTTPException(400, "Utente non ha nessuna subscription — impossibile simulare")
-
-    provider_sub_id = (
-        sub.get("stripe_subscription_id") if provider == "stripe" else sub.get("paypal_subscription_id")
-    ) or f"sim_{provider}_{user_id[:8]}"
-
-    fake_event_id = f"{provider}:sim-fail:{uuid.uuid4()}"
-    await suspend_subscription_on_payment_failed(
-        user_id=user_id,
-        provider=provider,
-        provider_event_id=fake_event_id,
-        provider_sub_id=provider_sub_id,
-    )
-    updated_sub = await db.subscriptions.find_one({"id": sub["id"]})
-    updated_user = await db.users.find_one({"id": user_id})
-    return {
-        "ok": True,
-        "simulated_event_id": fake_event_id,
-        "subscription_status": updated_sub.get("status"),
-        "subscription_end_date": updated_sub.get("end_date"),
-        "subscription_grace_expires_at": updated_sub.get("grace_expires_at"),
-        "user_subscription_status": updated_user.get("subscription_status"),
-        "provider": provider,
-    }
-
-
-@api.post("/admin/simulate-renewal/{user_id}")
-async def admin_simulate_renewal(
-    user_id: str,
-    provider: str = "stripe",
-    price_eur: float = 2.99,
-    admin: dict = Depends(require_admin_master),
-):
-    """Simula un evento di rinnovo (Stripe invoice.payment_succeeded o PayPal
-    PAYMENT.SALE.COMPLETED) senza dover collegare Test Clocks / Webhook Simulator.
-
-    Utile per QA: chiama la stessa `extend_subscription_on_renewal()` usata dai webhook,
-    quindi la logica testata è identica a quella di produzione (idempotenza inclusa).
-    """
-    if provider not in ("stripe", "paypal"):
-        raise HTTPException(400, "provider deve essere 'stripe' o 'paypal'")
-    u = await db.users.find_one({"id": user_id})
-    if not u:
-        raise HTTPException(404, "Utente non trovato")
-
-    sub = await db.subscriptions.find_one(
-        {"user_id": user_id, "provider": provider},
-        sort=[("start_date", -1)],
-    )
-    if not sub:
-        sub = await db.subscriptions.find_one({"user_id": user_id}, sort=[("start_date", -1)])
-    if not sub:
-        raise HTTPException(400, "Utente non ha nessuna subscription — impossibile simulare rinnovo")
-
-    provider_sub_id = (
-        sub.get("stripe_subscription_id") if provider == "stripe" else sub.get("paypal_subscription_id")
-    ) or f"sim_{provider}_{user_id[:8]}"
-
-    # Ogni chiamata genera un event_id unico → sempre processato (per test manuali multipli)
-    fake_event_id = f"{provider}:sim_{uuid.uuid4()}"
-    email_id = await extend_subscription_on_renewal(
-        user_id=user_id,
-        provider=provider,
-        provider_event_id=fake_event_id,
-        provider_sub_id=provider_sub_id,
-        price_eur=price_eur,
-    )
-    # Ritorna lo stato post-rinnovo
-    updated_user = await db.users.find_one({"id": user_id})
-    updated_sub = await db.subscriptions.find_one({"id": sub["id"]})
-    return {
-        "ok": True,
-        "simulated_event_id": fake_event_id,
-        "email_dispatched_id": email_id,
-        "user_data_scadenza_abbonamento": updated_user.get("data_scadenza_abbonamento"),
-        "subscription_end_date": updated_sub.get("end_date"),
-        "provider": provider,
-    }
-
 
 @api.post("/admin/run-grace-reminders")
 async def admin_run_grace_reminders(user: dict = Depends(require_admin_master)):
@@ -4519,7 +4338,12 @@ async def admin_geocode_confirm(
 # ---------- Include Router & CORS (LAST) ----------
 app.include_router(api)
 
-cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+def _parse_cors_origins(raw: str) -> list:
+    """Stessa forma che il browser mette nell'header Origin: senza spazi e senza barra finale."""
+    return [o.strip().rstrip("/") for o in (raw or "").split(",") if o.strip().rstrip("/")]
+
+
+cors_origins = _parse_cors_origins(os.environ.get("CORS_ORIGINS", ""))
 if not cors_origins:
     # Non usare mai wildcard `*` con credentials — i browser rifiutano la
     # combinazione. In sviluppo locale accetta il frontend classico su :3000.
@@ -4544,8 +4368,8 @@ async def origin_check_middleware(request: Request, call_next):
             hosts = {
                 (request.headers.get("host") or "").lower(),
                 (request.headers.get("x-forwarded-host") or "").split(",")[0].strip().lower(),
-            }
-            if o_host not in hosts:
+            } - {""}  # un header mancante non deve far passare un Origin senza host ("null")
+            if not o_host or o_host not in hosts:
                 logging.warning(f"[csrf] Origin non riconosciuto: {origin} su {request.method} {request.url.path}")
                 if CSRF_ORIGIN_MODE == "enforce":
                     return JSONResponse({"detail": "Origine non consentita"}, status_code=403)

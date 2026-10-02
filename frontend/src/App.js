@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
+import { ConfigProvider } from "@/context/ConfigContext";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import LegalFooter from "@/components/LegalFooter";
@@ -41,6 +42,7 @@ function App() {
     <div className="App bg-cream min-h-screen">
       <BrowserRouter>
         <AnalyticsTracker />
+        <ConfigProvider>
         <AuthProvider>
           <Navbar />
           <Routes>
@@ -78,6 +80,7 @@ function App() {
           <PWAInstallBanner />
           <Toaster position="top-center" richColors />
         </AuthProvider>
+        </ConfigProvider>
       </BrowserRouter>
     </div>
   );

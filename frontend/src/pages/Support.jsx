@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useAppConfig } from "@/context/ConfigContext";
 import {
   ArrowLeft,
   Mail,
@@ -10,6 +11,8 @@ import {
 } from "lucide-react";
 
 export default function Support() {
+  // Fase di lancio (abbonamento cliente spento): niente pagamenti da gestire.
+  const { subscriptionRequired } = useAppConfig();
   const openMail = "mailto:info@scontiroma.it?subject=Assistenza%20Sconti%20Roma";
 
   return (
@@ -79,7 +82,9 @@ export default function Support() {
           color="fucsia"
           title="Assistenza generale"
           email="info@scontiroma.it"
-          note="Problemi di login, pagamento, uso dei QR, domande sugli sconti"
+          note={subscriptionRequired
+            ? "Problemi di login, pagamento, uso dei QR, domande sugli sconti"
+            : "Problemi di accesso, uso dei QR, domande sugli sconti"}
         />
         <ContactRow
           testid="row-privacy"
@@ -108,14 +113,27 @@ export default function Support() {
           <HelpCircle size={14} /> Documenti utili
         </div>
         <ul className="mt-3 space-y-2 text-sm">
-          <li>
-            <Link
-              to="/recesso"
-              className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
-            >
-              → Come annullare l'abbonamento (Diritto di Recesso 14 giorni)
-            </Link>
-          </li>
+          {subscriptionRequired ? (
+            <li>
+              <Link
+                to="/recesso"
+                className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+              >
+                → Come annullare l'abbonamento (Diritto di Recesso 14 giorni)
+              </Link>
+            </li>
+          ) : (
+            <li data-testid="support-launch-free">
+              <Link
+                to="/recesso"
+                className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+              >
+                → <strong>Abbonamento e recesso</strong>: durante la fase di lancio Sconti Roma è
+                gratuito e non serve nessun abbonamento. Se hai un abbonamento attivo (per esempio
+                di prova), puoi annullarlo da "Il mio account".
+              </Link>
+            </li>
+          )}
           <li>
             <Link
               to="/termini"
