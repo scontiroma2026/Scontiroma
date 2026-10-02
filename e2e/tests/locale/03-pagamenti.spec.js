@@ -1,50 +1,50 @@
-// Abbonamento con Stripe.
-// - Con una chiave Stripe di TEST in ambiente (STRIPE_SECRET_KEY=sk_test_...): pagamento vero
-//   sulla pagina di Stripe con la carta 4242 4242 4242 4242, poi ritorno al sito.
-// - Senza chiave: quel test viene SALTATO e si prova lo stesso percorso lato server con un
-//   webhook "checkout.session.completed" firmato come lo firma Stripe (segreto di test).
-const { test, expect, API, WEB, chiama, registra, loginNelBrowser, webhookCheckoutCompletato, abbonamentoSimulato } = require('../fixtures');
-const { STRIPE_TEST_KEY } = require('../env');
+// Fase di lancio (CLIENT_SUBSCRIPTION_REQUIRED spento, come in produzione): Sconti Roma è
+// gratuito per i clienti. Nessuna pagina può avviare un pagamento, il server rifiuta nuovi
+// checkout Stripe e PayPal e i webhook firmati vengono accettati ma restano senza effetti.
+// Con l'interruttore acceso il comportamento a pagamento è provato in
+// backend/tests/test_interruttore_abbonamento.py.
+const { test, expect, API, chiama, registra, loginNelBrowser, webhookCheckoutCompletato } = require('../fixtures');
 
-async function abbonato(request, token) {
-  const me = await chiama(request, 'GET', '/auth/me', { token });
-  return me.data.user.has_active_subscription;
-}
+test('il server dichiara la fase di lancio gratuita', async ({ request }) => {
+  const r = await chiama(request, 'GET', '/config/public');
+  expect(r.status).toBe(200);
+  expect(r.data.client_subscription_required).toBe(false);
+});
 
-test('abbonamento con Stripe in modalità test (carta 4242)', async ({ page, request }) => {
-  test.skip(!STRIPE_TEST_KEY, 'Nessuna chiave Stripe di test (sk_test_...) in ambiente: pagamento reale saltato.');
-  test.setTimeout(180_000);
+test('dopo il PIN il cliente va agli sconti, non al pagamento', async ({ page, request }) => {
   const c = await registra(request, 'client');
   await loginNelBrowser(page, c.email, c.password);
-  // Solo per questo test la pagina può raggiungere Stripe (checkout ospitato da Stripe).
-  await page.route(/stripe\.(com|network)|stripecdn\.com|hcaptcha\.com/, (route) => route.continue());
-
-  const r = await chiama(request, 'POST', '/payments/checkout', { token: c.token, body: { origin_url: WEB } });
-  expect(r.status, JSON.stringify(r.data)).toBe(200);
-  expect(r.data.session_id).toMatch(/^cs_test_/);
-  await page.goto(r.data.checkout_url);
-  const email = page.locator('#email');
-  if (await email.isVisible().catch(() => false)) await email.fill(c.email);
-  await page.locator('#cardNumber').fill('4242 4242 4242 4242');
-  await page.locator('#cardExpiry').fill('12 / 34');
-  await page.locator('#cardCvc').fill('123');
-  await page.locator('#billingName').fill('Giulia Prova');
-  const cap = page.locator('#billingPostalCode');
-  if (await cap.isVisible().catch(() => false)) await cap.fill('00154');
-  await page.locator('button[type=submit]').click();
-  await page.waitForURL(`${WEB}/payment/success**`, { timeout: 90_000 });
-  // La pagina di successo interroga /payments/status, che conferma il pagamento con Stripe.
-  await expect.poll(() => abbonato(request, c.token), { timeout: 60_000 }).toBe(true);
+  await page.goto('/setup-security');
+  await page.getByTestId('skip-security').click();
+  await expect(page).toHaveURL(/\/discounts/);
 });
 
-test('abbonamento attivato dal webhook Stripe firmato (pagamento simulato)', async ({ request }) => {
+test('pagina abbonamento e account: "Gratis durante la fase di lancio", nessun pagamento', async ({ page, request }) => {
   const c = await registra(request, 'client');
-  expect(await abbonato(request, c.token)).toBe(false);
-  await abbonamentoSimulato(request, c.email, c.user.id);
-  expect(await abbonato(request, c.token)).toBe(true);
+  await loginNelBrowser(page, c.email, c.password);
+  await page.goto('/subscribe');
+  await expect(page.getByTestId('launch-free')).toContainText('Gratis durante la fase di lancio');
+  await expect(page.getByTestId('subscribe-btn')).toHaveCount(0);
+  await expect(page.getByText(/€\s*2,99/)).toHaveCount(0);
+  await page.goto('/dashboard');
+  await expect(page.getByTestId('launch-free')).toContainText('Gratis durante la fase di lancio');
+  await expect(page.getByTestId('activate-btn')).toHaveCount(0);
 });
 
-test('webhook Stripe: firma sbagliata rifiutata, evento ripetuto senza doppio abbonamento', async ({ request }) => {
+test('il server rifiuta nuovi pagamenti; il pagamento finto non esiste più', async ({ request }) => {
+  const c = await registra(request, 'client');
+  const stripe = await chiama(request, 'POST', '/payments/checkout', { token: c.token, body: {} });
+  expect(stripe.status).toBe(409);
+  const paypal = await chiama(request, 'POST', '/paypal/activate', { token: c.token, body: { subscription_id: 'I-PROVA' } });
+  expect(paypal.status).toBe(409);
+  expect((await chiama(request, 'GET', '/paypal/config')).data.enabled).toBe(false);
+  const finto = await chiama(request, 'POST', '/subscription/subscribe', { token: c.token, body: { plan: 'monthly' } });
+  expect([404, 405]).toContain(finto.status);
+  const me = await chiama(request, 'GET', '/subscription/me', { token: c.token });
+  expect(me.data).toMatchObject({ active: false, required: false });
+});
+
+test('webhook Stripe: firma sbagliata rifiutata, evento firmato accettato senza effetti', async ({ request }) => {
   const c = await registra(request, 'client');
   const s = await (await request.post(`${API}/__e2e/stripe/sessione-finta`, { params: { email: c.email } })).json();
 
@@ -54,12 +54,8 @@ test('webhook Stripe: firma sbagliata rifiutata, evento ripetuto senza doppio ab
   });
   expect(falso.status()).toBe(400);
 
-  for (let i = 0; i < 2; i++) {
-    const w = await webhookCheckoutCompletato(request, s.session_id, c.user.id);
-    expect(w.status()).toBe(200);
-  }
-  // L'esportazione GDPR elenca tutti gli abbonamenti dell'utente: ne deve esistere uno solo attivo.
+  const w = await webhookCheckoutCompletato(request, s.session_id, c.user.id);
+  expect(w.status()).toBe(200);
   const exp = await chiama(request, 'GET', '/gdpr/export', { token: c.token });
-  expect(exp.data.subscriptions.filter((x) => x.status === 'active')).toHaveLength(1);
-  expect(await abbonato(request, c.token)).toBe(true);
+  expect(exp.data.subscriptions).toHaveLength(0);
 });

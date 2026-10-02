@@ -20,29 +20,22 @@ export default function Subscribe() {
   const [cancelFeedback, setCancelFeedback] = useState("");
   const [cancelling, setCancelling] = useState(false);
 
-  const refresh = () => api.get("/subscription/me").then((r) => setSub(r.data.subscription));
+  // required=false: fase di lancio, nessun pagamento. Chi ha già un abbonamento può annullarlo.
+  const [required, setRequired] = useState(true);
+  const refresh = () => api.get("/subscription/me").then((r) => {
+    setSub(r.data.subscription);
+    setRequired(r.data.required !== false);
+  });
   useEffect(() => { refresh(); }, []);
 
   const startCheckout = async () => {
+    if (!required) return;
     trackClick("subscribe_click");
     setLoading(true);
     try {
-      const { data } = await api.post("/payments/checkout", { origin_url: window.location.origin });
+      const { data } = await api.post("/payments/checkout", {});
       if (data.checkout_url) {
-        // Se siamo dentro un iframe (es. "View Preview" di Emergent), Stripe non permette
-        // il caricamento in-frame. Facciamo il redirect sulla finestra top oppure apriamo
-        // una nuova scheda come fallback.
-        const inIframe = window.self !== window.top;
-        if (inIframe) {
-          try {
-            window.top.location.href = data.checkout_url;
-          } catch (_) {
-            // parent cross-origin → apri in nuova tab
-            window.open(data.checkout_url, "_blank", "noopener,noreferrer");
-          }
-        } else {
-          window.location.href = data.checkout_url;
-        }
+        window.location.href = data.checkout_url;
       } else {
         toast.error("Errore avvio pagamento");
         setLoading(false);
@@ -83,8 +76,10 @@ export default function Subscribe() {
   return (
     <main data-testid="subscribe-page" className="mx-auto max-w-3xl px-6 py-16 text-white">
       <div className="text-center">
-        <div className="text-xs uppercase tracking-[0.2em] text-ciano">Membership Sconti Roma</div>
-        <h1 className="mt-3 font-serif text-5xl">Un caffè al mese.<br/><span className="italic text-grad">Roma per un anno.</span></h1>
+        <div className="text-xs uppercase tracking-[0.2em] text-ciano">{required ? "Membership Sconti Roma" : "Sconti Roma"}</div>
+        {required && (
+          <h1 className="mt-3 font-serif text-5xl">Un caffè al mese.<br/><span className="italic text-grad">Roma per un anno.</span></h1>
+        )}
       </div>
 
       <Card className="mt-10 border-white/10 bg-white/5 backdrop-blur p-8">
@@ -101,7 +96,7 @@ export default function Subscribe() {
             </div>
             <div className="mt-6 grid gap-3 text-sm">
               <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Piano</span><span>Mensile — €{sub.price_eur}</span></div>
-              <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Provider</span><span>{sub.provider === 'stripe' ? 'Stripe (test mode)' : 'Mock'}</span></div>
+              <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Provider</span><span>{sub.provider === "paypal" ? "PayPal" : "Stripe"}</span></div>
               <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Stato</span><span className="text-fucsia">Attivo</span></div>
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -115,6 +110,16 @@ export default function Subscribe() {
                 Gestisci abbonamento
               </Button>
             </div>
+          </div>
+        ) : !required ? (
+          <div data-testid="launch-free" className="text-center">
+            <div className="font-serif text-3xl text-white">Gratis durante la fase di lancio</div>
+            <p className="mt-3 text-sm text-white/70">
+              Per usare gli sconti di Sconti Roma non serve nessun abbonamento e nessun pagamento.
+            </p>
+            <Button onClick={() => nav("/discounts")} className="mt-6 grad-fucsia-viola text-white hover:scale-105 transition rounded-full">
+              Sfoglia gli sconti
+            </Button>
           </div>
         ) : (
           <>

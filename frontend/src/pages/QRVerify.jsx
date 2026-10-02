@@ -34,7 +34,7 @@ export default function QRVerify() {
         <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-2xl" style={{animation: "pop 0.4s ease-out"}}>
           <Check size={72} className="text-emerald-600" strokeWidth={3} />
         </div>
-        <h1 className="font-serif text-[44px] tracking-tight sm:text-6xl sm:tracking-normal text-white text-center leading-none">ABBONAMENTO<br/>VALIDO</h1>
+        <h1 className="font-serif text-[44px] tracking-tight sm:text-6xl sm:tracking-normal text-white text-center leading-none">SCONTO<br/>VALIDO</h1>
         <div className="mt-8 w-full max-w-sm rounded-3xl bg-white/15 backdrop-blur-md border border-white/25 p-6 text-white text-center">
           <div className="text-xs uppercase tracking-[0.2em] text-white/70">Cliente</div>
           <div className="mt-1 font-serif text-3xl">{result.client_name}</div>
@@ -120,13 +120,6 @@ export default function QRVerify() {
           Non applicare lo sconto manualmente per evitare ammanchi di cassa non autorizzati.
         </p>
       </div>
-
-      {/* Debug reason (dev only) */}
-      {result?.reason && (
-        <div className="mt-4 text-[10px] uppercase tracking-widest text-white/50" data-testid="qr-invalid-reason">
-          {result.reason}
-        </div>
-      )}
 
       <style>{`@keyframes pop { 0% {transform: scale(0)} 60% {transform: scale(1.15)} 100% {transform: scale(1)} }`}</style>
     </div>

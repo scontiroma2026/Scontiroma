@@ -70,9 +70,6 @@ jobs:
     env:
       # Database del runner, mai quello di produzione (server_e2e.py rifiuta host non locali).
       MONGO_URL: mongodb://localhost:27017
-      # Facoltativo: chiave Stripe di TEST per il pagamento reale con la carta 4242.
-      # Se il secret non esiste il valore è vuoto e quel test viene saltato.
-      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -103,6 +100,9 @@ jobs:
           cd backend
           TEST_BASE_URL=http://localhost:8001 TEST_ADMIN_EMAIL=admin@example.com TEST_ADMIN_PASSWORD=e2e-admin-password \
             python -m pytest tests/test_legal_consent.py -o addopts="" -q -p no:cacheprovider
+      - name: Test dell'interruttore abbonamento (server in-process, MongoDB del runner)
+        working-directory: backend
+        run: python -m pytest tests/test_interruttore_abbonamento.py -o addopts="" -q -p no:cacheprovider
       - name: Report Playwright (se qualcosa fallisce)
         if: failure()
         uses: actions/upload-artifact@v4
