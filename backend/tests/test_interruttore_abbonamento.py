@@ -17,7 +17,9 @@ from urllib.parse import urlparse
 
 import pytest
 
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+# Il server richiede un MONGO_URL "mongodb://": l'indirizzo scelto per i test resta in
+# TEST_MONGO_URL, così più file di test nello stesso pytest vedono tutti lo stesso valore.
+MONGO_URL = os.environ.setdefault("TEST_MONGO_URL", os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
 _u = urlparse(MONGO_URL)
 if not (_u.scheme == "mongomock" or (_u.scheme == "mongodb" and (_u.hostname or "") in ("localhost", "127.0.0.1", "::1"))):
     pytest.exit(f"MONGO_URL non locale ({_u.scheme}://{_u.hostname}): test rifiutati.", returncode=2)
