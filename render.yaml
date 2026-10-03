@@ -79,7 +79,8 @@ services:
     name: scontiroma-web
     runtime: static
     rootDir: frontend
-    buildCommand: yarn install --frozen-lockfile && CI=false yarn build
+    # REACT_APP_VERSION = commit pubblicato (Render imposta RENDER_GIT_COMMIT), letto dallo smoke.
+    buildCommand: yarn install --frozen-lockfile && CI=false REACT_APP_VERSION=$RENDER_GIT_COMMIT yarn build
     staticPublishPath: build
     routes:
       # App a pagina singola: ogni indirizzo (/login, /dashboard…) apre index.html

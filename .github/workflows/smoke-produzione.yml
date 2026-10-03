@@ -19,12 +19,20 @@ jobs:
   smoke:
     name: Smoke produzione (sola lettura)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: e2e
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # serve a sapere quali cartelle (backend/, frontend/) ha cambiato l'unione
+      # Dopo un'unione in main lo smoke partiva prima della fine del deploy su Render (falso rosso).
+      # Ora aspetta, fino a 15 minuti, che server e sito riportino il commit appena unito.
+      - name: Aspetta il deploy su Render del commit appena unito
+        if: github.event_name == 'push'
+        working-directory: .
+        run: bash e2e/scripts/aspetta-deploy.sh "${{ github.sha }}" "${{ github.event.before }}"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
