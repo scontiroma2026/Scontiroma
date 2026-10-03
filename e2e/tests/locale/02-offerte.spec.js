@@ -1,7 +1,7 @@
 // Offerte: il commerciante crea l'offerta dal sito (con foto e "Migliora foto" con Gemini
 // simulato), l'admin la approva, l'offerta compare nella home del cliente.
 const path = require('path');
-const { test, expect, chiama, registra, admin, loginNelBrowser } = require('../fixtures');
+const { test, expect, chiama, registra, admin, creaOffertaApprovata, loginNelBrowser } = require('../fixtures');
 
 const FOTO = path.join(__dirname, '..', 'files', 'foto-offerta.jpg');
 
@@ -72,4 +72,21 @@ test('filtro zone degli sconti: solo Garbatella, San Paolo e Marconi', async ({ 
   await page.goto('/discounts');
   const opzioni = page.getByTestId('filter-zone').locator('option');
   await expect(opzioni).toHaveText(['Tutte le zone', 'Garbatella', 'San Paolo', 'Marconi']);
+});
+
+test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, consiglio senza abbonamento', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  const offerta = await creaOffertaApprovata(request, m.token);
+  const c = await registra(request, 'client');
+  await loginNelBrowser(page, c.email, c.password);
+  await page.goto(`/discounts/${offerta.id}`);
+  const chiama = page.getByTestId('btn-call-merchant');
+  const wa = page.getByTestId('btn-whatsapp-merchant');
+  await expect(chiama).toHaveText('Chiama per prenotare');
+  await expect(wa).toHaveText('Scrivi su WhatsApp');
+  const [a, b] = [await chiama.boundingBox(), await wa.boundingBox()];
+  expect(Math.round(a.height)).toBe(Math.round(b.height));
+  expect(Math.round(a.width)).toBe(Math.round(b.width));
+  await expect(page.getByTestId('booking-tip')).toContainText('Sconti Roma');
+  await expect(page.getByTestId('phone-booking-block')).not.toContainText('abbonamento');
 });

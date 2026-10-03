@@ -39,6 +39,9 @@ function normalizePhone(raw) {
   };
 }
 
+// Pulsanti per contattare il negozio: identici per tutti i commercianti, cambia solo il colore.
+const CONTACT_BTN = "flex min-h-[64px] items-center justify-center gap-2 rounded-2xl px-6 py-4 text-lg font-bold text-white shadow-lg hover:scale-[1.02] hover:brightness-110 transition";
+
 export default function DiscountDetail() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -361,32 +364,30 @@ export default function DiscountDetail() {
             if (!p) return null;
             return (
               <div data-testid="phone-booking-block" className="mt-6">
+                {/* Stesso formato per i due pulsanti: cambia solo il colore (blu per chiamare, verde WhatsApp) */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <a
                     href={p.telHref}
                     data-testid="btn-call-merchant"
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-terracotta px-6 py-4 text-lg font-bold text-white shadow-lg shadow-terracotta/30 hover:scale-[1.02] hover:brightness-110 transition"
+                    className={`${CONTACT_BTN} bg-[#2563EB] shadow-blue-600/30`}
                   >
                     <Phone size={22} className="shrink-0" />
-                    Chiama e Prenota con lo Sconto
+                    Chiama per prenotare
                   </a>
                   <a
                     href={p.waHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="btn-whatsapp-merchant"
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-lg font-bold text-white shadow-lg shadow-emerald-500/30 hover:scale-[1.02] hover:brightness-110 transition"
+                    className={`${CONTACT_BTN} bg-[#25D366] shadow-emerald-500/30`}
                   >
                     <MessageCircle size={22} className="shrink-0" />
                     Scrivi su WhatsApp
                   </a>
                 </div>
-                <div className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3 text-xs leading-relaxed text-white/80">
-                  <span className="mr-1">💡</span>
-                  <strong className="text-gold">Consiglio furbo:</strong> ricorda di specificare a voce durante la chiamata:{" "}
-                  <em className="text-white">"Ho l'abbonamento attivo a Sconti Roma"</em>{" "}
-                  per bloccare il tuo tavolo/appuntamento e assicurarti lo sconto!
-                </div>
+                <p data-testid="booking-tip" className="mt-3 text-center text-xs leading-relaxed text-white/60">
+                  Quando prenoti, di' che usi <strong className="text-white">Sconti Roma</strong>: così il negozio sa che applicherà lo sconto.
+                </p>
               </div>
             );
           })()}
