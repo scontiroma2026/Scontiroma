@@ -2,9 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
-import DiscountCard from "@/components/DiscountCard";
+import { useEffect } from "react";
 import BrandMark from "@/components/BrandMark";
 
 // Rome landmark imagery (Unsplash direct URLs)
@@ -12,7 +10,6 @@ const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1
 const ROMA_TREVI = "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&q=80"; // Trevi
 
 export default function Landing() {
-  const [featured, setFeatured] = useState([]);
   const [params] = useSearchParams();
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
@@ -23,9 +20,6 @@ export default function Landing() {
         localStorage.setItem("referral_captured_at", new Date().toISOString());
       } catch (_) { /* localStorage disabled */ }
     }
-    api.get("/discounts").then((r) => setFeatured((r.data.discounts || []).slice(0, 3))).catch((err) => {
-      console.warn("[landing] failed to load featured:", err?.message || err);
-    });
   }, [params]);
 
   return (
@@ -92,13 +86,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Ticker */}
-      <section className="relative border-y border-white/10 bg-fucsia py-3 overflow-hidden">
-        <div className="whitespace-nowrap font-serif text-2xl text-white" style={{animation: 'marquee 30s linear infinite'}}>
-          {"★ GARBATELLA ★ SAN PAOLO ★ MARCONI ★ SI PARTE DA QUI ".repeat(6)}
-        </div>
-      </section>
-
       {/* HOW IT WORKS */}
       <section className="relative mx-auto max-w-7xl px-6 py-20">
         <div className="mb-12">
@@ -146,22 +133,6 @@ export default function Landing() {
               </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* FEATURED discounts */}
-      <section className="relative mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-fucsia">✦ Vibe check</div>
-            <h2 className="mt-2 font-serif text-5xl">Gli sconti del momento</h2>
-          </div>
-          <Link to="/discounts" data-testid="link-see-all" className="text-sm text-ciano hover:underline">
-            Vedi tutti →
-          </Link>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((d) => <DiscountCard key={d.id} discount={d} />)}
         </div>
       </section>
 

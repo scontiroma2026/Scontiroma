@@ -89,3 +89,11 @@ test('home: nessun prezzo 2,99 €', async ({ page }) => {
   await expect(page.locator('body')).not.toContainText('2,99');
   await expect(page.getByText('Membership')).toHaveCount(0);
 });
+
+test('home: niente fascia dei quartieri né sconti dei commercianti', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('cta-start')).toBeVisible();
+  await expect(page.getByText('Gli sconti del momento')).toHaveCount(0);
+  await expect(page.getByText(/★ GARBATELLA/)).toHaveCount(0);
+  await expect(page.locator('[data-testid^="discount-card"]')).toHaveCount(0);
+});
