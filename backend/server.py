@@ -36,6 +36,8 @@ from email_service import (
     send_subscription_cancelled,
     send_master_reset,
     send_next_offer_reminder,
+    send_offer_expired,
+    send_admin_month_summary,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
@@ -438,8 +440,14 @@ def parse_rotating_code(raw: str):
     return raw.upper(), None, None
 
 
+def _rome_now() -> datetime:
+    """Ora di Roma (funzione a parte così i test possono fissare il giorno)."""
+    return datetime.now(ZoneInfo("Europe/Rome"))
+
+
 def current_month_key() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m")
+    # Mese di Roma (prima era UTC: il 1° tra mezzanotte e l'1/le 2 risultava ancora il mese prima).
+    return _rome_now().strftime("%Y-%m")
 
 
 # ---------- Offerta Mese Prossimo: helpers ----------
@@ -454,7 +462,7 @@ DISCOUNT_CONTENT_FIELDS = ("title", "description", "original_price", "discounted
 
 
 def next_month_key() -> str:
-    now = datetime.now(ZoneInfo("Europe/Rome"))
+    now = _rome_now()
     y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
     return f"{y}-{m:02d}"
 
@@ -467,7 +475,7 @@ def month_label_it(key: str) -> str:
 async def next_offer_window() -> dict:
     """Finestra caricamento offerta mese prossimo: ultimi 7 giorni del mese corrente.
     Override manuale admin via db.settings {key: 'next_offer_window_override'}."""
-    now = datetime.now(ZoneInfo("Europe/Rome"))
+    now = _rome_now()
     last_day = calendar.monthrange(now.year, now.month)[1]
     opens_day = last_day - (NEXT_OFFER_WINDOW_DAYS - 1)
     is_open = now.day >= opens_day
@@ -1373,7 +1381,58 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
                      "target_month": window["next_month"], "created_at": now_iso})
         await db.next_discounts.insert_one(data)
         nd = data
+    # Caricare l'offerta del mese dopo annulla un'eventuale scelta "Non rinnovo".
+    await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
     return {"next_discount": _enrich_next(nd), "window": window}
+
+
+class NoRenewIn(BaseModel):
+    no_renew: bool
+
+
+def _current_offer_end_label() -> str:
+    now = _rome_now()
+    last = calendar.monthrange(now.year, now.month)[1]
+    return f"{last} {MESI_IT[now.month - 1]}"
+
+
+@api.get("/merchants/me/renewal-status")
+async def merchant_renewal_status(user: dict = Depends(require_merchant)):
+    """Stato del rinnovo per il banner della dashboard. Nessun rinnovo automatico:
+    se a fine mese non c'è l'offerta del mese dopo, quella attuale scade."""
+    window = await next_offer_window()
+    cur = await db.discounts.find_one({"merchant_id": user["id"]})
+    nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
+    u = await db.users.find_one({"id": user["id"]})
+    return {
+        "window": window,
+        "current_active": bool(cur and cur.get("active") and cur.get("approval_status") == "approved"),
+        "current_expired": bool(cur and cur.get("approval_status") == "expired"),
+        "expires_on": _current_offer_end_label(),
+        "next_status": nd.get("approval_status") if nd else None,
+        "no_renew": (u or {}).get("no_renew_month") == window["next_month"],
+    }
+
+
+@api.post("/merchants/me/no-renew")
+async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require_merchant)):
+    """«Non rinnovo»: l'offerta attuale termina a fine mese e i promemoria si fermano.
+    Se l'offerta del mese dopo era già stata caricata viene ritirata (e archiviata),
+    così il 1° del mese non riparte nulla. Si può annullare fino alla fine del mese."""
+    window = await next_offer_window()
+    nm = window["next_month"]
+    if payload.no_renew:
+        nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": nm})
+        if nd:
+            doc = {k: v for k, v in nd.items() if k != "_id"}
+            doc.update({"archived_at": datetime.now(timezone.utc).isoformat(),
+                        "archive_reason": "withdrawn_no_renew"})
+            await db.discounts_archive.insert_one(doc)
+            await db.next_discounts.delete_one({"id": nd["id"]})
+        await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": nm}})
+    else:
+        await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
+    return await merchant_renewal_status(user)
 
 
 @api.put("/merchants/me/profile")
@@ -2880,7 +2939,7 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
     result = await db.discounts.update_one({"id": discount_id}, {"$set": {
         "approval_status": "approved",
         "approved_at": now.isoformat(),
-        "locked_month": now.strftime("%Y-%m"),
+        "locked_month": current_month_key(),
         "approval_note": "",
         "force_editable": False,
     }})
@@ -3233,6 +3292,7 @@ async def _run_month_rollover(force: bool = False) -> dict:
     - offerta corrente senza sostituzione → scade (negozio senza offerta finché non ne carica una)
     Le versioni sostituite/scadute vengono archiviate in `discounts_archive`.
     Idempotente via `rollover_runs` (bypass con force=True)."""
+    # Mese di Roma: con l'UTC il passaggio delle 00:05 del 1° veniva saltato.
     month = current_month_key()
     if not force and await db.rollover_runs.find_one({"month": month}):
         return {"skipped": True, "month": month}
@@ -3282,21 +3342,36 @@ async def _run_month_rollover(force: bool = False) -> dict:
             "active": False, "approval_status": "expired", "expired_at": now_iso,
             "locked_month": None, "updated_at": now_iso}})
         expired += 1
+        try:
+            m = await db.users.find_one({"id": d["merchant_id"]})
+            if m and m.get("email"):
+                await send_offer_expired(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                                         no_renew=m.get("no_renew_month") == month)
+        except Exception as e:
+            logging.error(f"[rollover] email offerta scaduta non inviata merchant={d['merchant_id'][:8]}: {e}")
     logging.info(f"[rollover] month={month} promoted={promoted} migrated={migrated} expired={expired}")
     return {"skipped": False, "month": month, "promoted": promoted,
             "migrated_pending": migrated, "expired": expired}
 
 
+# Promemoria al commerciante negli ultimi 7 giorni del mese: (fase, giorni rimasti massimi).
+# Se il server era spento, parte solo la fase più vicina alla scadenza (niente raffiche).
+NEXT_OFFER_REMINDER_STAGES = (("apertura", 7), ("tre_giorni", 3), ("ultimo_giorno", 1))
+ADMIN_SUMMARY_DAYS_LEFT = 4  # riepilogo admin: il 28 in un mese di 31 giorni
+
+
 async def _run_next_offer_reminders() -> dict:
-    """Email 'la tua offerta scade tra N giorni' ai merchant con offerta attiva che
-    non hanno ancora caricato quella del mese prossimo. Idempotente via
-    users.next_offer_reminder_month. Invia solo a finestra aperta."""
+    """Promemoria «la tua offerta scade»: fino a 3 email (apertura finestra, 3 giorni prima,
+    ultimo giorno) ai commercianti con offerta attiva che non hanno caricato quella del mese
+    dopo e non hanno scelto «Non rinnovo». Poi un riepilogo all'admin. Idempotente."""
     window = await next_offer_window()
     if not window["open"]:
         return {"window_open": False, "sent": 0}
     nm = window["next_month"]
-    uploaded = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
     days_left = window["days_to_month_end"] + 1
+    stage = [st for st, mx in NEXT_OFFER_REMINDER_STAGES if days_left <= mx]
+    stage = stage[-1] if stage else "apertura"
+    uploaded = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
     sent = checked = 0
     actives = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
     for d in actives:
@@ -3305,17 +3380,67 @@ async def _run_next_offer_reminders() -> dict:
         if mid in uploaded:
             continue
         m = await db.users.find_one({"id": mid})
-        if not m or not m.get("email") or m.get("next_offer_reminder_month") == nm:
+        if not m or not m.get("email") or m.get("no_renew_month") == nm:
+            continue
+        log = m.get("next_offer_reminders") or {}
+        stages = list(log.get("stages", [])) if log.get("month") == nm else []
+        if m.get("next_offer_reminder_month") == nm and "apertura" not in stages:
+            stages.append("apertura")  # promemoria unico della versione precedente
+        if stage in stages:
             continue
         try:
             await send_next_offer_reminder(m["email"], m.get("name") or "",
                                            m.get("shop_name") or "il tuo negozio",
                                            window["next_month_label"], days_left)
-            await db.users.update_one({"id": mid}, {"$set": {"next_offer_reminder_month": nm}})
+            stages.append(stage)
+            await db.users.update_one({"id": mid}, {"$set": {
+                "next_offer_reminders": {"month": nm, "stages": stages},
+                "next_offer_reminder_month": nm}})
             sent += 1
         except Exception as e:
             logging.error(f"[next-offer-reminder] send failed merchant={mid[:8]}: {e}")
-    return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm}
+    admin_summary = await _send_admin_month_summary(nm, window["next_month_label"], days_left, actives)
+    return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm,
+            "stage": stage, "admin_summary": admin_summary}
+
+
+async def _send_admin_month_summary(nm: str, label: str, days_left: int, actives: list) -> bool:
+    """Una volta al mese, negli ultimi giorni: offerte da approvare, rifiutate, mancanti, «Non rinnovo»."""
+    if days_left > ADMIN_SUMMARY_DAYS_LEFT:
+        return False
+    key = f"admin_month_summary_{nm}"
+    if await db.settings.find_one({"key": key}):
+        return False
+    to = os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
+    if not to:
+        return False
+    names: dict = {}
+
+    async def shop(mid):
+        if mid not in names:
+            m = await db.users.find_one({"id": mid}, {"shop_name": 1, "name": 1})
+            names[mid] = (m or {}).get("shop_name") or (m or {}).get("name") or "negozio"
+        return names[mid]
+
+    pending, rejected = [], []
+    async for nd in db.next_discounts.find({"target_month": nm}):
+        (pending if (nd.get("approval_status") or "pending") == "pending"
+         else rejected if nd.get("approval_status") == "rejected" else []).append(await shop(nd["merchant_id"]))
+    uploaded = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
+    missing, no_renew = [], []
+    for d in actives:
+        mid = d["merchant_id"]
+        if mid in uploaded:
+            continue
+        m = await db.users.find_one({"id": mid}, {"no_renew_month": 1})
+        (no_renew if (m or {}).get("no_renew_month") == nm else missing).append(await shop(mid))
+    try:
+        await send_admin_month_summary(to, label, pending, rejected, missing, no_renew)
+    except Exception as e:
+        logging.error(f"[admin-summary] send failed: {e}")
+        return False
+    await db.settings.update_one({"key": key}, {"$set": {"sent_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    return True
 
 
 def _start_scheduler() -> None:
@@ -3398,6 +3523,13 @@ async def on_startup():
             logging.info(f"[rollover:catchup] eseguito al riavvio: {res}")
     except Exception as e:
         logging.error(f"[rollover:catchup] failed: {e}")
+    # Catch-up promemoria offerte: sul piano gratuito il server può dormire alle 9:30.
+    # Idempotente per fase; mai di notte.
+    try:
+        if 9 <= _rome_now().hour < 21:
+            await _run_next_offer_reminders()
+    except Exception as e:
+        logging.error(f"[next-offer-reminder:catchup] failed: {e}")
 
 
 @app.on_event("shutdown")

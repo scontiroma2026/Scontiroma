@@ -9,6 +9,7 @@ import GdprSection from "@/components/GdprSection";
 import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
 import NextOfferCard from "@/components/NextOfferCard";
+import RenewalBanner from "@/components/RenewalBanner";
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
@@ -43,6 +44,8 @@ export default function MerchantDashboard() {
           </Link>
         </div>
       </div>
+
+      <RenewalBanner />
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard icon={<TicketPercent />} label="Codici generati" value={stats.total} />
