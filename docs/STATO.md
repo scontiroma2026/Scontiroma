@@ -14,11 +14,13 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #11 | "Sicurezza" dall'account (cambio PIN, Face ID su nuovo telefono), nessun campo riservato nelle risposte | 02/10 |
 | #10 | Step 1 – fase di lancio: app gratuita per i clienti (`CLIENT_SUBSCRIPTION_REQUIRED=false`), residui Emergent rimossi, CSRF `enforce`, al commerciante solo "Mario R." | 02/10 |
 | #12 | Blocco PIN dopo 5 tentativi anche senza PIN o account, riquadro chiaro nel login | 02/10 |
+| #13 | Regole di lavoro (`CLAUDE.md`), questo file, smoke che aspetta il deploy | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| (questa) | Regole di lavoro (`CLAUDE.md`, blocco unioni), questo file, smoke che aspetta il deploy | unione dell'utente |
+| #14 | Avvisi di scadenza delle offerte, «Non rinnovo», riepilogo admin, mese all'ora di Roma | controlli verdi |
+| #15 | Home senza 2,99 € | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -27,11 +29,11 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 - Offerte: **niente rinnovo automatico**. Se il commerciante non carica l'offerta del mese dopo, il 1° del mese la sua offerta scade e va in archivio.
 - Al commerciante, alla scansione: nome di battesimo e iniziale del cognome, ora, offerta, cliente nuovo / di ritorno. Nella lista "Ultimi codici" nessun nome.
 - I dati dei clienti si conservano finché l'account è attivo; proposte commerciali future solo con consenso marketing.
-- Unioni: solo con "unisci la #N" scritto dall'utente.
+- Unioni: le fa Claude quando tutti i controlli sono verdi (decisione dell'utente del 03/10).
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
-1. Avvisi di scadenza delle offerte: banner e tre email al commerciante, pulsante "Non rinnovo", riepilogo all'admin il 28, avviso di offerta scaduta il 1°. **Entro il 25/10.**
+1. Avvisi di scadenza delle offerte (PR #14). **Entro il 25/10.**
 2. PR legale/GDPR: correzioni di codice (statistiche solo con consenso, banner cookie, cancellazione ed esportazione complete, dichiarazione di età, "Mario R." solo al commerciante collegato) e testi evidenziati di Privacy, Cookie, Termini e Recesso per il consulente.
 3. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
 4. Step 2 – testi pubblici senza 2,99 €, email di benvenuto, avviso all'admin per ogni nuovo commerciante. **Solo dopo "parti con lo step 2".**

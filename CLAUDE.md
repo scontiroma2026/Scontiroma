@@ -1,7 +1,7 @@
 # Regole di lavoro per Claude su Sconti Roma
 
 - Rispondi sempre in italiano.
-- Unioni: MAI unire una PR (merge, squash, rebase, auto-merge) senza un messaggio scritto dell'utente che contenga "unisci la #N" con il numero di QUELLA PR. Un OK generico o dato per altre PR non vale. Mai cancellare branch.
+- Unioni: le PR le unisce Claude (decisione dell'utente del 03/10), solo quando TUTTI i controlli sono verdi e i test passano; mai unire una PR rossa. Se una PR contiene testi legali o decisioni ancora aperte, aspetta l'OK dell'utente. Non annullare le unioni già fatte. Mai cancellare branch.
 - Lavora sempre su un branch con una PR; mai push diretto su `main`.
 - Ogni PR ha nella descrizione: **Cosa ho cambiato**, **Test eseguiti**, **Cosa provare da iPhone**, **Cosa devi decidere**. Aggiorna `docs/STATO.md` a ogni step.
 - Nessun segreto (password, chiavi, ID di recupero) né dati di persone reali in commit, PR, log o output: il repository è pubblico.
