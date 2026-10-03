@@ -117,7 +117,7 @@ export default function Discounts() {
                 <span className="text-2xl">🏆</span>
                 <h2 className="font-serif text-2xl text-white">I più richiesti questo mese</h2>
               </div>
-              <p className="text-sm text-white/60 mt-1">Le 3 offerte più utilizzate dagli abbonati a Roma</p>
+              <p className="text-sm text-white/60 mt-1">Le 3 offerte più utilizzate dai clienti</p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

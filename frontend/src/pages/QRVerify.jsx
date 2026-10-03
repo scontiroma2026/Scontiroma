@@ -102,7 +102,7 @@ export default function QRVerify() {
         ) : (
           <>
             <p className="text-lg font-bold uppercase leading-snug">
-              L'utente non risulta abbonato<br/>o il codice è scaduto.
+              Codice non valido<br/>o scaduto.
             </p>
             <div className="my-4 h-px bg-white/25" />
             <p className="text-base font-semibold leading-snug">
