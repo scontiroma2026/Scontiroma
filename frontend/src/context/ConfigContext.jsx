@@ -10,7 +10,12 @@ export function ConfigProvider({ children }) {
 
   useEffect(() => {
     api.get("/config/public")
-      .then(({ data }) => setConfig({ loaded: true, subscriptionRequired: !!data.client_subscription_required }))
+      .then(({ data }) => setConfig({
+        loaded: true,
+        subscriptionRequired: !!data.client_subscription_required,
+        // Data di fine prova dei commercianti: c'è solo se impostata su Render (TRIAL_END_DATE)
+        trialEndLabel: data.trial_end_label || null,
+      }))
       .catch(() => setConfig({ loaded: true, subscriptionRequired: false }));
   }, []);
 
