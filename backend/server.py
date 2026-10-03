@@ -123,13 +123,8 @@ logger = logging.getLogger(__name__)
 # Unico punto da aggiornare quando cambiano i testi legali (es. "2026-11").
 LEGAL_VERSION = "2026-10"
 
-ZONES = [
-    # Zone pilota (lancio): per prime nei menu di iscrizione e nei filtri
-    "Garbatella", "San Paolo", "Marconi",
-    "Centro Storico", "Trastevere", "Prati", "Testaccio", "Monti",
-    "Ostiense", "EUR", "Parioli", "San Giovanni", "Trieste-Salario",
-    "Pigneto", "Flaminio",
-]
+# Solo le tre zone pilota (decisione dell'utente del 03/10): iscrizione, filtri e mappa.
+ZONES = ["Garbatella", "San Paolo", "Marconi"]
 
 CATEGORIES = [
     "Ristorante", "Bar & Caffè", "Pizzeria", "Gelateria",
