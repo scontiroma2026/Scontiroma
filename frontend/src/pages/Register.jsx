@@ -139,7 +139,7 @@ export default function Register() {
               data-testid="reg-email"
               type="email"
               required
-              autoComplete="email"
+              autoComplete="username"
               inputMode="email"
               value={form.email}
               onChange={update("email")}
@@ -265,7 +265,7 @@ export default function Register() {
             <span className="text-xs text-white/80 leading-relaxed">
               💾 <strong className="text-ciano">Salva queste credenziali su questo dispositivo</strong> per il prossimo accesso.
               <span className="block mt-0.5 text-white/50">
-                Al prossimo login troverai la tua email già scritta. Il tuo browser ti proporrà anche di ricordare la password.
+                Al prossimo accesso troverai la tua email già scritta. L'iPhone (Portachiavi) o il browser ti proporrà di salvare anche la password.
               </span>
             </span>
           </label>

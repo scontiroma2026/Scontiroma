@@ -17,10 +17,7 @@ test('Face ID: attivazione dal sito e accesso biometrico', async ({ page, reques
   await autenticatoreVirtuale(page);
   await loginNelBrowser(page, c.email, c.password);
   await page.goto('/setup-security');
-  // Passo 1 della pagina: il PIN (il Face ID si sblocca dopo)
-  await page.getByTestId('pin-new').fill('482916');
-  await page.getByTestId('pin-confirm').fill('482916');
-  await page.getByTestId('pin-save').click();
+  // Niente PIN (tolto il 03/10): il Face ID si attiva subito
   const completa = page.waitForResponse((r) => r.url().endsWith('/api/webauthn/register/complete'));
   await page.getByTestId('enroll-biometric-btn').click();
   const r = await completa;
@@ -63,28 +60,18 @@ test('Face ID: con due richieste di registrazione vale la sfida più recente', a
   expect(esito.status, esito.body).toBe(200);
 });
 
-test('Sicurezza: un cliente già registrato cambia il PIN e attiva il Face ID dal suo account', async ({ page, request }) => {
-  // Cliente "vecchio": PIN già impostato, nessun Face ID, non passa più dalla registrazione.
+test('Sicurezza: un cliente già registrato attiva il Face ID dal suo account', async ({ page, request }) => {
+  // Cliente "vecchio": nessun Face ID, non passa più dalla registrazione.
   const c = await registra(request, 'client');
-  const pin = await chiama(request, 'POST', '/auth/pin', { token: c.token, body: { pin: '135790' } });
-  expect(pin.status).toBe(200);
   await autenticatoreVirtuale(page);
   await loginNelBrowser(page, c.email, c.password);
 
   await page.goto('/dashboard');
   await page.getByTestId('security-link').click();
   await expect(page).toHaveURL(/\/setup-security\?da=account/);
-  await expect(page.getByRole('heading', { name: 'Sicurezza' })).toBeVisible();
-  await expect(page.getByTestId('pin-status')).toBeVisible();
+  await expect(page.getByTestId('setup-security-page')).toContainText('Face ID');
+  await expect(page.getByTestId('setup-security-page')).not.toContainText('PIN');
   await expect(page.getByTestId('bio-status')).toHaveCount(0);
-
-  // Cambio PIN
-  await page.getByTestId('pin-change').click();
-  await page.getByTestId('pin-new').fill('246802');
-  await page.getByTestId('pin-confirm').fill('246802');
-  await page.getByTestId('pin-save').click();
-  await expect(page.getByText('PIN aggiornato')).toBeVisible();
-  await expect(page.getByTestId('pin-status')).toBeVisible();
 
   // Face ID
   const completa = page.waitForResponse((r) => r.url().endsWith('/api/webauthn/register/complete'));
@@ -108,11 +95,11 @@ test('Sicurezza: un cliente già registrato cambia il PIN e attiva il Face ID da
 
 test('i dati riservati dell\'account non escono dal server', async ({ request }) => {
   const c = await registra(request, 'client');
-  await chiama(request, 'POST', '/auth/pin', { token: c.token, body: { pin: '135790' } });
   await chiama(request, 'POST', '/auth/forgot', { body: { email: c.email } });
   const me = (await chiama(request, 'GET', '/auth/me', { token: c.token })).data.user;
   for (const k of ['password_hash', 'pin_hash', 'reset_token', 'reset_expires', 'webauthn_credentials', 'webauthn_user_id']) {
     expect(me, k).not.toHaveProperty(k);
   }
-  expect(me).toMatchObject({ pin_set: true, biometric_devices: 0 });
+  expect(me).toMatchObject({ biometric_devices: 0 });
+  expect(me).not.toHaveProperty('pin_set');
 });
