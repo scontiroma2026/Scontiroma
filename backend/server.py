@@ -21,6 +21,7 @@ import json as _json
 import stripe
 import jwt
 import asyncio
+import time
 import httpx
 import ipaddress
 import socket
@@ -984,6 +985,29 @@ def _month_start_iso() -> str:
 # ---------- Geocoding via Nominatim (OpenStreetMap, gratuito) ----------
 # Rate limit: max 1 req/sec per policy Nominatim. Usa User-Agent identificativo.
 _geocode_cache: dict = {}
+_GEOCODE_CACHE_MAX = 2000
+_nominatim_lock = asyncio.Lock()
+_nominatim_last = 0.0
+
+
+async def _nominatim_turno(max_attesa: float) -> bool:
+    """Una richiesta al secondo verso Nominatim per tutto il server (policy OSMF).
+    Se il turno arriverebbe dopo più di `max_attesa` secondi si rinuncia (False)."""
+    global _nominatim_last
+    async with _nominatim_lock:
+        attesa = _nominatim_last + 1.0 - time.monotonic()
+        if attesa > max_attesa:
+            return False
+        if attesa > 0:
+            await asyncio.sleep(attesa)
+        _nominatim_last = time.monotonic()
+        return True
+
+
+def _cache_put(cache: dict, key: str, value) -> None:
+    if len(cache) >= _GEOCODE_CACHE_MAX:
+        cache.clear()
+    cache[key] = value
 
 async def geocode_address(address: str) -> Optional[dict]:
     """Trasforma un indirizzo stringa in {lat, lng} via Nominatim.
@@ -993,6 +1017,8 @@ async def geocode_address(address: str) -> Optional[dict]:
     key = address.strip().lower()
     if key in _geocode_cache:
         return _geocode_cache[key]
+    if not await _nominatim_turno(max_attesa=60):
+        return None
     try:
         async with httpx.AsyncClient(timeout=8) as client:
             r = await client.get(
@@ -1010,10 +1036,10 @@ async def geocode_address(address: str) -> Optional[dict]:
             return None
         data = r.json()
         if not data:
-            _geocode_cache[key] = None
+            _cache_put(_geocode_cache, key, None)
             return None
         result = {"lat": float(data[0]["lat"]), "lng": float(data[0]["lon"])}
-        _geocode_cache[key] = result
+        _cache_put(_geocode_cache, key, result)
         return result
     except Exception as e:
         logging.warning(f"[geocode] failed for '{address[:50]}': {e}")
@@ -1040,6 +1066,9 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
     key = f"{q.lower()}::{limit}"
     if key in _geocode_suggest_cache:
         return _geocode_suggest_cache[key]
+    # Suggerimenti: se la coda verso Nominatim è lunga si rinuncia subito (niente attese infinite)
+    if not await _nominatim_turno(max_attesa=2):
+        return []
     try:
         async with httpx.AsyncClient(timeout=8) as client:
             r = await client.get(
@@ -1092,7 +1121,7 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
             seen.add(key_disp)
             deduped.append(s)
         out = deduped[:limit]
-        _geocode_suggest_cache[key] = out
+        _cache_put(_geocode_suggest_cache, key, out)
         return out
     except Exception as e:
         logging.warning(f"[geocode_suggest] failed for '{q[:40]}': {e}")
@@ -3064,10 +3093,11 @@ async def admin_update_merchant(merchant_id: str, payload: AdminMerchantUpdate, 
 
 @api.delete("/admin/merchants/{merchant_id}")
 async def admin_delete_merchant(merchant_id: str, user: dict = Depends(require_admin_master)):
-    result = await db.users.delete_one({"id": merchant_id, "role": "merchant"})
-    if result.deleted_count == 0:
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
         raise HTTPException(404, "Commerciante non trovato")
-    await db.discounts.delete_many({"merchant_id": merchant_id})
+    await _erase_user_data(m)
+    await db.users.delete_one({"id": merchant_id, "role": "merchant"})
     return {"ok": True}
 
 
@@ -4009,11 +4039,15 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
     qr_scans = await db.qr_scans.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     subscriptions = await db.subscriptions.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     consents = await db.consent_logs.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    reviews = await db.reviews.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    app_feedback = await db.app_feedback.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
 
     # Merchant-specific
-    discounts = []
+    discounts, next_discounts, archive = [], [], []
     if user.get("role") == "merchant":
         discounts = await db.discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+        next_discounts = await db.next_discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+        archive = await db.discounts_archive.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
 
     export_doc = {
         "export_generated_at": datetime.now(timezone.utc).isoformat(),
@@ -4024,9 +4058,35 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
         "qr_scans": qr_scans,
         "subscriptions": subscriptions,
         "cookie_consent_log": consents,
+        "reviews": reviews,
+        "app_feedback": app_feedback,
         "merchant_discounts": discounts,
+        "merchant_next_discounts": next_discounts,
+        "merchant_discounts_archive": archive,
     }
     return export_doc
+
+
+async def _erase_user_data(user: dict) -> None:
+    """Cancella tutti i dati collegati a un utente (art. 17 GDPR), tranne l'utente stesso.
+    I dati di pagamento con obbligo fiscale vengono anonimizzati anziché cancellati."""
+    uid = user["id"]
+    # 1. Anonimizza i dati di pagamento (obbligo fiscale 10 anni)
+    anon = {"$set": {"user_id": f"deleted_{uid[:8]}", "anonymized": True,
+                     "anonymized_at": datetime.now(timezone.utc).isoformat()}}
+    for coll in (db.subscriptions, db.payment_transactions, db.renewal_events):
+        await coll.update_many({"user_id": uid}, anon)
+    # 2. Elimina tutto il resto collegato all'utente
+    for coll in (db.redemptions, db.qr_scans, db.consent_logs, db.reviews,
+                 db.app_feedback, db.webauthn_challenges):
+        await coll.delete_many({"user_id": uid})
+    if user.get("email"):
+        await db.login_guard.delete_many({"key": _login_guard_key(user["email"].strip().lower())})
+
+    # 3. Se merchant: offerte (attuale, mese dopo, archivio) e recensioni ricevute
+    if user.get("role") == "merchant":
+        for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews):
+            await coll.delete_many({"merchant_id": uid})
 
 
 @api.delete("/gdpr/delete-account")
@@ -4038,24 +4098,12 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
     if user.get("role") == "admin":
         raise HTTPException(400, "L'account admin non può essere cancellato via GDPR")
 
-    # 1. Anonimizza subscriptions (obbligo fiscale 10 anni)
-    await db.subscriptions.update_many(
-        {"user_id": uid},
-        {"$set": {"user_id": f"deleted_{uid[:8]}", "anonymized": True, "anonymized_at": datetime.now(timezone.utc).isoformat()}},
-    )
-    # 2. Elimina redemptions, qr_scans, consent_logs, reset_tokens
-    await db.redemptions.delete_many({"user_id": uid})
-    await db.qr_scans.delete_many({"user_id": uid})
-    await db.consent_logs.delete_many({"user_id": uid})
+    await _erase_user_data(user)
 
-    # 3. Se merchant, elimina i suoi discounts
-    if user.get("role") == "merchant":
-        await db.discounts.delete_many({"merchant_id": uid})
-
-    # 4. Elimina l'utente
+    # Elimina l'utente
     await db.users.delete_one({"id": uid})
 
-    # 5. Logout
+    # Logout
     if response is not None:
         response.delete_cookie("access_token", path="/")
         response.delete_cookie("refresh_token", path="/")

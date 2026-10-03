@@ -2,6 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leafl
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Navigation } from "lucide-react";
+import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
 
 // Custom pin fucsia (coerente con MapView)
 const SHOP_PIN = L.divIcon({
@@ -42,8 +43,8 @@ export default function MiniMap({ lat, lng, shopName, address, zoom = 16 }) {
         .mini-map-container .leaflet-tile { filter: brightness(0.65) invert(1) contrast(1.1) hue-rotate(180deg) saturate(0.4) brightness(0.85); }
         .mini-map-container .leaflet-popup-content-wrapper { background:#0A0A0A;color:#fff;border:1px solid rgba(255,46,147,0.4);border-radius:12px; }
         .mini-map-container .leaflet-popup-tip { background:#0A0A0A;border:1px solid rgba(255,46,147,0.4); }
-        .mini-map-container .leaflet-control-attribution { background: rgba(0,0,0,0.6) !important; color: rgba(255,255,255,0.4) !important; font-size: 10px; }
-        .mini-map-container .leaflet-control-attribution a { color: rgba(0,229,255,0.6) !important; }
+        .mini-map-container .leaflet-control-attribution { background: rgba(0,0,0,0.6) !important; color: rgba(255,255,255,0.85) !important; font-size: 10px; }
+        .mini-map-container .leaflet-control-attribution a { color: #00E5FF !important; }
         .mini-map-container .leaflet-control-zoom a { background:#141414 !important;color:#fff !important;border:1px solid rgba(255,255,255,0.1) !important; }
         .mini-map-container .leaflet-control-zoom a:hover { background:#FF2E93 !important; }
       `}</style>
@@ -87,8 +88,8 @@ export default function MiniMap({ lat, lng, shopName, address, zoom = 16 }) {
           dragging
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution={OSM_ATTRIBUTION}
+            url={OSM_TILE_URL}
           />
           <Marker position={[lat, lng]} icon={SHOP_PIN}>
             <Popup>
