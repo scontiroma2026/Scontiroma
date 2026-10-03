@@ -33,6 +33,10 @@ function saveConsent(prefs, action) {
     timestamp: new Date().toISOString(),
   };
   localStorage.setItem(CONSENT_KEY, JSON.stringify(payload));
+  // Senza consenso alle statistiche si cancella anche l'identificativo anonimo del visitatore.
+  if (!prefs.functional) {
+    try { localStorage.removeItem("sr_vid"); } catch (_) { /* localStorage non disponibile */ }
+  }
   // Log server-side for GDPR proof (best-effort, non-blocking)
   api
     .post("/gdpr/consent-log", {

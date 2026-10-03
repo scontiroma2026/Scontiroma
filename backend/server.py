@@ -46,7 +46,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from webauthn import (
     generate_registration_options, verify_registration_response,
     generate_authentication_options, verify_authentication_response,
@@ -363,6 +363,15 @@ class DiscountIn(BaseModel):
     # Numero massimo di volte che uno stesso abbonato può usare lo sconto nel mese in corso.
     # Default 1. Massimo 10 per prevenire abusi.
     max_uses_per_month: int = Field(default=1, ge=1, le=10)
+
+    @model_validator(mode="after")
+    def _prezzi_validi(self):
+        # Lo sconto deve essere uno sconto vero: prezzi positivi e scontato minore del pieno.
+        if self.original_price <= 0 or self.discounted_price <= 0:
+            raise ValueError("I prezzi devono essere maggiori di zero")
+        if self.discounted_price >= self.original_price:
+            raise ValueError("Il prezzo scontato deve essere più basso del prezzo pieno")
+        return self
 
     def cleaned(self) -> dict:
         d = self.model_dump()
