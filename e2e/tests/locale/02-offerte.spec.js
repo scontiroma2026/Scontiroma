@@ -99,3 +99,17 @@ test('lista sconti: con un solo risultato scrive "1 sconto trovato"', async ({ p
   await page.getByTestId('search-input').fill(titolo);
   await expect(page.getByTestId('results-count')).toHaveText('1 sconto trovato');
 });
+
+test('modulo offerta: con il server lento quello che scrivi non viene cancellato', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  await loginNelBrowser(page, m.email, m.password);
+  // Il server risponde dopo 2 s (come Render appena svegliato)
+  await page.route('**/api/merchants/me/discount', async (route) => {
+    if (route.request().method() === 'GET') await new Promise((r) => setTimeout(r, 2000));
+    await route.continue();
+  });
+  await page.goto('/merchant/discount');
+  await page.getByTestId('disc-title').fill('Titolo scritto subito');
+  await expect(page.getByTestId('disc-form')).toHaveAttribute('data-loaded', '1');
+  await expect(page.getByTestId('disc-title')).toHaveValue('Titolo scritto subito');
+});
