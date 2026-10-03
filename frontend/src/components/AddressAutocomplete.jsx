@@ -127,7 +127,7 @@ export default function AddressAutocomplete({
           className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-white/15 bg-[#141419] shadow-2xl overflow-hidden animate-in fade-in-0 slide-in-from-top-1"
         >
           <div className="text-[10px] uppercase tracking-wider text-fucsia px-3 py-2 border-b border-white/10 bg-black/40 flex items-center justify-between">
-            <span>{suggestions.length} indirizzi trovati — clicca per selezionare</span>
+            <span>{suggestions.length === 1 ? "1 indirizzo trovato" : `${suggestions.length} indirizzi trovati`} — clicca per selezionare</span>
             {(() => {
               const q = (value || "").trim();
               const queryHasDigit = /\d/.test(q);
