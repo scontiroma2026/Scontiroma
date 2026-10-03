@@ -99,7 +99,7 @@ export default function MerchantDiscountsDialog({ merchantId, open, onOpenChange
                         <span
                           data-testid={`disc-uses-${d.id}`}
                           className="inline-flex items-center gap-1 rounded-full border border-fucsia/40 bg-fucsia/10 px-2 py-0.5 text-[10px] text-fucsia font-semibold"
-                          title="Utilizzi al mese per abbonato"
+                          title="Utilizzi al mese per cliente"
                         >
                           🔁 {d.max_uses_per_month || 1}× / mese
                         </span>

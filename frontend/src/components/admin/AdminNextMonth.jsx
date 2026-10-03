@@ -260,7 +260,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
           <span className="text-fucsia font-bold text-xl">€{nd.discounted_price?.toFixed(2)}</span>
           <span className="text-white/40 line-through">€{nd.original_price?.toFixed(2)}</span>
           <span className="text-neon text-sm">−{nd.percent_off}%</span>
-          <span className="ml-3 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold">🔁 {nd.max_uses_per_month || 1}× al mese per abbonato</span>
+          <span className="ml-3 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold">🔁 {nd.max_uses_per_month || 1}× al mese per cliente</span>
           <span className={`rounded-full px-2.5 py-0.5 text-xs ${nd.active ? "bg-ciano/15 text-ciano border border-ciano/40" : "bg-white/5 text-white/40 border border-white/15"}`}>
             {nd.active ? "● attiva nel catalogo" : "○ non attiva"}
           </span>
@@ -387,7 +387,7 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
             <Input value={f.image_url} onChange={upd("image_url")} placeholder="https://… o dataURL" className="bg-black/40 border-white/10 text-white text-xs" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Utilizzi al mese per abbonato</Label>
+            <Label className="text-white/70 text-xs">Utilizzi al mese per cliente</Label>
             <div className="mt-1 grid grid-cols-5 gap-2">
               {[1, 2, 3, 5, 10].map((n) => (
                 <button

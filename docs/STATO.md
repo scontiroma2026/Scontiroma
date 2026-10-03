@@ -23,11 +23,12 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #19 | Pagina offerta: pulsanti Chiama (blu) e WhatsApp (verde) uguali, tolto il «Consiglio furbo» | 03/10 |
 | #20 | «1 sconto trovato» al singolare | 03/10 |
 | #21 | Prezzo scontato < pieno, statistiche solo con consenso, modulo offerta che non si svuota | 03/10 |
+| #22 | Pannello admin chiaro, stato vero dell'offerta, «Sospendi» funzionante | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #22 | Pannello admin: schede negozio con pulsanti scritti, stato vero dell'offerta, «Sospendi» funzionante | controlli verdi |
+| #23 | Step 2: email di benvenuto e avvisi all'admin, testi senza abbonamento | OK dell'utente sui testi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
