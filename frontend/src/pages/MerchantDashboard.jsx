@@ -10,9 +10,12 @@ import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
 import NextOfferCard from "@/components/NextOfferCard";
 import RenewalBanner from "@/components/RenewalBanner";
+import MerchantInsights from "@/components/MerchantInsights";
+import { useAppConfig } from "@/context/ConfigContext";
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
+  const { trialEndLabel } = useAppConfig();
   const [stats, setStats] = useState({ total: 0, redeemed: 0, pending: 0 });
   const [discount, setDiscount] = useState(null);
   const [redemptions, setRedemptions] = useState([]);
@@ -45,12 +48,22 @@ export default function MerchantDashboard() {
         </div>
       </div>
 
+      {trialEndLabel && (
+        <div data-testid="trial-banner" className="mb-6 rounded-2xl border border-ciano/40 bg-ciano/10 p-4 text-sm text-white/90">
+          <strong className="text-ciano">Prova gratuita fino al {trialEndLabel}</strong>, poi 4,99 € al mese (IVA inclusa), prezzo bloccato per chi parte adesso.
+          Ti avviseremo prima e non ti addebiteremo nulla senza la tua conferma.
+        </div>
+      )}
       <RenewalBanner />
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard icon={<TicketPercent />} label="Codici generati" value={stats.total} />
         <StatCard icon={<Users />} label="Codici utilizzati" value={stats.redeemed} highlight />
         <StatCard icon={<TrendingUp />} label="In attesa" value={stats.pending} />
+      </div>
+
+      <div className="mt-6">
+        <MerchantInsights />
       </div>
 
       <div className="mt-10 grid gap-6 md:grid-cols-5">

@@ -1397,6 +1397,50 @@ async def merchant_stats(user: dict = Depends(require_merchant)):
     return {"total": total, "redeemed": redeemed, "pending": pending}
 
 
+GIORNI_IT = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
+INSIGHTS_MIN_CLIENTI = 3  # sotto questa soglia niente dettagli: si riconoscerebbero i singoli clienti
+
+
+@api.get("/merchants/me/insights")
+async def merchant_insights(user: dict = Depends(require_merchant)):
+    """Statistiche aggregate per il commerciante: utilizzi del mese, clienti nuovi e di
+    ritorno, giorni preferiti, andamento degli ultimi 6 mesi. Solo numeri, mai nomi; sotto
+    i 3 clienti nel mese i dettagli non vengono mostrati ("dati insufficienti")."""
+    used = await db.redemptions.find(
+        {"merchant_id": user["id"], "status": "redeemed"},
+        {"_id": 0, "user_id": 1, "redeemed_at": 1}).to_list(None)
+    mese = current_month_key()
+    def mese_di(r):
+        d = _rome_day(r.get("redeemed_at"))
+        return d[:7] if d else None
+    prima_volta: dict = {}
+    for r in sorted(used, key=lambda r: r.get("redeemed_at") or ""):
+        prima_volta.setdefault(r["user_id"], mese_di(r))
+    del_mese = [r for r in used if mese_di(r) == mese]
+    clienti = {r["user_id"] for r in del_mese}
+    nuovi = {u for u in clienti if prima_volta.get(u) == mese}
+    now = _rome_now()
+    serie = []
+    for k in range(5, -1, -1):
+        y, m = now.year, now.month - k
+        while m <= 0:
+            y, m = y - 1, m + 12
+        key = f"{y}-{m:02d}"
+        serie.append({"mese": f"{MESI_IT[m - 1]} {y}", "utilizzi": sum(1 for r in used if mese_di(r) == key)})
+    out = {"mese": month_label_it(mese), "utilizzi_mese": len(del_mese), "utilizzi_totali": len(used),
+           "ultimi_6_mesi": serie, "dati_sufficienti": len(clienti) >= INSIGHTS_MIN_CLIENTI}
+    if out["dati_sufficienti"]:
+        giorni = [0] * 7
+        for r in del_mese:
+            try:
+                giorni[datetime.fromisoformat(r["redeemed_at"]).astimezone(ROME_TZ).weekday()] += 1
+            except Exception:
+                pass
+        out.update({"clienti_mese": len(clienti), "clienti_nuovi": len(nuovi), "clienti_di_ritorno": len(clienti) - len(nuovi),
+                    "giorni": [{"giorno": GIORNI_IT[i], "utilizzi": n} for i, n in enumerate(giorni)]})
+    return out
+
+
 @api.get("/merchants/me/referrals")
 async def merchant_referrals(user: dict = Depends(require_merchant)):
     """Ritorna solo il link e la locandina personalizzati del commerciante.
@@ -1464,7 +1508,17 @@ def _frontend_url() -> str:
 @api.get("/config/public")
 async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
-    return {"client_subscription_required": client_subscription_required()}
+    out = {"client_subscription_required": client_subscription_required()}
+    # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
+    fine = (os.environ.get("TRIAL_END_DATE") or "").strip()
+    if fine:
+        try:
+            d = datetime.strptime(fine, "%Y-%m-%d")
+            out["trial_end_date"] = fine
+            out["trial_end_label"] = f"{d.day} {MESI_IT[d.month - 1]} {d.year}"
+        except ValueError:
+            logging.warning("TRIAL_END_DATE non valida (atteso AAAA-MM-GG): banner della prova non mostrato")
+    return out
 
 
 @api.get("/subscription/me")
@@ -2642,6 +2696,40 @@ async def admin_session(request: Request, user: dict = Depends(require_admin)):
     verified = bool(token and _verify_master_token(token, user["id"]))
     u = await db.users.find_one({"id": user["id"]})
     return {"master_verified": verified, "biometric_available": bool((u or {}).get("webauthn_credentials"))}
+
+
+@api.get("/admin/launch-summary")
+async def admin_launch_summary(user: dict = Depends(require_admin_master)):
+    """Fase di lancio a colpo d'occhio: iscritti, negozi per quartiere, offerte da approvare,
+    negozi senza offerta, utilizzi del mese."""
+    sospesi = await _merchant_sospesi()
+    merchants = await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1, "zone": 1, "created_at": 1}).to_list(None)
+    offerte = {d["merchant_id"]: d for d in await db.discounts.find({}, {"_id": 0, "merchant_id": 1, "approval_status": 1, "active": 1}).to_list(None)}
+    zone: dict = {}
+    senza_offerta = []
+    for m in merchants:
+        z = zone.setdefault(m.get("zone") or "—", {"zona": m.get("zone") or "—", "negozi": 0, "online": 0})
+        z["negozi"] += 1
+        d = offerte.get(m["id"])
+        if d and d.get("approval_status") == "approved" and d.get("active", True) and m["id"] not in sospesi:
+            z["online"] += 1
+        if not d:
+            senza_offerta.append(m.get("shop_name") or "senza nome")
+    sette = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    mese = current_month_key()
+    return {
+        "clienti": await db.users.count_documents({"role": "client"}),
+        "clienti_ultimi_7_giorni": await db.users.count_documents({"role": "client", "created_at": {"$gte": sette}}),
+        "commercianti": len(merchants),
+        "commercianti_ultimi_7_giorni": sum(1 for m in merchants if (m.get("created_at") or "") >= sette),
+        "sospesi": len(sospesi),
+        "zone": sorted(zone.values(), key=lambda z: -z["negozi"]),
+        "offerte_da_approvare": await db.discounts.count_documents({"approval_status": "pending"})
+            + await db.next_discounts.count_documents({"approval_status": "pending"}),
+        "negozi_senza_offerta": sorted(senza_offerta),
+        "utilizzi_mese": await db.redemptions.count_documents({"status": "redeemed", "month_key": mese}),
+        "mese": month_label_it(mese),
+    }
 
 
 @api.get("/admin/stats")

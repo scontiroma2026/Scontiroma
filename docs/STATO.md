@@ -24,6 +24,7 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #20 | «1 sconto trovato» al singolare | 03/10 |
 | #21 | Prezzo scontato < pieno, statistiche solo con consenso, modulo offerta che non si svuota | 03/10 |
 | #22 | Pannello admin chiaro, stato vero dell'offerta, «Sospendi» funzionante | 03/10 |
+| #24 | Step 3: statistiche per i commercianti, «Fase di lancio» per l'admin, banner prova (solo con `TRIAL_END_DATE`) | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
