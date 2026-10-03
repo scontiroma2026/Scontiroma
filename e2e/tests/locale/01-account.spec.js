@@ -130,3 +130,26 @@ test('PIN: blocco anche per un account senza PIN o un\'email inesistente', async
     expect(esiti).toEqual([401, 401, 401, 401, 401, 429]);
   }
 });
+
+test('PIN: la pagina mostra l\'account e "Cambia account" permette di entrare con un altro', async ({ page, request }) => {
+  const vecchio = await registra(request, 'client');
+  const nuovo = await registra(request, 'client');
+  expect((await chiama(request, 'POST', '/auth/pin', { token: vecchio.token, body: { pin: '246801' } })).status).toBe(200);
+  // Sul telefono è rimasto l'ultimo account usato (quello nuovo)
+  await page.goto('/login');
+  await page.evaluate((e) => localStorage.setItem('last_email', e), nuovo.email);
+  await page.goto('/login');
+  await page.getByTestId('use-pin-btn').click();
+  await expect(page.getByTestId('pin-account')).toContainText(nuovo.email);
+  await page.getByTestId('switch-account').click();
+  await expect(page.getByTestId('login-email')).toHaveValue('');
+  expect(await page.evaluate(() => localStorage.getItem('last_email'))).toBeNull();
+  await page.getByTestId('login-email').fill(vecchio.email);
+  await page.getByTestId('use-pin-btn').click();
+  await expect(page.getByTestId('pin-account')).toContainText(vecchio.email);
+  await page.getByTestId('pin-input').fill('246801');
+  const risposta = page.waitForResponse((r) => r.url().endsWith('/api/auth/pin-login'));
+  await page.getByTestId('pin-submit').click();
+  expect((await risposta).status()).toBe(200);
+  await expect(page).toHaveURL(/\/discounts|\/setup-security/);
+});
