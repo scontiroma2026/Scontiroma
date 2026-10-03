@@ -21,11 +21,13 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #17 | Accesso: account in evidenza e «Cambia account» | 03/10 |
 | #18 | PIN tolto ovunque: email e password (blocco 15 minuti dopo 5 errori) o Face ID facoltativo | 03/10 |
 | #19 | Pagina offerta: pulsanti Chiama (blu) e WhatsApp (verde) uguali, tolto il «Consiglio furbo» | 03/10 |
+| #20 | «1 sconto trovato» al singolare | 03/10 |
+| #21 | Prezzo scontato < pieno, statistiche solo con consenso, modulo offerta che non si svuota | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #20 | «1 sconto trovato» / «1 indirizzo trovato» al singolare | controlli verdi |
+| #22 | Pannello admin: schede negozio con pulsanti scritti, stato vero dell'offerta, «Sospendi» funzionante | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".

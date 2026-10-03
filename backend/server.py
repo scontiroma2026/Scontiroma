@@ -915,6 +915,11 @@ async def default_images():
 
 
 # ---------- Discounts ----------
+async def _merchant_sospesi() -> set:
+    """Commercianti sospesi dall'admin: le loro offerte non compaiono e non si possono usare."""
+    return set(await db.users.distinct("id", {"role": "merchant", "approved": False}))
+
+
 async def enrich_discount(d: dict) -> dict:
     d = {k: v for k, v in d.items() if k != "_id"}
     merchant = await db.users.find_one({"id": d.get("merchant_id")})
@@ -1141,7 +1146,7 @@ async def top_merchants(limit: int = 3):
         if not mid:
             continue
         m = await db.users.find_one({"id": mid, "role": "merchant"})
-        if not m:
+        if not m or m.get("approved") is False:
             continue
         # Sconto attivo attuale del merchant
         d = await db.discounts.find_one({
@@ -1159,8 +1164,11 @@ async def top_merchants(limit: int = 3):
 async def list_discounts(zone: Optional[str] = None, category: Optional[str] = None, q: Optional[str] = None):
     # Only APPROVED + active discounts visible publicly
     docs = await db.discounts.find({"active": True, "approval_status": "approved"}).to_list(500)
+    sospesi = await _merchant_sospesi()
     out = []
     for d in docs:
+        if d.get("merchant_id") in sospesi:
+            continue
         item = await enrich_discount(d)
         m = item.get("merchant")
         if not m:
@@ -2092,6 +2100,8 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
     if not d:
         raise HTTPException(404, "Sconto non trovato")
     if d.get("approval_status") != "approved" or not d.get("active", True):
+        raise HTTPException(403, "Offerta non disponibile")
+    if d.get("merchant_id") in await _merchant_sospesi():
         raise HTTPException(403, "Offerta non disponibile")
 
     month_key = current_month_key()
@@ -3033,6 +3043,7 @@ async def admin_list_merchants(user: dict = Depends(require_admin_master)):
             m["discount_id"] = disc["id"]
             m["discount_title"] = disc.get("title")
             m["discount_active"] = disc.get("active", True)
+            m["discount_approval"] = disc.get("approval_status") or "approved"
         red_count = await db.redemptions.count_documents({"merchant_id": m["id"]})
         m["redemptions_count"] = red_count
         out.append(m)

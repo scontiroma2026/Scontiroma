@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Check, X, Trash2, Edit3 } from "lucide-react";
+import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 
@@ -86,19 +86,25 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   };
 
   const approveInline = async (id) => {
+    if (!window.confirm("Approvare l'offerta?\n\nDiventa subito visibile ai clienti e il commerciante riceve un'email.")) return;
     try { await api.post(`/admin/discounts/${id}/approve`, {}, hdrs()); toast.success("Approvata ✓"); onRefresh(); }
     catch (err) { toast.error(formatApiError(err)); }
   };
   const rejectInline = async (id) => {
-    const reason = window.prompt("Motivo del rifiuto:", "") || "";
+    const reason = window.prompt("Rifiutare l'offerta?\n\nScrivi il motivo: il commerciante lo riceve per email e potrà correggerla.", "");
+    if (reason === null) return;
     try { await api.post(`/admin/discounts/${id}/reject`, { reason }, hdrs()); toast.success("Rimandata in bozza"); onRefresh(); }
     catch (err) { toast.error(formatApiError(err)); }
   };
 
   const toggleApprove = async (m) => {
+    const msg = m.approved
+      ? `Sospendere ${m.shop_name}?\n\nLa sua offerta sparisce subito dall'app e i clienti non possono più usarla. Puoi riattivarlo quando vuoi.`
+      : `Riattivare ${m.shop_name}?\n\nLa sua offerta torna visibile ai clienti (se è approvata e attiva).`;
+    if (!window.confirm(msg)) return;
     try {
       await api.put(`/admin/merchants/${m.id}`, { approved: !m.approved }, hdrs());
-      toast.success(m.approved ? "Sospeso" : "Approvato");
+      toast.success(m.approved ? "Negozio sospeso" : "Negozio riattivato");
       onRefresh();
     } catch (err) { toast.error(formatApiError(err)); }
   };
@@ -115,7 +121,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   };
 
   const del = async (m) => {
-    if (!window.confirm(`Eliminare ${m.shop_name} e il suo sconto? L'azione è irreversibile.`)) return;
+    if (!window.confirm(`ELIMINARE DEFINITIVAMENTE ${m.shop_name}?\n\nSi cancellano l'account del commerciante e la sua offerta. Non si può annullare.\nSe vuoi solo fermarlo per un po', usa «Sospendi».`)) return;
     try {
       await api.delete(`/admin/merchants/${m.id}`, hdrs());
       toast.success("Eliminato");
@@ -125,7 +131,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
 
   const delDiscount = async (id, shopName) => {
     if (!id) return toast.error("Nessuno sconto da eliminare");
-    if (!window.confirm(`Eliminare lo sconto di ${shopName}?`)) return;
+    if (!window.confirm(`Eliminare l'offerta di ${shopName}?\n\nL'offerta sparisce e il commerciante dovrà crearne una nuova. Il negozio resta iscritto.`)) return;
     try {
       await api.delete(`/admin/discounts/${id}`, hdrs());
       toast.success("Sconto eliminato");
@@ -135,9 +141,12 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
 
   const toggleDiscountActive = async (m) => {
     if (!m.discount_id) return;
+    if (!window.confirm(m.discount_active
+      ? `Nascondere l'offerta di ${m.shop_name}?\n\nNon compare più ai clienti finché non la rendi di nuovo visibile.`
+      : `Rendere di nuovo visibile l'offerta di ${m.shop_name}?`)) return;
     try {
       await api.put(`/admin/discounts/${m.discount_id}`, { active: !m.discount_active }, hdrs());
-      toast.success("Sconto aggiornato");
+      toast.success(m.discount_active ? "Offerta nascosta" : "Offerta di nuovo visibile");
       onRefresh();
     } catch (err) { toast.error(formatApiError(err)); }
   };
@@ -148,49 +157,36 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
         <div>
           <h3 className="font-serif text-2xl">Gestione commercianti & offerte</h3>
           <p className="text-xs text-white/50 mt-1">
-            Modifica, elimina, approva/rifiuta. Tutte le azioni sono immediate.
+            Ogni azione chiede conferma e spiega cosa succede. «Sospendi» ferma il negozio senza cancellarlo.
           </p>
         </div>
         <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio, email, zona…" testId="merchants-search" />
       </div>
 
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase text-white/50 border-b border-white/10">
-              <th className="py-2">Negozio</th>
-              <th>Zona / Categoria</th>
-              <th>Offerta</th>
-              <th>Utilizzi</th>
-              <th>Stato</th>
-              <th className="text-right">Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredMerchants.map((m) => (
-              <MerchantRow
-                key={m.id}
-                m={m}
-                editing={editing === m.id}
-                form={form}
-                setForm={setForm}
-                busy={busy}
-                onStartEdit={() => startEdit(m)}
-                onSaveEdit={() => saveEdit(m.id)}
-                onCancelEdit={cancelEdit}
-                onToggleApprove={() => toggleApprove(m)}
-                onToggleDiscountActive={() => toggleDiscountActive(m)}
-                onApproveInline={() => approveInline(m.discount_id)}
-                onRejectInline={() => rejectInline(m.discount_id)}
-                onOpenDiscountEdit={() => openDiscountEdit(m)}
-                onForceEdit={() => onForceEdit(m.discount_id)}
-                onDelDiscount={() => delDiscount(m.discount_id, m.shop_name)}
-                onDelMerchant={() => del(m)}
-                onViewDiscounts={() => onViewDiscounts?.(m.id)}
-              />
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-4 space-y-3">
+        {filteredMerchants.length === 0 && <p className="text-sm text-white/50">Nessun negozio.</p>}
+        {filteredMerchants.map((m) => (
+          <MerchantRow
+            key={m.id}
+            m={m}
+            editing={editing === m.id}
+            form={form}
+            setForm={setForm}
+            busy={busy}
+            onStartEdit={() => startEdit(m)}
+            onSaveEdit={() => saveEdit(m.id)}
+            onCancelEdit={cancelEdit}
+            onToggleApprove={() => toggleApprove(m)}
+            onToggleDiscountActive={() => toggleDiscountActive(m)}
+            onApproveInline={() => approveInline(m.discount_id)}
+            onRejectInline={() => rejectInline(m.discount_id)}
+            onOpenDiscountEdit={() => openDiscountEdit(m)}
+            onForceEdit={() => onForceEdit(m.discount_id)}
+            onDelDiscount={() => delDiscount(m.discount_id, m.shop_name)}
+            onDelMerchant={() => del(m)}
+            onViewDiscounts={() => onViewDiscounts?.(m.id)}
+          />
+        ))}
       </div>
 
       {discEdit && (
@@ -205,8 +201,32 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   );
 }
 
+const STATO_OFFERTA = {
+  pending: { testo: "In attesa di approvazione", cls: "bg-amber-400/15 text-amber-300 border-amber-400/40" },
+  approved: { testo: "Approvata", cls: "bg-emerald-400/15 text-emerald-300 border-emerald-400/40" },
+  rejected: { testo: "Rifiutata", cls: "bg-red-500/15 text-red-300 border-red-500/40" },
+  expired: { testo: "Scaduta", cls: "bg-white/10 text-white/60 border-white/20" },
+};
+
+// Pulsante con icona e scritta: si capisce cosa fa anche da telefono (niente solo-icone).
+function Azione({ testid, onClick, icon: Icon, children, tono = "neutro", disabled }) {
+  const toni = {
+    verde: "bg-emerald-500/20 text-emerald-200 border-emerald-400/40 hover:bg-emerald-500/30",
+    rosso: "bg-red-500/15 text-red-200 border-red-500/40 hover:bg-red-500/25",
+    giallo: "bg-amber-400/15 text-amber-200 border-amber-400/40 hover:bg-amber-400/25",
+    neutro: "bg-white/5 text-white border-white/15 hover:bg-white/10",
+  };
+  return (
+    <button type="button" data-testid={testid} onClick={onClick} disabled={disabled}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${toni[tono]}`}>
+      {Icon && <Icon size={14} />} {children}
+    </button>
+  );
+}
+
 /**
- * Riga singola nella tabella merchants. Estratta per leggibilità.
+ * Scheda di un commerciante: dati del negozio, la sua offerta con lo stato in italiano e
+ * le azioni scritte per esteso, divise tra "Offerta" e "Negozio".
  */
 function MerchantRow({
   m, editing, form, setForm, busy,
@@ -215,120 +235,102 @@ function MerchantRow({
   onApproveInline, onRejectInline, onOpenDiscountEdit,
   onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts,
 }) {
+  const stato = STATO_OFFERTA[m.discount_approval] || STATO_OFFERTA.approved;
   return (
-    <tr className="border-b border-white/5 align-top">
-      <td className="py-3">
-        {editing ? (
-          <div className="space-y-2">
-            <Input value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} className="bg-black/40 border-white/10 text-white h-8 text-sm" />
-            <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Indirizzo" className="bg-black/40 border-white/10 text-white h-8 text-xs" />
-          </div>
-        ) : (
-          <>
-            <div className="text-white font-semibold">{m.shop_name}</div>
-            <div className="text-xs text-white/60">{m.email}</div>
-            {m.phone && (
-              <div className="mt-1 flex items-center gap-1.5 text-xs">
-                <span className="text-white/70 font-mono">{m.phone}</span>
-                <a
-                  data-testid={`wa-link-${m.id}`}
-                  href={`https://wa.me/${(m.phone || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Ciao ${m.name || m.shop_name}, ti scrivo da Sconti Roma...`)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-full bg-green-500 hover:bg-green-400 px-2 py-0.5 text-[10px] font-medium text-white"
-                >WhatsApp</a>
+    <div data-testid={`admin-merchant-${m.id}`} className={`rounded-2xl border p-4 ${m.approved ? "border-white/10 bg-black/20" : "border-red-500/40 bg-red-500/5"}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          {editing ? (
+            <div className="space-y-2">
+              <Input value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} placeholder="Nome negozio" className="bg-black/40 border-white/10 text-white h-9 text-sm" />
+              <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Indirizzo" className="bg-black/40 border-white/10 text-white h-9 text-xs" />
+              <div className="grid grid-cols-2 gap-2">
+                <Input value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })} placeholder="Zona" className="bg-black/40 border-white/10 text-white h-9 text-xs" />
+                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Categoria" className="bg-black/40 border-white/10 text-white h-9 text-xs" />
               </div>
-            )}
-            <button
-              type="button"
-              data-testid={`view-discounts-${m.id}`}
-              onClick={onViewDiscounts}
-              className="mt-2 text-xs text-ciano hover:underline"
-            >
-              Vedi tutte le offerte →
-            </button>
-          </>
-        )}
-      </td>
-      <td className="py-3">
-        {editing ? (
-          <div className="space-y-2">
-            <Input value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })} className="bg-black/40 border-white/10 text-white h-8 text-xs" />
-            <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="bg-black/40 border-white/10 text-white h-8 text-xs" />
-          </div>
-        ) : (
-          <>
-            <div className="text-white/80">{m.zone}</div>
-            <div className="text-xs text-white/50">{m.category}</div>
-          </>
-        )}
-      </td>
-      <td className="py-3">
+            </div>
+          ) : (
+            <>
+              <div className="text-lg font-semibold text-white break-words">{m.shop_name}</div>
+              <div className="text-xs text-white/60 break-all">{m.email}</div>
+              <div className="mt-1 text-xs text-white/60">{m.zone} · {m.category} · <span className="text-fucsia font-semibold">{m.redemptions_count}</span> sconti usati</div>
+              {m.phone && (
+                <div className="mt-1 flex items-center gap-1.5 text-xs">
+                  <span className="text-white/70 font-mono">{m.phone}</span>
+                  <a
+                    data-testid={`wa-link-${m.id}`}
+                    href={`https://wa.me/${(m.phone || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Ciao ${m.name || m.shop_name}, ti scrivo da Sconti Roma...`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full bg-green-500 hover:bg-green-400 px-2 py-0.5 text-[10px] font-medium text-white"
+                  >WhatsApp</a>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <span data-testid={`admin-merchant-stato-${m.id}`} className={`rounded-full border px-3 py-1 text-xs font-semibold ${m.approved ? "border-emerald-400/40 text-emerald-300" : "border-red-500/40 text-red-300"}`}>
+          {m.approved ? "Negozio attivo" : "Negozio sospeso"}
+        </span>
+      </div>
+
+      {/* Offerta */}
+      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[10px] uppercase tracking-wider text-white/50">Offerta</div>
+          {m.has_discount && (
+            <div className="flex flex-wrap gap-1.5">
+              <span data-testid={`admin-offerta-stato-${m.id}`} className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${stato.cls}`}>{stato.testo}</span>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${m.discount_active ? "border-ciano/40 text-ciano" : "border-white/20 text-white/50"}`}>
+                {m.discount_active ? "Visibile" : "Nascosta"}
+              </span>
+            </div>
+          )}
+        </div>
         {m.has_discount ? (
           <>
-            <div className="text-white/90 font-serif text-base max-w-[240px] truncate" title={m.discount_title}>
-              {m.discount_title || "(senza titolo)"}
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-[10px] uppercase tracking-wider flex-wrap">
-              <span className={`rounded-full px-2 py-0.5 ${
-                m.discount_approval === "pending" ? "bg-neon/20 text-neon"
-                  : m.discount_approval === "rejected" ? "bg-destructive/20 text-destructive"
-                  : "bg-fucsia/20 text-fucsia"
-              }`}>
-                {m.discount_approval || "approved"}
-              </span>
-              <button
-                onClick={onToggleDiscountActive}
-                className={`${m.discount_active ? "text-ciano" : "text-white/50 line-through"} hover:underline`}
-              >
-                {m.discount_active ? "● attivo" : "○ inattivo"}
-              </button>
+            <div className="mt-1 font-serif text-base text-white break-words">{m.discount_title || "(senza titolo)"}</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {m.discount_approval === "pending" && (
+                <>
+                  <Azione testid={`inline-approve-${m.discount_id}`} onClick={onApproveInline} icon={Check} tono="verde">Approva</Azione>
+                  <Azione testid={`inline-reject-${m.discount_id}`} onClick={onRejectInline} icon={X} tono="rosso">Rifiuta</Azione>
+                </>
+              )}
+              <Azione testid={`edit-discount-${m.discount_id}`} onClick={onOpenDiscountEdit} icon={Pencil}>Modifica</Azione>
+              <Azione testid={`toggle-discount-${m.discount_id}`} onClick={onToggleDiscountActive} icon={m.discount_active ? EyeOff : Eye} tono="giallo">
+                {m.discount_active ? "Nascondi" : "Rendi visibile"}
+              </Azione>
+              <Azione testid={`admin-force-edit-${m.discount_id}`} onClick={onForceEdit} icon={Unlock}>Permetti modifica al commerciante</Azione>
+              <Azione testid={`admin-delete-discount-${m.discount_id}`} onClick={onDelDiscount} icon={Trash2} tono="rosso">Elimina offerta</Azione>
             </div>
           </>
         ) : (
-          <span className="text-xs text-white/40">nessuna offerta</span>
+          <p className="mt-1 text-xs text-white/50">Nessuna offerta caricata.</p>
         )}
-      </td>
-      <td className="py-3 font-serif text-2xl text-fucsia">{m.redemptions_count}</td>
-      <td className="py-3">
-        <button
-          onClick={onToggleApprove}
-          className={`rounded-full px-3 py-1 text-xs ${
-            m.approved ? "bg-fucsia/20 text-fucsia" : "bg-white/10 text-white/50"
-          }`}
-        >
-          {m.approved ? "Approvato" : "Sospeso"}
+        <button type="button" data-testid={`view-discounts-${m.id}`} onClick={onViewDiscounts} className="mt-2 text-xs text-ciano hover:underline">
+          Storico offerte →
         </button>
-      </td>
-      <td className="py-3 text-right">
+      </div>
+
+      {/* Negozio */}
+      <div className="mt-3 flex flex-wrap gap-2">
         {editing ? (
-          <div className="flex justify-end gap-2">
-            <button data-testid={`admin-merchant-save-${m.id}`} onClick={onSaveEdit} disabled={busy} className="rounded-md bg-fucsia/20 hover:bg-fucsia/30 p-2 text-fucsia" title="Salva"><Check size={14} /></button>
-            <button data-testid={`admin-merchant-cancel-${m.id}`} onClick={onCancelEdit} className="rounded-md bg-white/10 p-2 text-white" title="Annulla"><X size={14} /></button>
-          </div>
+          <>
+            <Azione testid={`admin-merchant-save-${m.id}`} onClick={onSaveEdit} icon={Check} tono="verde" disabled={busy}>Salva</Azione>
+            <Azione testid={`admin-merchant-cancel-${m.id}`} onClick={onCancelEdit} icon={X}>Annulla</Azione>
+          </>
         ) : (
-          <div className="flex justify-end gap-1 flex-wrap">
-            {m.discount_approval === "pending" && (
-              <>
-                <button data-testid={`inline-approve-${m.discount_id}`} onClick={onApproveInline} className="rounded-md bg-fucsia/20 hover:bg-fucsia/30 p-2 text-fucsia" title="Approva offerta"><Check size={14} /></button>
-                <button data-testid={`inline-reject-${m.discount_id}`} onClick={onRejectInline} className="rounded-md bg-neon/20 hover:bg-neon/30 p-2 text-neon" title="Rifiuta"><X size={14} /></button>
-              </>
-            )}
-            {m.discount_id && (
-              <button data-testid={`edit-discount-${m.discount_id}`} onClick={onOpenDiscountEdit} className="rounded-md bg-ciano/20 hover:bg-ciano/30 p-2 text-ciano" title="Modifica offerta">📝</button>
-            )}
-            {m.discount_id && (
-              <button data-testid={`admin-force-edit-${m.discount_id}`} onClick={onForceEdit} className="rounded-md bg-neon/20 hover:bg-neon/30 p-2 text-neon" title="Sblocca modifica (lucchetto)">🔓</button>
-            )}
-            {m.discount_id && (
-              <button data-testid={`admin-delete-discount-${m.discount_id}`} onClick={onDelDiscount} className="rounded-md bg-destructive/20 hover:bg-destructive/30 p-2 text-destructive" title="Elimina solo sconto"><Trash2 size={14} /></button>
-            )}
-            <button data-testid={`admin-merchant-edit-${m.id}`} onClick={onStartEdit} className="rounded-md bg-white/10 hover:bg-white/20 p-2 text-white" title="Modifica negozio"><Edit3 size={14} /></button>
-            <button data-testid={`admin-merchant-delete-${m.id}`} onClick={onDelMerchant} className="rounded-md bg-destructive/30 hover:bg-destructive/40 p-2 text-white" title="Elimina negozio"><Trash2 size={14} /></button>
-          </div>
+          <>
+            <Azione testid={`admin-merchant-edit-${m.id}`} onClick={onStartEdit} icon={Edit3}>Modifica dati negozio</Azione>
+            <Azione testid={`admin-merchant-toggle-${m.id}`} onClick={onToggleApprove} icon={m.approved ? PauseCircle : PlayCircle} tono={m.approved ? "giallo" : "verde"}>
+              {m.approved ? "Sospendi negozio" : "Riattiva negozio"}
+            </Azione>
+            <Azione testid={`admin-merchant-delete-${m.id}`} onClick={onDelMerchant} icon={Trash2} tono="rosso">Elimina negozio</Azione>
+          </>
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
 
