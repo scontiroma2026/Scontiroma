@@ -12,6 +12,7 @@ import AdminSubscribers from "@/components/admin/AdminSubscribers";
 import GeocodeIssuesWidget from "@/components/admin/GeocodeIssuesWidget";
 import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import AdminGate from "@/components/admin/AdminGate";
+import AdminLaunch from "@/components/admin/AdminLaunch";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminPending from "@/components/admin/AdminPending";
 import AdminLog from "@/components/admin/AdminLog";
@@ -37,7 +38,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [merchants, setMerchants] = useState([]);
   const [pending, setPending] = useState([]);
-  const [tab, setTab] = useState("analytics");
+  const [tab, setTab] = useState("launch");
   // Economics e Abbonati servono solo con l'abbonamento cliente acceso
   // (CLIENT_SUBSCRIPTION_REQUIRED): nella fase di lancio restano nascoste, non cancellate.
   const { subscriptionRequired } = useAppConfig();
@@ -114,6 +115,7 @@ export default function AdminDashboard() {
 
   const SUBSCRIPTION_TABS = ["economics", "subscribers"];
   const tabs = [
+    ["launch", "Fase di lancio"],
     ["analytics", "Analytics"],
     ["economics", "Economics"],
     ["traffic", "Traffico"],
@@ -170,6 +172,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {tab === "launch" && <AdminLaunch hdrs={hdrs} />}
       {tab === "analytics" && <AdminAnalytics stats={stats} />}
       {tab === "subscribers" && subscriptionRequired && <AdminSubscribers hdrs={hdrs} />}
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}
