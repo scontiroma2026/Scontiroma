@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { ConfigProvider } from "@/context/ConfigContext";
 import { Toaster } from "@/components/ui/sonner";
@@ -32,7 +32,6 @@ import PaymentCancel from "@/pages/PaymentCancel";
 import MapView from "@/pages/MapView";
 import SetupSecurity from "@/pages/SetupSecurity";
 import ForgotPassword from "@/pages/ForgotPassword";
-import ForgotPin from "@/pages/ForgotPin";
 import ResetPassword from "@/pages/ResetPassword";
 import QRVerify from "@/pages/QRVerify";
 import "@/App.css";
@@ -63,7 +62,7 @@ function App() {
             <Route path="/map" element={<MapView />} />
             <Route path="/setup-security" element={<ProtectedRoute><SetupSecurity /></ProtectedRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/forgot-pin" element={<ForgotPin />} />
+            <Route path="/forgot-pin" element={<Navigate to="/forgot-password" replace />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/qr/:token" element={<QRVerify />} />
             <Route path="/qr" element={<QRVerify />} />

@@ -11,7 +11,7 @@ test('il server dichiara la fase di lancio gratuita', async ({ request }) => {
   expect(r.data.client_subscription_required).toBe(false);
 });
 
-test('dopo il PIN il cliente va agli sconti, non al pagamento', async ({ page, request }) => {
+test('dopo la pagina Sicurezza il cliente va agli sconti, non al pagamento', async ({ page, request }) => {
   const c = await registra(request, 'client');
   await loginNelBrowser(page, c.email, c.password);
   await page.goto('/setup-security');

@@ -181,7 +181,7 @@ export default function Landing() {
             { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
             { q: "Le offerte cambiano?", a: "Sì: ogni mese i commercianti possono pubblicare un'offerta nuova. Prima di comparire, ogni offerta viene controllata da noi." },
             { q: "In quali quartieri di Roma funziona?", a: "Stiamo partendo da Garbatella, San Paolo e Marconi, con le prime attività di questi quartieri. Poi arriveremo nel resto di Roma." },
-            { q: "Come accedo all'app?", a: "La prima volta con email e password; poi puoi entrare con un PIN di 6 cifre o con Face ID, che imposti dalla sezione «Sicurezza» del tuo account." },
+            { q: "Come accedo all'app?", a: "Con email e password: il telefono può ricordarle per te. Se vuoi, attiva il Face ID dalla sezione «Sicurezza» del tuo account ed entri con un tocco. Dopo 5 tentativi sbagliati l'accesso si blocca per 15 minuti; se hai dimenticato la password usa «Password dimenticata?»." },
             { q: "Come cancello il mio account?", a: "Dalla pagina del tuo account, con il pulsante «Elimina il mio account». Per qualsiasi problema scrivici dalla pagina Assistenza, in fondo a ogni pagina." },
           ]},
           { titolo: "Per i commercianti", voci: [

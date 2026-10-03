@@ -41,7 +41,7 @@ export default function ClientDashboard() {
         </div>
         <Link to="/setup-security?da=account">
           <Button data-testid="security-link" variant="outline" className="rounded-full border-white/20 text-white hover:bg-white/10">
-            <ShieldCheck size={16} className="mr-2" /> Sicurezza: PIN e Face ID
+            <ShieldCheck size={16} className="mr-2" /> Sicurezza: Face ID
           </Button>
         </Link>
       </div>

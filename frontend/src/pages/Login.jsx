@@ -15,29 +15,28 @@ import BrandMark from "@/components/BrandMark";
 export default function Login() {
   const { login, refresh } = useAuth();
   const nav = useNavigate();
-  const [step, setStep] = useState("email"); // email | biometric | pin | password
+  const [step, setStep] = useState("email"); // email | password
   const [email, setEmail] = useState(localStorage.getItem("last_email") || "");
-  const [pin, setPin] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [autoTried, setAutoTried] = useState(false);
-  // PIN bloccato dal server dopo troppi tentativi: fino a quando (ms) e minuti rimasti.
-  const [pinLockedUntil, setPinLockedUntil] = useState(0);
+  // Accesso bloccato dal server dopo 5 tentativi sbagliati: fino a quando (ms) e minuti rimasti.
+  const [lockedUntil, setLockedUntil] = useState(0);
   const [now, setNow] = useState(Date.now());
-  const pinLocked = pinLockedUntil > now;
-  const lockMinutes = Math.max(1, Math.ceil((pinLockedUntil - now) / 60000));
+  const locked = lockedUntil > now;
+  const lockMinutes = Math.max(1, Math.ceil((lockedUntil - now) / 60000));
   useEffect(() => {
-    if (!pinLockedUntil) return undefined;
+    if (!lockedUntil) return undefined;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [pinLockedUntil]);
+  }, [lockedUntil]);
 
-  // Il blocco del PIN riguarda un solo account: cambiando email non deve restare.
-  const changeEmail = (v) => { setEmail(v); setPinLockedUntil(0); };
-  // «Non sei tu?»: dimentica l'ultimo account usato su questo telefono e torna all'inizio.
+  // Il blocco riguarda un solo account: cambiando email non deve restare.
+  const changeEmail = (v) => { setEmail(v); setLockedUntil(0); };
+  // «Usa un altro account»: dimentica l'ultimo account usato su questo telefono.
   const switchAccount = () => {
     try { localStorage.removeItem("last_email"); } catch (_) { /* localStorage non disponibile */ }
-    setEmail(""); setPin(""); setPassword(""); setPinLockedUntil(0); setStep("email");
+    setEmail(""); setPassword(""); setLockedUntil(0); setStep("email");
   };
 
   const goBiometric = async () => {
@@ -53,13 +52,13 @@ export default function Login() {
       toast.success("Bentornato! ✦");
       nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
     } catch (e) {
-      // Face ID non riuscito → cade sul PIN silenziosamente se è un auto-attempt
+      // Face ID non riuscito → si passa a email e password (in silenzio se era il tentativo automatico)
       const isNotAllowed = e?.name === "NotAllowedError" || e?.name === "InvalidStateError";
       if (!autoTried && !isNotAllowed) {
         const msg = formatApiError(e) || "Face ID non disponibile";
         toast.error(msg);
       }
-      setStep("pin");
+      setStep("password");
     } finally {
       setBusy(false);
     }
@@ -78,33 +77,22 @@ export default function Login() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-tentativo Face ID SOLO al mount: rieseguirlo su cambio deps aprirebbe prompt biometrici indesiderati
   }, []);
 
-  const submitPin = async (e) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      const { data } = await api.post("/auth/pin-login", { email, pin });
-      // Cookie httpOnly già impostato dal backend — niente localStorage.
-      await refresh();
-      toast.success("Accesso effettuato");
-      nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
-    } catch (err) {
-      setPin("");
-      if (err?.response?.status === 429) {
-        const m = /(\d+)\s*minut/.exec(formatApiError(err) || "");
-        setPinLockedUntil(Date.now() + (m ? parseInt(m[1], 10) : 15) * 60000);
-        setNow(Date.now());
-      } else {
-        toast.error(formatApiError(err));
-      }
-    } finally { setBusy(false); }
-  };
-
   const submitPassword = async (e) => {
     e.preventDefault();
     setBusy(true);
     const res = await login(email, password);
     setBusy(false);
-    if (!res.ok) return toast.error(res.error);
+    if (!res.ok) {
+      setPassword("");
+      const m = /Riprova tra (\d+)\s*minut/.exec(res.error || "");
+      if (m) {
+        setLockedUntil(Date.now() + parseInt(m[1], 10) * 60000);
+        setNow(Date.now());
+        return;
+      }
+      return toast.error(res.error);
+    }
+    try { localStorage.setItem("last_email", email); } catch (_) { /* localStorage non disponibile */ }
     toast.success(`Bentornato, ${res.user.name}`);
     nav(res.user.role === "merchant" ? "/merchant/dashboard" : res.user.role === "admin" ? "/admin" : "/discounts");
   };
@@ -118,7 +106,7 @@ export default function Login() {
             <h1 className="mt-2 font-serif text-4xl text-white inline-flex items-center gap-3 flex-wrap justify-center">
               Entra in <BrandMark inline className="text-4xl" />
             </h1>
-            <p className="mt-2 text-sm text-white/60">Usa la scansione del volto per un accesso lampo.</p>
+            <p className="mt-2 text-sm text-white/60">Con Face ID entri con un tocco, oppure con email e password.</p>
 
             <div className="mt-8 space-y-4">
               <div>
@@ -133,7 +121,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => changeEmail(e.target.value)}
                     className="pl-9 bg-black/40 border-white/10 text-white"
-                    autoComplete="email"
+                    autoComplete="username"
                   />
                 </div>
               </div>
@@ -156,73 +144,21 @@ export default function Login() {
               </button>
 
               <button
-                data-testid="use-pin-btn"
-                onClick={() => setStep("pin")}
+                data-testid="use-pw-btn"
+                onClick={() => setStep("password")}
                 className="flex w-full items-center justify-center gap-2 rounded-full border border-white/20 py-3 text-sm text-white hover:bg-white/5 transition"
               >
-                <KeyRound size={14} /> Accedi con codice PIN
+                <KeyRound size={14} /> Accedi con email e password
               </button>
 
-              <div className="pt-3 text-center text-xs text-white/50">
-                Sei un commerciante o admin?{" "}
-                <button data-testid="use-pw-btn" onClick={() => setStep("password")} className="text-ciano hover:underline">
-                  Usa email e password
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {step === "pin" && (
-          <>
-            <button onClick={() => setStep("email")} className="mb-4 flex items-center gap-1 text-xs text-white/60 hover:text-white">
-              <ArrowLeft size={12} /> indietro
-            </button>
-            <h1 className="font-serif text-4xl text-white">Il tuo PIN</h1>
-            <div data-testid="pin-account" className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm">
-              <span className="text-white/70">Account: <strong className="text-white break-all">{email || "—"}</strong></span>
-              <button type="button" data-testid="switch-account" onClick={switchAccount} className="font-semibold text-ciano hover:underline">
-                Non sei tu? Cambia account
-              </button>
-            </div>
-            <p className="mt-2 text-sm text-white/60">Inserisci il PIN di 6 cifre di questo account.</p>
-            {pinLocked && (
-              <div data-testid="pin-locked" role="alert" className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
-                <strong className="block text-red-100">PIN bloccato per sicurezza</strong>
-                Troppi tentativi sbagliati. Riprova tra {lockMinutes} {lockMinutes === 1 ? "minuto" : "minuti"},
-                oppure usa "Hai dimenticato il PIN?" o accedi con la password.
-                <button type="button" data-testid="pin-locked-use-password" onClick={() => setStep("password")}
-                  className="mt-2 block font-semibold text-white underline-offset-4 hover:underline">
-                  Accedi con la password
-                </button>
-              </div>
-            )}
-            <form onSubmit={submitPin} className="mt-6 space-y-4">
-              <PasswordInput
-                data-testid="pin-input"
-                disabled={pinLocked}
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g,""))}
-                className="text-center text-3xl tracking-[0.5em] font-mono bg-black/40 border-white/10 text-white py-6"
-                autoFocus
-              />
-              <Button data-testid="pin-submit" type="submit" disabled={pin.length !== 6 || busy || pinLocked} className="w-full grad-fucsia-viola text-white rounded-full py-6">
-                {busy ? "Attendi…" : "Entra"}
-              </Button>
-              <div className="text-center text-xs space-y-2">
-                <div>
-                  <Link data-testid="forgot-pin-link" to={`/forgot-pin${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="text-fucsia hover:underline font-semibold">
-                    Hai dimenticato il PIN?
-                  </Link>
+              {email && (
+                <div className="pt-1 text-center text-xs">
+                  <button type="button" data-testid="switch-account" onClick={switchAccount} className="text-white/50 hover:text-white hover:underline">
+                    Non sei tu? Usa un altro account
+                  </button>
                 </div>
-                <div>
-                  <Link to="/forgot-password" className="text-ciano hover:underline">Password dimenticata?</Link>
-                </div>
-              </div>
-            </form>
+              )}
+            </div>
           </>
         )}
 
@@ -232,6 +168,13 @@ export default function Login() {
               <ArrowLeft size={12} /> indietro
             </button>
             <h1 className="font-serif text-4xl text-white">Email e password</h1>
+            {locked && (
+              <div data-testid="login-locked" role="alert" className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+                <strong className="block text-red-100">Accesso bloccato per sicurezza</strong>
+                Troppi tentativi sbagliati. Riprova tra {lockMinutes} {lockMinutes === 1 ? "minuto" : "minuti"},
+                oppure usa "Password dimenticata?" per crearne una nuova.
+              </div>
+            )}
             <form onSubmit={submitPassword} className="mt-6 space-y-4" autoComplete="on">
               <div>
                 <Label className="text-white/80">Email</Label>
@@ -257,7 +200,7 @@ export default function Login() {
                   className="mt-1 bg-black/40 border-white/10 text-white"
                 />
               </div>
-              <Button data-testid="login-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
+              <Button data-testid="login-submit" type="submit" disabled={busy || locked} className="w-full grad-fucsia-viola text-white rounded-full py-6">
                 {busy ? "Accesso…" : "Accedi"}
               </Button>
               <div className="text-center text-xs">

@@ -167,6 +167,8 @@ _PRIVATE_USER_FIELDS = (
     "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log",
     "login_failed_attempts", "pin_failed_attempts", "recovery_failed_attempts",
     "webauthn_credentials", "webauthn_user_id",
+    # PIN rimosso il 03/10: i campi possono restare negli account vecchi finché non rientrano.
+    "pin_set", "pin_locked_until",
 )
 
 
@@ -562,7 +564,7 @@ async def _register_login_failure(email: str) -> None:
     """Contatore di tentativi falliti per account, stesso pattern usato per la
     master password admin. Dopo LOGIN_MAX_ATTEMPTS tentativi, blocca l'account
     per LOGIN_LOCK_MINUTES minuti (anti brute-force). Incremento e lettura in
-    un'unica operazione atomica, come per il PIN (_register_user_failure)."""
+    un'unica operazione atomica."""
     u = await db.users.find_one_and_update(
         {"email": email},
         {"$inc": {"login_failed_attempts": 1}},
@@ -576,20 +578,35 @@ async def _register_login_failure(email: str) -> None:
         )
 
 
+# Dati del vecchio PIN (rimosso il 03/10): si cancellano dall'account al primo accesso.
+_OLD_PIN_FIELDS = {f: "" for f in (
+    "pin_hash", "pin_set", "pin_failed_attempts", "pin_locked_until",
+    "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log")}
+
+
 @api.post("/auth/login")
 async def login(payload: LoginIn, response: Response):
     email = payload.email.lower().strip()
     user = await db.users.find_one({"email": email})
     if user:
         _lock_check(user, "login_locked_until")
-    if not user or not verify_password(payload.password, user["password_hash"]):
+    else:
+        guard = await db.login_guard.find_one({"key": _login_guard_key(email)})
+        if guard:
+            _lock_check(guard, "locked_until")
+    # Con un'email sconosciuta si fa lo stesso lavoro (hash fittizio) e vale lo stesso limite
+    # di 5 tentativi: la risposta non rivela se l'account esiste.
+    ok = verify_password(payload.password, user["password_hash"] if user else _DUMMY_PASSWORD_HASH)
+    if not user or not ok:
         if user:
             await _register_login_failure(email)
+        else:
+            await _login_guard_fail(email)
         raise HTTPException(401, "Credenziali non valide")
 
     await db.users.update_one(
         {"email": email},
-        {"$set": {"login_failed_attempts": 0, "login_locked_until": None}},
+        {"$set": {"login_failed_attempts": 0, "login_locked_until": None}, "$unset": _OLD_PIN_FIELDS},
     )
     access = create_token(user["id"], user["email"], "access")
     refresh = create_token(user["id"], user["email"], "refresh")
@@ -617,16 +634,7 @@ async def me(user: dict = Depends(get_current_user)):
                      "subscription_required": client_subscription_required()}}
 
 
-# ---------- PIN & WebAuthn ----------
-class PinIn(BaseModel):
-    pin: str = Field(min_length=6, max_length=6)
-
-
-class PinLoginIn(BaseModel):
-    email: EmailStr
-    pin: str = Field(min_length=6, max_length=6)
-
-
+# ---------- WebAuthn (Face ID) ----------
 class WebAuthnCompleteIn(BaseModel):
     credential: dict
 
@@ -644,39 +652,12 @@ class ResetIn(BaseModel):
     new_password: str = Field(min_length=6)
 
 
-@api.post("/auth/pin")
-async def set_pin(payload: PinIn, user: dict = Depends(get_current_user)):
-    if not payload.pin.isdigit():
-        raise HTTPException(422, "Il PIN deve essere di 6 cifre")
-    await db.users.update_one({"id": user["id"]}, {"$set": {"pin_hash": hash_password(payload.pin), "pin_set": True}})
-    return {"ok": True}
-
-
-PIN_MAX_ATTEMPTS = 5
-PIN_LOCK_MINUTES = 15
-PIN_RESET_MAX_ATTEMPTS = 5
 RESET_REQ_MIN_GAP_SEC = 60
 RESET_REQ_MAX_PER_HOUR = 5
 
 
-async def _register_user_failure(user_id: str, prefix: str, max_attempts: int, lock_minutes: int) -> None:
-    """Conta un tentativo fallito in modo atomico ($inc con ritorno del documento)
-    e blocca l'account per `lock_minutes` al raggiungimento di `max_attempts`."""
-    doc = await db.users.find_one_and_update(
-        {"id": user_id},
-        {"$inc": {f"{prefix}_failed_attempts": 1}},
-        return_document=ReturnDocument.AFTER,
-    )
-    if doc and doc.get(f"{prefix}_failed_attempts", 0) >= max_attempts:
-        until = (datetime.now(timezone.utc) + timedelta(minutes=lock_minutes)).isoformat()
-        await db.users.update_one(
-            {"id": user_id},
-            {"$set": {f"{prefix}_locked_until": until, f"{prefix}_failed_attempts": 0}},
-        )
-
-
 async def _reset_request_allowed(user: dict, key: str) -> bool:
-    """Anti-abuso sulle richieste di reset (password/PIN): almeno RESET_REQ_MIN_GAP_SEC
+    """Anti-abuso sulle richieste di reset della password: almeno RESET_REQ_MIN_GAP_SEC
     secondi tra due richieste e al massimo RESET_REQ_MAX_PER_HOUR all'ora, per account.
     Evita di inondare di email un utente e di consumare il limite giornaliero di Resend."""
     now = datetime.now(timezone.utc)
@@ -698,120 +679,29 @@ async def _reset_request_allowed(user: dict, key: str) -> bool:
     return True
 
 
-# Hash bcrypt di un PIN che nessuno può avere: serve a fare lo stesso lavoro (e metterci lo
-# stesso tempo) anche quando l'account non esiste o non ha un PIN.
-_DUMMY_PIN_HASH = hash_password(secrets.token_hex(16))
+# Hash bcrypt di una password che nessuno può avere: con un'email sconosciuta il login fa
+# lo stesso lavoro (e ci mette lo stesso tempo) di quando l'account esiste.
+_DUMMY_PASSWORD_HASH = hash_password(secrets.token_hex(16))
 
 
-def _pin_guard_key(email: str) -> str:
+def _login_guard_key(email: str) -> str:
     # Si conserva solo l'impronta dell'email digitata, non l'email: può non essere di nessuno.
     return hashlib.sha256(email.encode()).hexdigest()
 
 
-async def _pin_guard_fail(email: str) -> None:
-    """Tentativo di PIN fallito per un'email senza account o senza PIN: stesso limite
-    (PIN_MAX_ATTEMPTS, poi blocco di PIN_LOCK_MINUTES) degli account con PIN, così il
-    comportamento è identico e non rivela se l'account esiste o ha un PIN."""
+async def _login_guard_fail(email: str) -> None:
+    """Accesso fallito per un'email senza account: stesso limite (LOGIN_MAX_ATTEMPTS, poi
+    blocco di LOGIN_LOCK_MINUTES) degli account veri, così il comportamento è identico."""
     now = datetime.now(timezone.utc)
-    doc = await db.pin_login_guard.find_one_and_update(
-        {"key": _pin_guard_key(email)},
+    doc = await db.login_guard.find_one_and_update(
+        {"key": _login_guard_key(email)},
         {"$inc": {"failed_attempts": 1}, "$set": {"expires_at": now + timedelta(days=1)}},
         upsert=True, return_document=ReturnDocument.AFTER,
     )
-    if doc and doc.get("failed_attempts", 0) >= PIN_MAX_ATTEMPTS:
-        await db.pin_login_guard.update_one({"key": doc["key"]}, {"$set": {
-            "locked_until": (now + timedelta(minutes=PIN_LOCK_MINUTES)).isoformat(),
+    if doc and doc.get("failed_attempts", 0) >= LOGIN_MAX_ATTEMPTS:
+        await db.login_guard.update_one({"key": doc["key"]}, {"$set": {
+            "locked_until": (now + timedelta(minutes=LOGIN_LOCK_MINUTES)).isoformat(),
             "failed_attempts": 0}})
-
-
-@api.post("/auth/pin-login")
-async def pin_login(payload: PinLoginIn, response: Response):
-    if not payload.pin.isdigit():
-        raise HTTPException(422, "PIN non valido")
-    email = payload.email.lower().strip()
-    u = await db.users.find_one({"email": email})
-    has_pin = bool(u and u.get("pin_hash"))
-    if has_pin:
-        _lock_check(u, "pin_locked_until")
-    else:
-        guard = await db.pin_login_guard.find_one({"key": _pin_guard_key(email)})
-        if guard:
-            _lock_check(guard, "locked_until")
-    if not verify_password(payload.pin, u["pin_hash"] if has_pin else _DUMMY_PIN_HASH) or not has_pin:
-        if has_pin:
-            await _register_user_failure(u["id"], "pin", PIN_MAX_ATTEMPTS, PIN_LOCK_MINUTES)
-        else:
-            await _pin_guard_fail(email)
-        raise HTTPException(401, "Credenziali non valide")
-    await db.users.update_one({"id": u["id"]}, {"$set": {"pin_failed_attempts": 0, "pin_locked_until": None}})
-    access = create_token(u["id"], u["email"], "access")
-    refresh = create_token(u["id"], u["email"], "refresh")
-    set_auth_cookies(response, access, refresh)
-    return {"user": sanitize_user(u), "access_token": access}
-
-
-# ---------- PIN forgot / reset (OTP via email) ----------
-class PinForgotIn(BaseModel):
-    email: EmailStr
-
-class PinResetIn(BaseModel):
-    email: EmailStr
-    code: str = Field(min_length=6, max_length=6)
-    new_pin: str = Field(min_length=6, max_length=6)
-
-
-@api.post("/auth/pin-forgot")
-async def pin_forgot(payload: PinForgotIn):
-    email = payload.email.lower().strip()
-    u = await db.users.find_one({"email": email})
-    if u and await _reset_request_allowed(u, "pin_reset_req_log"):
-        code = f"{secrets.randbelow(1_000_000):06d}"
-        expires = datetime.now(timezone.utc) + timedelta(minutes=10)
-        await db.users.update_one({"id": u["id"]}, {"$set": {
-            "pin_reset_code_hash": hash_password(code),
-            "pin_reset_expires": expires.isoformat(),
-            "pin_reset_attempts": 0,
-        }})
-        try:
-            from email_service import send_pin_reset_code
-            await send_pin_reset_code(u["email"], u.get("name") or "utente", code)
-        except Exception as e:
-            logging.warning(f"pin_forgot email failed: {e}")
-    return {"ok": True, "message": "Se l'email è registrata, riceverai un codice a 6 cifre entro pochi secondi."}
-
-
-@api.post("/auth/pin-reset")
-async def pin_reset(payload: PinResetIn):
-    if not payload.code.isdigit() or not payload.new_pin.isdigit():
-        raise HTTPException(422, "Codice o PIN non valido")
-    email = payload.email.lower().strip()
-    u = await db.users.find_one({"email": email})
-    if not u or not u.get("pin_reset_code_hash"):
-        raise HTTPException(400, "Nessuna richiesta di reset attiva. Ripeti la procedura.")
-    try:
-        exp = datetime.fromisoformat(u.get("pin_reset_expires"))
-    except Exception:
-        exp = datetime.now(timezone.utc) - timedelta(seconds=1)
-    if exp < datetime.now(timezone.utc):
-        raise HTTPException(400, "Codice scaduto, richiedine uno nuovo.")
-    if not verify_password(payload.code, u["pin_reset_code_hash"]):
-        upd = await db.users.find_one_and_update(
-            {"id": u["id"]}, {"$inc": {"pin_reset_attempts": 1}},
-            return_document=ReturnDocument.AFTER,
-        )
-        if (upd or {}).get("pin_reset_attempts", 0) >= PIN_RESET_MAX_ATTEMPTS:
-            # Troppi tentativi: il codice viene invalidato, serve richiederne uno nuovo.
-            await db.users.update_one({"id": u["id"]}, {
-                "$unset": {"pin_reset_code_hash": "", "pin_reset_expires": ""},
-            })
-            raise HTTPException(429, "Troppi tentativi. Richiedi un nuovo codice.")
-        raise HTTPException(401, "Codice non valido.")
-    await db.users.update_one({"id": u["id"]}, {
-        "$set": {"pin_hash": hash_password(payload.new_pin), "pin_set": True,
-                 "pin_failed_attempts": 0, "pin_locked_until": None},
-        "$unset": {"pin_reset_code_hash": "", "pin_reset_expires": "", "pin_reset_attempts": ""},
-    })
-    return {"ok": True, "message": "PIN aggiornato. Ora puoi accedere."}
 
 
 def _transports(raw) -> Optional[List[AuthenticatorTransport]]:
@@ -946,7 +836,7 @@ async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Respons
         raise HTTPException(401, "Autenticazione fallita")
     await db.users.update_one(
         {"id": u["id"], "webauthn_credentials.credential_id": cid},
-        {"$set": {"webauthn_credentials.$.sign_count": v.new_sign_count}},
+        {"$set": {"webauthn_credentials.$.sign_count": v.new_sign_count}, "$unset": _OLD_PIN_FIELDS},
     )
     access = create_token(u["id"], u["email"], "access")
     refresh = create_token(u["id"], u["email"], "refresh")
@@ -3484,8 +3374,8 @@ async def on_startup():
     if not stripe.api_key:
         logging.warning("STRIPE_SECRET_KEY non impostata: i pagamenti Stripe non funzioneranno")
     await db.users.create_index("email", unique=True)
-    await db.pin_login_guard.create_index("key", unique=True)
-    await db.pin_login_guard.create_index("expires_at", expireAfterSeconds=0)
+    await db.login_guard.create_index("key", unique=True)
+    await db.login_guard.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("id", unique=True)
     await db.discounts.create_index("merchant_id")
     await db.subscriptions.create_index("user_id")
@@ -4108,7 +3998,7 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
     export_doc = {
         "export_generated_at": datetime.now(timezone.utc).isoformat(),
         "export_version": 1,
-        "notice": "Questo file contiene tutti i tuoi dati personali trattati da Sconti Roma (art. 20 GDPR). Password, PIN e chiavi biometriche sono esclusi per motivi di sicurezza.",
+        "notice": "Questo file contiene tutti i tuoi dati personali trattati da Sconti Roma (art. 20 GDPR). Password e chiavi biometriche sono escluse per motivi di sicurezza.",
         "profile": profile,
         "redemptions": redemptions,
         "qr_scans": qr_scans,

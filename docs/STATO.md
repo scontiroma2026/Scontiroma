@@ -17,12 +17,13 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #13 | Regole di lavoro (`CLAUDE.md`), questo file, smoke che aspetta il deploy | 03/10 |
 | #14 | Avvisi di scadenza delle offerte, «Non rinnovo», riepilogo admin, mese all'ora di Roma | 03/10 |
 | #15 | Home e locandina senza 2,99 €, domande frequenti riscritte, niente offerte in home | 03/10 |
+| #16 | Solo le zone Garbatella, San Paolo, Marconi | 03/10 |
+| #17 | Accesso: account in evidenza e «Cambia account» | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #16 | Solo le zone Garbatella, San Paolo, Marconi | controlli verdi |
-| #17 | Accesso: account in evidenza e «Cambia account» | controlli verdi |
+| #18 | PIN tolto ovunque: si entra con email e password (blocco 15 minuti dopo 5 errori) o con Face ID facoltativo | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -34,6 +35,8 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 - Unioni: le fa Claude quando tutti i controlli sono verdi (decisione dell'utente del 03/10).
 - Avvisi di scadenza: date (25, 29, 31 e riepilogo admin il 28) e testi delle email approvati il 03/10.
 - Render resta sul piano gratuito fino al lancio.
+- Prezzo commercianti nelle domande frequenti (4,99 € al mese IVA inclusa dopo la fase di lancio): confermato.
+- Accesso: niente PIN (03/10). Email e password, blocco di 15 minuti dopo 5 errori, «Password dimenticata?»; Face ID facoltativo.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine

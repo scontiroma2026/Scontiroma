@@ -99,57 +99,60 @@ test('CSRF: una richiesta da un altro sito viene bloccata, dal nostro sito passa
   expect(senza.status).toBe(401);
 });
 
-test('PIN: dopo 5 tentativi sbagliati la pagina mostra il blocco e disattiva il campo', async ({ page, request }) => {
+test('accesso: dopo 5 password sbagliate la pagina mostra il blocco e disattiva il pulsante', async ({ page, request }) => {
   const u = await registra(request, 'client');
-  expect((await chiama(request, 'POST', '/auth/pin', { token: u.token, body: { pin: '135790' } })).status).toBe(200);
   await page.goto('/login');
   await page.getByTestId('login-email').fill(u.email);
-  await page.getByTestId('use-pin-btn').click();
+  await page.getByTestId('use-pw-btn').click();
   for (let i = 0; i < 6; i++) {
-    await page.getByTestId('pin-input').fill('000000');
-    const risposta = page.waitForResponse((r) => r.url().endsWith('/api/auth/pin-login'));
-    await page.getByTestId('pin-submit').click();
+    await page.getByTestId('login-password').fill('sbagliata-123');
+    const risposta = page.waitForResponse((r) => r.url().endsWith('/api/auth/login'));
+    await page.getByTestId('login-submit').click();
     if ((await risposta).status() === 429) break;
-    await expect(page.getByTestId('pin-input')).toHaveValue(''); // svuotato dopo ogni errore
+    await expect(page.getByTestId('login-password')).toHaveValue(''); // svuotata dopo ogni errore
   }
-  await expect(page.getByTestId('pin-locked')).toContainText('PIN bloccato per sicurezza');
-  await expect(page.getByTestId('pin-locked')).toContainText(/Riprova tra \d+ minut/);
-  await expect(page.getByTestId('pin-input')).toBeDisabled();
-  await expect(page.getByTestId('pin-submit')).toBeDisabled();
-  // Durante il blocco anche il PIN giusto è rifiutato dal server
-  expect((await chiama(request, 'POST', '/auth/pin-login', { body: { email: u.email, pin: '135790' } })).status).toBe(429);
-  await page.getByTestId('pin-locked-use-password').click();
-  await expect(page.getByTestId('login-password')).toBeVisible();
+  await expect(page.getByTestId('login-locked')).toContainText('Accesso bloccato per sicurezza');
+  await expect(page.getByTestId('login-locked')).toContainText(/Riprova tra \d+ minut/);
+  await expect(page.getByTestId('login-submit')).toBeDisabled();
+  // Durante il blocco anche la password giusta è rifiutata dal server
+  expect((await login(request, u.email, u.password)).status).toBe(429);
+  // Cambiando email il blocco dell'altro account non resta a schermo
+  await page.getByTestId('login-email-pw').fill(unico('altro'));
+  await expect(page.getByTestId('login-locked')).toHaveCount(0);
 });
 
-test('PIN: blocco anche per un account senza PIN o un\'email inesistente', async ({ request }) => {
-  const senzaPin = (await registra(request, 'client')).email;
-  for (const email of [senzaPin, unico('nessuno')]) {
-    const esiti = [];
-    for (let i = 0; i < 6; i++) esiti.push((await chiama(request, 'POST', '/auth/pin-login', { body: { email, pin: '000000' } })).status);
-    expect(esiti).toEqual([401, 401, 401, 401, 401, 429]);
-  }
+test('accesso: blocco dopo 5 tentativi anche per un\'email inesistente', async ({ request }) => {
+  const email = unico('nessuno');
+  const esiti = [];
+  for (let i = 0; i < 6; i++) esiti.push((await login(request, email, 'qualsiasi-123')).status);
+  expect(esiti).toEqual([401, 401, 401, 401, 401, 429]);
 });
 
-test('PIN: la pagina mostra l\'account e "Cambia account" permette di entrare con un altro', async ({ page, request }) => {
+test('PIN tolto: nessun PIN né in accesso né nella registrazione, vecchio link al recupero PIN reindirizzato', async ({ page, request }) => {
+  const r = await chiama(request, 'POST', '/auth/pin-login', { body: { email: unico('x'), pin: '123456' } });
+  expect([404, 405]).toContain(r.status);
+  await page.goto('/login');
+  await expect(page.getByTestId('login-page')).not.toContainText('PIN');
+  await page.goto('/forgot-pin');
+  await expect(page).toHaveURL(/\/forgot-password/);
+});
+
+test('accesso: "Usa un altro account" dimentica l\'ultimo account e si entra con un altro', async ({ page, request }) => {
   const vecchio = await registra(request, 'client');
   const nuovo = await registra(request, 'client');
-  expect((await chiama(request, 'POST', '/auth/pin', { token: vecchio.token, body: { pin: '246801' } })).status).toBe(200);
   // Sul telefono è rimasto l'ultimo account usato (quello nuovo)
   await page.goto('/login');
   await page.evaluate((e) => localStorage.setItem('last_email', e), nuovo.email);
   await page.goto('/login');
-  await page.getByTestId('use-pin-btn').click();
-  await expect(page.getByTestId('pin-account')).toContainText(nuovo.email);
+  await expect(page.getByTestId('login-email')).toHaveValue(nuovo.email);
   await page.getByTestId('switch-account').click();
   await expect(page.getByTestId('login-email')).toHaveValue('');
   expect(await page.evaluate(() => localStorage.getItem('last_email'))).toBeNull();
   await page.getByTestId('login-email').fill(vecchio.email);
-  await page.getByTestId('use-pin-btn').click();
-  await expect(page.getByTestId('pin-account')).toContainText(vecchio.email);
-  await page.getByTestId('pin-input').fill('246801');
-  const risposta = page.waitForResponse((r) => r.url().endsWith('/api/auth/pin-login'));
-  await page.getByTestId('pin-submit').click();
-  expect((await risposta).status()).toBe(200);
-  await expect(page).toHaveURL(/\/discounts|\/setup-security/);
+  await page.getByTestId('use-pw-btn').click();
+  await expect(page.getByTestId('login-email-pw')).toHaveValue(vecchio.email);
+  await page.getByTestId('login-password').fill(vecchio.password);
+  await page.getByTestId('login-submit').click();
+  await expect(page).toHaveURL(/\/discounts/);
+  expect(await page.evaluate(() => localStorage.getItem('last_email'))).toBe(vecchio.email);
 });

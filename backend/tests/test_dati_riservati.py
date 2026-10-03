@@ -27,8 +27,8 @@ def test_nessun_campo_riservato():
 
 def test_restano_i_dati_utili_alla_pagina_sicurezza():
     out = server.sanitize_user(UTENTE)
-    assert out["pin_set"] is True
     assert out["biometric_devices"] == 2
+    assert "pin_set" not in out  # il PIN non esiste più (03/10)
     assert out["email"] == "a@example.com" and out["role"] == "client"
 
 
