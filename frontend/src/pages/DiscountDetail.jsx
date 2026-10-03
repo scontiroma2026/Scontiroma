@@ -347,9 +347,9 @@ export default function DiscountDetail() {
                   <div data-testid="info-legal" className="border-t border-white/10 pt-4">
                     <div className="text-sm font-bold text-white">Informative legali</div>
                     <p className="mt-1 text-xs leading-relaxed text-white/50">
-                      Il commerciante è l'unico responsabile verso gli abbonati per la cura e la qualità dei
-                      prodotti e servizi pubblicizzati. Sconti Roma fornisce l'accesso allo sconto tramite
-                      abbonamento; il servizio è erogato dal commerciante. Per assistenza e domande, consulta la{" "}
+                      Il commerciante è l'unico responsabile verso i clienti per la cura e la qualità dei
+                      prodotti e servizi pubblicizzati. Sconti Roma fa da intermediario e fornisce l'accesso
+                      allo sconto; il servizio è erogato dal commerciante. Per assistenza e domande, consulta la{" "}
                       <a href="/support" className="text-ciano underline underline-offset-2">sezione Assistenza</a>.
                     </p>
                   </div>
