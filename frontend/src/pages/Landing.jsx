@@ -45,7 +45,7 @@ export default function Landing() {
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
-                <Sparkles size={12} className="text-neon" /> €2,99 al mese · Solo Roma
+                <Sparkles size={12} className="text-neon" /> Solo Roma
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
@@ -86,11 +86,6 @@ export default function Landing() {
                   <div className="text-sm text-white/70">Si parte da Garbatella, San Paolo e Marconi</div>
                 </div>
               </div>
-              {/* Floating deal cards */}
-              <div className="absolute -left-6 top-10 rotate-[-6deg] rounded-2xl bg-fucsia p-4 shadow-2xl glow-fucsia" style={{animation: 'float 4s ease-in-out infinite'}}>
-                <div className="text-[10px] uppercase text-white/80 tracking-widest">Membership</div>
-                <div className="font-serif text-3xl text-white">€2,99<span className="text-sm">/mese</span></div>
-              </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
             </div>
           </div>
@@ -112,7 +107,7 @@ export default function Landing() {
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { n: "01", t: "Abbonati", d: "€2,99 al mese. Cancelli quando vuoi. Nessuna sorpresa in bolletta.", c: "fucsia" },
+            { n: "01", t: "Registrati", d: "Crea il tuo account in pochi secondi.", c: "fucsia" },
             { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
             { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Amen.", c: "neon" },
           ].map((s) => (
@@ -214,7 +209,7 @@ export default function Landing() {
         </div>
         <div className="space-y-3">
           {[
-            { q: "Quanto costa Sconti Roma?", a: "€2,99 al mese. Nessun costo di attivazione, nessuna commissione nascosta. Puoi cancellare quando vuoi con un clic." },
+            { q: "Quanto costa Sconti Roma?", a: "Durante la fase di lancio Sconti Roma è gratuito e non serve nessun abbonamento." },
             { q: "Come funziona uno sconto?", a: "Scegli un locale, apri il dettaglio e clicca 'Ottieni QR Code'. Mostri il QR (che cambia ogni 20 secondi per sicurezza) al commerciante, lui lo scansiona e paghi il prezzo scontato. Punto." },
             { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e raggiri. Il codice è unico e temporaneo: solo tu in quel momento puoi usarlo, così i commercianti sanno che sei un vero abbonato." },
             { q: "Quanti sconti posso usare in un mese?", a: "Ne puoi usare quanti vuoi, uno diverso per ogni locale partner. Alcuni negozi (contrassegnati con il badge '🔁 N× al mese') permettono anche più utilizzi ripetuti nello stesso mese — vedi la voce sotto." },

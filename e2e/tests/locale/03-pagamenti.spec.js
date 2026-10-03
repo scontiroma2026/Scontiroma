@@ -82,3 +82,10 @@ test('assistenza: fase di lancio gratuita, nessun prezzo, annullamento solo per 
   await expect(page.getByTestId('row-info')).not.toContainText('pagamento');
   await expect(page.getByText(/€\s*\d|per sempre/i)).toHaveCount(0);
 });
+
+test('home: nessun prezzo 2,99 €', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('cta-start')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('2,99');
+  await expect(page.getByText('Membership')).toHaveCount(0);
+});
