@@ -2,9 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
-import DiscountCard from "@/components/DiscountCard";
+import { useEffect } from "react";
 import BrandMark from "@/components/BrandMark";
 
 // Rome landmark imagery (Unsplash direct URLs)
@@ -12,7 +10,6 @@ const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1
 const ROMA_TREVI = "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&q=80"; // Trevi
 
 export default function Landing() {
-  const [featured, setFeatured] = useState([]);
   const [params] = useSearchParams();
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
@@ -23,9 +20,6 @@ export default function Landing() {
         localStorage.setItem("referral_captured_at", new Date().toISOString());
       } catch (_) { /* localStorage disabled */ }
     }
-    api.get("/discounts").then((r) => setFeatured((r.data.discounts || []).slice(0, 3))).catch((err) => {
-      console.warn("[landing] failed to load featured:", err?.message || err);
-    });
   }, [params]);
 
   return (
@@ -45,7 +39,7 @@ export default function Landing() {
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
-                <Sparkles size={12} className="text-neon" /> €2,99 al mese · Solo Roma
+                <Sparkles size={12} className="text-neon" /> Solo Roma
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
@@ -53,7 +47,7 @@ export default function Landing() {
                 <span className="italic">A metà prezzo.</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg text-white/70">
-                Un abbonamento e ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
+                Ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
                 <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -69,11 +63,6 @@ export default function Landing() {
                 </Link>
               </div>
 
-              {/* Chip stats */}
-              <div className="mt-10 flex flex-wrap gap-3">
-                <Chip label="Cancelli quando vuoi" grad="grad-ciano-fucsia" />
-                <Chip label="No commissioni" grad="grad-neon" dark />
-              </div>
             </div>
 
             {/* Right: Rome collage */}
@@ -86,21 +75,9 @@ export default function Landing() {
                   <div className="text-sm text-white/70">Si parte da Garbatella, San Paolo e Marconi</div>
                 </div>
               </div>
-              {/* Floating deal cards */}
-              <div className="absolute -left-6 top-10 rotate-[-6deg] rounded-2xl bg-fucsia p-4 shadow-2xl glow-fucsia" style={{animation: 'float 4s ease-in-out infinite'}}>
-                <div className="text-[10px] uppercase text-white/80 tracking-widest">Membership</div>
-                <div className="font-serif text-3xl text-white">€2,99<span className="text-sm">/mese</span></div>
-              </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Ticker */}
-      <section className="relative border-y border-white/10 bg-fucsia py-3 overflow-hidden">
-        <div className="whitespace-nowrap font-serif text-2xl text-white" style={{animation: 'marquee 30s linear infinite'}}>
-          {"★ GARBATELLA ★ SAN PAOLO ★ MARCONI ★ SI PARTE DA QUI ".repeat(6)}
         </div>
       </section>
 
@@ -112,7 +89,7 @@ export default function Landing() {
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { n: "01", t: "Abbonati", d: "€2,99 al mese. Cancelli quando vuoi. Nessuna sorpresa in bolletta.", c: "fucsia" },
+            { n: "01", t: "Registrati", d: "Crea il tuo account in pochi secondi.", c: "fucsia" },
             { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
             { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Amen.", c: "neon" },
           ].map((s) => (
@@ -154,22 +131,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FEATURED discounts */}
-      <section className="relative mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-fucsia">✦ Vibe check</div>
-            <h2 className="mt-2 font-serif text-5xl">Gli sconti del momento</h2>
-          </div>
-          <Link to="/discounts" data-testid="link-see-all" className="text-sm text-ciano hover:underline">
-            Vedi tutti →
-          </Link>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((d) => <DiscountCard key={d.id} discount={d} />)}
-        </div>
-      </section>
-
       {/* MERCHANT CTA */}
       <section className="relative mx-auto max-w-7xl px-6 pb-20">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-fucsia via-purple-700 to-ciano p-10 md:p-14">
@@ -192,7 +153,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 gap-4">
               {[
                 { n: "0€", l: "iscrizione" },
-                { n: "0€", l: "commissioni" },
+                { n: "3", l: "quartieri pilota" },
                 { n: "24h", l: "attivazione" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
@@ -212,27 +173,39 @@ export default function Landing() {
           <div className="text-xs uppercase tracking-[0.2em] text-neon">FAQ</div>
           <h2 className="mt-2 font-serif text-5xl">Domande frequenti</h2>
         </div>
-        <div className="space-y-3">
-          {[
-            { q: "Quanto costa Sconti Roma?", a: "€2,99 al mese. Nessun costo di attivazione, nessuna commissione nascosta. Puoi cancellare quando vuoi con un clic." },
-            { q: "Come funziona uno sconto?", a: "Scegli un locale, apri il dettaglio e clicca 'Ottieni QR Code'. Mostri il QR (che cambia ogni 20 secondi per sicurezza) al commerciante, lui lo scansiona e paghi il prezzo scontato. Punto." },
-            { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e raggiri. Il codice è unico e temporaneo: solo tu in quel momento puoi usarlo, così i commercianti sanno che sei un vero abbonato." },
-            { q: "Quanti sconti posso usare in un mese?", a: "Ne puoi usare quanti vuoi, uno diverso per ogni locale partner. Alcuni negozi (contrassegnati con il badge '🔁 N× al mese') permettono anche più utilizzi ripetuti nello stesso mese — vedi la voce sotto." },
-            { q: "🔁 Alcuni negozi permettono più utilizzi al mese: come funziona?", a: "Ogni commerciante decide se ti concede lo sconto una sola volta al mese oppure fino a 2, 3, 5 o addirittura 10 volte. Nella pagina del negozio vedrai un badge fucsia con il numero massimo (es. 'Fino a 3 utilizzi al mese per abbonato') e, se sei loggato e abbonato, un contatore che ti dice quanti utilizzi hai già consumato e quanti te ne restano (es. '2 / 3 · 1 rimasto'). Ogni utilizzo genera un QR code DIVERSO, quindi non puoi riciclare lo stesso codice." },
-            { q: "Posso cancellare quando voglio?", a: "Sì. Vai in 'Il mio account' → 'Gestisci abbonamento' → 'Annulla abbonamento' e conferma. Nessuna penale, nessuna domanda, nessuna telefonata imbarazzante di retention." },
-            { q: "Come posso pagare?", a: "Tramite Stripe: carta di credito, debito o wallet (Apple Pay, Google Pay). Pagamento sicuro, i tuoi dati non passano dai nostri server." },
-            { q: "Sono un commerciante, come partecipo?", a: "Registrati come commerciante, crea la tua singola offerta e comparirai nel catalogo. Zero commissioni, zero costi di ingresso, solo nuovi clienti." },
-            { q: "In quali quartieri di Roma funziona?", a: "Stiamo partendo adesso da Garbatella, San Paolo e Marconi, con le prime attività di questi quartieri. Poi arriveremo nel resto di Roma." },
-          ].map((f) => (
-            <details key={f.q} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
-              <summary className="flex cursor-pointer items-center justify-between text-white font-semibold">
-                <span className="font-serif text-lg">{f.q}</span>
-                <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>
-              </summary>
-              <p className="mt-3 text-sm text-white/70 leading-relaxed">{f.a}</p>
-            </details>
-          ))}
-        </div>
+        {[
+          { titolo: "Per chi usa gli sconti", voci: [
+            { q: "Quanto costa Sconti Roma?", a: "Durante la fase di lancio Sconti Roma è gratuito: non serve nessun abbonamento e non ti chiediamo dati di pagamento. Se in futuro cambierà qualcosa te lo diremo prima, e nessun pagamento partirà senza la tua conferma." },
+            { q: "Come funziona uno sconto?", a: "Registrati, scegli un negozio, apri l'offerta e premi «Mostra QR Code». Mostri il QR al banco, il commerciante lo scansiona e paghi il prezzo scontato." },
+            { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e usi scorretti: il codice è unico e vale solo per pochi secondi, così il commerciante sa che lo sconto è davvero tuo." },
+            { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
+            { q: "Le offerte cambiano?", a: "Sì: ogni mese i commercianti possono pubblicare un'offerta nuova. Prima di comparire, ogni offerta viene controllata da noi." },
+            { q: "In quali quartieri di Roma funziona?", a: "Stiamo partendo da Garbatella, San Paolo e Marconi, con le prime attività di questi quartieri. Poi arriveremo nel resto di Roma." },
+            { q: "Come accedo all'app?", a: "La prima volta con email e password; poi puoi entrare con un PIN di 6 cifre o con Face ID, che imposti dalla sezione «Sicurezza» del tuo account." },
+            { q: "Come cancello il mio account?", a: "Dalla pagina del tuo account, con il pulsante «Elimina il mio account». Per qualsiasi problema scrivici dalla pagina Assistenza, in fondo a ogni pagina." },
+          ]},
+          { titolo: "Per i commercianti", voci: [
+            { q: "Come partecipo con il mio negozio?", a: "Registrati come commerciante e crea la tua offerta: la controlliamo e, dopo l'approvazione, il tuo negozio compare tra gli sconti." },
+            { q: "Quanto costa per i commercianti?", a: "Durante la fase di lancio partecipare è gratuito. Dopo, il prezzo previsto è di 4,99 € al mese IVA inclusa, bloccato per chi partecipa dall'inizio. Ti avviseremo almeno 30 giorni prima e non ti addebiteremo nulla senza la tua conferma." },
+            { q: "Come funziona l'offerta del mese?", a: "Hai un'offerta al mese. Negli ultimi 7 giorni del mese puoi caricare quella del mese successivo: ti avvisiamo nella dashboard e per email. L'offerta non si rinnova da sola: se non carichi la nuova, il 1° del mese quella attuale scade. Se non vuoi continuare, scegli «Non rinnovo»." },
+            { q: "Come verifico lo sconto di un cliente?", a: "Dalla tua dashboard premi «Scansiona codice» e inquadra il QR del cliente: vedi subito se lo sconto è valido. Lo stesso QR non può essere usato due volte." },
+          ]},
+        ].map((g) => (
+          <div key={g.titolo} className="mb-8">
+            <h3 className="mb-3 text-xs uppercase tracking-[0.2em] text-ciano">{g.titolo}</h3>
+            <div className="space-y-3">
+              {g.voci.map((f) => (
+                <details key={f.q} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
+                  <summary className="flex cursor-pointer items-center justify-between text-white font-semibold">
+                    <span className="font-serif text-lg">{f.q}</span>
+                    <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-white/70 leading-relaxed">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
       <footer className="border-t border-white/10 py-8 text-center text-xs text-white/50">
@@ -241,13 +214,5 @@ export default function Landing() {
         </span>
       </footer>
     </main>
-  );
-}
-
-function Chip({ label, grad, dark }) {
-  return (
-    <div className={`${grad} rounded-full px-5 py-2 text-sm font-semibold shadow-lg ${dark ? "text-black" : "text-white"}`}>
-      {label}
-    </div>
   );
 }

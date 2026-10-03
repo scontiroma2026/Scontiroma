@@ -82,3 +82,40 @@ test('assistenza: fase di lancio gratuita, nessun prezzo, annullamento solo per 
   await expect(page.getByTestId('row-info')).not.toContainText('pagamento');
   await expect(page.getByText(/€\s*\d|per sempre/i)).toHaveCount(0);
 });
+
+test('home: nessun prezzo 2,99 €', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('cta-start')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('2,99');
+  await expect(page.getByText('Membership')).toHaveCount(0);
+});
+
+test('home: niente fascia dei quartieri né sconti dei commercianti', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('cta-start')).toBeVisible();
+  await expect(page.getByText('Gli sconti del momento')).toHaveCount(0);
+  await expect(page.getByText(/★ GARBATELLA/)).toHaveCount(0);
+  await expect(page.locator('[data-testid^="discount-card"]')).toHaveCount(0);
+});
+
+test('locandina e domande frequenti: nessun prezzo né pagamento', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('cta-start')).toBeVisible();
+  for (const testo of ['Come posso pagare?', 'Stripe', 'Gestisci abbonamento', 'commissioni']) {
+    await expect(page.getByText(testo)).toHaveCount(0);
+  }
+  await page.goto('/locandina');
+  await expect(page.getByText('Gratis durante la fase di lancio')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('2,99');
+});
+
+test('domande frequenti: clienti e commercianti, regole della fase di lancio', async ({ page }) => {
+  await page.goto('/');
+  const faq = page.locator('#faq');
+  await expect(faq.getByText('Per chi usa gli sconti', { exact: true })).toBeVisible();
+  await expect(faq.getByText('Per i commercianti', { exact: true })).toBeVisible();
+  await faq.getByText('Quanto costa Sconti Roma?').click();
+  await expect(faq.getByText(/Durante la fase di lancio Sconti Roma è gratuito/)).toBeVisible();
+  await expect(faq).not.toContainText('per sempre');
+  await expect(faq).not.toContainText(/commission/i);
+});
