@@ -1,4 +1,5 @@
 import { API } from "@/lib/api";
+import { hasFunctionalConsent } from "@/components/CookieBanner";
 
 // Analytics first-party ANONIMA: vid casuale non collegato all'account,
 // nessun dato personale, eventi batchati e inviati al nostro backend.
@@ -36,6 +37,8 @@ function flush() {
 }
 
 function enqueue(ev) {
+  // Statistiche (anche i clic) solo con il consenso ai cookie funzionali.
+  if (!hasFunctionalConsent()) return;
   queue.push(ev);
   if (queue.length >= 15) {
     flush();

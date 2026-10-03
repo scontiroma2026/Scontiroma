@@ -28,7 +28,7 @@ export function formatApiError(err) {
   if (detail == null) return err?.message || "Errore imprevisto";
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail))
-    return detail.map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).join(" ");
+    return detail.map((e) => (e && typeof e.msg === "string" ? e.msg.replace(/^Value error, /, "") : JSON.stringify(e))).join(" ");
   if (detail && typeof detail.msg === "string") return detail.msg;
   return String(detail);
 }

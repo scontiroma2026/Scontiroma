@@ -39,21 +39,30 @@ export default function MerchantDiscount() {
   const [existing, setExisting] = useState(null);
   const [nextOffer, setNextOffer] = useState(null);
   const [win, setWin] = useState(null);
+  // Il modulo si sblocca solo quando sono arrivati i dati dal server: altrimenti la risposta
+  // (anche lenta, server appena svegliato) cancellerebbe quello che il commerciante ha già scritto.
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => { load(mode); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   const load = async (targetMode) => {
-    const [cur, nxt] = await Promise.all([
-      api.get("/merchants/me/discount"),
-      api.get("/merchants/me/next-discount"),
-    ]);
-    const c = cur.data.discount;
-    const n = nxt.data.next_discount;
-    setExisting(c);
-    setNextOffer(n);
-    setWin(nxt.data.window);
-    if (targetMode === "next") setForm(n ? formFrom(n) : (c ? formFrom(c) : EMPTY_FORM));
-    else setForm(c ? formFrom(c) : EMPTY_FORM);
+    try {
+      const [cur, nxt] = await Promise.all([
+        api.get("/merchants/me/discount"),
+        api.get("/merchants/me/next-discount"),
+      ]);
+      const c = cur.data.discount;
+      const n = nxt.data.next_discount;
+      setExisting(c);
+      setNextOffer(n);
+      setWin(nxt.data.window);
+      if (targetMode === "next") setForm(n ? formFrom(n) : (c ? formFrom(c) : EMPTY_FORM));
+      else setForm(c ? formFrom(c) : EMPTY_FORM);
+    } catch (e) {
+      toast.error(formatApiError(e) || "Impossibile caricare l'offerta, riprova.");
+    } finally {
+      setLoaded(true);
+    }
   };
 
   const switchMode = (m) => {
@@ -280,7 +289,7 @@ export default function MerchantDiscount() {
       )}
 
       <Card className="border-white/10 bg-white/5 p-8">
-        <fieldset disabled={readOnly} className={readOnly ? "opacity-60" : ""}>
+        <fieldset data-testid="disc-form" data-loaded={loaded ? "1" : "0"} disabled={readOnly || !loaded} className={readOnly || !loaded ? "opacity-60" : ""}>
           <form onSubmit={submit} className="space-y-5">
             <div>
               <Label>Titolo offerta</Label>
