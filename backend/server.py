@@ -3758,9 +3758,14 @@ async def admin_subscribers(
 # ---------- Include Router & CORS (must be LAST - after all @api.* definitions) ----------
 
 
+# Commit pubblicato: Render imposta RENDER_GIT_COMMIT a ogni deploy. Serve allo smoke di
+# produzione per aspettare che il deploy sia finito (il repository è pubblico, non è un segreto).
+APP_VERSION = (os.environ.get("RENDER_GIT_COMMIT") or "dev")[:7]
+
+
 @api.get("/")
 async def root():
-    return {"message": "Sconti Roma API", "status": "ok"}
+    return {"message": "Sconti Roma API", "status": "ok", "version": APP_VERSION}
 
 
 # ---------- AI description assistant RIMOSSO su richiesta utente (2026-08-27) ----------
