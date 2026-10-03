@@ -32,6 +32,14 @@ export default function Login() {
     return () => clearInterval(t);
   }, [pinLockedUntil]);
 
+  // Il blocco del PIN riguarda un solo account: cambiando email non deve restare.
+  const changeEmail = (v) => { setEmail(v); setPinLockedUntil(0); };
+  // «Non sei tu?»: dimentica l'ultimo account usato su questo telefono e torna all'inizio.
+  const switchAccount = () => {
+    try { localStorage.removeItem("last_email"); } catch (_) { /* localStorage non disponibile */ }
+    setEmail(""); setPin(""); setPassword(""); setPinLockedUntil(0); setStep("email");
+  };
+
   const goBiometric = async () => {
     if (!email) return toast.error("Inserisci l'email");
     localStorage.setItem("last_email", email);
@@ -123,7 +131,7 @@ export default function Login() {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => changeEmail(e.target.value)}
                     className="pl-9 bg-black/40 border-white/10 text-white"
                     autoComplete="email"
                   />
@@ -171,7 +179,13 @@ export default function Login() {
               <ArrowLeft size={12} /> indietro
             </button>
             <h1 className="font-serif text-4xl text-white">Il tuo PIN</h1>
-            <p className="mt-2 text-sm text-white/60">6 cifre per {email || "il tuo account"}</p>
+            <div data-testid="pin-account" className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm">
+              <span className="text-white/70">Account: <strong className="text-white break-all">{email || "—"}</strong></span>
+              <button type="button" data-testid="switch-account" onClick={switchAccount} className="font-semibold text-ciano hover:underline">
+                Non sei tu? Cambia account
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-white/60">Inserisci il PIN di 6 cifre di questo account.</p>
             {pinLocked && (
               <div data-testid="pin-locked" role="alert" className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
                 <strong className="block text-red-100">PIN bloccato per sicurezza</strong>
@@ -228,7 +242,7 @@ export default function Login() {
                   autoComplete="username"
                   inputMode="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => changeEmail(e.target.value)}
                   className="mt-1 bg-black/40 border-white/10 text-white"
                 />
               </div>

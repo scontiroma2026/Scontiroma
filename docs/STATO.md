@@ -15,12 +15,14 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #10 | Step 1 – fase di lancio: app gratuita per i clienti (`CLIENT_SUBSCRIPTION_REQUIRED=false`), residui Emergent rimossi, CSRF `enforce`, al commerciante solo "Mario R." | 02/10 |
 | #12 | Blocco PIN dopo 5 tentativi anche senza PIN o account, riquadro chiaro nel login | 02/10 |
 | #13 | Regole di lavoro (`CLAUDE.md`), questo file, smoke che aspetta il deploy | 03/10 |
+| #14 | Avvisi di scadenza delle offerte, «Non rinnovo», riepilogo admin, mese all'ora di Roma | 03/10 |
+| #15 | Home e locandina senza 2,99 €, domande frequenti riscritte, niente offerte in home | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #14 | Avvisi di scadenza delle offerte, «Non rinnovo», riepilogo admin, mese all'ora di Roma | controlli verdi |
-| #15 | Home senza 2,99 € | controlli verdi |
+| #16 | Solo le zone Garbatella, San Paolo, Marconi | controlli verdi |
+| #17 | Accesso: account in evidenza e «Cambia account» | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -30,15 +32,16 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 - Al commerciante, alla scansione: nome di battesimo e iniziale del cognome, ora, offerta, cliente nuovo / di ritorno. Nella lista "Ultimi codici" nessun nome.
 - I dati dei clienti si conservano finché l'account è attivo; proposte commerciali future solo con consenso marketing.
 - Unioni: le fa Claude quando tutti i controlli sono verdi (decisione dell'utente del 03/10).
+- Avvisi di scadenza: date (25, 29, 31 e riepilogo admin il 28) e testi delle email approvati il 03/10.
+- Render resta sul piano gratuito fino al lancio.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
-1. Avvisi di scadenza delle offerte (PR #14). **Entro il 25/10.**
-2. PR legale/GDPR: correzioni di codice (statistiche solo con consenso, banner cookie, cancellazione ed esportazione complete, dichiarazione di età, "Mario R." solo al commerciante collegato) e testi evidenziati di Privacy, Cookie, Termini e Recesso per il consulente.
-3. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
-4. Step 2 – testi pubblici senza 2,99 €, email di benvenuto, avviso all'admin per ogni nuovo commerciante. **Solo dopo "parti con lo step 2".**
-5. Step 3 – statistiche per i commercianti, richieste in attesa nel pannello admin, banner della prova (solo con `TRIAL_END_DATE` impostata).
-6. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
+1. PR legale/GDPR: correzioni di codice (statistiche solo con consenso, banner cookie, cancellazione ed esportazione complete, dichiarazione di età, "Mario R." solo al commerciante collegato) e testi evidenziati di Privacy, Cookie, Termini e Recesso per il consulente.
+2. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
+3. Step 2 – testi pubblici senza 2,99 €, email di benvenuto, avviso all'admin per ogni nuovo commerciante. **Solo dopo "parti con lo step 2".**
+4. Step 3 – statistiche per i commercianti, richieste in attesa nel pannello admin, banner della prova (solo con `TRIAL_END_DATE` impostata).
+5. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
 
 ## Domande aperte
 - Per l'utente:
