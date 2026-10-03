@@ -352,11 +352,11 @@ export default function MerchantDiscount() {
               </div>
             </div>
 
-            {/* Utilizzi al mese per abbonato */}
+            {/* Utilizzi al mese per cliente */}
             <div className="rounded-lg border border-white/10 bg-black/40 p-4">
-              <Label className="text-white">Quante volte al mese ogni abbonato può usare questo sconto?</Label>
+              <Label className="text-white">Quante volte al mese ogni cliente può usare questo sconto?</Label>
               <p className="text-xs text-white/60 mt-1 mb-3">
-                Esempio: se scegli <strong>3</strong>, ogni cliente abbonato potrà scansionare il tuo QR fino a 3 volte nel mese in corso. Ogni utilizzo genera un codice QR <strong>diverso</strong> e conta una singola visita.
+                Esempio: se scegli <strong>3</strong>, ogni cliente potrà far scansionare il tuo QR fino a 3 volte nel mese in corso. Ogni utilizzo genera un codice QR <strong>diverso</strong> e conta una singola visita.
               </p>
               <div className="grid grid-cols-5 gap-2">
                 {[1, 2, 3, 5, 10].map((n) => (
@@ -377,7 +377,7 @@ export default function MerchantDiscount() {
                 ))}
               </div>
               <div className="mt-3 text-xs text-white/50">
-                Scelto: <span className="text-fucsia font-semibold">{form.max_uses_per_month} utilizzi al mese</span> per abbonato
+                Scelto: <span className="text-fucsia font-semibold">{form.max_uses_per_month} utilizzi al mese</span> per cliente
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/40 p-4">

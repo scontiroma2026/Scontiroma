@@ -33,7 +33,7 @@ function normalizePhone(raw) {
     display: trimmed,
     telHref: `tel:${digits}`,
     waHref: `https://wa.me/${waDigits}?text=${encodeURIComponent(
-      "Ciao! Ho l'abbonamento attivo a Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!"
+      "Ciao! Ho trovato la vostra offerta su Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!"
     )}`,
     isMobile,
   };
@@ -246,7 +246,7 @@ export default function DiscountDetail() {
                   {discount.percent_off}% di sconto
                 </span>
               </div>
-              <div className="mt-1 text-sm text-white/60">Risparmi <strong className="text-white">€{savings}</strong> con l'abbonamento Sconti Roma</div>
+              <div className="mt-1 text-sm text-white/60">Risparmi <strong className="text-white">€{savings}</strong> con Sconti Roma</div>
 
             {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
             {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (
@@ -278,7 +278,7 @@ export default function DiscountDetail() {
             {/* Badge informativo per NON abbonati */}
             {(!user || user.role !== "client") && discount.max_uses_per_month > 1 && (
               <div className="mt-4 rounded-lg border border-fucsia/30 bg-fucsia/10 px-4 py-2 text-xs text-fucsia">
-                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per abbonato (max 1 al giorno)
+                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per cliente (max 1 al giorno)
               </div>
             )}
 

@@ -39,6 +39,11 @@ from email_service import (
     send_next_offer_reminder,
     send_offer_expired,
     send_admin_month_summary,
+    send_welcome_client,
+    send_welcome_merchant,
+    send_admin_new_merchant,
+    send_admin_new_offer,
+    send_account_deleted,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
@@ -457,6 +462,21 @@ def current_month_key() -> str:
     return _rome_now().strftime("%Y-%m")
 
 
+def _admin_notify_to() -> str:
+    """Indirizzo a cui arrivano gli avvisi per l'admin."""
+    return os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
+
+
+def _email_in_background(coro, label: str) -> None:
+    """Invia un'email senza far aspettare chi usa l'app; un errore finisce solo nei log."""
+    async def run():
+        try:
+            await coro
+        except Exception as e:
+            logging.warning(f"[email:{label}] non inviata: {e}")
+    asyncio.create_task(run())
+
+
 # ---------- Offerta Mese Prossimo: helpers ----------
 NEXT_OFFER_WINDOW_DAYS = 7
 
@@ -559,6 +579,15 @@ async def register(payload: RegisterIn, response: Response):
     # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)
     if payload.role == "merchant" and doc.get("address"):
         asyncio.create_task(geocode_and_save_merchant(user_id, doc["address"]))
+
+    # Email di benvenuto e, per i commercianti, avviso all'admin (in background)
+    if payload.role == "merchant":
+        _email_in_background(send_welcome_merchant(email, doc.get("name") or "", doc.get("shop_name") or ""), "benvenuto-commerciante")
+        if _admin_notify_to():
+            _email_in_background(send_admin_new_merchant(_admin_notify_to(), doc.get("shop_name") or "", doc.get("category") or "",
+                                                         doc.get("zone") or "", email, doc.get("phone") or ""), "admin-nuovo-commerciante")
+    else:
+        _email_in_background(send_welcome_client(email, doc.get("name") or ""), "benvenuto-cliente")
 
     access = create_token(user_id, email, "access")
     refresh = create_token(user_id, email, "refresh")
@@ -1255,6 +1284,8 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data["expired_at"] = None
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
+        if existing.get("approval_status") != "pending" and _admin_notify_to():
+            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
     else:
         did = str(uuid.uuid4())
         doc = payload.cleaned()
@@ -1273,6 +1304,8 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         })
         await db.discounts.insert_one(doc)
         d = doc
+        if _admin_notify_to():
+            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
     return {"discount": await enrich_discount(d)}
 
 
@@ -1304,6 +1337,9 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     now_iso = datetime.now(timezone.utc).isoformat()
     data.update({"approval_status": "pending", "approval_note": "", "approved_at": None, "updated_at": now_iso})
     existing = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
+    if (not existing or existing.get("approval_status") != "pending") and _admin_notify_to():
+        _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
+                                                  window["next_month_label"]), "admin-offerta-mese-prossimo")
     if existing:
         await db.next_discounts.update_one({"id": existing["id"]}, {"$set": data})
         nd = await db.next_discounts.find_one({"id": existing["id"]})
@@ -4190,6 +4226,8 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
 
     # Elimina l'utente
     await db.users.delete_one({"id": uid})
+    if user.get("email"):
+        _email_in_background(send_account_deleted(user["email"], user.get("name") or ""), "account-cancellato")
 
     # Logout
     if response is not None:

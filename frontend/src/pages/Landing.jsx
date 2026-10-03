@@ -139,10 +139,10 @@ export default function Landing() {
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-white/80">Per i commercianti</div>
               <h2 className="mt-3 font-serif text-5xl text-white leading-tight">
-                Un solo sconto,<br/>migliaia di romani.
+                Un solo sconto,<br/>nuovi clienti dal quartiere.
               </h2>
               <p className="mt-4 text-white/90 max-w-md">
-                Sei un esercente di Roma? Pubblica un'offerta e appari nell'app che i romani consultano ogni giorno. Nessun costo, solo vibrazioni positive.
+                Hai un'attività a Garbatella, San Paolo o Marconi? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.
               </p>
               <Link to="/register?role=merchant">
                 <Button data-testid="cta-merchant" className="mt-6 rounded-full bg-black text-white hover:bg-black/80 px-8 py-6">
@@ -152,9 +152,9 @@ export default function Landing() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { n: "0€", l: "iscrizione" },
+                { n: "Gratis", l: "fase di lancio" },
                 { n: "3", l: "quartieri pilota" },
-                { n: "24h", l: "attivazione" },
+                { n: "1", l: "offerta al mese" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
                 <div key={s.l} className="rounded-2xl border border-white/20 bg-black/30 backdrop-blur p-5">

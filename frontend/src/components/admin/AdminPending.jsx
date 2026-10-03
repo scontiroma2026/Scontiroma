@@ -83,9 +83,9 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                   <span
                     data-testid={`pending-uses-${d.id}`}
                     className="inline-flex items-center gap-1 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold"
-                    title="Quante volte al mese ogni abbonato può usare lo sconto"
+                    title="Quante volte al mese ogni cliente può usare lo sconto"
                   >
-                    🔁 {d.max_uses_per_month || 1}× al mese per abbonato
+                    🔁 {d.max_uses_per_month || 1}× al mese per cliente
                   </span>
                   {d.category && (
                     <span className="rounded-full border border-white/10 bg-black/40 px-2.5 py-0.5 text-xs text-white/70">
