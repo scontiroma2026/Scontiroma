@@ -108,3 +108,14 @@ test('locandina e domande frequenti: nessun prezzo né pagamento', async ({ page
   await expect(page.getByText('Gratis durante la fase di lancio')).toBeVisible();
   await expect(page.locator('body')).not.toContainText('2,99');
 });
+
+test('domande frequenti: clienti e commercianti, regole della fase di lancio', async ({ page }) => {
+  await page.goto('/');
+  const faq = page.locator('#faq');
+  await expect(faq.getByText('Per chi usa gli sconti', { exact: true })).toBeVisible();
+  await expect(faq.getByText('Per i commercianti', { exact: true })).toBeVisible();
+  await faq.getByText('Quanto costa Sconti Roma?').click();
+  await expect(faq.getByText(/Durante la fase di lancio Sconti Roma è gratuito/)).toBeVisible();
+  await expect(faq).not.toContainText('per sempre');
+  await expect(faq).not.toContainText(/commission/i);
+});
