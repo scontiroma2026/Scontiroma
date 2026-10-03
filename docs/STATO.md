@@ -19,11 +19,13 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #15 | Home e locandina senza 2,99 €, domande frequenti riscritte, niente offerte in home | 03/10 |
 | #16 | Solo le zone Garbatella, San Paolo, Marconi | 03/10 |
 | #17 | Accesso: account in evidenza e «Cambia account» | 03/10 |
+| #18 | PIN tolto ovunque: email e password (blocco 15 minuti dopo 5 errori) o Face ID facoltativo | 03/10 |
+| #19 | Pagina offerta: pulsanti Chiama (blu) e WhatsApp (verde) uguali, tolto il «Consiglio furbo» | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #18 | PIN tolto ovunque: si entra con email e password (blocco 15 minuti dopo 5 errori) o con Face ID facoltativo | controlli verdi |
+| #20 | «1 sconto trovato» / «1 indirizzo trovato» al singolare | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -36,6 +38,7 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 - Avvisi di scadenza: date (25, 29, 31 e riepilogo admin il 28) e testi delle email approvati il 03/10.
 - Render resta sul piano gratuito fino al lancio.
 - Prezzo commercianti nelle domande frequenti (4,99 € al mese IVA inclusa dopo la fase di lancio): confermato.
+- Video commercianti: niente abbonamento clienti; costi = gratis nella fase di lancio, poi 4,99 €/mese IVA inclusa, prezzo bloccato, avviso 30 giorni, nessun addebito senza conferma; «Nessun vincolo». Voce nuova (Fernando Martínez) sul copione del 03/10: bozza v9.
 - Accesso: niente PIN (03/10). Email e password, blocco di 15 minuti dopo 5 errori, «Password dimenticata?»; Face ID facoltativo.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 

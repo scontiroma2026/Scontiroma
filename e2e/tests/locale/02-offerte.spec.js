@@ -90,3 +90,12 @@ test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun cons
   // Il «Consiglio furbo» è stato tolto (03/10)
   await expect(page.getByTestId('phone-booking-block')).not.toContainText(/Consiglio|abbonamento/);
 });
+
+test('lista sconti: con un solo risultato scrive "1 sconto trovato"', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  const titolo = `Offerta unica ${Date.now()}`;
+  await creaOffertaApprovata(request, m.token, { title: titolo });
+  await page.goto('/discounts');
+  await page.getByTestId('search-input').fill(titolo);
+  await expect(page.getByTestId('results-count')).toHaveText('1 sconto trovato');
+});

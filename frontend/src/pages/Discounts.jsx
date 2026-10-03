@@ -135,7 +135,7 @@ export default function Discounts() {
 
       <div className="mb-4 flex items-center justify-between text-sm text-white/60">
         <div>
-          {loading ? "Caricamento…" : <span data-testid="results-count">{count} sconti trovati</span>}
+          {loading ? "Caricamento…" : <span data-testid="results-count">{count === 1 ? "1 sconto trovato" : `${count} sconti trovati`}</span>}
           {userPos && !loading && <span className="ml-2 text-ciano">· ordinati per distanza</span>}
         </div>
         <button
