@@ -75,7 +75,7 @@ export default function Discounts() {
       <div className="mb-8 max-w-2xl">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Sconti a Roma</div>
         <h1 className="mt-2 font-serif text-5xl leading-tight">Trova il tuo sconto</h1>
-        <p className="mt-3 text-white/70">Filtra per zona o categoria. Cambia ogni settimana, come i quartieri di Roma.</p>
+        <p className="mt-3 text-white/70">Filtra per zona o categoria. Le offerte cambiano ogni mese.</p>
       </div>
 
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center">

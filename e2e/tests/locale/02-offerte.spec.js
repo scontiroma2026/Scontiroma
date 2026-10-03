@@ -67,3 +67,9 @@ test('"Migliora foto" senza essere commerciante: rifiutato', async ({ request })
   const r = await chiama(request, 'POST', '/ai/enhance-image', { token: c.token, body: { image_url: 'data:image/png;base64,AAAA' } });
   expect(r.status).toBe(403);
 });
+
+test('filtro zone degli sconti: solo Garbatella, San Paolo e Marconi', async ({ page }) => {
+  await page.goto('/discounts');
+  const opzioni = page.getByTestId('filter-zone').locator('option');
+  await expect(opzioni).toHaveText(['Tutte le zone', 'Garbatella', 'San Paolo', 'Marconi']);
+});
