@@ -269,9 +269,9 @@ export default function Locandina() {
                   color: "rgba(244,244,245,0.9)",
                 }}
               >
-                Un abbonamento <strong style={{ color: "#FFD93D" }}>€2,99 al mese</strong> ti apre
-                gli sconti di <strong style={{ color: "#FF2E93" }}>decine di locali</strong> di
-                Roma: pizzerie, bar, pescherie, parrucchieri e molto altro.
+                Con <strong style={{ color: "#FFD93D" }}>Sconti Roma</strong> hai gli sconti dei
+                <strong style={{ color: "#FF2E93" }}> negozi del tuo quartiere</strong>:
+                pizzerie, bar, pescherie, parrucchieri e molto altro.
                 <br />
                 <span style={{ color: "rgba(244,244,245,0.65)", fontSize: "10pt" }}>
                   Basta una scansione, mostri il QR al banco, paghi il prezzo scontato.
@@ -296,7 +296,7 @@ export default function Locandina() {
 
               {[
                 { n: "1", title: "Scansiona il QR", desc: "Inquadra il codice qui sotto con la fotocamera del telefono." },
-                { n: "2", title: "Iscriviti in 30 secondi", desc: "Crea l'account, scegli l'abbonamento a €2,99/mese." },
+                { n: "2", title: "Iscriviti in 30 secondi", desc: "Crea il tuo account in pochi secondi." },
                 { n: "3", title: "Sconti subito!", desc: "Sfoglia i negozi, genera il QR e mostralo al banco per pagare meno." },
               ].map((s) => (
                 <div
@@ -464,7 +464,7 @@ export default function Locandina() {
                     lineHeight: 1.35,
                   }}
                 >
-                  Solo <strong style={{ color: "#FF2E93" }}>€2,99/mese</strong> · Cancelli quando vuoi · Nessuna penale
+                  <strong style={{ color: "#FF2E93" }}>Gratis durante la fase di lancio</strong>
                 </div>
               </div>
             </div>

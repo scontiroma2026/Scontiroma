@@ -97,3 +97,14 @@ test('home: niente fascia dei quartieri né sconti dei commercianti', async ({ p
   await expect(page.getByText(/★ GARBATELLA/)).toHaveCount(0);
   await expect(page.locator('[data-testid^="discount-card"]')).toHaveCount(0);
 });
+
+test('locandina e domande frequenti: nessun prezzo né pagamento', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('cta-start')).toBeVisible();
+  for (const testo of ['Come posso pagare?', 'Stripe', 'Gestisci abbonamento', 'commissioni']) {
+    await expect(page.getByText(testo)).toHaveCount(0);
+  }
+  await page.goto('/locandina');
+  await expect(page.getByText('Gratis durante la fase di lancio')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('2,99');
+});

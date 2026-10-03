@@ -47,7 +47,7 @@ export default function Landing() {
                 <span className="italic">A metà prezzo.</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg text-white/70">
-                Un abbonamento e ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
+                Ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
                 <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -63,11 +63,6 @@ export default function Landing() {
                 </Link>
               </div>
 
-              {/* Chip stats */}
-              <div className="mt-10 flex flex-wrap gap-3">
-                <Chip label="Cancelli quando vuoi" grad="grad-ciano-fucsia" />
-                <Chip label="No commissioni" grad="grad-neon" dark />
-              </div>
             </div>
 
             {/* Right: Rome collage */}
@@ -158,7 +153,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 gap-4">
               {[
                 { n: "0€", l: "iscrizione" },
-                { n: "0€", l: "commissioni" },
+                { n: "3", l: "quartieri pilota" },
                 { n: "24h", l: "attivazione" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
@@ -182,12 +177,10 @@ export default function Landing() {
           {[
             { q: "Quanto costa Sconti Roma?", a: "Durante la fase di lancio Sconti Roma è gratuito e non serve nessun abbonamento." },
             { q: "Come funziona uno sconto?", a: "Scegli un locale, apri il dettaglio e clicca 'Ottieni QR Code'. Mostri il QR (che cambia ogni 20 secondi per sicurezza) al commerciante, lui lo scansiona e paghi il prezzo scontato. Punto." },
-            { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e raggiri. Il codice è unico e temporaneo: solo tu in quel momento puoi usarlo, così i commercianti sanno che sei un vero abbonato." },
+            { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e raggiri. Il codice è unico e temporaneo: solo tu in quel momento puoi usarlo, così i commercianti sanno che sei un vero iscritto." },
             { q: "Quanti sconti posso usare in un mese?", a: "Ne puoi usare quanti vuoi, uno diverso per ogni locale partner. Alcuni negozi (contrassegnati con il badge '🔁 N× al mese') permettono anche più utilizzi ripetuti nello stesso mese — vedi la voce sotto." },
-            { q: "🔁 Alcuni negozi permettono più utilizzi al mese: come funziona?", a: "Ogni commerciante decide se ti concede lo sconto una sola volta al mese oppure fino a 2, 3, 5 o addirittura 10 volte. Nella pagina del negozio vedrai un badge fucsia con il numero massimo (es. 'Fino a 3 utilizzi al mese per abbonato') e, se sei loggato e abbonato, un contatore che ti dice quanti utilizzi hai già consumato e quanti te ne restano (es. '2 / 3 · 1 rimasto'). Ogni utilizzo genera un QR code DIVERSO, quindi non puoi riciclare lo stesso codice." },
-            { q: "Posso cancellare quando voglio?", a: "Sì. Vai in 'Il mio account' → 'Gestisci abbonamento' → 'Annulla abbonamento' e conferma. Nessuna penale, nessuna domanda, nessuna telefonata imbarazzante di retention." },
-            { q: "Come posso pagare?", a: "Tramite Stripe: carta di credito, debito o wallet (Apple Pay, Google Pay). Pagamento sicuro, i tuoi dati non passano dai nostri server." },
-            { q: "Sono un commerciante, come partecipo?", a: "Registrati come commerciante, crea la tua singola offerta e comparirai nel catalogo. Zero commissioni, zero costi di ingresso, solo nuovi clienti." },
+            { q: "🔁 Alcuni negozi permettono più utilizzi al mese: come funziona?", a: "Ogni commerciante decide se ti concede lo sconto una sola volta al mese oppure fino a 2, 3, 5 o addirittura 10 volte. Nella pagina del negozio vedrai un badge fucsia con il numero massimo (es. 'Fino a 3 utilizzi al mese') e, se hai fatto l'accesso, un contatore che ti dice quanti utilizzi hai già consumato e quanti te ne restano (es. '2 / 3 · 1 rimasto'). Ogni utilizzo genera un QR code DIVERSO, quindi non puoi riciclare lo stesso codice." },
+            { q: "Sono un commerciante, come partecipo?", a: "Registrati come commerciante e crea la tua offerta: dopo l'approvazione comparirai tra gli sconti. Durante la fase di lancio partecipare è gratuito." },
             { q: "In quali quartieri di Roma funziona?", a: "Stiamo partendo adesso da Garbatella, San Paolo e Marconi, con le prime attività di questi quartieri. Poi arriveremo nel resto di Roma." },
           ].map((f) => (
             <details key={f.q} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
@@ -207,13 +200,5 @@ export default function Landing() {
         </span>
       </footer>
     </main>
-  );
-}
-
-function Chip({ label, grad, dark }) {
-  return (
-    <div className={`${grad} rounded-full px-5 py-2 text-sm font-semibold shadow-lg ${dark ? "text-black" : "text-white"}`}>
-      {label}
-    </div>
   );
 }
