@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
 
 const PIN = L.divIcon({
   className: "picker-pin",
@@ -37,8 +38,8 @@ export default function MapPicker({ value, onChange, height = 240 }) {
         scrollWheelZoom
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap'
+          url={OSM_TILE_URL}
+          attribution={OSM_ATTRIBUTION}
         />
         <ClickHandler onPick={onChange} />
         {value && <Marker position={value} icon={PIN} />}

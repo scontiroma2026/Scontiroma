@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -25,11 +25,13 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 | #21 | Prezzo scontato < pieno, statistiche solo con consenso, modulo offerta che non si svuota | 03/10 |
 | #22 | Pannello admin chiaro, stato vero dell'offerta, «Sospendi» funzionante | 03/10 |
 | #24 | Step 3: statistiche per i commercianti, «Fase di lancio» per l'admin, banner prova (solo con `TRIAL_END_DATE`) | 03/10 |
+| #25 | GDPR: cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #23 | Step 2: email di benvenuto e avvisi all'admin, testi senza abbonamento | OK dell'utente sui testi |
+| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
+| #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -47,11 +49,9 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `3b765d3`
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
-1. PR legale/GDPR: correzioni di codice (statistiche solo con consenso, banner cookie, cancellazione ed esportazione complete, dichiarazione di età, "Mario R." solo al commerciante collegato) e testi evidenziati di Privacy, Cookie, Termini e Recesso per il consulente.
+1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
 2. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
-3. Step 2 – testi pubblici senza 2,99 €, email di benvenuto, avviso all'admin per ogni nuovo commerciante. **Solo dopo "parti con lo step 2".**
-4. Step 3 – statistiche per i commercianti, richieste in attesa nel pannello admin, banner della prova (solo con `TRIAL_END_DATE` impostata).
-5. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
+3. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
 
 ## Domande aperte
 - Per l'utente:
