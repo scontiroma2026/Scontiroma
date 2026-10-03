@@ -6,7 +6,7 @@ export default function PrivacyPolicy() {
       <LegalLayout
         kicker="Documento legale"
         title="Privacy Policy"
-        updatedAt="Febbraio 2026"
+        updatedAt="Ottobre 2026"
       >
         <p>
           La presente Privacy Policy descrive come <strong>Sconti Roma</strong> (di
@@ -38,8 +38,8 @@ export default function PrivacyPolicy() {
         <ul className="list-disc pl-6 space-y-2">
           <li>
             <strong>Dati di registrazione</strong>: nome, cognome, indirizzo
-            email, password (memorizzata in forma cifrata bcrypt), PIN a 6 cifre
-            (cifrato).
+            email, password (memorizzata in forma cifrata bcrypt). Per i
+            commercianti anche nome dell'attività, indirizzo e telefono.
           </li>
           <li>
             <strong>Dati di autenticazione biometrica</strong>: se attivi Face
@@ -59,15 +59,32 @@ export default function PrivacyPolicy() {
             durante la sessione.
           </li>
           <li>
-            <strong>Dati di pagamento</strong>: non conserviamo mai i dati della
-            tua carta. I pagamenti sono gestiti direttamente da{" "}
+            <strong>Dati di pagamento</strong>: durante la fase di lancio il
+            servizio è gratuito e <strong>non raccogliamo alcun dato di
+            pagamento</strong>. Se in futuro verranno attivati pagamenti (solo
+            per i commercianti e solo con la loro conferma), saranno gestiti da{" "}
             <strong>Stripe</strong> o <strong>PayPal</strong>, che agiscono come
-            titolari autonomi del trattamento. Salviamo solo un identificativo
-            cliente e lo stato dell'abbonamento.
+            titolari autonomi del trattamento: non conserveremo mai i dati della
+            carta, ma solo un identificativo cliente e lo stato del pagamento.
           </li>
           <li>
             <strong>Dati di utilizzo</strong>: sconti richiesti, codici QR
             generati, riscatti effettuati, recensioni lasciate.
+          </li>
+          <li>
+            <strong>Dati condivisi con il commerciante</strong>: quando il
+            commerciante scansiona il tuo codice QR vede soltanto il tuo{" "}
+            <strong>nome e l'iniziale del cognome</strong> (es. "Mario R."),
+            l'ora, l'offerta e se sei un cliente nuovo o di ritorno. Non vede
+            la tua email né altri dati. Le statistiche che il commerciante vede
+            nella sua area sono solo numeri aggregati e compaiono solo quando i
+            clienti del mese sono almeno 3.
+          </li>
+          <li>
+            <strong>Statistiche di visita</strong>: solo se accetti i cookie
+            "funzionali", contiamo visite e pagine viste con un identificativo
+            casuale non collegato al tuo account (vedi{" "}
+            <a href="/cookies" className="text-fucsia hover:underline">Cookie Policy</a>).
           </li>
           <li>
             <strong>Log tecnici</strong>: indirizzo IP, tipo di browser, sistema
@@ -91,11 +108,11 @@ export default function PrivacyPolicy() {
                 <td className="border border-white/10 p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Gestione abbonamento e pagamenti</td>
+                <td className="border border-white/10 p-2">Gestione dei pagamenti dei commercianti (solo dopo la fase di lancio e con la loro conferma)</td>
                 <td className="border border-white/10 p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Invio email transazionali (welcome, OTP, recupero PIN)</td>
+                <td className="border border-white/10 p-2">Invio email transazionali (benvenuto, recupero password, promemoria di scadenza delle offerte)</td>
                 <td className="border border-white/10 p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
@@ -105,6 +122,10 @@ export default function PrivacyPolicy() {
               <tr>
                 <td className="border border-white/10 p-2">Comunicazioni promozionali</td>
                 <td className="border border-white/10 p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
+              </tr>
+              <tr>
+                <td className="border border-white/10 p-2">Statistiche anonime di visita</td>
+                <td className="border border-white/10 p-2">Consenso (art. 6.1.a GDPR), tramite banner cookie</td>
               </tr>
               <tr>
                 <td className="border border-white/10 p-2">Prevenzione frodi e sicurezza</td>
@@ -151,9 +172,40 @@ export default function PrivacyPolicy() {
           </li>
         </ul>
 
+        <h3 className="font-serif text-xl text-white mt-6">4.1 Mappa, indirizzi e caratteri</h3>
+        <p>
+          Alcune funzioni caricano contenuti da servizi esterni, che ricevono
+          dal tuo browser l'<strong>indirizzo IP</strong> e i dati tecnici della
+          richiesta e li trattano come titolari autonomi secondo le proprie
+          informative:
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            <strong>OpenStreetMap Foundation</strong> (Regno Unito) — immagini
+            della mappa, solo quando apri una pagina con la mappa (
+            <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline">informativa</a>).
+          </li>
+          <li>
+            <strong>Google Fonts</strong> (Google Ireland Ltd.) — caratteri
+            tipografici del sito, a ogni pagina (
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline">informativa</a>).
+          </li>
+          <li>
+            <strong>Google Maps</strong> — solo se tocchi "Portami qui": si apre
+            Google Maps con la posizione del negozio come destinazione.
+          </li>
+        </ul>
+        <p>
+          La ricerca degli indirizzi durante l'iscrizione del commerciante usa{" "}
+          <strong>Nominatim</strong> (OpenStreetMap Foundation): il testo
+          dell'indirizzo viene inviato dai nostri server, quindi Nominatim non
+          riceve il tuo indirizzo IP.
+        </p>
+
         <h2 className="font-serif text-2xl text-white mt-8">5. Trasferimenti extra-UE</h2>
         <p>
-          Alcuni fornitori (Stripe, PayPal, Resend, Render, Google) possono elaborare dati
+          Alcuni fornitori (Stripe, PayPal, Resend, Render, Google, OpenStreetMap
+          Foundation) possono elaborare dati
           anche al di fuori dell'UE. In tal caso il trasferimento è protetto
           dalle Clausole Contrattuali Standard approvate dalla Commissione
           Europea (SCC) o da decisioni di adeguatezza. Puoi richiedere copia
@@ -166,11 +218,14 @@ export default function PrivacyPolicy() {
 
         <h2 className="font-serif text-2xl text-white mt-8">6. Periodo di conservazione</h2>
         <ul className="list-disc pl-6 space-y-2">
-          <li><strong>Dati account</strong>: per tutta la durata del rapporto + 12 mesi dopo la chiusura.</li>
-          <li><strong>Dati contabili / fatture</strong>: 10 anni (obbligo di legge).</li>
+          <li>
+            <strong>Dati account, codici QR, riscatti, recensioni</strong>:
+            finché l'account è attivo. Quando elimini l'account vengono
+            cancellati subito, insieme alle offerte del commerciante e al loro
+            archivio.
+          </li>
+          <li><strong>Dati contabili / fatture</strong>: 10 anni (obbligo di legge), in forma non più collegata al tuo account.</li>
           <li><strong>Log di sicurezza</strong>: 12 mesi.</li>
-          <li><strong>Codici QR e riscatti</strong>: 24 mesi.</li>
-          <li><strong>Recensioni</strong>: fino a cancellazione manuale.</li>
         </ul>
 
         <h2 className="font-serif text-2xl text-white mt-8">7. I tuoi diritti (art. 15-22 GDPR)</h2>
@@ -213,9 +268,10 @@ export default function PrivacyPolicy() {
         <h2 className="font-serif text-2xl text-white mt-8">9. Sicurezza</h2>
         <p>
           Adottiamo misure di sicurezza tecniche e organizzative adeguate:
-          password cifrate con bcrypt, comunicazioni HTTPS/TLS 1.3, database
-          crittografato at-rest, autenticazione a 2 fattori tramite PIN + Face
-          ID, monitoraggio degli accessi sospetti e log di frode.
+          password cifrate con bcrypt, comunicazioni HTTPS/TLS, database
+          crittografato at-rest, blocco dell'accesso per 15 minuti dopo 5
+          tentativi errati, accesso con Face ID facoltativo, codici QR che
+          cambiano ogni 20 secondi e log di frode.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">10. Minori</h2>

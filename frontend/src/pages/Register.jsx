@@ -49,7 +49,7 @@ export default function Register() {
     e.preventDefault();
     trackClick("register_started");
     if (!acceptedLegal) {
-      toast.error("Devi accettare Termini, Privacy e Cookie Policy per continuare");
+      toast.error("Devi dichiarare di avere almeno 18 anni e accettare Termini, Privacy e Cookie Policy per continuare");
       return;
     }
     setLoading(true);
@@ -230,7 +230,7 @@ export default function Register() {
                 className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
               />
               <span className="text-xs text-white/80 leading-relaxed">
-                <span className="text-fucsia">*</span> Accetto i{" "}
+                <span className="text-fucsia">*</span> Dichiaro di avere almeno 18 anni, accetto i{" "}
                 <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold" data-testid="link-terms">Termini e Condizioni</a>
                 {" "}e confermo di aver letto la{" "}
                 <a href={LEGAL_LINKS.privacy} target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline font-semibold" data-testid="link-privacy">Privacy Policy</a>
