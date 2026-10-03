@@ -385,9 +385,6 @@ export default function DiscountDetail() {
                     Scrivi su WhatsApp
                   </a>
                 </div>
-                <p data-testid="booking-tip" className="mt-3 text-center text-xs leading-relaxed text-white/60">
-                  Quando prenoti, di' che usi <strong className="text-white">Sconti Roma</strong>: così il negozio sa che applicherà lo sconto.
-                </p>
               </div>
             );
           })()}

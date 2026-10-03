@@ -74,7 +74,7 @@ test('filtro zone degli sconti: solo Garbatella, San Paolo e Marconi', async ({ 
   await expect(opzioni).toHaveText(['Tutte le zone', 'Garbatella', 'San Paolo', 'Marconi']);
 });
 
-test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, consiglio senza abbonamento', async ({ page, request }) => {
+test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun consiglio sotto', async ({ page, request }) => {
   const m = await registra(request, 'merchant');
   const offerta = await creaOffertaApprovata(request, m.token);
   const c = await registra(request, 'client');
@@ -87,6 +87,6 @@ test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, consiglio s
   const [a, b] = [await chiama.boundingBox(), await wa.boundingBox()];
   expect(Math.round(a.height)).toBe(Math.round(b.height));
   expect(Math.round(a.width)).toBe(Math.round(b.width));
-  await expect(page.getByTestId('booking-tip')).toContainText('Sconti Roma');
-  await expect(page.getByTestId('phone-booking-block')).not.toContainText('abbonamento');
+  // Il «Consiglio furbo» è stato tolto (03/10)
+  await expect(page.getByTestId('phone-booking-block')).not.toContainText(/Consiglio|abbonamento/);
 });
