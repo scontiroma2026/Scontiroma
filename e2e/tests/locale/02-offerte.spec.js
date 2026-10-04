@@ -89,6 +89,9 @@ test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun cons
   expect(Math.round(a.width)).toBe(Math.round(b.width));
   // Il «Consiglio furbo» è stato tolto (03/10)
   await expect(page.getByTestId('phone-booking-block')).not.toContainText(/Consiglio|abbonamento/);
+  // Il messaggio che parte su WhatsApp non parla di abbonamento (04/10)
+  const testoWa = decodeURIComponent(new URL(await wa.getAttribute('href')).searchParams.get('text'));
+  expect(testoWa).toBe('Ciao! Ho trovato la vostra offerta su Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!');
 });
 
 test('lista sconti: con un solo risultato scrive "1 sconto trovato"', async ({ page, request }) => {

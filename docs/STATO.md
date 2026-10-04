@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `a7d0e3a`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -30,7 +30,7 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `a7d0e3a`
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
-| PR GDPR codice | Cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | controlli verdi |
+| PR WhatsApp | Messaggio WhatsApp senza «abbonamento» (staccato dalla #23 su richiesta dell'utente) | controlli verdi |
 | PR testi legali | Proposte per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
