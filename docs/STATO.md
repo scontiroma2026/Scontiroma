@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `a7d0e3a`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -25,13 +25,14 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `a7d0e3a`
 | #21 | Prezzo scontato < pieno, statistiche solo con consenso, modulo offerta che non si svuota | 03/10 |
 | #22 | Pannello admin chiaro, stato vero dell'offerta, «Sospendi» funzionante | 03/10 |
 | #24 | Step 3: statistiche per i commercianti, «Fase di lancio» per l'admin, banner prova (solo con `TRIAL_END_DATE`) | 03/10 |
+| #25 | GDPR: cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | 03/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
-| PR GDPR codice | Cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | controlli verdi |
-| PR testi legali | Proposte per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
+| #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
+| PR indirizzi | Il civico scritto non si perde più; suggerimenti su due righe | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -49,7 +50,7 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `a7d0e3a`
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
-1. PR legale/GDPR: codice in PR (cancellazione ed esportazione complete); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età in PR separata per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
+1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
 2. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
 3. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
 
