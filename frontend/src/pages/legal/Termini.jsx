@@ -12,7 +12,7 @@ export default function Termini() {
           I presenti Termini e Condizioni ("Termini") disciplinano l'accesso e
           l'utilizzo della piattaforma <strong>Sconti Roma</strong> (di seguito
           "il Servizio" o "la Piattaforma") gestita da{" "}
-          <strong>Euro Linea S.r.l.s.</strong> (Partita IVA 03240220644),
+          <strong>Euro Linea S.r.l.s.</strong> (Partita IVA 03240220644, sede legale in Via Tasso 5/B, 83031 Ariano Irpino (AV)),
           di seguito "Sconti Roma". Registrandoti al Servizio dichiari di
           aver letto, compreso e accettato integralmente i presenti Termini.
         </p>
