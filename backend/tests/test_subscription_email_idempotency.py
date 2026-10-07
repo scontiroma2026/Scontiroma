@@ -55,6 +55,13 @@ def _db_locale(monkeypatch):
     if USE_MOCK:
         import mongomock_motor
         server.db = mongomock_motor.AsyncMongoMockClient()["unit_sub_idem"]
+    else:
+        # MongoDB vero (CI): un client nuovo legato al ciclo di eventi di questi test.
+        # Quello lasciato da altri test usa un ciclo già chiuso («Event loop is closed»).
+        from motor.motor_asyncio import AsyncIOMotorClient
+        cli = AsyncIOMotorClient(MONGO_URL, io_loop=_LOOP)
+        run(cli.drop_database("unit_sub_idem"))
+        server.db = cli["unit_sub_idem"]
     yield
 
 
