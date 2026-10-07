@@ -10,8 +10,7 @@ export default function Recesso() {
       >
         <p>
           Durante la <strong>fase di lancio</strong> Sconti Roma è gratuito per
-          i Clienti: non c'è alcun abbonamento da annullare e nessun importo da
-          rimborsare. Puoi smettere di usare il servizio quando vuoi.
+          i Clienti: non c'è nulla da annullare e nessun importo da rimborsare. Puoi smettere di usare il servizio quando vuoi.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">1. Come chiudere l'account</h2>
@@ -58,7 +57,7 @@ export default function Recesso() {
           <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
             info@scontiroma.it
           </a>
-          . Ti risponderemo entro 24 ore lavorative.
+          . Ti risponderemo il prima possibile, di norma entro 3 giorni lavorativi.
         </p>
       </LegalLayout>
     </div>

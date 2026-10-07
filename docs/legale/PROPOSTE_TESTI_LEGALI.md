@@ -101,3 +101,16 @@ La pagina è riscritta per intero. Prima descriveva l'annullamento dell'abboname
 6. **Versione dei testi:** con la pubblicazione si cambia la versione registrata all'iscrizione (`LEGAL_VERSION`). Bisogna chiedere di nuovo l'accettazione agli iscritti, o basta un avviso via email (art. 9 dei Termini, 15 giorni di preavviso)?
 7. **Modifiche e rimozione del negozio:** il riquadro dei Termini chiede 15 giorni di preavviso via email, ma l'app permette di eliminare l'account subito. Va bene così o va riscritto?
 8. **Log di sicurezza** (12 mesi) e **log del consenso** (24 mesi): durate da confermare.
+
+## Aggiornamento del 07/10/2026 (sera) — modifiche dopo la prima analisi
+
+Cosa è stato cambiato rispetto alla bozza precedente, su indicazione del titolare:
+1. **Titolare identificato:** Euro Linea S.r.l.s., con Partita IVA nei testi (Privacy 1, Termini). Restano da inserire sede legale e PEC; fino ad allora si invita a scrivere a privacy@scontiroma.it.
+2. **Google Fonts tolto:** i caratteri sono ospitati sul nostro sito (PR separata). Sparisce dalla Privacy (4.1) e dalla Cookie Policy (2.2).
+3. **Seconda casella per i commercianti** all'iscrizione: approvazione specifica delle clausole su responsabilità (art. 7), modifiche (art. 9) e foro (art. 10), ai sensi degli artt. 1341-1342 c.c. Il server registra data e conferma.
+4. **Responsabilità (art. 7):** per i clienti resta quella di legge, nessun limite a zero; il limite all'importo pagato vale solo per i commercianti.
+5. **Dati visti da chi gestisce Sconti Roma (Privacy 2):** gli amministratori vedono nome, cognome, email e, per chi si è iscritto dal QR di un negozio, da quale negozio. Il commerciante vede solo nome e iniziale del cognome. Aggiunti anche il negozio di provenienza, le valutazioni sull'app e la natura obbligatoria o facoltativa dei dati.
+6. **Altre correzioni:** tolto il riferimento alla piattaforma ODR (abrogata, da confermare); tolto «senza rimborso» (art. 2); «sospensione o chiusura» per la condivisione del QR (art. 4); riquadro «Modifiche o rimozione del negozio» riscritto come nell'app (art. 5); garanzia del commerciante sui contenuti (art. 8); tabella dei cookie aggiornata (consenso 6 mesi, negozio di provenienza 30 giorni, tempo d'uso per le stelle); geolocalizzazione «solo sul telefono»; tempi di risposta dell'assistenza coerenti.
+7. **Prima domanda frequente per i clienti e art. 3.1 dei Termini:** senza la parola «abbonamento».
+
+Domande aperte per il consulente (oltre alle 8 sopra): approvazione specifica art. 1341 c.c. così com'è scritta; responsabilità verso i clienti; ODR; obblighi della piattaforma verso le imprese (Reg. UE 2019/1150) e segnalazione dei contenuti (Digital Services Act); fatturazione ai commercianti dopo il lancio.

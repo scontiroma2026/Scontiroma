@@ -12,7 +12,8 @@ export default function Termini() {
           I presenti Termini e Condizioni ("Termini") disciplinano l'accesso e
           l'utilizzo della piattaforma <strong>Sconti Roma</strong> (di seguito
           "il Servizio" o "la Piattaforma") gestita da{" "}
-          <strong>Sconti Roma</strong>. Registrandoti al Servizio dichiari di
+          <strong>Euro Linea S.r.l.s.</strong> (Partita IVA 03240220644),
+          di seguito "Sconti Roma". Registrandoti al Servizio dichiari di
           aver letto, compreso e accettato integralmente i presenti Termini.
         </p>
 
@@ -45,8 +46,8 @@ export default function Termini() {
             viene bloccato per 15 minuti.
           </li>
           <li>
-            Un solo account per persona. Account multipli o fittizi verranno
-            chiusi senza rimborso.
+            Un solo account per persona. Account multipli o fittizi possono
+            essere chiusi.
           </li>
           <li>
             Sconti Roma si riserva il diritto di sospendere o chiudere account
@@ -59,7 +60,7 @@ export default function Termini() {
         <p>
           Durante la <strong>fase di lancio</strong> la registrazione e l'uso
           degli sconti sono <strong>gratuiti</strong> per i Clienti. Non è
-          richiesto alcun abbonamento né alcun dato di pagamento. Se in futuro
+          richiesto alcun dato di pagamento. Se in futuro
           venissero introdotti servizi a pagamento per i Clienti, saranno
           comunicati con almeno 30 giorni di preavviso e si attiveranno solo
           con la tua accettazione espressa.
@@ -124,8 +125,8 @@ export default function Termini() {
             dell'account.
           </li>
           <li>
-            La condivisione del codice QR con terzi è vietata e comporta la
-            chiusura immediata dell'account.
+            La condivisione del codice QR con terzi è vietata e può comportare
+            la sospensione o la chiusura dell'account.
           </li>
           <li>
             Sconti Roma non garantisce la disponibilità dello sconto presso il
@@ -178,27 +179,27 @@ export default function Termini() {
             <span className="text-neon">✎</span> Modifiche o rimozione del negozio
           </h3>
           <p className="mt-2 text-sm">
-            Il Commerciante che desidera <strong>modificare</strong> i propri
-            dati (nome attività, indirizzo, categoria, telefono),{" "}
-            <strong>sospendere temporaneamente</strong> l'esposizione dello
-            sconto oppure <strong>rimuovere definitivamente</strong> il negozio
-            dalla piattaforma e dalla mappa deve inviare richiesta scritta a{" "}
+            Il Commerciante può in qualsiasi momento, dal proprio profilo,{" "}
+            <strong>modificare</strong> i propri dati, scegliere{" "}
+            <strong>«Non rinnovo»</strong> per l'offerta del mese oppure{" "}
+            <strong>eliminare l'account</strong>: l'eliminazione rimuove subito
+            il negozio dalla piattaforma e dalla mappa e cancella i dati
+            collegati.
+          </p>
+          <p className="mt-2 text-sm">
+            Per <strong>sospendere temporaneamente</strong> l'esposizione dello
+            sconto o per qualsiasi altra richiesta scrivi a{" "}
             <a
               href="mailto:partner@scontiroma.it?subject=Richiesta%20modifica%2Frimozione%20negozio"
               className="text-neon hover:underline font-semibold"
               data-testid="link-partner-modifica"
             >
               partner@scontiroma.it
-            </a>{" "}
-            con un <strong>preavviso minimo di 15 giorni</strong> rispetto alla
-            data di efficacia richiesta.
-          </p>
-          <p className="mt-2 text-sm">
-            Sconti Roma processerà la richiesta entro 5 giorni lavorativi dalla
-            ricezione e confermerà la data effettiva di applicazione via email.
-            Il preavviso di 15 giorni serve a permettere ai Clienti che
-            hanno già visualizzato l'offerta di completare eventuali riscatti
-            in corso.
+            </a>
+            : rispondiamo entro 5 giorni lavorativi e ti confermiamo via email
+            la data di applicazione. Le offerte già mostrate ai Clienti nel mese
+            in corso possono essere completate solo se il negozio non viene
+            rimosso.
           </p>
           <p className="mt-2 text-xs text-white/60">
             Per candidature di nuovi negozi e collaborazioni B2B scrivi allo
@@ -242,11 +243,17 @@ export default function Termini() {
           </li>
         </ul>
         <p>
-          Nei limiti massimi consentiti dalla legge, la responsabilità
-          complessiva di Sconti Roma nei confronti dell'utente è limitata
-          all'importo eventualmente pagato dall'utente stesso nei 12 mesi
-          precedenti l'evento dannoso, salvo i casi di dolo o colpa grave e i
-          diritti inderogabili del consumatore.
+          <strong>Clienti (consumatori).</strong> La responsabilità di Sconti
+          Roma resta quella prevista dalla legge: nulla in questi Termini
+          limita o esclude la responsabilità per dolo o colpa grave, per danni
+          alla persona o per ciò che la legge non permette di escludere, né
+          i diritti inderogabili del consumatore.
+        </p>
+        <p>
+          <strong>Commercianti (professionisti).</strong> Nei limiti consentiti
+          dalla legge, la responsabilità complessiva di Sconti Roma è limitata
+          all'importo pagato dal Commerciante nei 12 mesi precedenti l'evento
+          dannoso, salvi i casi di dolo o colpa grave.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">8. Proprietà intellettuale</h2>
@@ -260,7 +267,9 @@ export default function Termini() {
           Le fotografie e i testi caricati dai Commercianti restano di loro
           proprietà; con la pubblicazione concedono a Sconti Roma una licenza
           non esclusiva, gratuita e revocabile per l'utilizzo sulla
-          Piattaforma.
+          Piattaforma. Il Commerciante garantisce di avere i diritti su foto
+          e testi che carica, comprese le foto migliorate con strumenti
+          automatici, e di non violare diritti di terzi.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">9. Modifiche ai Termini</h2>
@@ -280,20 +289,15 @@ export default function Termini() {
           residenza.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">11. Risoluzione alternativa delle controversie (ODR)</h2>
+        <h2 className="font-serif text-2xl text-white mt-8">11. Risoluzione alternativa delle controversie</h2>
         <p>
-          Ai sensi del Reg. UE 524/2013 informiamo l'utente Consumatore della
-          possibilità di ricorrere alla piattaforma ODR della Commissione
-          Europea:{" "}
-          <a
-            href="https://ec.europa.eu/consumers/odr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-ciano hover:underline"
-          >
-            ec.europa.eu/consumers/odr
+          Se hai un problema scrivici prima a{" "}
+          <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
+            info@scontiroma.it
           </a>
-          .
+          : cerchiamo una soluzione insieme. L'utente Consumatore può inoltre
+          ricorrere agli organismi di risoluzione alternativa delle
+          controversie previsti dalla legge.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">12. Contatti</h2>

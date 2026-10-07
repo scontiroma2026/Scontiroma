@@ -19,18 +19,16 @@ export default function PrivacyPolicy() {
 
         <h2 className="font-serif text-2xl text-white mt-8">1. Titolare del trattamento</h2>
         <p>
-          Titolare del trattamento è <strong>Sconti Roma</strong>. Puoi
-          contattarci in qualsiasi momento all'indirizzo{" "}
+          Titolare del trattamento è <strong>Euro Linea S.r.l.s.</strong>
+          (Partita IVA 03240220644), che gestisce il servizio <strong>Sconti
+          Roma</strong> (di seguito "noi", "Sconti Roma" o il "Titolare"). Per
+          conoscere la sede legale e l'indirizzo PEC, o per esercitare i tuoi
+          diritti, puoi contattarci in qualsiasi momento all'indirizzo{" "}
           <a href="mailto:privacy@scontiroma.it" className="text-fucsia hover:underline">
             privacy@scontiroma.it
           </a>{" "}
           per esercitare i tuoi diritti o per qualunque richiesta relativa al
           trattamento dei tuoi dati.
-        </p>
-        <p className="text-xs text-white/50 italic">
-          [Dati identificativi completi (ragione sociale, sede legale, Partita
-          IVA, PEC) verranno pubblicati appena la società sarà formalmente
-          costituita.]
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">2. Dati che raccogliamo</h2>
@@ -55,8 +53,9 @@ export default function PrivacyPolicy() {
           <li>
             <strong>Dati di geolocalizzazione</strong>: se acconsenti, usiamo la
             tua posizione approssimata per mostrarti gli sconti più vicini. La
-            posizione non viene memorizzata sui nostri server: viene usata solo
-            durante la sessione.
+            posizione viene chiesta solo quando tocchi «Usa la mia posizione»
+            ed è elaborata solo sul tuo telefono: non arriva ai nostri server
+            e non viene memorizzata.
           </li>
           <li>
             <strong>Dati di pagamento</strong>: durante la fase di lancio il
@@ -79,7 +78,25 @@ export default function PrivacyPolicy() {
             l'ora, l'offerta e se sei un cliente nuovo o di ritorno. Non vede
             la tua email né altri dati. Le statistiche che il commerciante vede
             nella sua area sono solo numeri aggregati e compaiono solo quando i
-            clienti del mese sono almeno 3.
+            clienti del mese sono almeno 3. Dopo la scansione il commerciante
+            tratta quanto ha visto come titolare autonomo, per gestire lo
+            sconto.
+          </li>
+          <li>
+            <strong>Dati visibili a chi gestisce Sconti Roma</strong>: le
+            persone autorizzate di Sconti Roma (amministratori) vedono i dati
+            dell'account, cioè <strong>nome, cognome, email</strong> e data di
+            iscrizione, per assistenza, sicurezza e approvazione delle offerte.
+            Nell'area di amministrazione vedono anche, per chi si è iscritto dal
+            QR di un negozio, <strong>da quale negozio</strong> è arrivata
+            l'iscrizione: serve a capire quali negozi portano nuovi clienti. Il
+            commerciante non vede queste informazioni.
+          </li>
+          <li>
+            <strong>Valutazioni sull'app</strong>: se rispondi alla richiesta
+            «Come valuti Sconti Roma?» conserviamo le stelle e l'eventuale
+            commento, collegati al tuo account, per migliorare il servizio.
+            Puoi non rispondere e chiudere la richiesta.
           </li>
           <li>
             <strong>Statistiche di visita</strong>: solo se accetti i cookie
@@ -93,6 +110,13 @@ export default function PrivacyPolicy() {
             sicurezza e prevenzione frodi.
           </li>
         </ul>
+
+        <p>
+          Per creare l'account servono i dati di registrazione: senza non
+          possiamo fornire il servizio. La posizione, gli avvisi via email, le
+          comunicazioni promozionali, le statistiche di visita e le valutazioni
+          sull'app sono invece <strong>facoltativi</strong>.
+        </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">3. Finalità e basi giuridiche</h2>
         <div className="overflow-x-auto">
@@ -177,7 +201,7 @@ export default function PrivacyPolicy() {
           </li>
         </ul>
 
-        <h3 className="font-serif text-xl text-white mt-6">4.1 Mappa, indirizzi e caratteri</h3>
+        <h3 className="font-serif text-xl text-white mt-6">4.1 Mappa e indirizzi</h3>
         <p>
           Alcune funzioni caricano contenuti da servizi esterni, che ricevono
           dal tuo browser l'<strong>indirizzo IP</strong> e i dati tecnici della
@@ -191,15 +215,14 @@ export default function PrivacyPolicy() {
             <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline">informativa</a>).
           </li>
           <li>
-            <strong>Google Fonts</strong> (Google Ireland Ltd.) — caratteri
-            tipografici del sito, a ogni pagina (
-            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline">informativa</a>).
-          </li>
-          <li>
             <strong>Google Maps</strong> — solo se tocchi "Portami qui": si apre
             Google Maps con la posizione del negozio come destinazione.
           </li>
         </ul>
+        <p>
+          I caratteri tipografici del sito sono ospitati sul nostro server:
+          nessun fornitore esterno li carica al posto nostro.
+        </p>
         <p>
           La ricerca degli indirizzi durante l'iscrizione del commerciante usa{" "}
           <strong>Nominatim</strong> (OpenStreetMap Foundation): il testo
@@ -241,7 +264,7 @@ export default function PrivacyPolicy() {
           <li><strong>Cancellazione (diritto all'oblio)</strong>: eliminare l'account e tutti i dati collegati.</li>
           <li><strong>Portabilità</strong>: ricevere i tuoi dati in formato JSON leggibile.</li>
           <li><strong>Limitazione</strong>: bloccare temporaneamente il trattamento.</li>
-          <li><strong>Opposizione</strong>: opporti al trattamento per finalità di marketing.</li>
+          <li><strong>Opposizione</strong>: opporti al trattamento basato sul legittimo interesse e a quello per finalità di marketing.</li>
           <li><strong>Revoca del consenso</strong>: in qualunque momento, senza pregiudicare la liceità del trattamento precedente.</li>
         </ul>
         <p className="mt-4">

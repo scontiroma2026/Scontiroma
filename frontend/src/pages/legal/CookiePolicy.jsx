@@ -12,7 +12,7 @@ export default function CookiePolicy() {
           Questo documento spiega quali cookie e tecnologie di tracciamento
           simili utilizza <strong>Sconti Roma</strong> e come puoi gestirne le
           preferenze. Il testo è redatto in conformità al Provvedimento del
-          Garante Privacy del 10 giugno 2021 (nn. 231) e all'art. 122 del
+          Garante Privacy del 10 giugno 2021 n. 231 e all'art. 122 del
           Codice Privacy.
         </p>
 
@@ -62,7 +62,7 @@ export default function CookiePolicy() {
               <tr>
                 <td className="border border-white/10 p-2 font-mono">sr_cookie_consent</td>
                 <td className="border border-white/10 p-2">Memoria del browser: ricorda le tue scelte sui cookie</td>
-                <td className="border border-white/10 p-2">Fino a cancellazione</td>
+                <td className="border border-white/10 p-2">6 mesi, poi il banner chiede di nuovo</td>
               </tr>
               <tr>
                 <td className="border border-white/10 p-2 font-mono">last_email, last_role</td>
@@ -72,12 +72,17 @@ export default function CookiePolicy() {
               <tr>
                 <td className="border border-white/10 p-2 font-mono">referral_merchant_id</td>
                 <td className="border border-white/10 p-2">Memoria del browser: ricorda il negozio da cui sei arrivato tramite il suo QR, per attribuirgli l'iscrizione</td>
-                <td className="border border-white/10 p-2">Fino all'iscrizione</td>
+                <td className="border border-white/10 p-2">30 giorni</td>
               </tr>
               <tr>
                 <td className="border border-white/10 p-2 font-mono">pwa_install_dismissed_at, app_feedback_dismissed_v1, sr_opened</td>
-                <td className="border border-white/10 p-2">Memoria del browser: non ripropone avvisi che hai già chiuso</td>
+                <td className="border border-white/10 p-2">Memoria del browser: non ripropone avvisi che hai già chiuso (l'invito a installare l'app torna dopo 7 giorni)</td>
                 <td className="border border-white/10 p-2">Fino a cancellazione / fine sessione</td>
+              </tr>
+              <tr>
+                <td className="border border-white/10 p-2 font-mono">app_feedback_secondi_v1</td>
+                <td className="border border-white/10 p-2">Memoria del browser: conta da quanto tempo usi l'app, per mostrare la richiesta di valutazione dopo 3 minuti (solo se hai fatto l'accesso)</td>
+                <td className="border border-white/10 p-2">Fino a cancellazione</td>
               </tr>
             </tbody>
           </table>
@@ -129,11 +134,6 @@ export default function CookiePolicy() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="border border-white/10 p-2">Google Fonts</td>
-                <td className="border border-white/10 p-2">Caratteri tipografici del sito: il browser li scarica da Google, che riceve l'indirizzo IP (non installa cookie)</td>
-                <td className="border border-white/10 p-2">Tecnico</td>
-              </tr>
               <tr>
                 <td className="border border-white/10 p-2">Stripe</td>
                 <td className="border border-white/10 p-2">Elaborazione pagamenti e prevenzione frodi (solo alla pagina di pagamento; oggi i pagamenti non sono attivi)</td>
