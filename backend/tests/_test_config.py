@@ -1,15 +1,15 @@
 """Shared pytest fixtures + credentials caricate da environment.
 
 Tutti i test dovrebbero importare `ADMIN_EMAIL/ADMIN_PASSWORD/MASTER_PW/JWT_SECRET/CLIENT_EMAIL/CLIENT_PASSWORD`
-da qui invece di hard-codarli. In CI si iniettano via env; in locale si fallback ai default della
-`test_credentials.md` così i test rimangono runnable senza setup.
+da qui invece di hard-codarli. In CI si iniettano via env; in locale si usano i default di sviluppo
+definiti qui sotto, così i test restano eseguibili senza setup.
 """
 import os
 
 
 def _env(key: str, default: str) -> str:
-    """Ritorna una variabile d'ambiente con fallback ai default di test noti in
-    /app/memory/test_credentials.md. In produzione/CI queste devono essere sovrascritte."""
+    """Ritorna una variabile d'ambiente con fallback ai default di sviluppo locale definiti qui sotto.
+    In produzione/CI queste devono essere sovrascritte."""
     return os.environ.get(key, default)
 
 

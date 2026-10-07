@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 07/10/2026 — ultimo commit in `main`: `94f0a96`
+Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -37,6 +37,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `94f0a96`
 | #34 | Titoli in Fraunces su tutti i telefoni; stelle dopo 3 minuti, mai sulla scansione; «Usa un altro account» affidabile | 07/10 |
 | #35 | La scelta sui cookie scade dopo 6 mesi, come scritto nella Cookie Policy | 07/10 |
 | #36 | QR della locandina verso la pagina del negozio con l'offerta del mese; negozio di provenienza ricordato 30 giorni; testi nuovi della locandina | 07/10 |
+| #37 | Pulizia residui Emergent, parte 1: file e vecchi test; bozze dei messaggi per i commercianti | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
@@ -64,13 +65,15 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `94f0a96`
 - Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Commercianti (07/10): 5 macro aree (Mangiare e bere, Bellezza e benessere, Sport e tempo libero, Negozi, Servizi); niente SMS o WhatsApp in serie senza consenso.
 - Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B) in coda.
+- Codice del negozio (opzione C): in pausa (07/10), da riconsiderare; se si fa, «Ricorda su questo telefono» vale al massimo 90 giorni.
+- Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
-2. Codice del negozio per convalidare gli sconti (opzione C), poi mappe Protomaps + LocationIQ.
+2. Mappe Protomaps + LocationIQ. (Codice del negozio: in pausa.)
 3. Area commerciante più sobria e professionale, mantenendo il carattere del marchio: prima una bozza da approvare.
-4. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
+4. Pulizia Emergent: file e test (#37) e pacchetti (questa PR); resta da valutare `frontend/plugins/health-check`.
 
 ## Domande aperte
 - Per l'utente:
