@@ -12,6 +12,7 @@ import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, Mes
 import MiniMap from "@/components/MiniMap";
 import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
+import OrariNegozio from "@/components/OrariNegozio";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
 // Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
@@ -296,6 +297,7 @@ export default function DiscountDetail() {
               </div>
             )}
 
+            <OrariNegozio orari={m.orari} stato={m.stato_orari} />
             <Button
               data-testid="redeem-btn"
               onClick={redeem}

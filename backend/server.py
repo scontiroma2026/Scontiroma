@@ -14,6 +14,7 @@ from typing import List, Optional, Literal
 
 import bcrypt
 import base64
+import re
 import binascii
 from html import escape as html_escape
 import hmac as hmac_lib
@@ -405,6 +406,73 @@ class MerchantProfileIn(BaseModel):
     address: Optional[str] = None
     image_url: Optional[str] = None
     phone: Optional[str] = None
+
+
+# ---------- Orari del negozio (li scrive il commerciante) ----------
+GIORNI_SETTIMANA = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
+_ORA_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+class FasciaOraria(BaseModel):
+    apre: str
+    chiude: str  # se è prima dell'apertura, la fascia finisce dopo mezzanotte (es. 19:30–01:00)
+
+
+class GiornoOrari(BaseModel):
+    chiuso: bool = False
+    fasce: List[FasciaOraria] = []
+
+
+class OrariIn(BaseModel):
+    giorni: List[GiornoOrari]  # 7 giorni, da lunedì a domenica
+    chiusura_straordinaria: bool = False
+    nota_chiusura: Optional[str] = Field(None, max_length=120)
+
+    @model_validator(mode="after")
+    def _controlla(self):
+        if len(self.giorni) != 7:
+            raise ValueError("Servono gli orari di tutti e 7 i giorni")
+        for nome, g in zip(GIORNI_SETTIMANA, self.giorni):
+            if g.chiuso:
+                g.fasce = []
+                continue
+            if not 1 <= len(g.fasce) <= 2:
+                raise ValueError(f"{nome.capitalize()}: indica una o due fasce orarie, oppure «Chiuso»")
+            for f in g.fasce:
+                if not (_ORA_RE.match(f.apre) and _ORA_RE.match(f.chiude)) or f.apre == f.chiude:
+                    raise ValueError(f"{nome.capitalize()}: orario non valido")
+        return self
+
+
+def stato_orari(orari: Optional[dict], ora: datetime) -> Optional[dict]:
+    """«Aperto ora · chiude alle 23:00» oppure «Chiuso · apre domani alle 12:30»."""
+    if not orari or not orari.get("giorni"):
+        return None
+    if orari.get("chiusura_straordinaria"):
+        return {"aperto": False, "testo": "Chiuso temporaneamente", "nota": orari.get("nota_chiusura") or ""}
+    settimana = 7 * 1440
+    minuti = lambda hhmm: int(hhmm[:2]) * 60 + int(hhmm[3:])
+    fasce = []
+    for d, g in enumerate(orari["giorni"]):
+        if g.get("chiuso"):
+            continue
+        for f in g.get("fasce") or []:
+            a, c = minuti(f["apre"]), minuti(f["chiude"])
+            inizio = d * 1440 + a
+            fasce.append((inizio, d * 1440 + c + (1440 if c <= a else 0)))
+    if not fasce:
+        return {"aperto": False, "testo": "Chiuso", "nota": ""}
+    t = ora.weekday() * 1440 + ora.hour * 60 + ora.minute
+    hhmm = lambda m: f"{(m % 1440) // 60:02d}:{m % 60:02d}"
+    for inizio, fine in fasce:
+        for tt in (t, t + settimana):
+            if inizio <= tt < fine:
+                return {"aperto": True, "testo": f"Aperto ora · chiude alle {hhmm(fine)}", "nota": ""}
+    prossima = min((i if i > t else i + settimana) for i, _ in fasce)
+    giorni_dopo = prossima // 1440 - t // 1440
+    quando = ("oggi" if giorni_dopo == 0 else "domani" if giorni_dopo == 1
+              else GIORNI_SETTIMANA[(prossima // 1440) % 7])
+    return {"aperto": False, "testo": f"Chiuso · apre {quando} alle {hhmm(prossima)}", "nota": ""}
 
 
 class StripeCheckoutIn(BaseModel):
@@ -939,6 +1007,8 @@ async def enrich_discount(d: dict) -> dict:
             "lat": merchant.get("lat"),
             "lng": merchant.get("lng"),
             "phone": merchant.get("phone", ""),
+            "orari": merchant.get("orari"),
+            "stato_orari": stato_orari(merchant.get("orari"), _rome_now()),
         }
     if d.get("original_price") and d.get("discounted_price") is not None:
         try:
@@ -1457,6 +1527,15 @@ async def merchant_update_profile(payload: MerchantProfileIn, user: dict = Depen
             asyncio.create_task(geocode_and_save_merchant(user["id"], updates["address"]))
     u = await db.users.find_one({"id": user["id"]})
     return {"user": sanitize_user(u)}
+
+
+@api.put("/merchants/me/hours")
+async def merchant_update_hours(payload: OrariIn, user: dict = Depends(require_merchant)):
+    orari = payload.model_dump()
+    orari["nota_chiusura"] = (orari.get("nota_chiusura") or "").strip()
+    orari["aggiornati_il"] = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one({"id": user["id"]}, {"$set": {"orari": orari}})
+    return {"orari": orari, "stato": stato_orari(orari, _rome_now())}
 
 
 @api.get("/merchants/me/stats")

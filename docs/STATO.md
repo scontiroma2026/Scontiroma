@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `68041d9`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `5978355`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -28,13 +28,14 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `68041d9`
 | #25 | GDPR: cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | 03/10 |
 | #28 | Messaggio WhatsApp per prenotare senza «abbonamento» | 04/10 |
 | #27 | Indirizzo: il civico scritto non si perde, suggerimenti su due righe | 04/10 |
+| #29 | «Condividi con un amico» con anteprima del link; titolo del sito senza 2,99 € | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
-| #29 | «Condividi con un amico» con anteprima del link; titolo del sito senza 2,99 € | controlli verdi |
+| #30 | Orari del negozio scritti dal commerciante, «Aperto ora» sull'offerta | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -50,8 +51,9 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `68041d9`
 - Video commercianti: niente abbonamento clienti; costi = gratis nella fase di lancio, poi 4,99 €/mese IVA inclusa, prezzo bloccato, avviso 30 giorni, nessun addebito senza conferma; «Nessun vincolo». Voce nuova (Fernando Martínez) sul copione del 03/10: bozza v9.
 - Accesso: niente PIN (03/10). Email e password, blocco di 15 minuti dopo 5 errori, «Password dimenticata?»; Face ID facoltativo.
 - Nuove funzioni approvate il 04/10: negozi preferiti (avviso via email solo con consenso), «Condividi con un amico», orari scritti dal commerciante, archivio delle offerte con «Riusa». Ordine: condividi, orari, preferiti, archivio.
-- «Telefoni della cassa» scartato (04/10): la convalida resta veloce per tutti i dipendenti. Alternativa proposta: tocco «Applica sconto» prima di consumare il codice (in attesa).
-- Mappa: MapTiler gratuito non vale per uso commerciale; proposta Protomaps ospitata da noi + LocationIQ per gli indirizzi (in attesa).
+- «Telefoni della cassa» scartato (04/10): la convalida resta veloce per tutti i dipendenti. Scelta l'opzione C (vedi sotto).
+- Convalida dello sconto (04/10): **opzione C**, codice del negozio a 4 cifre (uno per negozio, visibile al titolare e all'admin, «Ricorda su questo telefono», «Cambia codice»). In coda dopo orari, preferiti, archivio.
+- Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine

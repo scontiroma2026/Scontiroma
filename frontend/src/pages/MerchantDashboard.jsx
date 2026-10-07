@@ -8,6 +8,7 @@ import { QrCode, TicketPercent, Users, TrendingUp, ShieldCheck } from "lucide-re
 import GdprSection from "@/components/GdprSection";
 import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
+import MerchantHours from "@/components/MerchantHours";
 import NextOfferCard from "@/components/NextOfferCard";
 import RenewalBanner from "@/components/RenewalBanner";
 import MerchantInsights from "@/components/MerchantInsights";
@@ -130,6 +131,7 @@ export default function MerchantDashboard() {
 
       <div className="mt-10">
         <ShopDescriptionCard />
+        <div className="mt-6"><MerchantHours /></div>
       </div>
 
       <div className="mt-12">
