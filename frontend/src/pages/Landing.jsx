@@ -1,3 +1,4 @@
+import { salvaReferral } from "@/lib/referral";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,13 +14,7 @@ export default function Landing() {
   const [params] = useSearchParams();
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
-    const ref = params.get("ref");
-    if (ref) {
-      try {
-        localStorage.setItem("referral_merchant_id", ref);
-        localStorage.setItem("referral_captured_at", new Date().toISOString());
-      } catch (_) { /* localStorage disabled */ }
-    }
+    salvaReferral(params.get("ref"));
   }, [params]);
 
   return (

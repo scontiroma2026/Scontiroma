@@ -1342,6 +1342,21 @@ async def get_discount(discount_id: str):
     return {"discount": await enrich_discount(d)}
 
 
+@api.get("/negozio/{merchant_id}")
+async def pagina_negozio(merchant_id: str):
+    """Pagina pubblica a cui porta il QR della locandina: nome del negozio e offerta del mese in corso.
+    Nessun dato personale: solo nome, quartiere, categoria e l'offerta già visibile a tutti."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m or merchant_id in await _merchant_sospesi():
+        raise HTTPException(404, "Negozio non trovato")
+    d = await db.discounts.find_one({"merchant_id": merchant_id, "active": True, "approval_status": "approved"})
+    return {
+        "negozio": {"id": m["id"], "shop_name": m.get("shop_name") or m.get("name"),
+                    "zone": m.get("zone"), "category": m.get("category")},
+        "discount": await enrich_discount(d) if d else None,
+    }
+
+
 # ---------- Condivisione di un'offerta (anteprima del link per WhatsApp e simili) ----------
 def _euro(v) -> str:
     try:
@@ -1771,7 +1786,7 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
     return {
         "merchant_id": user["id"],
         "shop_name": user.get("shop_name"),
-        "referral_url": f"{app_url}/register?ref={user['id']}",
+        "referral_url": f"{app_url}/n/{user['id']}",
         "flyer_url": f"{app_url}/locandina?ref={user['id']}",
     }
 
