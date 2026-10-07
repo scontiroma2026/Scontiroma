@@ -70,7 +70,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `f855b2a`
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
 2. Mappe Protomaps + LocationIQ. (Codice del negozio: in pausa.)
 3. Area commerciante più sobria e professionale, mantenendo il carattere del marchio: prima una bozza da approvare.
-3. Pulizia Emergent: parte 1 (file e test) in questa PR; parte 2 (pacchetti) in un'altra PR.
+4. Pulizia Emergent: parte 1 (file e test) in questa PR; parte 2 (pacchetti) in un'altra PR.
 
 ## Domande aperte
 - Per l'utente:
