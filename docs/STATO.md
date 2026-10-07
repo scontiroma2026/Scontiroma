@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `ea78e34`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `68041d9`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -34,6 +34,7 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `ea78e34`
 |---|---|---|
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
+| #29 | «Condividi con un amico» con anteprima del link; titolo del sito senza 2,99 € | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -48,6 +49,9 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `ea78e34`
 - Prezzo commercianti nelle domande frequenti (4,99 € al mese IVA inclusa dopo la fase di lancio): confermato.
 - Video commercianti: niente abbonamento clienti; costi = gratis nella fase di lancio, poi 4,99 €/mese IVA inclusa, prezzo bloccato, avviso 30 giorni, nessun addebito senza conferma; «Nessun vincolo». Voce nuova (Fernando Martínez) sul copione del 03/10: bozza v9.
 - Accesso: niente PIN (03/10). Email e password, blocco di 15 minuti dopo 5 errori, «Password dimenticata?»; Face ID facoltativo.
+- Nuove funzioni approvate il 04/10: negozi preferiti (avviso via email solo con consenso), «Condividi con un amico», orari scritti dal commerciante, archivio delle offerte con «Riusa». Ordine: condividi, orari, preferiti, archivio.
+- «Telefoni della cassa» scartato (04/10): la convalida resta veloce per tutti i dipendenti. Alternativa proposta: tocco «Applica sconto» prima di consumare il codice (in attesa).
+- Mappa: MapTiler gratuito non vale per uso commerciale; proposta Protomaps ospitata da noi + LocationIQ per gli indirizzi (in attesa).
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine

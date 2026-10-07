@@ -116,3 +116,24 @@ test('modulo offerta: con il server lento quello che scrivi non viene cancellato
   await expect(page.getByTestId('disc-form')).toHaveAttribute('data-loaded', '1');
   await expect(page.getByTestId('disc-title')).toHaveValue('Titolo scritto subito');
 });
+
+test('pagina offerta: «Condividi con un amico» manda il link con l\'anteprima (04/10)', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  const offerta = await creaOffertaApprovata(request, m.token);
+  // Senza menu di condivisione l'app apre WhatsApp: registriamo il link invece di aprirlo
+  await page.addInitScript(() => {
+    delete Navigator.prototype.share;
+    window.__aperti = [];
+    window.open = (u) => { window.__aperti.push(u); return null; };
+  });
+  await page.goto(`/discounts/${offerta.id}`);
+  await page.getByTestId('share-btn').click();
+  const aperti = await page.evaluate(() => window.__aperti);
+  expect(aperti).toHaveLength(1);
+  expect(aperti[0]).toMatch(/^https:\/\/wa\.me\/\?text=/);
+  const testo = new URL(aperti[0]).searchParams.get('text');
+  expect(testo).toContain('Guarda questo sconto su Sconti Roma');
+  expect(testo).toContain(`/api/share/o/${offerta.id}`);
+  const anteprima = await request.get(`http://localhost:8001/api/share/o/${offerta.id}`);
+  expect(await anteprima.text()).toContain('og:title');
+});
