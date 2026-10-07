@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `9bf9b58`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -26,11 +26,17 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
 | #22 | Pannello admin chiaro, stato vero dell'offerta, «Sospendi» funzionante | 03/10 |
 | #24 | Step 3: statistiche per i commercianti, «Fase di lancio» per l'admin, banner prova (solo con `TRIAL_END_DATE`) | 03/10 |
 | #25 | GDPR: cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | 03/10 |
+| #28 | Messaggio WhatsApp per prenotare senza «abbonamento» | 04/10 |
+| #27 | Indirizzo: il civico scritto non si perde, suggerimenti su due righe | 04/10 |
+| #29 | «Condividi con un amico» con anteprima del link; titolo del sito senza 2,99 € | 07/10 |
+| #30 | Orari del negozio scritti dal commerciante, «Aperto ora» sull'offerta | 07/10 |
+| #31 | Negozi preferiti: cuore, vista «Preferiti», avviso via email solo con consenso | 07/10 |
+| #32 | Archivio delle offerte con «Riusa» / «Correggi e riusa» | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
+| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | testi approvati dall'utente il 07/10; controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
@@ -46,11 +52,15 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
 - Prezzo commercianti nelle domande frequenti (4,99 € al mese IVA inclusa dopo la fase di lancio): confermato.
 - Video commercianti: niente abbonamento clienti; costi = gratis nella fase di lancio, poi 4,99 €/mese IVA inclusa, prezzo bloccato, avviso 30 giorni, nessun addebito senza conferma; «Nessun vincolo». Voce nuova (Fernando Martínez) sul copione del 03/10: bozza v9.
 - Accesso: niente PIN (03/10). Email e password, blocco di 15 minuti dopo 5 errori, «Password dimenticata?»; Face ID facoltativo.
+- Nuove funzioni approvate il 04/10: negozi preferiti (avviso via email solo con consenso), «Condividi con un amico», orari scritti dal commerciante, archivio delle offerte con «Riusa». Ordine: condividi, orari, preferiti, archivio.
+- «Telefoni della cassa» scartato (04/10): la convalida resta veloce per tutti i dipendenti. Scelta l'opzione C (vedi sotto).
+- Convalida dello sconto (04/10): **opzione C**, codice del negozio a 4 cifre (uno per negozio, visibile al titolare e all'admin, «Ricorda su questo telefono», «Cambia codice»). In coda dopo orari, preferiti, archivio.
+- Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
-2. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
+2. Codice del negozio per convalidare gli sconti (opzione C), poi mappe Protomaps + LocationIQ.
 3. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
 
 ## Domande aperte

@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle, CalendarClock, CalendarPlus } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle, CalendarClock, CalendarPlus, Archive } from "lucide-react";
 import PhotoGallery from "@/components/PhotoGallery";
+import ArchivioOfferte from "@/components/ArchivioOfferte";
 
 const EMPTY_FORM = {
   title: "", description: "", original_price: "", discounted_price: "",
@@ -33,7 +34,8 @@ const formFrom = (d) => ({
 export default function MerchantDiscount() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState(searchParams.get("tab") === "next" ? "next" : "current");
+  const tabIniziale = searchParams.get("tab");
+  const [mode, setMode] = useState(tabIniziale === "next" || tabIniziale === "archivio" ? tabIniziale : "current");
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [existing, setExisting] = useState(null);
@@ -73,6 +75,19 @@ export default function MerchantDiscount() {
   };
 
   const isNext = mode === "next";
+
+  // «Riusa» dall'archivio: copia l'offerta passata nel modulo del mese prossimo (da controllare e inviare)
+  const riusa = async (archivioId) => {
+    try {
+      const { data } = await api.get(`/merchants/me/archive/${archivioId}`);
+      setMode("next");
+      setForm(formFrom({ ...data.offerta, active: true }));
+      toast.success("Offerta copiata: controllala e inviala per il mese prossimo.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      toast.error(formatApiError(e));
+    }
+  };
   const monthLabel = win?.next_month_label || "il mese prossimo";
 
   const submit = async (e) => {
@@ -121,7 +136,7 @@ export default function MerchantDiscount() {
       </div>
 
       {/* Tab: offerta corrente vs mese prossimo */}
-      <div className="mb-6 inline-flex gap-1 rounded-full border border-white/10 bg-white/5 p-1">
+      <div className="mb-6 inline-flex flex-wrap gap-1 rounded-full border border-white/10 bg-white/5 p-1">
         <button
           type="button"
           data-testid="offer-tab-current"
@@ -144,7 +159,22 @@ export default function MerchantDiscount() {
           Mese prossimo{win ? ` · ${monthLabel}` : ""}
           {nextOffer && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-fucsia" />}
         </button>
+        <button
+          type="button"
+          data-testid="offer-tab-archivio"
+          onClick={() => setMode("archivio")}
+          className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+            mode === "archivio" ? "bg-white text-black" : "text-white/60 hover:text-white"
+          }`}
+        >
+          <Archive size={14} className="inline mr-1.5 -mt-0.5" />
+          Archivio
+        </button>
       </div>
+
+      {mode === "archivio" ? (
+        <ArchivioOfferte onRiusa={riusa} finestraAperta={Boolean(win?.open)} monthLabel={monthLabel} />
+      ) : (<>
 
       {/* ---- Banner offerta corrente ---- */}
       {!isNext && status === "pending" && (
@@ -405,6 +435,7 @@ export default function MerchantDiscount() {
           <CheckCircle2 size={12} className="inline mr-1 text-fucsia" /> Offerta approvata e visibile agli utenti
         </p>
       )}
+      </>)}
     </main>
   );
 }

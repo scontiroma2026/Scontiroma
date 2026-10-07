@@ -583,3 +583,23 @@ async def send_account_deleted(to: str, name: str) -> Optional[str]:
 <p style="{_P}">Se non sei stato tu, scrivici subito a <a href="mailto:info@scontiroma.it" style="color:#00E5FF">info@scontiroma.it</a>.</p>
 """
     return await _send(to, f"Il tuo account {BRAND} è stato cancellato", _shell(inner))
+
+
+async def send_preferito_nuova_offerta(to: str, name: str, shop_name: str, zone: str, title: str,
+                                       prezzo: str, prezzo_pieno: str, discount_id: str) -> Optional[str]:
+    """Avviso al cliente che ha messo il negozio tra i preferiti e ha chiesto gli avvisi."""
+    oggetto = f"Nuova offerta da {shop_name} — Sconti Roma"
+    name, shop_name, zone, title = _esc(name), _esc(shop_name), _esc(zone), _esc(title)
+    prezzi = f" a <strong>€{_esc(prezzo)}</strong> invece di €{_esc(prezzo_pieno)}" if prezzo and prezzo_pieno else ""
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuova offerta da {shop_name}</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8">uno dei tuoi negozi preferiti{f" a {zone}" if zone else ""} ha pubblicato l'offerta del mese:
+<strong style="color:#00E5FF">"{title}"</strong>{prezzi}.</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/discounts/{_esc(discount_id)}" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Guarda l'offerta</a>
+</div>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Ricevi questa email perché hai chiesto gli avvisi sui tuoi negozi preferiti.
+Per non riceverne più: apri <a href="{APP_URL}/discounts?vista=preferiti" style="color:#a1a1aa">Sconti › Preferiti</a> e tocca «Non avvisarmi più».</p>
+"""
+    return await _send(to, oggetto, _shell(inner))
