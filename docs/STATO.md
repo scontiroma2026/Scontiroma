@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `9bf9b58`
+Aggiornato: 07/10/2026 — ultimo commit in `main`: `f1e4590`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -32,11 +32,12 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `9bf9b58`
 | #30 | Orari del negozio scritti dal commerciante, «Aperto ora» sull'offerta | 07/10 |
 | #31 | Negozi preferiti: cuore, vista «Preferiti», avviso via email solo con consenso | 07/10 |
 | #32 | Archivio delle offerte con «Riusa» / «Correggi e riusa» | 07/10 |
+| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» (anche «migliaia di romani» e «abbonati a Roma» tolti) | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | testi approvati dall'utente il 07/10; controlli verdi |
+| (questa) | Home senza «A metà prezzo»; posizione chiesta solo col pulsante su sconti e mappa | controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
@@ -56,12 +57,14 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `9bf9b58`
 - «Telefoni della cassa» scartato (04/10): la convalida resta veloce per tutti i dipendenti. Scelta l'opzione C (vedi sotto).
 - Convalida dello sconto (04/10): **opzione C**, codice del negozio a 4 cifre (uno per negozio, visibile al titolare e all'admin, «Ricorda su questo telefono», «Cambia codice»). In coda dopo orari, preferiti, archivio.
 - Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
+- Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
 2. Codice del negozio per convalidare gli sconti (opzione C), poi mappe Protomaps + LocationIQ.
-3. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
+3. Area commerciante più sobria e professionale, mantenendo il carattere del marchio: prima una bozza da approvare.
+4. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
 
 ## Domande aperte
 - Per l'utente:

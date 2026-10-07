@@ -42,11 +42,6 @@ export default function Discounts() {
     );
   };
   useEffect(() => {
-    requestLocation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run one-shot at mount
-  }, []);
-
-  useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
     api.get("/merchants/top?limit=3")
@@ -160,20 +155,39 @@ export default function Discounts() {
           {loading ? "Caricamento…" : <span data-testid="results-count">{count === 1 ? "1 sconto trovato" : `${count} sconti trovati`}</span>}
           {userPos && !loading && <span className="ml-2 text-ciano">· ordinati per distanza</span>}
         </div>
-        <button
-          type="button"
-          data-testid="discounts-locate-btn"
-          onClick={requestLocation}
-          className="inline-flex items-center gap-1.5 rounded-full border border-ciano/40 bg-ciano/10 text-ciano px-3 py-1.5 text-xs hover:bg-ciano/20 hover:text-white transition"
-        >
-          <LocateFixed size={12} />
-          {geoStatus === "granted" ? "Aggiorna posizione" : "Trova quelli vicini a me"}
-        </button>
+        {geoStatus === "granted" && (
+          <button
+            type="button"
+            data-testid="discounts-locate-btn"
+            onClick={requestLocation}
+            className="inline-flex items-center gap-1.5 rounded-full border border-ciano/40 bg-ciano/10 text-ciano px-3 py-1.5 text-xs hover:bg-ciano/20 hover:text-white transition"
+          >
+            <LocateFixed size={12} /> Aggiorna posizione
+          </button>
+        )}
       </div>
 
-      {geoStatus === "denied" && (
-        <div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-100">
-          Posizione negata — abilitala nel browser per vedere prima gli sconti più vicini.
+      {/* La posizione si chiede solo se il cliente tocca il pulsante: mai all'apertura della pagina */}
+      {geoStatus !== "granted" && (
+        <div data-testid="geo-invito" className="mb-6 flex flex-col gap-3 rounded-2xl border border-ciano/30 bg-ciano/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold text-white">Vuoi trovare gli sconti vicino a te?</p>
+            <p className="mt-1 text-xs text-white/60">
+              {geoStatus === "denied"
+                ? "Posizione non disponibile: puoi attivarla nelle impostazioni del browser, oppure scegli la zona qui sopra."
+                : "La posizione serve solo a ordinare le offerte sul tuo telefono: non la salviamo."}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="discounts-locate-btn"
+            onClick={requestLocation}
+            disabled={geoStatus === "requesting"}
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-ciano/50 bg-ciano/10 px-5 text-sm font-semibold text-ciano hover:bg-ciano/20 hover:text-white transition disabled:opacity-60"
+          >
+            <LocateFixed size={16} />
+            {geoStatus === "requesting" ? "Cerco la posizione…" : "Usa la mia posizione"}
+          </button>
         </div>
       )}
 
