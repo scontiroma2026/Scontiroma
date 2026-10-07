@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import LegalFooter from "@/components/LegalFooter";
 import CookieBanner from "@/components/CookieBanner";
+import NegozioQR from "@/pages/NegozioQR";
 import AppFeedbackBanner from "@/components/AppFeedbackBanner";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
@@ -50,6 +51,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/n/:id" element={<NegozioQR />} />
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/discounts/:id" element={<DiscountDetail />} />
             <Route path="/subscribe" element={<ProtectedRoute role="client"><Subscribe /></ProtectedRoute>} />

@@ -105,7 +105,7 @@ test('locandina e domande frequenti: nessun prezzo né pagamento', async ({ page
     await expect(page.getByText(testo)).toHaveCount(0);
   }
   await page.goto('/locandina');
-  await expect(page.getByText('Gratis durante la fase di lancio')).toBeVisible();
+  await expect(page.getByText('Iscrizione gratuita')).toBeVisible();   // per i clienti l'app è gratuita
   await expect(page.locator('body')).not.toContainText('2,99');
 });
 
