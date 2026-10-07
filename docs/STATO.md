@@ -45,6 +45,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 |---|---|---|
 | (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
+| (da aprire, branch `claude/kit-commercianti`) | Kit per contattare i commercianti: `docs/commercianti/MESSAGGI.md` (regole d'uso, WhatsApp, Instagram, Facebook, email, telefonata, SMS); video e lista restano fuori dal repository | OK dell'utente sui testi; il consulente deve vedere le regole d'uso |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
