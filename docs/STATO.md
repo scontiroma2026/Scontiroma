@@ -40,6 +40,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `f855b2a`
 | PR | Cosa | Aspetta |
 |---|---|---|
 | (questa) | La scelta sui cookie scade dopo 6 mesi, come già scritto nella Cookie Policy | controlli verdi |
+| (questa) | Pulizia residui Emergent, parte 1: file e vecchi test; bozza messaggi per i commercianti | controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
@@ -61,13 +62,15 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `f855b2a`
 - Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
 - Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Commercianti (07/10): 5 macro aree (Mangiare e bere, Bellezza e benessere, Sport e tempo libero, Negozi, Servizi); niente SMS o WhatsApp in serie senza consenso.
+- Codice del negozio (opzione C): in pausa (07/10), da riconsiderare; se si fa, «Ricorda su questo telefono» vale al massimo 90 giorni.
+- Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
-2. Codice del negozio per convalidare gli sconti (opzione C), poi mappe Protomaps + LocationIQ.
+2. Mappe Protomaps + LocationIQ. (Codice del negozio: in pausa.)
 3. Area commerciante più sobria e professionale, mantenendo il carattere del marchio: prima una bozza da approvare.
-4. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
+3. Pulizia Emergent: parte 1 (file e test) in questa PR; parte 2 (pacchetti) in un'altra PR.
 
 ## Domande aperte
 - Per l'utente:

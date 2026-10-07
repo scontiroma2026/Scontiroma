@@ -12,21 +12,47 @@ Verifies the fix in server.paypal_activate (L996-1040):
 - If PayPal is not configured, /paypal/activate returns 400.
 """
 import asyncio
+import os
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import pytest
 
-sys.path.insert(0, "/app/backend")
+# Database SOLO locale (mai produzione): mongomock in-process oppure MongoDB su localhost.
+MONGO_URL = os.environ.setdefault("TEST_MONGO_URL", os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+_u = urlparse(MONGO_URL)
+if not (_u.scheme == "mongomock" or (_u.scheme == "mongodb" and (_u.hostname or "") in ("localhost", "127.0.0.1", "::1"))):
+    pytest.exit(f"MONGO_URL non locale ({_u.scheme}://{_u.hostname}): test rifiutati.", returncode=2)
+USE_MOCK = _u.scheme == "mongomock"
+os.environ["MONGO_URL"] = "mongodb://localhost:27017" if USE_MOCK else MONGO_URL
+os.environ.setdefault("DB_NAME", "unit_paypal_welcome")
+os.environ.setdefault("JWT_SECRET", "test-unit-secret-0123456789abcdef")
+os.environ["RESEND_API_KEY"] = ""
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import server  # noqa: E402
 import email_service  # noqa: E402
 import paypal_service  # noqa: E402
 
+_LOOP = asyncio.new_event_loop()
+
 
 def run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    return _LOOP.run_until_complete(coro)
+
+
+@pytest.fixture(autouse=True)
+def _db_locale(monkeypatch):
+    # questi percorsi di pagamento esistono solo con l'abbonamento clienti acceso
+    monkeypatch.setenv("CLIENT_SUBSCRIPTION_REQUIRED", "true")
+    if USE_MOCK:
+        import mongomock_motor
+        server.db = mongomock_motor.AsyncMongoMockClient()["unit_paypal_welcome"]
+    yield
 
 
 # ---------- fixtures ----------
