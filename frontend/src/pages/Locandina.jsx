@@ -1,23 +1,32 @@
 import { trackClick } from "@/lib/analytics";
 import { QRCodeSVG } from "qrcode.react";
 import { Printer } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import api from "@/lib/api";
 
 /**
  * Locandina promozionale A5 stampabile per i banchi dei commercianti.
  * URL diretto: /locandina (globale) o /locandina?ref=MERCHANT_ID (personalizzata).
- * Il QR punta a {origin}/register?ref=MERCHANT_ID — identico al QR mostrato
- * nella dashboard del commerciante: ogni iscrizione viene attribuita al negozio.
+ * Il QR della locandina personalizzata punta a {origin}/n/MERCHANT_ID: la pagina del negozio con l'offerta
+ * del mese in corso (sempre aggiornata, la carta stampata no) e il pulsante «Iscriviti», che attribuisce
+ * l'iscrizione al negozio. Sulla carta ci sono solo cose che non cambiano: il nome del negozio e il QR.
  */
 export default function Locandina() {
   const [params] = useSearchParams();
   const ref = params.get("ref");
-  // QR punta DIRETTAMENTE alla pagina di registrazione utente (con referral se presente).
   // Usa l'origin corrente: in produzione sarà scontiroma.it, in preview l'URL di test.
   const origin = window.location.origin;
   const APP_URL = ref
-    ? `${origin}/register?ref=${encodeURIComponent(ref)}`
+    ? `${origin}/n/${encodeURIComponent(ref)}`
     : `${origin}/register`;
+  const [nomeNegozio, setNomeNegozio] = useState("");
+  useEffect(() => {
+    if (!ref) return;
+    api.get(`/negozio/${encodeURIComponent(ref)}`)
+      .then(({ data }) => setNomeNegozio(data.negozio?.shop_name || ""))
+      .catch(() => {});
+  }, [ref]);
 
   // Assicura che Fraunces (700+800) sia effettivamente caricato prima di stampare,
   // altrimenti il browser ricade su serif di sistema e "Sconti Roma" cambia
@@ -296,7 +305,7 @@ export default function Locandina() {
 
               {[
                 { n: "1", title: "Scansiona il QR", desc: "Inquadra il codice qui sotto con la fotocamera del telefono." },
-                { n: "2", title: "Iscriviti in 30 secondi", desc: "Crea il tuo account in pochi secondi." },
+                { n: "2", title: "Iscriviti", desc: "Bastano email e password." },
                 { n: "3", title: "Sconti subito!", desc: "Sfoglia i negozi, genera il QR e mostralo al banco per pagare meno." },
               ].map((s) => (
                 <div
@@ -396,7 +405,7 @@ export default function Locandina() {
                   textAlign: "center",
                 }}
               >
-                Questo locale è un affiliato{" "}
+                {nomeNegozio || "Questo negozio"} aderisce a{" "}
                 <span style={{ whiteSpace: "nowrap" }}>Sconti <span style={{ color: "#FF2E93" }}>Roma</span></span>
               </div>
             </div>
@@ -443,7 +452,7 @@ export default function Locandina() {
                     marginBottom: "1mm",
                   }}
                 >
-                  Inquadra e iscriviti
+                  {ref ? "Inquadra e scopri l'offerta di questo mese" : "Inquadra e iscriviti"}
                 </div>
                 <div
                   style={{
@@ -464,7 +473,7 @@ export default function Locandina() {
                     lineHeight: 1.35,
                   }}
                 >
-                  <strong style={{ color: "#FF2E93" }}>Gratis durante la fase di lancio</strong>
+                  <strong style={{ color: "#FF2E93" }}>Iscrizione gratuita</strong>
                 </div>
               </div>
             </div>
