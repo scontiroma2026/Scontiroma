@@ -39,6 +39,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `f855b2a`
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
+| (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
 | (questa) | La scelta sui cookie scade dopo 6 mesi, come già scritto nella Cookie Policy | controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
