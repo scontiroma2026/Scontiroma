@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 07/10/2026 — ultimo commit in `main`: `94f0a96`
+Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -37,11 +37,12 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `94f0a96`
 | #34 | Titoli in Fraunces su tutti i telefoni; stelle dopo 3 minuti, mai sulla scansione; «Usa un altro account» affidabile | 07/10 |
 | #35 | La scelta sui cookie scade dopo 6 mesi, come scritto nella Cookie Policy | 07/10 |
 | #36 | QR della locandina verso la pagina del negozio con l'offerta del mese; negozio di provenienza ricordato 30 giorni; testi nuovi della locandina | 07/10 |
+| #37 | Pulizia residui Emergent, parte 1: file e vecchi test; bozze dei messaggi per i commercianti | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| (questa) | Pulizia residui Emergent, parte 1: file e vecchi test; bozza messaggi per i commercianti | controlli verdi |
+| (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
@@ -72,7 +73,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `94f0a96`
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
 2. Mappe Protomaps + LocationIQ. (Codice del negozio: in pausa.)
 3. Area commerciante più sobria e professionale, mantenendo il carattere del marchio: prima una bozza da approvare.
-4. Pulizia Emergent: parte 1 (file e test) in questa PR; parte 2 (pacchetti) in un'altra PR.
+4. Pulizia Emergent: file e test (#37) e pacchetti (questa PR); resta da valutare `frontend/plugins/health-check`.
 
 ## Domande aperte
 - Per l'utente:
