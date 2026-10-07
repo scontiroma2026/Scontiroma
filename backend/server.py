@@ -15,6 +15,8 @@ from typing import List, Optional, Literal
 import bcrypt
 import base64
 import re
+import binascii
+from html import escape as html_escape
 import hmac as hmac_lib
 import hashlib
 import calendar
@@ -43,7 +45,7 @@ from email_service import (
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
@@ -1291,6 +1293,81 @@ async def get_discount(discount_id: str):
     if not d:
         raise HTTPException(404, "Sconto non trovato")
     return {"discount": await enrich_discount(d)}
+
+
+# ---------- Condivisione di un'offerta (anteprima del link per WhatsApp e simili) ----------
+def _euro(v) -> str:
+    try:
+        return f"{float(v):.2f}".replace(".", ",")
+    except (TypeError, ValueError):
+        return ""
+
+
+async def _offerta_pubblica(discount_id: str) -> Optional[dict]:
+    """Solo offerte visibili a tutti: approvate, attive, di negozi non sospesi."""
+    d = await db.discounts.find_one({"id": discount_id, "active": True, "approval_status": "approved"})
+    if not d or d.get("merchant_id") in await _merchant_sospesi():
+        return None
+    return d
+
+
+def _base_api(request: Request) -> str:
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    return f"{proto}://{request.url.netloc}"
+
+
+@api.get("/share/o/{discount_id}", response_class=HTMLResponse)
+async def share_offerta(discount_id: str, request: Request):
+    """Pagina minima con i meta Open Graph: l'anteprima mostra foto, titolo e prezzo,
+    poi il browser passa subito alla pagina dell'offerta sul sito."""
+    front = _frontend_url() or "https://scontiroma.it"
+    d = await _offerta_pubblica(discount_id)
+    img = ""
+    if d:
+        m = await db.users.find_one({"id": d.get("merchant_id")}) or {}
+        shop = m.get("shop_name") or m.get("name") or ""
+        dest = f"{front}/discounts/{discount_id}"
+        prezzi = ""
+        if d.get("discounted_price") is not None and d.get("original_price"):
+            prezzi = f" a €{_euro(d['discounted_price'])} invece di €{_euro(d['original_price'])}"
+        titolo = f"{d.get('title', '')}{prezzi}"
+        desc = " · ".join(x for x in (shop, m.get("zone") or "", "Sconti Roma") if x)
+        if d.get("image_url"):
+            img = f"{_base_api(request)}/api/share/o/{discount_id}/img"
+    else:
+        dest = f"{front}/discounts"
+        titolo = "Sconti Roma"
+        desc = "Sconti nei negozi di Garbatella, San Paolo e Marconi."
+    e = html_escape
+    og_img = f'<meta property="og:image" content="{e(img)}">' if img else ""
+    pagina = f"""<!doctype html><html lang="it"><head><meta charset="utf-8">
+<title>{e(titolo)}</title>
+<meta property="og:type" content="website"><meta property="og:site_name" content="Sconti Roma">
+<meta property="og:title" content="{e(titolo)}"><meta property="og:description" content="{e(desc)}">
+<meta property="og:url" content="{e(dest)}">{og_img}
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="refresh" content="0;url={e(dest)}">
+</head><body><a href="{e(dest)}">Apri l'offerta su Sconti Roma</a></body></html>"""
+    return HTMLResponse(pagina, headers={"Cache-Control": "public, max-age=600"})
+
+
+@api.get("/share/o/{discount_id}/img")
+async def share_offerta_img(discount_id: str):
+    d = await _offerta_pubblica(discount_id)
+    src = (d or {}).get("image_url") or ""
+    if src.startswith("data:image/") and ";base64," in src:
+        tipo, dati = src[5:].split(";base64,", 1)
+        if tipo not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
+            raise HTTPException(404, "Immagine non disponibile")
+        try:
+            corpo = base64.b64decode(dati, validate=False)
+        except (ValueError, binascii.Error):
+            raise HTTPException(404, "Immagine non disponibile")
+        return Response(corpo, media_type=tipo, headers={"Cache-Control": "public, max-age=3600",
+                                                         "X-Content-Type-Options": "nosniff"})
+    if src.startswith("https://"):
+        return RedirectResponse(src, status_code=302)
+    raise HTTPException(404, "Immagine non disponibile")
 
 
 # ---------- Merchant Routes ----------

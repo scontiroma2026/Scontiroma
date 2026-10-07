@@ -1,14 +1,14 @@
 import { trackClick } from "@/lib/analytics";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api, { formatApiError } from "@/lib/api";
+import api, { API, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store, Share2 } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
 import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
@@ -129,6 +129,20 @@ export default function DiscountDetail() {
 
   const m = discount.merchant || {};
   const savings = (discount.original_price - discount.discounted_price).toFixed(2);
+
+  // Condividi con un amico: menu di condivisione del telefono, altrimenti WhatsApp.
+  // Il link passa da una pagina con l'anteprima (foto, titolo, prezzo) e porta all'offerta.
+  const condividi = async () => {
+    const link = `${API}/share/o/${discount.id}`;
+    const euro = (v) => Number(v).toFixed(2).replace(".", ",");
+    const testo = `Guarda questo sconto su Sconti Roma: ${discount.title}${m.shop_name ? ` da ${m.shop_name}` : ""}, €${euro(discount.discounted_price)} invece di €${euro(discount.original_price)}`;
+    trackClick("share_offer");
+    if (navigator.share) {
+      try { await navigator.share({ title: discount.title, text: testo, url: link }); } catch (e) { /* annullato */ }
+      return;
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${testo} ${link}`)}`, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <main data-testid="discount-detail-page" className="mx-auto max-w-6xl px-6 py-10">
@@ -301,6 +315,15 @@ export default function DiscountDetail() {
                 usageInfo.max_uses > 1 && usageInfo.used_count > 0
                   ? `Genera QR (utilizzo ${usageInfo.used_count + 1} di ${usageInfo.max_uses})`
                   : "Mostra QR Code"}
+            </Button>
+            <Button
+              data-testid="share-btn"
+              type="button"
+              variant="outline"
+              onClick={condividi}
+              className="mt-3 w-full rounded-full border-white/20 py-5 text-base font-semibold text-white hover:bg-white/10"
+            >
+              <Share2 size={18} className="mr-2" /> Condividi con un amico
             </Button>
             </div>
           </Card>
