@@ -8,11 +8,18 @@ import { Star, X } from "lucide-react";
 import { toast } from "sonner";
 
 const LS_KEY = "app_feedback_dismissed_v1";
-const HIDDEN_PREFIXES = ["/locandina", "/admin", "/scan"];
+const LS_TEMPO = "app_feedback_secondi_v1";
+// Mai sopra la cassa: il commerciante sta scansionando il QR di un cliente
+const HIDDEN_PREFIXES = ["/locandina", "/admin", "/scan", "/merchant/scan"];
+const DOPO_SECONDI = 180;
+
+const leggi = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const scrivi = (k, v) => { try { localStorage.setItem(k, v); } catch { /* modalità privata */ } };
 
 /**
  * Banner in basso che chiede una valutazione a stelle sull'app.
- * Mostrato solo a utenti loggati (client/merchant) che non hanno ancora votato.
+ * Mostrato solo a utenti loggati (client/merchant) che non hanno ancora votato,
+ * dopo 3 minuti di uso dell'app (sommati tra una visita e l'altra, solo con la pagina in primo piano).
  */
 export default function AppFeedbackBanner() {
   const { user } = useAuth();
@@ -23,19 +30,34 @@ export default function AppFeedbackBanner() {
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [pronto, setPronto] = useState(false);
+
+  // Conta i secondi di uso con la pagina visibile; a 3 minuti il banner può comparire
   useEffect(() => {
-    if (!user || user.role === "admin") return;
-    if (localStorage.getItem(LS_KEY)) return;
+    if (!user || user.role === "admin" || leggi(LS_KEY)) return;
+    let secondi = parseInt(leggi(LS_TEMPO) || "0", 10) || 0;
+    if (secondi >= DOPO_SECONDI) { setPronto(true); return; }
+    const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      secondi += 5;
+      scrivi(LS_TEMPO, String(secondi));
+      if (secondi >= DOPO_SECONDI) { setPronto(true); clearInterval(id); }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [user]);
+
+  useEffect(() => {
+    if (!pronto || !user || user.role === "admin" || leggi(LS_KEY)) return;
     api.get("/app-feedback/me")
       .then(({ data }) => { if (!data.given) setVisible(true); })
       .catch(() => {});
-  }, [user]);
+  }, [pronto, user]);
 
   if (!visible || !user) return null;
   if (HIDDEN_PREFIXES.some((p) => location.pathname.startsWith(p))) return null;
 
   const dismiss = () => {
-    localStorage.setItem(LS_KEY, "1");
+    scrivi(LS_KEY, "1");
     setVisible(false);
   };
 
@@ -44,7 +66,7 @@ export default function AppFeedbackBanner() {
     try {
       await api.post("/app-feedback", { stars, comment: comment.trim() || null });
       toast.success("Grazie per il tuo feedback! ⭐");
-      localStorage.setItem(LS_KEY, "1");
+      scrivi(LS_KEY, "1");
       setVisible(false);
     } catch (err) {
       toast.error(formatApiError(err));

@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 07/10/2026 — ultimo commit in `main`: `f1e4590`
+Aggiornato: 07/10/2026 — ultimo commit in `main`: `c26857f`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -33,11 +33,12 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `f1e4590`
 | #31 | Negozi preferiti: cuore, vista «Preferiti», avviso via email solo con consenso | 07/10 |
 | #32 | Archivio delle offerte con «Riusa» / «Correggi e riusa» | 07/10 |
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» (anche «migliaia di romani» e «abbonati a Roma» tolti) | 07/10 |
+| #33 | Home senza «A metà prezzo»; posizione chiesta solo col pulsante su sconti e mappa | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| (questa) | Home senza «A metà prezzo»; posizione chiesta solo col pulsante su sconti e mappa | controlli verdi |
+| (questa) | Titoli in Fraunces su tutti i telefoni; banner stelle dopo 3 minuti, mai sulla scansione; «Usa un altro account» senza ritorno della vecchia email | controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
