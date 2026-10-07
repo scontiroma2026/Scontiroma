@@ -84,9 +84,6 @@ export default function MapView() {
     );
   };
 
-  // richiedi posizione al primo mount (silenzioso — il browser mostra il prompt)
-  useEffect(() => { requestLocation(); }, []);
-
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
@@ -157,10 +154,14 @@ export default function MapView() {
             className="rounded-full border-ciano/50 bg-ciano/10 text-ciano hover:bg-ciano/20 hover:text-white"
           >
             <LocateFixed size={12} className="mr-1.5" />
-            {geoStatus === "granted" ? "Aggiorna posizione" : "Trova sconti vicino a me"}
+            {geoStatus === "granted" ? "Aggiorna posizione" : "Usa la mia posizione"}
           </Button>
+          {/* La posizione si chiede solo se il cliente tocca il pulsante: mai all'apertura della mappa */}
+          {geoStatus === "idle" && (
+            <span data-testid="geo-invito" className="text-white/70">Vuoi trovare gli sconti vicino a te? La posizione resta sul tuo telefono.</span>
+          )}
           {geoStatus === "denied" && (
-            <span className="text-yellow-300/80">Posizione negata — abilitala nel browser per vedere gli sconti più vicini.</span>
+            <span className="text-yellow-300/80">Posizione non disponibile: puoi attivarla nelle impostazioni del browser.</span>
           )}
           {geoStatus === "requesting" && (
             <span className="text-white/50">Rilevo posizione…</span>

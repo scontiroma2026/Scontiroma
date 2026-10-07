@@ -246,7 +246,7 @@ export default function Locandina() {
                   fontStyle: "italic",
                 }}
               >
-                La città a metà prezzo, ogni giorno.
+                Gli sconti del tuo quartiere.
               </div>
             </div>
 
@@ -479,7 +479,7 @@ export default function Locandina() {
                 letterSpacing: "0.05em",
               }}
             >
-              Sconti Roma · <a href="mailto:info@scontiroma.it" style={{ color: "rgba(0,229,255,0.7)", textDecoration: "none" }}>info@scontiroma.it</a> · La città a metà prezzo, ogni giorno.
+              Sconti Roma · <a href="mailto:info@scontiroma.it" style={{ color: "rgba(0,229,255,0.7)", textDecoration: "none" }}>info@scontiroma.it</a> · Gli sconti del tuo quartiere.
             </div>
           </div>
         </div>

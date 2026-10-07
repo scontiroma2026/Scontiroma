@@ -43,9 +43,11 @@ export default function Landing() {
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
-                <span className="text-grad">tutta tua.</span><br/>
-                <span className="italic">A metà prezzo.</span>
+                <span className="text-grad">tutta tua.</span>
               </h1>
+              <p data-testid="hero-sottotitolo" className="mt-5 max-w-xl font-serif text-3xl italic leading-tight text-white/90 md:text-4xl">
+                Scopri quanto puoi risparmiare nel tuo quartiere.
+              </p>
               <p className="mt-6 max-w-lg text-lg text-white/70">
                 Ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
                 <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
