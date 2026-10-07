@@ -6,6 +6,7 @@ import api from "@/lib/api";
 
 const CONSENT_KEY = "sr_cookie_consent";
 const CONSENT_VERSION = 1;
+const CONSENT_MAX_MS = 182 * 24 * 60 * 60 * 1000; // 6 mesi
 
 const DEFAULT_PREFS = {
   essential: true, // always on
@@ -19,6 +20,9 @@ function readConsent() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed?.version !== CONSENT_VERSION) return null;
+    // La scelta vale 6 mesi (come scritto nella Cookie Policy): poi il banner la richiede.
+    const quando = Date.parse(parsed.timestamp || "") || Number(parsed.ts) || 0;
+    if (quando && Date.now() - quando > CONSENT_MAX_MS) return null;
     return parsed;
   } catch {
     return null;
