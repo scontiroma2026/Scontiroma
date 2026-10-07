@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `ea78e34`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -26,13 +26,14 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `61d9d9e`
 | #22 | Pannello admin chiaro, stato vero dell'offerta, «Sospendi» funzionante | 03/10 |
 | #24 | Step 3: statistiche per i commercianti, «Fase di lancio» per l'admin, banner prova (solo con `TRIAL_END_DATE`) | 03/10 |
 | #25 | GDPR: cancellazione ed esportazione complete, ricerca indirizzi 1 richiesta/s, attribuzione OpenStreetMap | 03/10 |
+| #28 | Messaggio WhatsApp per prenotare senza «abbonamento» | 04/10 |
+| #27 | Indirizzo: il civico scritto non si perde, suggerimenti su due righe | 04/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
-| PR indirizzi | Il civico scritto non si perde più; suggerimenti su due righe | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
