@@ -105,7 +105,7 @@ La pagina è riscritta per intero. Prima descriveva l'annullamento dell'abboname
 ## Aggiornamento del 07/10/2026 (sera) — modifiche dopo la prima analisi
 
 Cosa è stato cambiato rispetto alla bozza precedente, su indicazione del titolare:
-1. **Titolare identificato:** Euro Linea S.r.l.s., con Partita IVA nei testi (Privacy 1, Termini). Sede legale inserita (Via Tasso 5/B, Ariano Irpino, AV; da confermare il civico). Resta da inserire la PEC.
+1. **Titolare identificato:** Euro Linea S.r.l.s., con Partita IVA nei testi (Privacy 1, Termini). Sede legale inserita (Via Tasso 5/B, Ariano Irpino, AV; civico confermato dal titolare). Resta da inserire la PEC.
 2. **Google Fonts tolto:** i caratteri sono ospitati sul nostro sito (PR separata). Sparisce dalla Privacy (4.1) e dalla Cookie Policy (2.2).
 3. **Seconda casella per i commercianti** all'iscrizione: approvazione specifica delle clausole su responsabilità (art. 7), modifiche (art. 9) e foro (art. 10), ai sensi degli artt. 1341-1342 c.c. Il server registra data e conferma.
 4. **Responsabilità (art. 7):** per i clienti resta quella di legge, nessun limite a zero; il limite all'importo pagato vale solo per i commercianti.
