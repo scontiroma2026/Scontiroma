@@ -68,17 +68,17 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
     <div data-testid="photo-gallery" className="space-y-4">
       {/* Header contatore */}
       <div className="flex items-center justify-between">
-        <div className="text-xs text-white/60">
-          <ImagePlus size={12} className="inline mr-1 text-fucsia" />
-          <strong className="text-white">{photos.length}</strong> / {max} foto
+        <div className="text-sm font-semibold text-ac-soft">
+          <ImagePlus size={14} className="mr-1 inline text-ac-rosa" aria-hidden="true" />
+          <strong className="text-ac-ink">{photos.length}</strong> / {max} foto
           {photos.length > 0 && (
-            <span className="ml-2 text-[10px] text-gold">
+            <span className="ml-2 text-xs font-bold text-ac-viola">
               (la 1ª è la copertina)
             </span>
           )}
         </div>
         {photos.length >= max && (
-          <span className="text-[10px] text-red-300">Limite raggiunto</span>
+          <span className="text-xs font-bold text-ac-rosso">Limite raggiunto</span>
         )}
       </div>
 
@@ -89,7 +89,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
             <div
               key={`${url}-${i}`}
               data-testid={`photo-tile-${i}`}
-              className="relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-black/40 group"
+              className="group relative aspect-square overflow-hidden rounded-xl border border-ac-line bg-ac-tint"
             >
               <button
                 type="button"
@@ -112,47 +112,47 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
               </button>
               {/* Badge copertina */}
               {i === 0 && (
-                <div className="absolute top-1 left-1 z-20 flex items-center gap-1 rounded-full bg-gold/90 text-black px-2 py-0.5 text-[10px] font-bold pointer-events-none">
+                <div className="absolute top-1 left-1 z-20 flex items-center gap-1 rounded-full bg-white/95 text-ac-ink px-2 py-0.5 text-[11px] font-extrabold shadow pointer-events-none">
                   <Star size={10} fill="currentColor" /> Copertina
                 </div>
               )}
               {/* Numero */}
-              <div className="absolute top-1 right-1 z-20 rounded-full bg-black/70 text-white text-[10px] font-mono w-5 h-5 flex items-center justify-center pointer-events-none">
+              <div className="absolute top-1 right-1 z-20 rounded-full bg-black/70 text-white text-[11px] font-bold w-6 h-6 flex items-center justify-center pointer-events-none">
                 {i + 1}
               </div>
               {/* Overlay controlli */}
               {!disabled && (
-                <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between bg-gradient-to-t from-black/90 to-transparent p-1 opacity-0 group-hover:opacity-100 transition">
+                <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between bg-gradient-to-t from-black/90 to-transparent p-1 transition md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                   <div className="flex gap-0.5">
                     <button
                       type="button"
                       data-testid={`photo-move-up-${i}`}
                       onClick={() => move(i, -1)}
                       disabled={i === 0}
-                      className={`p-1 rounded ${i === 0 ? "opacity-30 cursor-not-allowed" : "text-white hover:bg-white/20"}`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${i === 0 ? "opacity-30 cursor-not-allowed" : "text-white hover:bg-white/20"}`}
                       title="Sposta prima"
                     >
-                      <ChevronUp size={14} />
+                      <ChevronUp size={18} />
                     </button>
                     <button
                       type="button"
                       data-testid={`photo-move-down-${i}`}
                       onClick={() => move(i, 1)}
                       disabled={i === photos.length - 1}
-                      className={`p-1 rounded ${i === photos.length - 1 ? "opacity-30 cursor-not-allowed" : "text-white hover:bg-white/20"}`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${i === photos.length - 1 ? "opacity-30 cursor-not-allowed" : "text-white hover:bg-white/20"}`}
                       title="Sposta dopo"
                     >
-                      <ChevronDown size={14} />
+                      <ChevronDown size={18} />
                     </button>
                   </div>
                   <button
                     type="button"
                     data-testid={`photo-remove-${i}`}
                     onClick={() => removeAt(i)}
-                    className="p-1 rounded bg-red-500/80 text-white hover:bg-red-600"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg bg-ac-rosso text-white hover:brightness-110"
                     title="Rimuovi"
                   >
-                    <X size={14} />
+                    <X size={18} />
                   </button>
                 </div>
               )}
@@ -163,12 +163,12 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                   data-testid={`photo-ai-enhance-${i}`}
                   onClick={() => enhanceAt(i)}
                   disabled={enhancingIdx !== -1}
-                  className={`absolute top-8 left-1 right-1 z-20 flex items-center justify-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider shadow-lg backdrop-blur-md transition ${
+                  className={`absolute top-8 left-1 right-1 z-20 flex min-h-11 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-lg backdrop-blur-md transition ${
                     enhancingIdx === i
-                      ? "grad-fucsia-viola text-white"
+                      ? "ac-grad text-white"
                       : enhancingIdx !== -1
                       ? "bg-black/60 text-white/40 cursor-wait"
-                      : "bg-black/75 text-white hover:grad-fucsia-viola border border-fucsia/50"
+                      : "bg-black/80 text-white hover:ac-grad border border-white/40"
                   }`}
                   title="Ottimizza questa foto con l'intelligenza artificiale (Gemini Nano Banana)"
                 >
@@ -178,7 +178,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                     </>
                   ) : (
                     <>
-                      <Sparkles size={12} className="text-fucsia" /> Ottimizza con AI
+                      <Sparkles size={12} className="text-pink-300" /> Ottimizza con AI
                     </>
                   )}
                 </button>
@@ -190,38 +190,36 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
 
       {/* Picker per aggiungere una nuova foto (visibile solo se sotto il max) */}
       {canAdd && (
-        <div className="rounded-xl border border-dashed border-white/15 bg-black/30 p-4">
-          <div className="text-xs uppercase tracking-wider text-gold mb-3 flex items-center gap-1">
-            <Plus size={12} /> Aggiungi la {photos.length + 1}ª foto
+        <div className="rounded-2xl border-2 border-dashed border-ac-campo bg-white p-4">
+          <div className="mb-3 flex items-center gap-1.5 text-[13px] font-extrabold text-ac-viola">
+            <Plus size={14} aria-hidden="true" /> Aggiungi la {photos.length + 1}ª foto
           </div>
 
           {/* Preview staged + conferma */}
           {staged ? (
-            <div className="flex items-start gap-3 rounded-lg bg-black/50 border border-fucsia/30 p-3">
+            <div className="flex items-start gap-3 rounded-xl border border-ac-rosa/40 bg-ac-rosaSoft p-3">
               <img
                 src={staged}
                 alt="anteprima"
                 className="h-20 w-20 object-cover rounded-lg"
               />
               <div className="flex-1 min-w-0">
-                <div className="text-xs text-white/70 mb-2">Anteprima foto</div>
+                <div className="mb-2 text-sm font-bold text-ac-ink">Anteprima foto</div>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     data-testid="photo-add-confirm"
                     onClick={addStaged}
-                    size="sm"
-                    className="grad-fucsia-viola text-white hover:scale-105 transition"
+                    className="ac-grad h-11 rounded-xl px-4 font-extrabold text-white hover:brightness-105"
                   >
-                    <Plus size={14} className="mr-1" /> Aggiungi alla galleria
+                    <Plus size={16} className="mr-1" /> Aggiungi alla galleria
                   </Button>
                   <Button
                     type="button"
                     data-testid="photo-add-cancel"
                     onClick={() => setStaged("")}
                     variant="outline"
-                    size="sm"
-                    className="border-white/20 bg-transparent text-white hover:bg-white/5"
+                    className="h-11 rounded-xl border-2 border-ac-soft bg-white px-4 font-extrabold text-ac-ink hover:bg-ac-tint"
                   >
                     Annulla
                   </Button>
@@ -248,7 +246,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
       )}
 
       {photos.length === 0 && !canAdd && (
-        <div className="rounded-xl border border-dashed border-white/10 bg-black/30 p-6 text-center text-xs text-white/50">
+        <div className="rounded-2xl border-2 border-dashed border-ac-campo bg-ac-tint p-6 text-center text-sm font-semibold text-ac-soft">
           Nessuna foto caricata
         </div>
       )}

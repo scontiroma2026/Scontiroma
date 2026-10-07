@@ -152,20 +152,20 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
           data-testid={`${testIdPrefix}-upload-btn`}
           onClick={() => inputRef.current?.click()}
           disabled={processing}
-          className="group relative w-full overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-black/40 p-8 text-center transition hover:border-fucsia hover:bg-fucsia/5"
+          className="group relative w-full overflow-hidden rounded-2xl border-2 border-dashed border-ac-campo bg-white p-8 text-center transition hover:border-ac-rosa hover:bg-ac-rosaSoft"
         >
           {processing ? (
             <>
-              <Loader2 size={32} className="mx-auto animate-spin text-fucsia" />
-              <div className="mt-3 text-white/70 text-sm">Ottimizzazione in corso…</div>
+              <Loader2 size={32} className="mx-auto animate-spin text-ac-rosa" />
+              <div className="mt-3 text-sm font-semibold text-ac-soft">Ottimizzazione in corso…</div>
             </>
           ) : (
             <>
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl grad-fucsia-viola text-white">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ac-grad text-white">
                 <Camera size={24} />
               </div>
-              <div className="mt-3 font-serif text-lg text-white">Carica una foto</div>
-              <div className="text-xs text-white/50">JPG o PNG · L'app la ottimizzerà automaticamente</div>
+              <div className="mt-3 font-serif text-lg font-bold text-ac-ink">Carica una foto</div>
+              <div className="text-sm text-ac-soft">JPG o PNG · L'app la ottimizzerà automaticamente</div>
             </>
           )}
         </button>
@@ -173,17 +173,17 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
 
       {preview && (
         <div className="space-y-3">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-fucsia glow-fucsia" data-testid={`${testIdPrefix}-preview`}>
+          <div className="relative overflow-hidden rounded-2xl border-2 border-ac-rosa" data-testid={`${testIdPrefix}-preview`}>
             {processing && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70">
-                <Loader2 size={40} className="animate-spin text-fucsia" />
+                <Loader2 size={40} className="animate-spin text-ac-rosa" />
               </div>
             )}
-            <img src={preview} alt="Preview ottimizzata" className="block w-full h-auto max-h-[400px] object-contain bg-black" />
+            <img src={preview} alt="Preview ottimizzata" className="block w-full h-auto max-h-[400px] object-contain bg-ac-tint" />
             {showBadge && (
               <div
                 data-testid={`${testIdPrefix}-badge`}
-                className="absolute inset-x-0 top-0 grad-fucsia-viola text-white px-4 py-2.5 text-sm font-semibold flex items-center gap-2 shadow-lg"
+                className="absolute inset-x-0 top-0 ac-grad text-white px-4 py-2.5 text-sm font-semibold flex items-center gap-2 shadow-lg"
                 style={{animation: "slideDown 0.4s ease-out"}}
               >
                 <Sparkles size={16} className="animate-pulse" />
@@ -200,7 +200,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
               type="button"
               data-testid={`${testIdPrefix}-change-btn`}
               onClick={() => inputRef.current?.click()}
-              className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 transition flex items-center justify-center gap-2"
+              className="flex-1 rounded-full min-h-11 border-2 border-ac-soft bg-white px-4 py-2 text-sm font-extrabold text-ac-ink hover:bg-ac-tint transition flex items-center justify-center gap-2"
             >
               <Camera size={14} /> Cambia foto
             </button>
@@ -210,7 +210,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
                 data-testid={`${testIdPrefix}-reprocess-btn`}
                 onClick={reprocess}
                 disabled={processing}
-                className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10 transition flex items-center justify-center gap-2"
+                className="rounded-full min-h-11 border-2 border-ac-soft bg-white px-4 py-2 text-sm font-extrabold text-ac-ink hover:bg-ac-tint transition flex items-center justify-center gap-2"
               >
                 <RefreshCw size={14} /> Ri-ottimizza
               </button>
@@ -219,7 +219,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
               type="button"
               data-testid={`${testIdPrefix}-clear-btn`}
               onClick={clear}
-              className="rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive hover:bg-destructive/20 transition"
+              className="min-h-11 rounded-full border-2 border-ac-rosso px-4 py-2 text-sm font-extrabold text-ac-rosso hover:bg-ac-rossoBg transition"
               aria-label="Rimuovi foto"
             >
               <X size={14} />
@@ -229,7 +229,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
       )}
 
       {error && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" data-testid={`${testIdPrefix}-error`}>
+        <div className="rounded-xl border border-ac-rosso/40 bg-ac-rossoBg p-3 text-sm font-semibold text-ac-rosso" data-testid={`${testIdPrefix}-error`}>
           {error}
         </div>
       )}

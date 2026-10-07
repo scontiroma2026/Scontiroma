@@ -37,7 +37,7 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
         variant="outline"
         onClick={() => setOpen(true)}
         data-testid="open-default-images-btn"
-        className="rounded-full border-ciano/50 bg-ciano/10 text-ciano hover:bg-ciano/20 hover:text-white"
+        className="h-11 rounded-full border-2 border-ac-teal bg-white px-4 font-extrabold text-ac-teal hover:bg-ac-tealBg hover:text-ac-teal"
       >
         <Images size={16} className="mr-2" />
         Scegli da libreria (100 foto)
@@ -46,37 +46,37 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           data-testid="default-images-dialog"
-          className="max-w-5xl max-h-[85vh] overflow-hidden bg-zinc-950 border-white/10 text-white flex flex-col"
+          className="max-w-5xl max-h-[85vh] overflow-hidden bg-white border-ac-line text-ac-ink flex flex-col"
         >
           <DialogHeader>
-            <DialogTitle className="font-serif text-3xl text-white">
-              Libreria immagini <span className="text-grad">(100 foto)</span>
+            <DialogTitle className="font-serif text-3xl font-bold text-ac-ink">
+              Libreria immagini <span className="text-ac-rosa">(100 foto)</span>
             </DialogTitle>
-            <DialogDescription className="text-sm text-white/60">
+            <DialogDescription className="text-sm text-ac-soft">
               Scegli una foto già ottimizzata se non vuoi caricare la tua.
             </DialogDescription>
           </DialogHeader>
 
           {loading && (
             <div className="flex-1 flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-fucsia" size={32} />
+              <Loader2 className="animate-spin text-ac-rosa" size={32} />
             </div>
           )}
 
           {library && (
             <div className="flex-1 flex flex-col min-h-0">
               {/* Tab categorie */}
-              <div className="flex flex-wrap gap-2 pb-4 border-b border-white/10">
+              <div className="flex flex-wrap gap-2 pb-4 border-b border-ac-line">
                 {Object.keys(library).map((cat) => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setActiveCat(cat)}
                     data-testid={`cat-tab-${cat.replace(/\s+/g, "-").toLowerCase()}`}
-                    className={`text-xs uppercase tracking-wider px-3 py-1.5 rounded-full transition ${
+                    className={`min-h-11 text-xs font-extrabold uppercase tracking-wider px-4 rounded-full transition ${
                       activeCat === cat
-                        ? "bg-fucsia text-white shadow-[0_0_20px_rgba(255,46,147,0.5)]"
-                        : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                        ? "bg-ac-rosa text-white"
+                        : "bg-ac-tint text-ac-soft hover:bg-ac-violaBg hover:text-ac-ink"
                     }`}
                   >
                     {cat}
@@ -97,8 +97,8 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
                         data-testid={`lib-img-${i}`}
                         className={`group relative aspect-video rounded-lg overflow-hidden border-2 transition ${
                           isSelected
-                            ? "border-fucsia shadow-[0_0_20px_rgba(255,46,147,0.6)]"
-                            : "border-white/10 hover:border-ciano/80"
+                            ? "border-ac-rosa"
+                            : "border-ac-line hover:border-ac-teal"
                         }`}
                       >
                         <img
@@ -108,7 +108,7 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
                           className="w-full h-full object-cover transition group-hover:scale-105"
                         />
                         {isSelected && (
-                          <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-fucsia flex items-center justify-center text-white">
+                          <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-ac-rosa flex items-center justify-center text-white">
                             <Check size={14} />
                           </div>
                         )}

@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Store, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Scheda, CLASSE_PRIMARIO } from "@/components/AreaUI";
 
 const MAX_LEN = 1500;
 
@@ -43,35 +42,35 @@ export default function ShopDescriptionCard() {
   const dirty = text.trim() !== saved;
 
   return (
-    <Card data-testid="shop-description-card" className="border-white/10 bg-[#141414] p-6">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
-        <Store size={14} /> Il tuo negozio
-      </div>
-      <p className="mt-2 text-sm text-white/60">
+    <Scheda data-testid="shop-description-card" titolo="Il tuo negozio" tono="rosa" icona={<Store size={15} />}>
+      <p className="text-sm leading-relaxed text-ac-soft">
         Racconta la tua attività ai clienti: storia, specialità, atmosfera. Questo testo apparirà
-        nella sezione <strong className="text-white/80">"Il negozio"</strong> sulla pagina pubblica della tua offerta.
+        nella sezione <strong className="text-ac-ink">"Il negozio"</strong> sulla pagina pubblica della tua offerta.
       </p>
+      <label htmlFor="shop-description" className="sr-only">Descrizione del negozio</label>
       <Textarea
+        id="shop-description"
         data-testid="shop-description-input"
         value={text}
         onChange={(e) => setText(e.target.value.slice(0, MAX_LEN))}
         rows={5}
         placeholder="Es. Dal 1987 la nostra trattoria porta in tavola la vera cucina romana: carbonara mantecata al momento, cacio e pepe con pecorino DOP e un'atmosfera familiare nel cuore di Trastevere…"
-        className="mt-4 bg-black/40 border-white/10 text-white"
+        className="mt-4 rounded-xl border-ac-campo bg-white text-base text-ac-ink"
       />
-      <div className="mt-3 flex items-center justify-between">
-        <span className={`text-xs ${text.length > MAX_LEN - 100 ? "text-gold" : "text-white/40"}`}>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <span className={`text-xs font-bold ${text.length > MAX_LEN - 100 ? "text-ac-ambra" : "text-ac-mute"}`}>
           {text.length}/{MAX_LEN}
         </span>
-        <Button
+        <button
+          type="button"
           data-testid="shop-description-save"
           onClick={save}
           disabled={busy || !dirty}
-          className="rounded-full grad-fucsia-viola text-white px-6"
+          className={`${CLASSE_PRIMARIO} min-h-12 px-6 text-sm`}
         >
-          <Save size={14} className="mr-2" /> {busy ? "Salvataggio…" : "Salva descrizione"}
-        </Button>
+          <Save size={16} aria-hidden="true" /> {busy ? "Salvataggio…" : "Salva descrizione"}
+        </button>
       </div>
-    </Card>
+    </Scheda>
   );
 }

@@ -24,7 +24,7 @@ test('archivio: offerta rifiutata, poi «Correggi e riusa» nel mese prossimo', 
 
     await archivio.getByRole('button', { name: 'Correggi e riusa' }).click();
     await expect(page.getByTestId('disc-title')).toHaveValue(titolo);
-    await expect(page.getByTestId('offer-tab-next')).toHaveClass(/bg-ciano/);
+    await expect(page.getByTestId('offer-tab-next')).toHaveAttribute('aria-pressed', 'true'); // la scheda attiva si riconosce da aria-pressed, non dal colore (cambiato con la variante «Bianco vivo»)
   } finally {
     await chiama(request, 'POST', '/admin/next-offers/window-override', { token: a.token, headers: a.headers, body: { open: null } });
   }

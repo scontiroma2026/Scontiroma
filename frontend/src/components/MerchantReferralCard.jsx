@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Card } from "@/components/ui/card";
+import { Scheda } from "@/components/AreaUI";
 import { Copy, Check, ExternalLink, QrCode, Printer } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
@@ -38,23 +38,16 @@ export default function MerchantReferralCard() {
   };
 
   return (
-    <Card
-      data-testid="merchant-referral-card"
-      className="border-fucsia/30 bg-gradient-to-br from-fucsia/10 via-viola/5 to-black/40 p-6"
-    >
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-fucsia mb-4">
-        <QrCode size={14} /> Il tuo QR personale
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-[auto_1fr]">
-        {/* QR Code */}
-        <div className="flex justify-center md:justify-start">
-          <div className="rounded-xl bg-white p-3 shadow-lg">
+    <Scheda data-testid="merchant-referral-card" titolo="Il tuo QR personale" tono="teal" icona={<QrCode size={15} />}>
+      <div className="grid gap-5 md:grid-cols-[auto_1fr]">
+        {/* QR Code: sempre scuro su bianco, per essere letto bene */}
+        <div className="flex justify-center md:items-start md:justify-start">
+          <div className="rounded-2xl border border-ac-line bg-white p-3">
             <QRCodeSVG
               value={refUrl}
               size={140}
               level="H"
-              fgColor="#0A0A0F"
+              fgColor="#1A1530"
               bgColor="#ffffff"
               includeMargin={false}
             />
@@ -63,51 +56,53 @@ export default function MerchantReferralCard() {
 
         {/* Info + azioni */}
         <div className="min-w-0">
-          <p className="text-sm text-white/80 leading-relaxed">
+          <p className="text-sm leading-relaxed text-ac-soft">
             Metti questo QR in cassa: ogni cliente che si iscrive scansionandolo
-            verrà <strong className="text-fucsia">attribuito al tuo negozio</strong>.
+            verrà <strong className="text-ac-ink">attribuito al tuo negozio</strong>.
             Più clienti porti, più diventi un partner strategico di Sconti Roma.
           </p>
 
           {/* Link URL */}
           <div
             data-testid="referral-url-box"
-            className="mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-black/50 p-2"
+            className="mt-3 flex items-center gap-2 rounded-xl border border-ac-line bg-ac-tint p-1.5 pl-3"
           >
-            <code className="text-[11px] text-ciano flex-1 truncate">{refUrl}</code>
+            <code className="flex-1 truncate text-xs font-bold text-ac-teal">{refUrl}</code>
             <button
+              type="button"
               data-testid="referral-copy"
               onClick={copyLink}
-              className="shrink-0 rounded-md border border-white/15 bg-black/40 hover:bg-fucsia/20 text-white p-1.5 transition"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-ac-campo bg-white text-ac-ink transition hover:bg-ac-tealBg"
               title="Copia link"
+              aria-label="Copia il link"
             >
-              {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+              {copied ? <Check size={16} className="text-ac-verde" /> : <Copy size={16} />}
             </button>
           </div>
 
           {/* CTA */}
-          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <a
               data-testid="ref-open-flyer"
               href={flyerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 justify-center rounded-full border border-fucsia/40 bg-fucsia/10 text-fucsia px-4 py-2 text-sm font-semibold hover:bg-fucsia/20 transition"
+              className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-ac-rosa px-4 text-sm font-extrabold text-ac-rosa transition hover:bg-ac-rosaSoft"
             >
-              <Printer size={14} /> Stampa la mia locandina
+              <Printer size={16} aria-hidden="true" /> Stampa la mia locandina
             </a>
             <a
               data-testid="ref-open-page"
               href={refUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 justify-center rounded-full border border-white/15 bg-transparent text-white/80 px-4 py-2 text-sm hover:bg-white/5 transition"
+              className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-ac-viola px-4 text-sm font-extrabold text-ac-viola transition hover:bg-ac-violaBg/60"
             >
-              <ExternalLink size={14} /> Prova il link
+              <ExternalLink size={16} aria-hidden="true" /> Prova il link
             </a>
           </div>
         </div>
       </div>
-    </Card>
+    </Scheda>
   );
 }
