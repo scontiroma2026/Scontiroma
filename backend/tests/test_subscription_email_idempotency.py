@@ -20,19 +20,49 @@ import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import pytest
 
-# Ensure /app/backend is on sys.path so `import server` / `email_service` work
-sys.path.insert(0, "/app/backend")
+# Database SOLO locale (mai produzione): mongomock in-process oppure MongoDB su localhost.
+MONGO_URL = os.environ.setdefault("TEST_MONGO_URL", os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+_u = urlparse(MONGO_URL)
+if not (_u.scheme == "mongomock" or (_u.scheme == "mongodb" and (_u.hostname or "") in ("localhost", "127.0.0.1", "::1"))):
+    pytest.exit(f"MONGO_URL non locale ({_u.scheme}://{_u.hostname}): test rifiutati.", returncode=2)
+USE_MOCK = _u.scheme == "mongomock"
+os.environ["MONGO_URL"] = "mongodb://localhost:27017" if USE_MOCK else MONGO_URL
+os.environ.setdefault("DB_NAME", "unit_sub_idem")
+os.environ.setdefault("JWT_SECRET", "test-unit-secret-0123456789abcdef")
+os.environ["RESEND_API_KEY"] = ""
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import server  # noqa: E402
 import email_service  # noqa: E402
 
 
-# ---------- helpers ----------
+_LOOP = asyncio.new_event_loop()
+
+
 def run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    return _LOOP.run_until_complete(coro)
+
+
+@pytest.fixture(autouse=True)
+def _db_locale(monkeypatch):
+    # questi percorsi di pagamento esistono solo con l'abbonamento clienti acceso
+    monkeypatch.setenv("CLIENT_SUBSCRIPTION_REQUIRED", "true")
+    if USE_MOCK:
+        import mongomock_motor
+        server.db = mongomock_motor.AsyncMongoMockClient()["unit_sub_idem"]
+    else:
+        # MongoDB vero (CI): un client nuovo legato al ciclo di eventi di questi test.
+        # Quello lasciato da altri test usa un ciclo già chiuso («Event loop is closed»).
+        from motor.motor_asyncio import AsyncIOMotorClient
+        cli = AsyncIOMotorClient(MONGO_URL, io_loop=_LOOP)
+        run(cli.drop_database("unit_sub_idem"))
+        server.db = cli["unit_sub_idem"]
+    yield
 
 
 @pytest.fixture()
@@ -162,20 +192,3 @@ def test_email_failure_does_not_break_subscription(test_user_and_tx, monkeypatch
     active = run(server.db.subscriptions.count_documents(
         {"user_id": ctx["user_id"], "status": "active"}))
     assert active == 1
-
-
-# ---------- Stripe webhook regression: bad signature still 400 ----------
-def test_stripe_webhook_invalid_signature_regression():
-    import requests
-    BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-    if not BASE_URL:
-        with open("/app/frontend/.env") as f:
-            for line in f:
-                if line.startswith("REACT_APP_BACKEND_URL="):
-                    BASE_URL = line.split("=", 1)[1].strip().rstrip("/")
-                    break
-    r = requests.post(f"{BASE_URL}/api/stripe/webhook",
-                      data='{"type":"noop"}',
-                      headers={"Content-Type": "application/json",
-                               "stripe-signature": "t=1,v1=invalid"})
-    assert r.status_code == 400

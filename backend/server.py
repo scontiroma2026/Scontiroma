@@ -14,6 +14,9 @@ from typing import List, Optional, Literal
 
 import bcrypt
 import base64
+import re
+import binascii
+from html import escape as html_escape
 import hmac as hmac_lib
 import hashlib
 import calendar
@@ -21,12 +24,14 @@ import json as _json
 import stripe
 import jwt
 import asyncio
+import time
 import httpx
 import ipaddress
 import socket
 from urllib.parse import urlparse, urljoin
 from email_service import (
     send_password_reset,
+    send_preferito_nuova_offerta,
     send_merchant_approved,
     send_merchant_rejected,
     send_monthly_discounts_notification,
@@ -38,10 +43,15 @@ from email_service import (
     send_next_offer_reminder,
     send_offer_expired,
     send_admin_month_summary,
+    send_welcome_client,
+    send_welcome_merchant,
+    send_admin_new_merchant,
+    send_admin_new_offer,
+    send_account_deleted,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
@@ -404,6 +414,73 @@ class MerchantProfileIn(BaseModel):
     phone: Optional[str] = None
 
 
+# ---------- Orari del negozio (li scrive il commerciante) ----------
+GIORNI_SETTIMANA = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
+_ORA_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+class FasciaOraria(BaseModel):
+    apre: str
+    chiude: str  # se è prima dell'apertura, la fascia finisce dopo mezzanotte (es. 19:30–01:00)
+
+
+class GiornoOrari(BaseModel):
+    chiuso: bool = False
+    fasce: List[FasciaOraria] = []
+
+
+class OrariIn(BaseModel):
+    giorni: List[GiornoOrari]  # 7 giorni, da lunedì a domenica
+    chiusura_straordinaria: bool = False
+    nota_chiusura: Optional[str] = Field(None, max_length=120)
+
+    @model_validator(mode="after")
+    def _controlla(self):
+        if len(self.giorni) != 7:
+            raise ValueError("Servono gli orari di tutti e 7 i giorni")
+        for nome, g in zip(GIORNI_SETTIMANA, self.giorni):
+            if g.chiuso:
+                g.fasce = []
+                continue
+            if not 1 <= len(g.fasce) <= 2:
+                raise ValueError(f"{nome.capitalize()}: indica una o due fasce orarie, oppure «Chiuso»")
+            for f in g.fasce:
+                if not (_ORA_RE.match(f.apre) and _ORA_RE.match(f.chiude)) or f.apre == f.chiude:
+                    raise ValueError(f"{nome.capitalize()}: orario non valido")
+        return self
+
+
+def stato_orari(orari: Optional[dict], ora: datetime) -> Optional[dict]:
+    """«Aperto ora · chiude alle 23:00» oppure «Chiuso · apre domani alle 12:30»."""
+    if not orari or not orari.get("giorni"):
+        return None
+    if orari.get("chiusura_straordinaria"):
+        return {"aperto": False, "testo": "Chiuso temporaneamente", "nota": orari.get("nota_chiusura") or ""}
+    settimana = 7 * 1440
+    minuti = lambda hhmm: int(hhmm[:2]) * 60 + int(hhmm[3:])
+    fasce = []
+    for d, g in enumerate(orari["giorni"]):
+        if g.get("chiuso"):
+            continue
+        for f in g.get("fasce") or []:
+            a, c = minuti(f["apre"]), minuti(f["chiude"])
+            inizio = d * 1440 + a
+            fasce.append((inizio, d * 1440 + c + (1440 if c <= a else 0)))
+    if not fasce:
+        return {"aperto": False, "testo": "Chiuso", "nota": ""}
+    t = ora.weekday() * 1440 + ora.hour * 60 + ora.minute
+    hhmm = lambda m: f"{(m % 1440) // 60:02d}:{m % 60:02d}"
+    for inizio, fine in fasce:
+        for tt in (t, t + settimana):
+            if inizio <= tt < fine:
+                return {"aperto": True, "testo": f"Aperto ora · chiude alle {hhmm(fine)}", "nota": ""}
+    prossima = min((i if i > t else i + settimana) for i, _ in fasce)
+    giorni_dopo = prossima // 1440 - t // 1440
+    quando = ("oggi" if giorni_dopo == 0 else "domani" if giorni_dopo == 1
+              else GIORNI_SETTIMANA[(prossima // 1440) % 7])
+    return {"aperto": False, "testo": f"Chiuso · apre {quando} alle {hhmm(prossima)}", "nota": ""}
+
+
 class StripeCheckoutIn(BaseModel):
     # Ignorato: gli indirizzi di ritorno da Stripe vengono da FRONTEND_URL, non dal browser
     # (altrimenti chiunque potrebbe far tornare il cliente su un sito qualsiasi).
@@ -456,6 +533,21 @@ def current_month_key() -> str:
     return _rome_now().strftime("%Y-%m")
 
 
+def _admin_notify_to() -> str:
+    """Indirizzo a cui arrivano gli avvisi per l'admin."""
+    return os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
+
+
+def _email_in_background(coro, label: str) -> None:
+    """Invia un'email senza far aspettare chi usa l'app; un errore finisce solo nei log."""
+    async def run():
+        try:
+            await coro
+        except Exception as e:
+            logging.warning(f"[email:{label}] non inviata: {e}")
+    asyncio.create_task(run())
+
+
 # ---------- Offerta Mese Prossimo: helpers ----------
 NEXT_OFFER_WINDOW_DAYS = 7
 
@@ -465,6 +557,23 @@ MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
 DISCOUNT_CONTENT_FIELDS = ("title", "description", "original_price", "discounted_price",
                            "image_url", "image_urls", "terms", "plan_ahead", "validity_info",
                            "additional_info", "active", "max_uses_per_month")
+
+MOTIVI_ARCHIVIO = {
+    "replaced_by_next_month": "Scaduta",
+    "expired_no_replacement": "Scaduta",
+    "withdrawn_no_renew": "Ritirata",
+    "rejected": "Rifiutata",
+    "deleted_by_admin": "Eliminata",
+}
+
+
+async def _archivia(doc: dict, motivo: str) -> None:
+    """Copia nell'archivio una versione dell'offerta; ogni copia ha il suo archivio_id
+    (l'id dell'offerta resta lo stesso da un mese all'altro)."""
+    copia = {k: v for k, v in doc.items() if k != "_id"}
+    copia.update({"archivio_id": str(uuid.uuid4()), "archived_at": datetime.now(timezone.utc).isoformat(),
+                  "archive_reason": motivo})
+    await db.discounts_archive.insert_one(copia)
 
 
 def next_month_key() -> str:
@@ -558,6 +667,15 @@ async def register(payload: RegisterIn, response: Response):
     # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)
     if payload.role == "merchant" and doc.get("address"):
         asyncio.create_task(geocode_and_save_merchant(user_id, doc["address"]))
+
+    # Email di benvenuto e, per i commercianti, avviso all'admin (in background)
+    if payload.role == "merchant":
+        _email_in_background(send_welcome_merchant(email, doc.get("name") or "", doc.get("shop_name") or ""), "benvenuto-commerciante")
+        if _admin_notify_to():
+            _email_in_background(send_admin_new_merchant(_admin_notify_to(), doc.get("shop_name") or "", doc.get("category") or "",
+                                                         doc.get("zone") or "", email, doc.get("phone") or ""), "admin-nuovo-commerciante")
+    else:
+        _email_in_background(send_welcome_client(email, doc.get("name") or ""), "benvenuto-cliente")
 
     access = create_token(user_id, email, "access")
     refresh = create_token(user_id, email, "refresh")
@@ -936,6 +1054,8 @@ async def enrich_discount(d: dict) -> dict:
             "lat": merchant.get("lat"),
             "lng": merchant.get("lng"),
             "phone": merchant.get("phone", ""),
+            "orari": merchant.get("orari"),
+            "stato_orari": stato_orari(merchant.get("orari"), _rome_now()),
         }
     if d.get("original_price") and d.get("discounted_price") is not None:
         try:
@@ -984,6 +1104,29 @@ def _month_start_iso() -> str:
 # ---------- Geocoding via Nominatim (OpenStreetMap, gratuito) ----------
 # Rate limit: max 1 req/sec per policy Nominatim. Usa User-Agent identificativo.
 _geocode_cache: dict = {}
+_GEOCODE_CACHE_MAX = 2000
+_nominatim_lock = asyncio.Lock()
+_nominatim_last = 0.0
+
+
+async def _nominatim_turno(max_attesa: float) -> bool:
+    """Una richiesta al secondo verso Nominatim per tutto il server (policy OSMF).
+    Se il turno arriverebbe dopo più di `max_attesa` secondi si rinuncia (False)."""
+    global _nominatim_last
+    async with _nominatim_lock:
+        attesa = _nominatim_last + 1.0 - time.monotonic()
+        if attesa > max_attesa:
+            return False
+        if attesa > 0:
+            await asyncio.sleep(attesa)
+        _nominatim_last = time.monotonic()
+        return True
+
+
+def _cache_put(cache: dict, key: str, value) -> None:
+    if len(cache) >= _GEOCODE_CACHE_MAX:
+        cache.clear()
+    cache[key] = value
 
 async def geocode_address(address: str) -> Optional[dict]:
     """Trasforma un indirizzo stringa in {lat, lng} via Nominatim.
@@ -993,6 +1136,8 @@ async def geocode_address(address: str) -> Optional[dict]:
     key = address.strip().lower()
     if key in _geocode_cache:
         return _geocode_cache[key]
+    if not await _nominatim_turno(max_attesa=60):
+        return None
     try:
         async with httpx.AsyncClient(timeout=8) as client:
             r = await client.get(
@@ -1010,10 +1155,10 @@ async def geocode_address(address: str) -> Optional[dict]:
             return None
         data = r.json()
         if not data:
-            _geocode_cache[key] = None
+            _cache_put(_geocode_cache, key, None)
             return None
         result = {"lat": float(data[0]["lat"]), "lng": float(data[0]["lon"])}
-        _geocode_cache[key] = result
+        _cache_put(_geocode_cache, key, result)
         return result
     except Exception as e:
         logging.warning(f"[geocode] failed for '{address[:50]}': {e}")
@@ -1040,6 +1185,9 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
     key = f"{q.lower()}::{limit}"
     if key in _geocode_suggest_cache:
         return _geocode_suggest_cache[key]
+    # Suggerimenti: se la coda verso Nominatim è lunga si rinuncia subito (niente attese infinite)
+    if not await _nominatim_turno(max_attesa=2):
+        return []
     try:
         async with httpx.AsyncClient(timeout=8) as client:
             r = await client.get(
@@ -1092,7 +1240,7 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
             seen.add(key_disp)
             deduped.append(s)
         out = deduped[:limit]
-        _geocode_suggest_cache[key] = out
+        _cache_put(_geocode_suggest_cache, key, out)
         return out
     except Exception as e:
         logging.warning(f"[geocode_suggest] failed for '{q[:40]}': {e}")
@@ -1194,6 +1342,181 @@ async def get_discount(discount_id: str):
     return {"discount": await enrich_discount(d)}
 
 
+@api.get("/negozio/{merchant_id}")
+async def pagina_negozio(merchant_id: str):
+    """Pagina pubblica a cui porta il QR della locandina: nome del negozio e offerta del mese in corso.
+    Nessun dato personale: solo nome, quartiere, categoria e l'offerta già visibile a tutti."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m or merchant_id in await _merchant_sospesi():
+        raise HTTPException(404, "Negozio non trovato")
+    d = await db.discounts.find_one({"merchant_id": merchant_id, "active": True, "approval_status": "approved"})
+    return {
+        "negozio": {"id": m["id"], "shop_name": m.get("shop_name") or m.get("name"),
+                    "zone": m.get("zone"), "category": m.get("category")},
+        "discount": await enrich_discount(d) if d else None,
+    }
+
+
+# ---------- Condivisione di un'offerta (anteprima del link per WhatsApp e simili) ----------
+def _euro(v) -> str:
+    try:
+        return f"{float(v):.2f}".replace(".", ",")
+    except (TypeError, ValueError):
+        return ""
+
+
+async def _offerta_pubblica(discount_id: str) -> Optional[dict]:
+    """Solo offerte visibili a tutti: approvate, attive, di negozi non sospesi."""
+    d = await db.discounts.find_one({"id": discount_id, "active": True, "approval_status": "approved"})
+    if not d or d.get("merchant_id") in await _merchant_sospesi():
+        return None
+    return d
+
+
+def _base_api(request: Request) -> str:
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    return f"{proto}://{request.url.netloc}"
+
+
+@api.get("/share/o/{discount_id}", response_class=HTMLResponse)
+async def share_offerta(discount_id: str, request: Request):
+    """Pagina minima con i meta Open Graph: l'anteprima mostra foto, titolo e prezzo,
+    poi il browser passa subito alla pagina dell'offerta sul sito."""
+    front = _frontend_url() or "https://scontiroma.it"
+    d = await _offerta_pubblica(discount_id)
+    img = ""
+    if d:
+        m = await db.users.find_one({"id": d.get("merchant_id")}) or {}
+        shop = m.get("shop_name") or m.get("name") or ""
+        dest = f"{front}/discounts/{discount_id}"
+        prezzi = ""
+        if d.get("discounted_price") is not None and d.get("original_price"):
+            prezzi = f" a €{_euro(d['discounted_price'])} invece di €{_euro(d['original_price'])}"
+        titolo = f"{d.get('title', '')}{prezzi}"
+        desc = " · ".join(x for x in (shop, m.get("zone") or "", "Sconti Roma") if x)
+        if d.get("image_url"):
+            img = f"{_base_api(request)}/api/share/o/{discount_id}/img"
+    else:
+        dest = f"{front}/discounts"
+        titolo = "Sconti Roma"
+        desc = "Sconti nei negozi di Garbatella, San Paolo e Marconi."
+    e = html_escape
+    og_img = f'<meta property="og:image" content="{e(img)}">' if img else ""
+    pagina = f"""<!doctype html><html lang="it"><head><meta charset="utf-8">
+<title>{e(titolo)}</title>
+<meta property="og:type" content="website"><meta property="og:site_name" content="Sconti Roma">
+<meta property="og:title" content="{e(titolo)}"><meta property="og:description" content="{e(desc)}">
+<meta property="og:url" content="{e(dest)}">{og_img}
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="refresh" content="0;url={e(dest)}">
+</head><body><a href="{e(dest)}">Apri l'offerta su Sconti Roma</a></body></html>"""
+    return HTMLResponse(pagina, headers={"Cache-Control": "public, max-age=600"})
+
+
+@api.get("/share/o/{discount_id}/img")
+async def share_offerta_img(discount_id: str):
+    d = await _offerta_pubblica(discount_id)
+    src = (d or {}).get("image_url") or ""
+    if src.startswith("data:image/") and ";base64," in src:
+        tipo, dati = src[5:].split(";base64,", 1)
+        if tipo not in ("image/jpeg", "image/png", "image/webp", "image/gif"):
+            raise HTTPException(404, "Immagine non disponibile")
+        try:
+            corpo = base64.b64decode(dati, validate=False)
+        except (ValueError, binascii.Error):
+            raise HTTPException(404, "Immagine non disponibile")
+        return Response(corpo, media_type=tipo, headers={"Cache-Control": "public, max-age=3600",
+                                                         "X-Content-Type-Options": "nosniff"})
+    if src.startswith("https://"):
+        return RedirectResponse(src, status_code=302)
+    raise HTTPException(404, "Immagine non disponibile")
+
+
+# ---------- Negozi preferiti del cliente ----------
+MAX_PREFERITI = 200
+
+
+class AvvisiPreferitiIn(BaseModel):
+    attivo: bool
+
+
+@api.get("/me/preferiti")
+async def preferiti_elenco(user: dict = Depends(require_client)):
+    ids = user.get("preferiti") or []
+    sospesi = await _merchant_sospesi()
+    offerte = []
+    for d in await db.discounts.find({"merchant_id": {"$in": ids}, "active": True,
+                                      "approval_status": "approved"}).to_list(MAX_PREFERITI):
+        if d.get("merchant_id") not in sospesi:
+            offerte.append(await enrich_discount(d))
+    return {"merchant_ids": ids, "offerte": offerte,
+            "avvisi": bool((user.get("consents") or {}).get("avvisi_preferiti"))}
+
+
+@api.post("/me/preferiti/{merchant_id}")
+async def preferiti_aggiungi(merchant_id: str, user: dict = Depends(require_client)):
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"_id": 1}):
+        raise HTTPException(404, "Negozio non trovato")
+    if len(user.get("preferiti") or []) >= MAX_PREFERITI:
+        raise HTTPException(400, "Hai raggiunto il numero massimo di preferiti")
+    await db.users.update_one({"id": user["id"]}, {"$addToSet": {"preferiti": merchant_id}})
+    return {"ok": True}
+
+
+@api.delete("/me/preferiti/{merchant_id}")
+async def preferiti_togli(merchant_id: str, user: dict = Depends(require_client)):
+    await db.users.update_one({"id": user["id"]}, {"$pull": {"preferiti": merchant_id}})
+    return {"ok": True}
+
+
+@api.put("/me/preferiti/avvisi")
+async def preferiti_avvisi(payload: AvvisiPreferitiIn, user: dict = Depends(require_client)):
+    """Consenso (revocabile) a ricevere un'email quando un negozio preferito pubblica l'offerta."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one({"id": user["id"]}, {"$set": {
+        "consents.avvisi_preferiti": payload.attivo,
+        "consents.avvisi_preferiti_at": now_iso,
+    }})
+    return {"avvisi": payload.attivo}
+
+
+def _avvisi_in_background(d: dict) -> None:
+    """Gli avvisi partono dopo la risposta: l'admin non aspetta l'invio delle email."""
+    async def _invia():
+        try:
+            n = await _avvisa_preferiti(d)
+            if n:
+                logging.info(f"[preferiti] {n} avvisi per l'offerta {d.get('id', '')[:8]}")
+        except Exception as e:
+            logging.warning(f"[preferiti] avvisi non inviati: {e}")
+    asyncio.create_task(_invia())
+
+
+async def _avvisa_preferiti(d: dict) -> int:
+    """Email ai clienti che hanno il negozio tra i preferiti e hanno chiesto gli avvisi.
+    Al massimo un avviso per cliente, negozio e mese."""
+    mid = d.get("merchant_id")
+    m = await db.users.find_one({"id": mid}) or {}
+    if not mid or m.get("approved") is False:
+        return 0
+    mese = current_month_key()
+    inviati = 0
+    clienti = await db.users.find({"role": "client", "preferiti": mid,
+                                   "consents.avvisi_preferiti": True}).to_list(None)
+    for c in clienti:
+        chiave = f"{c['id']}:{mid}:{mese}"
+        if await db.avvisi_preferiti.find_one({"id": chiave}):
+            continue
+        await db.avvisi_preferiti.insert_one({"id": chiave, "user_id": c["id"], "merchant_id": mid,
+                                              "mese": mese, "inviato_at": datetime.now(timezone.utc).isoformat()})
+        prezzo = _euro(d["discounted_price"]) if d.get("discounted_price") is not None else ""
+        pieno = _euro(d["original_price"]) if d.get("original_price") else ""
+        await send_preferito_nuova_offerta(c["email"], c.get("name") or "", m.get("shop_name") or "",
+                                           m.get("zone") or "", d.get("title") or "", prezzo, pieno, d["id"])
+        inviati += 1
+    return inviati
+
+
 # ---------- Merchant Routes ----------
 @api.get("/merchants/me/discount")
 async def merchant_get_discount(user: dict = Depends(require_merchant)):
@@ -1226,6 +1549,8 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data["expired_at"] = None
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
+        if existing.get("approval_status") != "pending" and _admin_notify_to():
+            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
     else:
         did = str(uuid.uuid4())
         doc = payload.cleaned()
@@ -1244,6 +1569,8 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         })
         await db.discounts.insert_one(doc)
         d = doc
+        if _admin_notify_to():
+            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
     return {"discount": await enrich_discount(d)}
 
 
@@ -1275,6 +1602,9 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     now_iso = datetime.now(timezone.utc).isoformat()
     data.update({"approval_status": "pending", "approval_note": "", "approved_at": None, "updated_at": now_iso})
     existing = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
+    if (not existing or existing.get("approval_status") != "pending") and _admin_notify_to():
+        _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
+                                                  window["next_month_label"]), "admin-offerta-mese-prossimo")
     if existing:
         await db.next_discounts.update_one({"id": existing["id"]}, {"$set": data})
         nd = await db.next_discounts.find_one({"id": existing["id"]})
@@ -1326,10 +1656,7 @@ async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require
     if payload.no_renew:
         nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": nm})
         if nd:
-            doc = {k: v for k, v in nd.items() if k != "_id"}
-            doc.update({"archived_at": datetime.now(timezone.utc).isoformat(),
-                        "archive_reason": "withdrawn_no_renew"})
-            await db.discounts_archive.insert_one(doc)
+            await _archivia(nd, "withdrawn_no_renew")
             await db.next_discounts.delete_one({"id": nd["id"]})
         await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": nm}})
     else:
@@ -1351,6 +1678,49 @@ async def merchant_update_profile(payload: MerchantProfileIn, user: dict = Depen
             asyncio.create_task(geocode_and_save_merchant(user["id"], updates["address"]))
     u = await db.users.find_one({"id": user["id"]})
     return {"user": sanitize_user(u)}
+
+
+@api.put("/merchants/me/hours")
+async def merchant_update_hours(payload: OrariIn, user: dict = Depends(require_merchant)):
+    orari = payload.model_dump()
+    orari["nota_chiusura"] = (orari.get("nota_chiusura") or "").strip()
+    orari["aggiornati_il"] = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one({"id": user["id"]}, {"$set": {"orari": orari}})
+    return {"orari": orari, "stato": stato_orari(orari, _rome_now())}
+
+
+@api.get("/merchants/me/archive")
+async def merchant_archive(user: dict = Depends(require_merchant)):
+    """Le offerte passate del commerciante (scadute, ritirate, rifiutate, eliminate), dalla più recente."""
+    docs = await db.discounts_archive.find({"merchant_id": user["id"]}).sort("archived_at", -1).to_list(50)
+    out = []
+    for d in docs:
+        if not d.get("archivio_id"):  # copie archiviate prima del 07/10: si assegna l'id ora
+            d["archivio_id"] = str(uuid.uuid4())
+            await db.discounts_archive.update_one({"_id": d["_id"]}, {"$set": {"archivio_id": d["archivio_id"]}})
+        mese = d.get("locked_month") or d.get("target_month") or ""
+        utilizzi = 0
+        if mese:
+            utilizzi = await db.redemptions.count_documents({
+                "discount_id": d.get("id"), "status": "redeemed", "redeemed_at": {"$regex": f"^{mese}"}})
+        out.append({
+            "archivio_id": d["archivio_id"], "title": d.get("title") or "",
+            "original_price": d.get("original_price"), "discounted_price": d.get("discounted_price"),
+            "image_url": d.get("image_url") or "", "mese": mese, "archived_at": d.get("archived_at"),
+            "stato": MOTIVI_ARCHIVIO.get(d.get("archive_reason"), "Archiviata"),
+            "nota": (d.get("approval_note") or "") if d.get("archive_reason") == "rejected" else "",
+            "utilizzi": utilizzi,
+        })
+    return {"archivio": out}
+
+
+@api.get("/merchants/me/archive/{archivio_id}")
+async def merchant_archive_item(archivio_id: str, user: dict = Depends(require_merchant)):
+    """Il contenuto di un'offerta archiviata, per riusarla nel modulo del mese prossimo."""
+    d = await db.discounts_archive.find_one({"archivio_id": archivio_id, "merchant_id": user["id"]})
+    if not d:
+        raise HTTPException(404, "Offerta non trovata nell'archivio")
+    return {"offerta": {k: d.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in d}}
 
 
 @api.get("/merchants/me/stats")
@@ -1416,7 +1786,7 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
     return {
         "merchant_id": user["id"],
         "shop_name": user.get("shop_name"),
-        "referral_url": f"{app_url}/register?ref={user['id']}",
+        "referral_url": f"{app_url}/n/{user['id']}",
         "flyer_url": f"{app_url}/locandina?ref={user['id']}",
     }
 
@@ -2945,6 +3315,8 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
             await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "")
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
+    if d.get("active", True):
+        _avvisi_in_background(d)
     return {"discount": await enrich_discount(d)}
 
 
@@ -2958,6 +3330,9 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
     }})
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
+    d_rif = await db.discounts.find_one({"id": discount_id})
+    if d_rif:
+        await _archivia(d_rif, "rejected")
     try:
         d = await db.discounts.find_one({"id": discount_id})
         m = await db.users.find_one({"id": d.get("merchant_id")}) if d else None
@@ -3052,6 +3427,9 @@ async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = 
         "approval_status": "rejected", "approval_note": payload.reason or "", "approved_at": None}})
     if result.matched_count == 0:
         raise HTTPException(404, "Offerta non trovata")
+    nd_rif = await db.next_discounts.find_one({"id": next_id})
+    if nd_rif:
+        await _archivia(nd_rif, "rejected")
     try:
         nd = await db.next_discounts.find_one({"id": next_id})
         m = await db.users.find_one({"id": nd.get("merchant_id")}) if nd else None
@@ -3152,10 +3530,11 @@ async def admin_update_merchant(merchant_id: str, payload: AdminMerchantUpdate, 
 
 @api.delete("/admin/merchants/{merchant_id}")
 async def admin_delete_merchant(merchant_id: str, user: dict = Depends(require_admin_master)):
-    result = await db.users.delete_one({"id": merchant_id, "role": "merchant"})
-    if result.deleted_count == 0:
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
         raise HTTPException(404, "Commerciante non trovato")
-    await db.discounts.delete_many({"merchant_id": merchant_id})
+    await _erase_user_data(m)
+    await db.users.delete_one({"id": merchant_id, "role": "merchant"})
     return {"ok": True}
 
 
@@ -3173,6 +3552,9 @@ async def admin_update_discount(discount_id: str, payload: AdminDiscountUpdate, 
 
 @api.delete("/admin/discounts/{discount_id}")
 async def admin_delete_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+    d = await db.discounts.find_one({"id": discount_id})
+    if d:
+        await _archivia(d, "deleted_by_admin")
     result = await db.discounts.delete_one({"id": discount_id})
     if result.deleted_count == 0:
         raise HTTPException(404, "Sconto non trovato")
@@ -3293,9 +3675,7 @@ async def _run_month_rollover(force: bool = False) -> dict:
     await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
 
     async def _archive(old: dict, reason: str):
-        doc = {k: v for k, v in old.items() if k != "_id"}
-        doc.update({"archived_at": now_iso, "archive_reason": reason})
-        await db.discounts_archive.insert_one(doc)
+        await _archivia(old, reason)
 
     handled = set()
     promoted = migrated = expired = 0
@@ -3324,6 +3704,10 @@ async def _run_month_rollover(force: bool = False) -> dict:
             sets.update({"id": str(uuid.uuid4()), "merchant_id": mid, "created_at": now_iso})
             await db.discounts.insert_one(sets)
         await db.next_discounts.delete_one({"id": nd["id"]})
+        if st == "approved":  # l'offerta del mese è online: avviso a chi ha il negozio tra i preferiti
+            promossa = await db.discounts.find_one({"merchant_id": mid})
+            if promossa and promossa.get("active", True):
+                _avvisi_in_background(promossa)
 
     # Offerte del mese precedente senza sostituzione → scadono
     stale = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
@@ -4097,11 +4481,15 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
     qr_scans = await db.qr_scans.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     subscriptions = await db.subscriptions.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     consents = await db.consent_logs.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    reviews = await db.reviews.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    app_feedback = await db.app_feedback.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
 
     # Merchant-specific
-    discounts = []
+    discounts, next_discounts, archive = [], [], []
     if user.get("role") == "merchant":
         discounts = await db.discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+        next_discounts = await db.next_discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+        archive = await db.discounts_archive.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
 
     export_doc = {
         "export_generated_at": datetime.now(timezone.utc).isoformat(),
@@ -4112,9 +4500,37 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
         "qr_scans": qr_scans,
         "subscriptions": subscriptions,
         "cookie_consent_log": consents,
+        "reviews": reviews,
+        "app_feedback": app_feedback,
         "merchant_discounts": discounts,
+        "merchant_next_discounts": next_discounts,
+        "merchant_discounts_archive": archive,
     }
     return export_doc
+
+
+async def _erase_user_data(user: dict) -> None:
+    """Cancella tutti i dati collegati a un utente (art. 17 GDPR), tranne l'utente stesso.
+    I dati di pagamento con obbligo fiscale vengono anonimizzati anziché cancellati."""
+    uid = user["id"]
+    # 1. Anonimizza i dati di pagamento (obbligo fiscale 10 anni)
+    anon = {"$set": {"user_id": f"deleted_{uid[:8]}", "anonymized": True,
+                     "anonymized_at": datetime.now(timezone.utc).isoformat()}}
+    for coll in (db.subscriptions, db.payment_transactions, db.renewal_events):
+        await coll.update_many({"user_id": uid}, anon)
+    # 2. Elimina tutto il resto collegato all'utente
+    for coll in (db.redemptions, db.qr_scans, db.consent_logs, db.reviews,
+                 db.app_feedback, db.webauthn_challenges, db.avvisi_preferiti):
+        await coll.delete_many({"user_id": uid})
+    if user.get("email"):
+        await db.login_guard.delete_many({"key": _login_guard_key(user["email"].strip().lower())})
+
+    # 3. Se merchant: offerte (attuale, mese dopo, archivio) e recensioni ricevute
+    if user.get("role") == "merchant":
+        for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews):
+            await coll.delete_many({"merchant_id": uid})
+        await db.avvisi_preferiti.delete_many({"merchant_id": uid})
+        await db.users.update_many({"preferiti": uid}, {"$pull": {"preferiti": uid}})
 
 
 @api.delete("/gdpr/delete-account")
@@ -4126,24 +4542,14 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
     if user.get("role") == "admin":
         raise HTTPException(400, "L'account admin non può essere cancellato via GDPR")
 
-    # 1. Anonimizza subscriptions (obbligo fiscale 10 anni)
-    await db.subscriptions.update_many(
-        {"user_id": uid},
-        {"$set": {"user_id": f"deleted_{uid[:8]}", "anonymized": True, "anonymized_at": datetime.now(timezone.utc).isoformat()}},
-    )
-    # 2. Elimina redemptions, qr_scans, consent_logs, reset_tokens
-    await db.redemptions.delete_many({"user_id": uid})
-    await db.qr_scans.delete_many({"user_id": uid})
-    await db.consent_logs.delete_many({"user_id": uid})
+    await _erase_user_data(user)
 
-    # 3. Se merchant, elimina i suoi discounts
-    if user.get("role") == "merchant":
-        await db.discounts.delete_many({"merchant_id": uid})
-
-    # 4. Elimina l'utente
+    # Elimina l'utente
     await db.users.delete_one({"id": uid})
+    if user.get("email"):
+        _email_in_background(send_account_deleted(user["email"], user.get("name") or ""), "account-cancellato")
 
-    # 5. Logout
+    # Logout
     if response is not None:
         response.delete_cookie("access_token", path="/")
         response.delete_cookie("refresh_token", path="/")

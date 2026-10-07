@@ -119,7 +119,7 @@ export default function Support() {
                 to="/recesso"
                 className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
               >
-                → Come annullare l'abbonamento (Diritto di Recesso 14 giorni)
+                → Diritto di Recesso e chiusura dell'account
               </Link>
             </li>
           ) : (

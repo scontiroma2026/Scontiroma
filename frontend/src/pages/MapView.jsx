@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, ArrowRight, LocateFixed } from "lucide-react";
+import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
 
 const ROME_CENTER = [41.8955, 12.4823];
 
@@ -83,9 +84,6 @@ export default function MapView() {
     );
   };
 
-  // richiedi posizione al primo mount (silenzioso — il browser mostra il prompt)
-  useEffect(() => { requestLocation(); }, []);
-
   useEffect(() => {
     api.get("/zones").then((r) => setZones(r.data.zones || []));
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
@@ -131,8 +129,8 @@ export default function MapView() {
         }
         .leaflet-popup-tip { background: #0A0A0A; border: 1px solid rgba(255,46,147,0.4); }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
-        .leaflet-control-attribution { background: rgba(0,0,0,0.6) !important; color: rgba(255,255,255,0.5) !important; }
-        .leaflet-control-attribution a { color: rgba(0,229,255,0.7) !important; }
+        .leaflet-control-attribution { background: rgba(0,0,0,0.75) !important; color: rgba(255,255,255,0.85) !important; }
+        .leaflet-control-attribution a { color: #00E5FF !important; }
         .leaflet-control-zoom a { background: #141414 !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; }
         .leaflet-control-zoom a:hover { background: #FF2E93 !important; }
       `}</style>
@@ -156,10 +154,14 @@ export default function MapView() {
             className="rounded-full border-ciano/50 bg-ciano/10 text-ciano hover:bg-ciano/20 hover:text-white"
           >
             <LocateFixed size={12} className="mr-1.5" />
-            {geoStatus === "granted" ? "Aggiorna posizione" : "Trova sconti vicino a me"}
+            {geoStatus === "granted" ? "Aggiorna posizione" : "Usa la mia posizione"}
           </Button>
+          {/* La posizione si chiede solo se il cliente tocca il pulsante: mai all'apertura della mappa */}
+          {geoStatus === "idle" && (
+            <span data-testid="geo-invito" className="text-white/70">Vuoi trovare gli sconti vicino a te? La posizione resta sul tuo telefono.</span>
+          )}
           {geoStatus === "denied" && (
-            <span className="text-yellow-300/80">Posizione negata — abilitala nel browser per vedere gli sconti più vicini.</span>
+            <span className="text-yellow-300/80">Posizione non disponibile: puoi attivarla nelle impostazioni del browser.</span>
           )}
           {geoStatus === "requesting" && (
             <span className="text-white/50">Rilevo posizione…</span>
@@ -202,8 +204,8 @@ export default function MapView() {
         <div className="relative overflow-hidden rounded-2xl border-2 border-white/10" style={{ height: "70vh", minHeight: 500 }}>
           <MapContainer center={ROME_CENTER} zoom={13} zoomControl={false} className="h-full w-full" scrollWheelZoom>
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution={OSM_ATTRIBUTION}
+              url={OSM_TILE_URL}
             />
             <ZoomControl position="bottomright" />
             {userPos && <Recenter position={userPos} zoom={14} />}

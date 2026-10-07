@@ -1,17 +1,19 @@
 import { trackClick } from "@/lib/analytics";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api, { formatApiError } from "@/lib/api";
+import api, { API, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store, Share2 } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
 import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
+import OrariNegozio from "@/components/OrariNegozio";
+import CuorePreferito from "@/components/CuorePreferito";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
 // Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
@@ -33,7 +35,7 @@ function normalizePhone(raw) {
     display: trimmed,
     telHref: `tel:${digits}`,
     waHref: `https://wa.me/${waDigits}?text=${encodeURIComponent(
-      "Ciao! Ho l'abbonamento attivo a Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!"
+      "Ciao! Ho trovato la vostra offerta su Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!"
     )}`,
     isMobile,
   };
@@ -129,6 +131,20 @@ export default function DiscountDetail() {
   const m = discount.merchant || {};
   const savings = (discount.original_price - discount.discounted_price).toFixed(2);
 
+  // Condividi con un amico: menu di condivisione del telefono, altrimenti WhatsApp.
+  // Il link passa da una pagina con l'anteprima (foto, titolo, prezzo) e porta all'offerta.
+  const condividi = async () => {
+    const link = `${API}/share/o/${discount.id}`;
+    const euro = (v) => Number(v).toFixed(2).replace(".", ",");
+    const testo = `Guarda questo sconto su Sconti Roma: ${discount.title}${m.shop_name ? ` da ${m.shop_name}` : ""}, €${euro(discount.discounted_price)} invece di €${euro(discount.original_price)}`;
+    trackClick("share_offer");
+    if (navigator.share) {
+      try { await navigator.share({ title: discount.title, text: testo, url: link }); } catch (e) { /* annullato */ }
+      return;
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${testo} ${link}`)}`, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <main data-testid="discount-detail-page" className="mx-auto max-w-6xl px-6 py-10">
       <button onClick={() => nav(-1)} className="mb-6 flex items-center gap-2 text-sm text-white/70 hover:text-terracotta">
@@ -155,6 +171,7 @@ export default function DiscountDetail() {
                 <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
                   −{discount.percent_off}%
                 </div>
+                <CuorePreferito merchantId={m.id} className="absolute right-4 top-4" />
                 {hasMulti && (
                   <>
                     <div className="absolute bottom-3 right-3 rounded-lg bg-black/70 px-3 py-1.5 text-xs font-semibold text-white">
@@ -246,7 +263,7 @@ export default function DiscountDetail() {
                   {discount.percent_off}% di sconto
                 </span>
               </div>
-              <div className="mt-1 text-sm text-white/60">Risparmi <strong className="text-white">€{savings}</strong> con l'abbonamento Sconti Roma</div>
+              <div className="mt-1 text-sm text-white/60">Risparmi <strong className="text-white">€{savings}</strong> con Sconti Roma</div>
 
             {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
             {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (
@@ -278,10 +295,11 @@ export default function DiscountDetail() {
             {/* Badge informativo per NON abbonati */}
             {(!user || user.role !== "client") && discount.max_uses_per_month > 1 && (
               <div className="mt-4 rounded-lg border border-fucsia/30 bg-fucsia/10 px-4 py-2 text-xs text-fucsia">
-                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per abbonato (max 1 al giorno)
+                Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per cliente (max 1 al giorno)
               </div>
             )}
 
+            <OrariNegozio orari={m.orari} stato={m.stato_orari} />
             <Button
               data-testid="redeem-btn"
               onClick={redeem}
@@ -299,6 +317,15 @@ export default function DiscountDetail() {
                 usageInfo.max_uses > 1 && usageInfo.used_count > 0
                   ? `Genera QR (utilizzo ${usageInfo.used_count + 1} di ${usageInfo.max_uses})`
                   : "Mostra QR Code"}
+            </Button>
+            <Button
+              data-testid="share-btn"
+              type="button"
+              variant="outline"
+              onClick={condividi}
+              className="mt-3 w-full rounded-full border-white/20 py-5 text-base font-semibold text-white hover:bg-white/10"
+            >
+              <Share2 size={18} className="mr-2" /> Condividi con un amico
             </Button>
             </div>
           </Card>

@@ -1,4 +1,4 @@
-"""Interruttore CLIENT_SUBSCRIPTION_REQUIRED e rimozione dei residui di Emergent.
+"""Interruttore CLIENT_SUBSCRIPTION_REQUIRED e controlli sui vecchi pagamenti simulati.
 
 Il server gira in-process (httpx + ASGI) contro un MongoDB LOCALE: rifiuta qualsiasi
 host remoto, quindi non può mai toccare il database di produzione.
@@ -225,7 +225,7 @@ def test_acceso_webhook_stripe_attiva_abbonamento_e_qr():
     run(body, required=True)
 
 
-# ---------- Residui di Emergent rimossi ----------
+# ---------- Pagamento simulato rimosso ----------
 
 def test_pagamento_finto_rimosso():
     async def body(c):

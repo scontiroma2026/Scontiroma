@@ -89,6 +89,9 @@ test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun cons
   expect(Math.round(a.width)).toBe(Math.round(b.width));
   // Il «Consiglio furbo» è stato tolto (03/10)
   await expect(page.getByTestId('phone-booking-block')).not.toContainText(/Consiglio|abbonamento/);
+  // Il messaggio che parte su WhatsApp non parla di abbonamento (04/10)
+  const testoWa = decodeURIComponent(new URL(await wa.getAttribute('href')).searchParams.get('text'));
+  expect(testoWa).toBe('Ciao! Ho trovato la vostra offerta su Sconti Roma e vorrei prenotare per usufruire dello sconto. Grazie!');
 });
 
 test('lista sconti: con un solo risultato scrive "1 sconto trovato"', async ({ page, request }) => {
@@ -112,4 +115,25 @@ test('modulo offerta: con il server lento quello che scrivi non viene cancellato
   await page.getByTestId('disc-title').fill('Titolo scritto subito');
   await expect(page.getByTestId('disc-form')).toHaveAttribute('data-loaded', '1');
   await expect(page.getByTestId('disc-title')).toHaveValue('Titolo scritto subito');
+});
+
+test('pagina offerta: «Condividi con un amico» manda il link con l\'anteprima (04/10)', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  const offerta = await creaOffertaApprovata(request, m.token);
+  // Senza menu di condivisione l'app apre WhatsApp: registriamo il link invece di aprirlo
+  await page.addInitScript(() => {
+    delete Navigator.prototype.share;
+    window.__aperti = [];
+    window.open = (u) => { window.__aperti.push(u); return null; };
+  });
+  await page.goto(`/discounts/${offerta.id}`);
+  await page.getByTestId('share-btn').click();
+  const aperti = await page.evaluate(() => window.__aperti);
+  expect(aperti).toHaveLength(1);
+  expect(aperti[0]).toMatch(/^https:\/\/wa\.me\/\?text=/);
+  const testo = new URL(aperti[0]).searchParams.get('text');
+  expect(testo).toContain('Guarda questo sconto su Sconti Roma');
+  expect(testo).toContain(`/api/share/o/${offerta.id}`);
+  const anteprima = await request.get(`http://localhost:8001/api/share/o/${offerta.id}`);
+  expect(await anteprima.text()).toContain('og:title');
 });

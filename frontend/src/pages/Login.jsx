@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [autoTried, setAutoTried] = useState(false);
+  // «Usa un altro account» annulla il Face ID automatico, anche se è già partito
+  const cambiato = useRef(false);
   // Accesso bloccato dal server dopo 5 tentativi sbagliati: fino a quando (ms) e minuti rimasti.
   const [lockedUntil, setLockedUntil] = useState(0);
   const [now, setNow] = useState(Date.now());
@@ -35,6 +37,7 @@ export default function Login() {
   const changeEmail = (v) => { setEmail(v); setLockedUntil(0); };
   // «Usa un altro account»: dimentica l'ultimo account usato su questo telefono.
   const switchAccount = () => {
+    cambiato.current = true;
     try { localStorage.removeItem("last_email"); } catch (_) { /* localStorage non disponibile */ }
     setEmail(""); setPassword(""); setLockedUntil(0); setStep("email");
   };
@@ -52,6 +55,7 @@ export default function Login() {
       toast.success("Bentornato! ✦");
       nav(data.user.role === "merchant" ? "/merchant/dashboard" : data.user.role === "admin" ? "/admin" : "/discounts");
     } catch (e) {
+      if (cambiato.current) return;
       // Face ID non riuscito → si passa a email e password (in silenzio se era il tentativo automatico)
       const isNotAllowed = e?.name === "NotAllowedError" || e?.name === "InvalidStateError";
       if (!autoTried && !isNotAllowed) {
@@ -72,7 +76,7 @@ export default function Login() {
     if (!window.PublicKeyCredential) return; // browser senza WebAuthn
     setAutoTried(true);
     // piccolo delay per permettere al render di stabilizzarsi
-    const t = setTimeout(() => { goBiometric(); }, 400);
+    const t = setTimeout(() => { if (!cambiato.current) goBiometric(); }, 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-tentativo Face ID SOLO al mount: rieseguirlo su cambio deps aprirebbe prompt biometrici indesiderati
   }, []);

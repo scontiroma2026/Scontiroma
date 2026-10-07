@@ -1,7 +1,7 @@
 {
   "short_name": "Sconti Roma",
-  "name": "Sconti Roma — Sblocca la città a €2,99/mese",
-  "description": "Sconti esclusivi nei migliori locali di Roma. €2,99/mese, cancelli quando vuoi.",
+  "name": "Sconti Roma — Sconti nei negozi del tuo quartiere",
+  "description": "Sconti nei negozi di Garbatella, San Paolo e Marconi. Gratis durante la fase di lancio.",
   "icons": [
     {
       "src": "/icon-192.svg",

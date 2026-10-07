@@ -7,6 +7,11 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // Titoli in Fraunces su tutti i telefoni (prima la classe font-serif di Tailwind
+      // vinceva sul CSS e iPhone/Android mostravano font diversi)
+      fontFamily: {
+        serif: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
