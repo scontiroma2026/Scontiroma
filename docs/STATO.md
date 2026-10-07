@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `5604e87`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `4fceb00`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -30,13 +30,14 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `5604e87`
 | #27 | Indirizzo: il civico scritto non si perde, suggerimenti su due righe | 04/10 |
 | #29 | «Condividi con un amico» con anteprima del link; titolo del sito senza 2,99 € | 07/10 |
 | #30 | Orari del negozio scritti dal commerciante, «Aperto ora» sull'offerta | 07/10 |
+| #31 | Negozi preferiti: cuore, vista «Preferiti», avviso via email solo con consenso | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
-| #31 | Negozi preferiti: cuore, vista «Preferiti», avviso via email solo con consenso | controlli verdi |
+| #32 | Archivio delle offerte con «Riusa» / «Correggi e riusa» | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -59,7 +60,7 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `5604e87`
 
 ## Da fare, in ordine
 1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
-2. Archivio delle offerte con "Ripristina" (rifiutate, modificate, eliminate).
+2. Codice del negozio per convalidare gli sconti (opzione C), poi mappe Protomaps + LocationIQ.
 3. Pulizia residui Emergent (vecchi test, `memory/PRD.md`, `.gitconfig`, pacchetti inutilizzati): prima il piano.
 
 ## Domande aperte

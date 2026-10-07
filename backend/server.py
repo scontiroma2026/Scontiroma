@@ -538,6 +538,23 @@ DISCOUNT_CONTENT_FIELDS = ("title", "description", "original_price", "discounted
                            "image_url", "image_urls", "terms", "plan_ahead", "validity_info",
                            "additional_info", "active", "max_uses_per_month")
 
+MOTIVI_ARCHIVIO = {
+    "replaced_by_next_month": "Scaduta",
+    "expired_no_replacement": "Scaduta",
+    "withdrawn_no_renew": "Ritirata",
+    "rejected": "Rifiutata",
+    "deleted_by_admin": "Eliminata",
+}
+
+
+async def _archivia(doc: dict, motivo: str) -> None:
+    """Copia nell'archivio una versione dell'offerta; ogni copia ha il suo archivio_id
+    (l'id dell'offerta resta lo stesso da un mese all'altro)."""
+    copia = {k: v for k, v in doc.items() if k != "_id"}
+    copia.update({"archivio_id": str(uuid.uuid4()), "archived_at": datetime.now(timezone.utc).isoformat(),
+                  "archive_reason": motivo})
+    await db.discounts_archive.insert_one(copia)
+
 
 def next_month_key() -> str:
     now = _rome_now()
@@ -1588,10 +1605,7 @@ async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require
     if payload.no_renew:
         nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": nm})
         if nd:
-            doc = {k: v for k, v in nd.items() if k != "_id"}
-            doc.update({"archived_at": datetime.now(timezone.utc).isoformat(),
-                        "archive_reason": "withdrawn_no_renew"})
-            await db.discounts_archive.insert_one(doc)
+            await _archivia(nd, "withdrawn_no_renew")
             await db.next_discounts.delete_one({"id": nd["id"]})
         await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": nm}})
     else:
@@ -1622,6 +1636,40 @@ async def merchant_update_hours(payload: OrariIn, user: dict = Depends(require_m
     orari["aggiornati_il"] = datetime.now(timezone.utc).isoformat()
     await db.users.update_one({"id": user["id"]}, {"$set": {"orari": orari}})
     return {"orari": orari, "stato": stato_orari(orari, _rome_now())}
+
+
+@api.get("/merchants/me/archive")
+async def merchant_archive(user: dict = Depends(require_merchant)):
+    """Le offerte passate del commerciante (scadute, ritirate, rifiutate, eliminate), dalla più recente."""
+    docs = await db.discounts_archive.find({"merchant_id": user["id"]}).sort("archived_at", -1).to_list(50)
+    out = []
+    for d in docs:
+        if not d.get("archivio_id"):  # copie archiviate prima del 07/10: si assegna l'id ora
+            d["archivio_id"] = str(uuid.uuid4())
+            await db.discounts_archive.update_one({"_id": d["_id"]}, {"$set": {"archivio_id": d["archivio_id"]}})
+        mese = d.get("locked_month") or d.get("target_month") or ""
+        utilizzi = 0
+        if mese:
+            utilizzi = await db.redemptions.count_documents({
+                "discount_id": d.get("id"), "status": "redeemed", "redeemed_at": {"$regex": f"^{mese}"}})
+        out.append({
+            "archivio_id": d["archivio_id"], "title": d.get("title") or "",
+            "original_price": d.get("original_price"), "discounted_price": d.get("discounted_price"),
+            "image_url": d.get("image_url") or "", "mese": mese, "archived_at": d.get("archived_at"),
+            "stato": MOTIVI_ARCHIVIO.get(d.get("archive_reason"), "Archiviata"),
+            "nota": (d.get("approval_note") or "") if d.get("archive_reason") == "rejected" else "",
+            "utilizzi": utilizzi,
+        })
+    return {"archivio": out}
+
+
+@api.get("/merchants/me/archive/{archivio_id}")
+async def merchant_archive_item(archivio_id: str, user: dict = Depends(require_merchant)):
+    """Il contenuto di un'offerta archiviata, per riusarla nel modulo del mese prossimo."""
+    d = await db.discounts_archive.find_one({"archivio_id": archivio_id, "merchant_id": user["id"]})
+    if not d:
+        raise HTTPException(404, "Offerta non trovata nell'archivio")
+    return {"offerta": {k: d.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in d}}
 
 
 @api.get("/merchants/me/stats")
@@ -3231,6 +3279,9 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
     }})
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
+    d_rif = await db.discounts.find_one({"id": discount_id})
+    if d_rif:
+        await _archivia(d_rif, "rejected")
     try:
         d = await db.discounts.find_one({"id": discount_id})
         m = await db.users.find_one({"id": d.get("merchant_id")}) if d else None
@@ -3325,6 +3376,9 @@ async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = 
         "approval_status": "rejected", "approval_note": payload.reason or "", "approved_at": None}})
     if result.matched_count == 0:
         raise HTTPException(404, "Offerta non trovata")
+    nd_rif = await db.next_discounts.find_one({"id": next_id})
+    if nd_rif:
+        await _archivia(nd_rif, "rejected")
     try:
         nd = await db.next_discounts.find_one({"id": next_id})
         m = await db.users.find_one({"id": nd.get("merchant_id")}) if nd else None
@@ -3447,6 +3501,9 @@ async def admin_update_discount(discount_id: str, payload: AdminDiscountUpdate, 
 
 @api.delete("/admin/discounts/{discount_id}")
 async def admin_delete_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+    d = await db.discounts.find_one({"id": discount_id})
+    if d:
+        await _archivia(d, "deleted_by_admin")
     result = await db.discounts.delete_one({"id": discount_id})
     if result.deleted_count == 0:
         raise HTTPException(404, "Sconto non trovato")
@@ -3567,9 +3624,7 @@ async def _run_month_rollover(force: bool = False) -> dict:
     await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
 
     async def _archive(old: dict, reason: str):
-        doc = {k: v for k, v in old.items() if k != "_id"}
-        doc.update({"archived_at": now_iso, "archive_reason": reason})
-        await db.discounts_archive.insert_one(doc)
+        await _archivia(old, reason)
 
     handled = set()
     promoted = migrated = expired = 0
