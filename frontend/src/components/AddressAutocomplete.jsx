@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Loader2, Check, Search, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
+import { civicoDigitato, conCivico } from "@/lib/indirizzo";
 
 /**
  * Autocomplete per indirizzi italiani via Nominatim (proxy backend).
@@ -25,6 +26,7 @@ export default function AddressAutocomplete({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState(false);
+  const [civicoTenuto, setCivicoTenuto] = useState("");
   const timerRef = useRef(null);
   const wrapRef = useRef(null);
 
@@ -67,10 +69,14 @@ export default function AddressAutocomplete({
 
   const handleInput = (e) => {
     setPicked(false);
+    setCivicoTenuto("");
     onChange(e.target.value);
   };
 
-  const pick = (s) => {
+  const pick = (scelto) => {
+    // Se il suggerimento non ha il civico ma l'utente l'ha scritto, non lo perdiamo.
+    const s = conCivico(scelto, civicoDigitato(value));
+    setCivicoTenuto(s.civico_digitato ? s.house_number : "");
     setPicked(true);
     onChange(s.display, {
       lat: s.lat,
@@ -83,6 +89,8 @@ export default function AddressAutocomplete({
     setSuggestions([]);
     setOpen(false);
   };
+
+  const civico = civicoDigitato(value);
 
   return (
     <div ref={wrapRef} className="relative" data-testid={testId}>
@@ -154,19 +162,19 @@ export default function AddressAutocomplete({
                   <div className="flex items-start gap-2">
                     <MapPin size={12} className={`mt-1 shrink-0 ${s.has_house_number ? "text-fucsia" : "text-yellow-400"}`} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm text-white truncate flex items-center gap-2">
-                        {s.display}
+                      <div className="text-sm text-white break-words flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {conCivico(s, civico).display}
                         {!s.has_house_number && (
                           <span
                             className="text-[9px] text-yellow-300 border border-yellow-500/40 bg-yellow-500/10 rounded px-1.5 py-0.5 shrink-0"
-                            title="Manca il numero civico — aggiungilo nella tua query"
+                            title="Il numero civico non è nella mappa: teniamo quello che hai scritto"
                           >
-                            senza civico
+                            {civico ? `civico ${civico} da te` : "senza civico"}
                           </span>
                         )}
                       </div>
                       {s.full_display_name && s.full_display_name !== s.display && (
-                        <div className="text-[10px] text-white/50 truncate">
+                        <div className="text-[11px] text-white/50 line-clamp-2 break-words">
                           {s.full_display_name}
                         </div>
                       )}
@@ -185,6 +193,11 @@ export default function AddressAutocomplete({
       {picked && (
         <div className="mt-1 text-[10px] text-green-400 flex items-center gap-1">
           <Check size={10} /> Indirizzo verificato — comparirà sulla mappa
+        </div>
+      )}
+      {picked && civicoTenuto && (
+        <div data-testid={`${testId}-civico-tenuto`} className="mt-1 text-[11px] text-white/60">
+          Abbiamo tenuto il civico {civicoTenuto} che hai scritto: controlla la posizione sulla mappa.
         </div>
       )}
     </div>
