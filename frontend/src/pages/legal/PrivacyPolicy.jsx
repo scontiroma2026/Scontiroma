@@ -69,7 +69,8 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong>Dati di utilizzo</strong>: sconti richiesti, codici QR
-            generati, riscatti effettuati, recensioni lasciate.
+            generati, riscatti effettuati, recensioni lasciate, negozi salvati
+            tra i preferiti.
           </li>
           <li>
             <strong>Dati condivisi con il commerciante</strong>: quando il
@@ -122,6 +123,10 @@ export default function PrivacyPolicy() {
               <tr>
                 <td className="border border-white/10 p-2">Comunicazioni promozionali</td>
                 <td className="border border-white/10 p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
+              </tr>
+              <tr>
+                <td className="border border-white/10 p-2">Avvisi via email quando un negozio preferito pubblica l'offerta del mese (al massimo uno per negozio al mese)</td>
+                <td className="border border-white/10 p-2">Consenso (art. 6.1.a GDPR), revocabile dall'app con «Non avvisarmi più»</td>
               </tr>
               <tr>
                 <td className="border border-white/10 p-2">Statistiche anonime di visita</td>

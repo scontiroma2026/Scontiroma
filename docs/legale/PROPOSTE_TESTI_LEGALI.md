@@ -53,6 +53,8 @@
 | 3. Finalità | «Gestione abbonamento e pagamenti» | «Pagamenti dei commercianti (solo dopo la fase di lancio e con conferma)» |
 | 3. Finalità | «welcome, OTP, recupero PIN» | «benvenuto, recupero password, promemoria di scadenza delle offerte» |
 | 3. (nuova riga) | — | Statistiche anonime di visita: consenso |
+| 2. Dati di utilizzo (07/10) | — | + negozi salvati tra i preferiti |
+| 3. (nuova riga, 07/10) | — | Avvisi via email sulle offerte dei negozi preferiti: consenso, revocabile («Non avvisarmi più») |
 | 4.1 (nuovo) | — | **OpenStreetMap Foundation** (immagini della mappa), **Google Fonts** (caratteri, a ogni pagina), **Google Maps** (solo «Portami qui»), **Nominatim** (riceve l'indirizzo dal nostro server, non l'IP dell'utente) |
 | 5. Extra-UE | Stripe, PayPal, Resend, Render, Google | + OpenStreetMap Foundation (Regno Unito) |
 | 6. Conservazione | Account: durata + 12 mesi; QR 24 mesi; recensioni fino a cancellazione | Finché l'account è attivo, cancellazione immediata quando lo elimini; contabili 10 anni non collegati all'account |
