@@ -38,13 +38,13 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 | #35 | La scelta sui cookie scade dopo 6 mesi, come scritto nella Cookie Policy | 07/10 |
 | #36 | QR della locandina verso la pagina del negozio con l'offerta del mese; negozio di provenienza ricordato 30 giorni; testi nuovi della locandina | 07/10 |
 | #37 | Pulizia residui Emergent, parte 1: file e vecchi test; bozze dei messaggi per i commercianti | 07/10 |
+| #26 | Testi legali aggiornati (Privacy, Termini, Recesso, Cookie): titolare Euro Linea S.r.l.s., niente abbonamento clienti, seconda casella per i commercianti, cookie e dati reali. **Pubblicati su ordine del titolare; il consulente deve ancora validarli** | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
-| #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
@@ -68,12 +68,14 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 - Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B) in coda.
 - Codice del negozio (opzione C): in pausa (07/10), da riconsiderare; se si fa, «Ricorda su questo telefono» vale al massimo 90 giorni.
 - Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
+- Area commerciante (07/10): scelta la variante «D · Bianco vivo» (fondo chiaro, testi e pulsanti colorati, due soli caratteri: Fraunces e Manrope). Da realizzare.
+- Testi legali (07/10): titolare Euro Linea S.r.l.s.; i testi sono pubblicati ma il consulente deve ancora validarli (domande in docs/legale/PROPOSTE_TESTI_LEGALI.md). Sede legale e PEC da aggiungere.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
-1. PR legale/GDPR: codice unito (#25); testi evidenziati di Privacy, Cookie, Termini, Recesso e dichiarazione di età nella #26 per il consulente. Resta: "Mario R." solo al commerciante collegato (`/api/qr/verify` pubblico), in attesa della tua decisione.
+1. Testi legali: validazione del consulente; sede legale e PEC da inserire; "Mario R.": l'indirizzo `/api/qr/verify` è pubblico, da decidere se restringerlo.
 2. Mappe Protomaps + LocationIQ. (Codice del negozio: in pausa.)
-3. Area commerciante più sobria e professionale, mantenendo il carattere del marchio: prima una bozza da approvare.
+3. Area commerciante nella variante «D · Bianco vivo».
 4. Pulizia Emergent: file e test (#37) e pacchetti (questa PR); resta da valutare `frontend/plugins/health-check`.
 
 ## Domande aperte

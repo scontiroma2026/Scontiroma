@@ -35,6 +35,7 @@ export default function Register() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [acceptedSpecific, setAcceptedSpecific] = useState(false);   // solo commercianti
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   // Ricorda credenziali su questo dispositivo (default: attivo, come UX consumer)
   const [rememberCreds, setRememberCreds] = useState(true);
@@ -53,11 +54,16 @@ export default function Register() {
     e.preventDefault();
     trackClick("register_started");
     if (!acceptedLegal) {
-      toast.error("Devi accettare Termini, Privacy e Cookie Policy per continuare");
+      toast.error("Devi dichiarare di avere almeno 18 anni e accettare Termini, Privacy e Cookie Policy per continuare");
+      return;
+    }
+    if (role === "merchant" && !acceptedSpecific) {
+      toast.error("Per continuare approva specificamente le clausole indicate sotto i Termini (artt. 7, 9 e 10)");
       return;
     }
     setLoading(true);
     const payload = { ...form, role, marketing_opt_in: marketingOptIn, legal_accepted: true };
+    if (role === "merchant") payload.legal_specific_accepted = true;
     if (role === "client") {
       payload.name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
       delete payload.first_name; delete payload.last_name;
@@ -232,7 +238,7 @@ export default function Register() {
                 className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
               />
               <span className="text-xs text-white/80 leading-relaxed">
-                <span className="text-fucsia">*</span> Accetto i{" "}
+                <span className="text-fucsia">*</span> Dichiaro di avere almeno 18 anni, accetto i{" "}
                 <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold" data-testid="link-terms">Termini e Condizioni</a>
                 {" "}e confermo di aver letto la{" "}
                 <a href={LEGAL_LINKS.privacy} target="_blank" rel="noopener noreferrer" className="text-ciano hover:underline font-semibold" data-testid="link-privacy">Privacy Policy</a>
@@ -240,6 +246,23 @@ export default function Register() {
                 <a href={LEGAL_LINKS.cookie} target="_blank" rel="noopener noreferrer" className="text-neon hover:underline font-semibold" data-testid="link-cookie">Cookie Policy</a>.
               </span>
             </label>
+
+            {role === "merchant" && (
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  data-testid="legal-specific"
+                  type="checkbox"
+                  checked={acceptedSpecific}
+                  onChange={(e) => setAcceptedSpecific(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
+                />
+                <span className="text-xs text-white/80 leading-relaxed">
+                  <span className="text-fucsia">*</span> Ai sensi degli artt. 1341 e 1342 c.c. approvo specificamente le clausole dei{" "}
+                  <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold">Termini e Condizioni</a>
+                  {" "}sulle <strong>limitazioni di responsabilità (art. 7)</strong>, sulle <strong>modifiche ai Termini (art. 9)</strong> e sul <strong>foro competente (art. 10)</strong>.
+                </span>
+              </label>
+            )}
 
             <label className="flex items-start gap-3 cursor-pointer">
               <input
@@ -272,7 +295,7 @@ export default function Register() {
             </span>
           </label>
 
-          <Button data-testid="reg-submit" type="submit" disabled={loading || !acceptedLegal} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
+          <Button data-testid="reg-submit" type="submit" disabled={loading || !acceptedLegal || (role === "merchant" && !acceptedSpecific)} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Creazione…" : "Crea account"}
           </Button>
         </form>

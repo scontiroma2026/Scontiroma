@@ -30,11 +30,15 @@ test('registrazione commerciante dal sito', async ({ page, request }) => {
   await page.getByTestId('reg-zone').selectOption('Garbatella');
   await page.getByTestId('reg-category').selectOption('Ristorante');
   await page.getByTestId('legal-accept').click();
+  // I commercianti approvano anche, a parte, le clausole specifiche dei Termini (artt. 7, 9, 10)
+  await expect(page.getByTestId('reg-submit')).toBeDisabled();
+  await page.getByTestId('legal-specific').click();
   await page.getByTestId('reg-submit').click();
   await expect(page).toHaveURL(/\/setup-security/);
   const r = await login(request, email, PASSWORD);
   expect(r.status).toBe(200);
   expect(r.data.user).toMatchObject({ role: 'merchant', shop_name: "Osteria dell'Esempio", zone: 'Garbatella' });
+  expect(r.data.user.consents.legal_specific_accepted).toBe(true);
   expect(r.data.user.consents.legal_version).toBeTruthy();
 });
 

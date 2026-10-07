@@ -346,6 +346,8 @@ class RegisterIn(BaseModel):
     address: Optional[str] = None
     # GDPR consents:
     legal_accepted: Optional[bool] = False
+    # Solo commercianti: approvazione specifica delle clausole dei Termini (artt. 1341-1342 c.c.)
+    legal_specific_accepted: Optional[bool] = False
     marketing_opt_in: Optional[bool] = False
     # Tracking referral: merchant_id da cui l'iscritto proviene (QR personalizzato)
     referred_by: Optional[str] = None
@@ -642,6 +644,8 @@ async def register(payload: RegisterIn, response: Response):
             "legal_accepted": bool(payload.legal_accepted),
             "legal_accepted_at": now_iso if payload.legal_accepted else None,
             "legal_version": LEGAL_VERSION if payload.legal_accepted else None,
+            "legal_specific_accepted": bool(payload.legal_specific_accepted and payload.role == "merchant"),
+            "legal_specific_accepted_at": now_iso if (payload.legal_specific_accepted and payload.role == "merchant") else None,
             "marketing_opt_in": bool(payload.marketing_opt_in),
             "marketing_opt_in_at": now_iso if payload.marketing_opt_in else None,
         },

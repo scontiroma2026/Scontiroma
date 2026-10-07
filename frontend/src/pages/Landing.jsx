@@ -172,7 +172,7 @@ export default function Landing() {
         </div>
         {[
           { titolo: "Per chi usa gli sconti", voci: [
-            { q: "Quanto costa Sconti Roma?", a: "Durante la fase di lancio Sconti Roma è gratuito: non serve nessun abbonamento e non ti chiediamo dati di pagamento. Se in futuro cambierà qualcosa te lo diremo prima, e nessun pagamento partirà senza la tua conferma." },
+            { q: "Quanto costa Sconti Roma?", a: "Per ora Sconti Roma è gratuito per chi usa gli sconti: registrarti e usare le offerte non costa nulla e non ti chiediamo dati di pagamento. Se in futuro cambiasse qualcosa te lo diremo con almeno 30 giorni di anticipo, e nessun pagamento partirà senza la tua conferma." },
             { q: "Come funziona uno sconto?", a: "Registrati, scegli un negozio, apri l'offerta e premi «Mostra QR Code». Mostri il QR al banco, il commerciante lo scansiona e paghi il prezzo scontato." },
             { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e usi scorretti: il codice è unico e vale solo per pochi secondi, così il commerciante sa che lo sconto è davvero tuo." },
             { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },

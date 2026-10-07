@@ -6,22 +6,23 @@ export default function Termini() {
       <LegalLayout
         kicker="Documento legale"
         title="Termini e Condizioni d'Uso"
-        updatedAt="Febbraio 2026"
+        updatedAt="Ottobre 2026"
       >
         <p>
           I presenti Termini e Condizioni ("Termini") disciplinano l'accesso e
           l'utilizzo della piattaforma <strong>Sconti Roma</strong> (di seguito
           "il Servizio" o "la Piattaforma") gestita da{" "}
-          <strong>Sconti Roma</strong>. Registrandoti al Servizio dichiari di
+          <strong>Euro Linea S.r.l.s.</strong> (Partita IVA 03240220644),
+          di seguito "Sconti Roma". Registrandoti al Servizio dichiari di
           aver letto, compreso e accettato integralmente i presenti Termini.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">1. Oggetto del Servizio</h2>
         <p>
           Sconti Roma è una piattaforma digitale che mette in contatto{" "}
-          <strong>utenti abbonati</strong> ("Clienti") con{" "}
-          <strong>esercenti locali</strong> ("Commercianti") della zona di
-          Roma, permettendo ai primi di accedere a sconti esclusivi presso i
+          <strong>utenti registrati</strong> ("Clienti") con{" "}
+          <strong>esercenti locali</strong> ("Commercianti") dei quartieri
+          Garbatella, San Paolo e Marconi a Roma, permettendo ai primi di accedere a sconti esclusivi presso i
           punti vendita dei secondi mediante l'esposizione di codici QR
           dinamici.
         </p>
@@ -34,15 +35,19 @@ export default function Termini() {
 
         <h2 className="font-serif text-2xl text-white mt-8">2. Registrazione</h2>
         <ul className="list-disc pl-6 space-y-2">
-          <li>Devi avere almeno <strong>18 anni</strong> per registrarti.</li>
           <li>
-            Devi fornire dati veritieri, aggiornati e completi. Sei
-            responsabile della custodia delle tue credenziali (password, PIN,
-            Face ID).
+            Devi avere almeno <strong>18 anni</strong> per registrarti: con la
+            registrazione lo dichiari espressamente.
           </li>
           <li>
-            Un solo account per persona. Account multipli o fittizi verranno
-            chiusi senza rimborso.
+            Devi fornire dati veritieri, aggiornati e completi. Sei
+            responsabile della custodia delle tue credenziali (password e, se
+            lo attivi, Face ID). Dopo 5 tentativi di accesso errati l'accesso
+            viene bloccato per 15 minuti.
+          </li>
+          <li>
+            Un solo account per persona. Account multipli o fittizi possono
+            essere chiusi.
           </li>
           <li>
             Sconti Roma si riserva il diritto di sospendere o chiudere account
@@ -50,41 +55,48 @@ export default function Termini() {
           </li>
         </ul>
 
-        <h2 className="font-serif text-2xl text-white mt-8">3. Abbonamento a pagamento</h2>
+        <h2 className="font-serif text-2xl text-white mt-8">3. Costi del servizio</h2>
+        <h3 className="font-serif text-xl text-white mt-6">3.1 Per i Clienti</h3>
         <p>
-          L'accesso agli sconti richiede la sottoscrizione di un abbonamento
-          mensile a rinnovo automatico:
+          Durante la <strong>fase di lancio</strong> la registrazione e l'uso
+          degli sconti sono <strong>gratuiti</strong> per i Clienti. Non è
+          richiesto alcun dato di pagamento. Se in futuro
+          venissero introdotti servizi a pagamento per i Clienti, saranno
+          comunicati con almeno 30 giorni di preavviso e si attiveranno solo
+          con la tua accettazione espressa.
         </p>
+        <h3 className="font-serif text-xl text-white mt-6">3.2 Per i Commercianti</h3>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Prezzo</strong>: €2,99 al mese (IVA inclusa quando
-            applicabile).
+            <strong>Fase di lancio</strong>: la partecipazione è gratuita per
+            circa 2 mesi. La data di fine viene comunicata via email e
+            nell'area del Commerciante.
+          </li>
+          <li>
+            <strong>Dopo la fase di lancio</strong>: €4,99 al mese, IVA
+            inclusa.
+          </li>
+          <li>
+            <strong>Prezzo bloccato</strong> per i Commercianti che aderiscono
+            durante la fase di lancio, finché restano iscritti senza
+            interruzioni.
+          </li>
+          <li>
+            <strong>Preavviso di 30 giorni</strong> prima della fine della fase
+            di lancio e di qualsiasi variazione di prezzo.
+          </li>
+          <li>
+            <strong>Nessun addebito senza la tua conferma</strong>: il
+            pagamento parte solo se lo confermi espressamente. Se non confermi,
+            non paghi nulla e la tua offerta non viene più pubblicata.
+          </li>
+          <li>
+            <strong>Nessun vincolo</strong>: puoi smettere quando vuoi, anche
+            scegliendo «Non rinnovo» per l'offerta del mese.
           </li>
           <li>
             <strong>Pagamento</strong>: tramite Stripe o PayPal. Non
-            memorizziamo i dati della tua carta.
-          </li>
-          <li>
-            <strong>Rinnovo automatico</strong>: l'abbonamento si rinnova
-            automaticamente ogni mese finché non lo disattivi dalla tua area
-            personale (sezione "Gestisci abbonamento").
-          </li>
-          <li>
-            <strong>Nessun vincolo di durata</strong>: puoi disdire in
-            qualsiasi momento. La disdetta ha effetto alla fine del periodo di
-            fatturazione in corso.
-          </li>
-          <li>
-            <strong>Mancato pagamento</strong>: se il pagamento al rinnovo non
-            va a buon fine, l'abbonamento viene <strong>sospeso
-            immediatamente</strong> e non potrai più utilizzare gli sconti.
-            Hai <strong>7 giorni</strong> per completare il pagamento (Stripe e
-            PayPal riproveranno automaticamente in questo periodo): se
-            l'operazione va a buon fine, l'abbonamento riprende subito e viene
-            rinnovato di 30 giorni. Se trascorrono <strong>7 giorni senza
-            pagamento</strong>, l'abbonamento <strong>decade
-            definitivamente</strong> e per riattivarlo dovrai iscriverti di
-            nuovo.
+            memorizziamo i dati della carta.
           </li>
         </ul>
 
@@ -107,14 +119,14 @@ export default function Termini() {
           </li>
           <li>
             Gli sconti sono riservati <strong>esclusivamente al titolare
-            dell'abbonamento</strong>: non possono essere utilizzati per
+            dell'account</strong>: non possono essere utilizzati per
             estendere il beneficio ad accompagnatori, amici o familiari non
-            abbonati. L'uso improprio ripetuto può comportare la sospensione
+            registrati. L'uso improprio ripetuto può comportare la sospensione
             dell'account.
           </li>
           <li>
-            La condivisione del codice QR con terzi è vietata e comporta la
-            chiusura immediata dell'account senza rimborso.
+            La condivisione del codice QR con terzi è vietata e può comportare
+            la sospensione o la chiusura dell'account.
           </li>
           <li>
             Sconti Roma non garantisce la disponibilità dello sconto presso il
@@ -130,6 +142,14 @@ export default function Termini() {
         <ul className="list-disc pl-6 space-y-2">
           <li>Rispettare lo sconto pubblicato per l'intero mese di validità.</li>
           <li>
+            Sapere che le offerte sono <strong>mensili e non si rinnovano
+            automaticamente</strong>: ogni offerta termina l'ultimo giorno del
+            mese. Per continuare il Commerciante carica l'offerta del mese
+            successivo, che viene pubblicata dopo l'approvazione; in
+            alternativa può scegliere «Non rinnovo». Prima della scadenza
+            riceve dei promemoria via email.
+          </li>
+          <li>
             Fornire informazioni veritiere su attività, prodotto, prezzo e
             zona.
           </li>
@@ -139,7 +159,7 @@ export default function Termini() {
             italiana.
           </li>
           <li>
-            Non discriminare gli abbonati Sconti Roma rispetto agli altri
+            Non discriminare i Clienti Sconti Roma rispetto agli altri
             clienti.
           </li>
           <li>
@@ -148,9 +168,9 @@ export default function Termini() {
             rossa (incluso il messaggio "limite giornaliero raggiunto": il
             cliente ha già usato lo sconto lo stesso giorno) applicare il
             prezzo pieno. Gli utilizzi multipli mensili valgono per{" "}
-            <strong>massimo 1 utilizzo al giorno per abbonato</strong> e non
+            <strong>massimo 1 utilizzo al giorno per Cliente</strong> e non
             sono cumulabili nella stessa visita per coprire persone non
-            abbonate.
+            registrate.
           </li>
         </ul>
 
@@ -159,27 +179,27 @@ export default function Termini() {
             <span className="text-neon">✎</span> Modifiche o rimozione del negozio
           </h3>
           <p className="mt-2 text-sm">
-            Il Commerciante che desidera <strong>modificare</strong> i propri
-            dati (nome attività, indirizzo, categoria, telefono),{" "}
-            <strong>sospendere temporaneamente</strong> l'esposizione dello
-            sconto oppure <strong>rimuovere definitivamente</strong> il negozio
-            dalla piattaforma e dalla mappa deve inviare richiesta scritta a{" "}
+            Il Commerciante può in qualsiasi momento, dal proprio profilo,{" "}
+            <strong>modificare</strong> i propri dati, scegliere{" "}
+            <strong>«Non rinnovo»</strong> per l'offerta del mese oppure{" "}
+            <strong>eliminare l'account</strong>: l'eliminazione rimuove subito
+            il negozio dalla piattaforma e dalla mappa e cancella i dati
+            collegati.
+          </p>
+          <p className="mt-2 text-sm">
+            Per <strong>sospendere temporaneamente</strong> l'esposizione dello
+            sconto o per qualsiasi altra richiesta scrivi a{" "}
             <a
               href="mailto:partner@scontiroma.it?subject=Richiesta%20modifica%2Frimozione%20negozio"
               className="text-neon hover:underline font-semibold"
               data-testid="link-partner-modifica"
             >
               partner@scontiroma.it
-            </a>{" "}
-            con un <strong>preavviso minimo di 15 giorni</strong> rispetto alla
-            data di efficacia richiesta.
-          </p>
-          <p className="mt-2 text-sm">
-            Sconti Roma processerà la richiesta entro 5 giorni lavorativi dalla
-            ricezione e confermerà la data effettiva di applicazione via email.
-            Il preavviso di 15 giorni serve a permettere agli abbonati che
-            hanno già visualizzato l'offerta di completare eventuali riscatti
-            in corso.
+            </a>
+            : rispondiamo entro 5 giorni lavorativi e ti confermiamo via email
+            la data di applicazione. Le offerte già mostrate ai Clienti nel mese
+            in corso possono essere completate solo se il negozio non viene
+            rimosso.
           </p>
           <p className="mt-2 text-xs text-white/60">
             Per candidature di nuovi negozi e collaborazioni B2B scrivi allo
@@ -195,11 +215,13 @@ export default function Termini() {
           </p>
         </div>
 
-        <h2 className="font-serif text-2xl text-white mt-8">6. Diritto di recesso</h2>
+        <h2 className="font-serif text-2xl text-white mt-8">6. Recesso e cancellazione</h2>
         <p>
-          Gli utenti Consumatori possono esercitare il diritto di recesso
-          entro 14 giorni dalla sottoscrizione, come previsto dal Codice del
-          Consumo (D.Lgs. 206/2005). Per le modalità dettagliate consulta la{" "}
+          Puoi eliminare il tuo account in qualsiasi momento dal profilo
+          ("Elimina il mio account"). Per gli eventuali servizi a pagamento
+          rivolti ai Consumatori vale il diritto di recesso di 14 giorni
+          previsto dal Codice del Consumo (D.Lgs. 206/2005). Per le modalità
+          dettagliate consulta la{" "}
           <a href="/recesso" className="text-fucsia hover:underline">
             pagina Diritto di Recesso
           </a>
@@ -221,10 +243,17 @@ export default function Termini() {
           </li>
         </ul>
         <p>
-          Nei limiti massimi consentiti dalla legge, la responsabilità
-          complessiva di Sconti Roma nei confronti dell'utente è limitata
-          all'importo pagato dall'utente stesso nei 12 mesi precedenti
-          l'evento dannoso.
+          <strong>Clienti (consumatori).</strong> La responsabilità di Sconti
+          Roma resta quella prevista dalla legge: nulla in questi Termini
+          limita o esclude la responsabilità per dolo o colpa grave, per danni
+          alla persona o per ciò che la legge non permette di escludere, né
+          i diritti inderogabili del consumatore.
+        </p>
+        <p>
+          <strong>Commercianti (professionisti).</strong> Nei limiti consentiti
+          dalla legge, la responsabilità complessiva di Sconti Roma è limitata
+          all'importo pagato dal Commerciante nei 12 mesi precedenti l'evento
+          dannoso, salvi i casi di dolo o colpa grave.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">8. Proprietà intellettuale</h2>
@@ -238,7 +267,9 @@ export default function Termini() {
           Le fotografie e i testi caricati dai Commercianti restano di loro
           proprietà; con la pubblicazione concedono a Sconti Roma una licenza
           non esclusiva, gratuita e revocabile per l'utilizzo sulla
-          Piattaforma.
+          Piattaforma. Il Commerciante garantisce di avere i diritti su foto
+          e testi che carica, comprese le foto migliorate con strumenti
+          automatici, e di non violare diritti di terzi.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">9. Modifiche ai Termini</h2>
@@ -258,20 +289,15 @@ export default function Termini() {
           residenza.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">11. Risoluzione alternativa delle controversie (ODR)</h2>
+        <h2 className="font-serif text-2xl text-white mt-8">11. Risoluzione alternativa delle controversie</h2>
         <p>
-          Ai sensi del Reg. UE 524/2013 informiamo l'utente Consumatore della
-          possibilità di ricorrere alla piattaforma ODR della Commissione
-          Europea:{" "}
-          <a
-            href="https://ec.europa.eu/consumers/odr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-ciano hover:underline"
-          >
-            ec.europa.eu/consumers/odr
+          Se hai un problema scrivici prima a{" "}
+          <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
+            info@scontiroma.it
           </a>
-          .
+          : cerchiamo una soluzione insieme. L'utente Consumatore può inoltre
+          ricorrere agli organismi di risoluzione alternativa delle
+          controversie previsti dalla legge.
         </p>
 
         <h2 className="font-serif text-2xl text-white mt-8">12. Contatti</h2>

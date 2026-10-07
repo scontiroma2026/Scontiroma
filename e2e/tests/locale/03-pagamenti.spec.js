@@ -115,7 +115,7 @@ test('domande frequenti: clienti e commercianti, regole della fase di lancio', a
   await expect(faq.getByText('Per chi usa gli sconti', { exact: true })).toBeVisible();
   await expect(faq.getByText('Per i commercianti', { exact: true })).toBeVisible();
   await faq.getByText('Quanto costa Sconti Roma?').click();
-  await expect(faq.getByText(/Durante la fase di lancio Sconti Roma è gratuito/)).toBeVisible();
+  await expect(faq.getByText(/Per ora Sconti Roma è gratuito per chi usa gli sconti/)).toBeVisible();
   await expect(faq).not.toContainText('per sempre');
   await expect(faq).not.toContainText(/commission/i);
 });
