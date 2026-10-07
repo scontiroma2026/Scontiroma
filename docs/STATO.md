@@ -43,6 +43,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
+| (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
 
 ## Decisioni prese
