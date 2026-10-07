@@ -13,6 +13,7 @@ import MiniMap from "@/components/MiniMap";
 import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
 import OrariNegozio from "@/components/OrariNegozio";
+import CuorePreferito from "@/components/CuorePreferito";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
 // Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
@@ -170,6 +171,7 @@ export default function DiscountDetail() {
                 <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
                   −{discount.percent_off}%
                 </div>
+                <CuorePreferito merchantId={m.id} className="absolute right-4 top-4" />
                 {hasMulti && (
                   <>
                     <div className="absolute bottom-3 right-3 rounded-lg bg-black/70 px-3 py-1.5 text-xs font-semibold text-white">
