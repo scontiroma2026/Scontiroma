@@ -112,7 +112,7 @@ async def send_merchant_approved(to: str, name: str, shop_name: str, discount_ti
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti gli abbonati Sconti Roma.</p>
+<p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti i clienti di Sconti Roma.</p>
 <p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
@@ -510,6 +510,79 @@ async def send_renewal_receipt(
         "Il tuo abbonamento a Sconti Roma si è rinnovato!",
         _shell(inner, "Ricevuta rinnovo"),
     )
+
+
+# ---------- Step 2 (03/10): benvenuto, avvisi all'admin, cancellazione account ----------
+_BTN = "display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px"
+_P = "margin:0 0 16px;color:#d4d4d8"
+
+
+async def send_welcome_client(to: str, name: str) -> Optional[str]:
+    """Benvenuto al cliente appena iscritto. Breve, senza date né prezzi."""
+    name = _esc((name or "").strip().split(" ")[0] or "ciao")
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Benvenuto in {BRAND}!</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">da oggi trovi gli sconti dei negozi del tuo quartiere: scegli un'offerta, mostra il QR al banco e paghi il prezzo scontato.</p>
+<p style="{_P}">Durante la fase di lancio {BRAND} è <strong>gratuito</strong>: non serve nessun abbonamento.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/discounts" style="{_BTN}">Guarda gli sconti</a></div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Per entrare con un tocco attiva il Face ID dalla sezione «Sicurezza» del tuo account.</p>
+"""
+    return await _send(to, f"Benvenuto in {BRAND}", _shell(inner))
+
+
+async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[str]:
+    """Benvenuto al commerciante: come funziona e cosa succede dopo la fase di lancio."""
+    name, shop_name = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio")
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Benvenuto in {BRAND}!</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">grazie per aver iscritto <strong>{shop_name}</strong>. Ecco come si parte:</p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">
+<li>crea la tua offerta del mese dalla dashboard;</li>
+<li>la controlliamo e, dopo l'approvazione, compare tra gli sconti;</li>
+<li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
+</ol>
+<p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese IVA inclusa</strong>, bloccato per chi parte adesso. Ti avviseremo almeno 30 giorni prima e non ti addebiteremo nulla senza la tua conferma.</p>
+<p style="{_P}"><strong>Nessun vincolo:</strong> l'offerta vale per il mese in corso e non si rinnova da sola. Se non vuoi continuare, scegli «Non rinnovo».</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
+"""
+    return await _send(to, f"Benvenuto in {BRAND}: crea la tua prima offerta", _shell(inner))
+
+
+async def send_admin_new_merchant(to: str, shop_name: str, category: str, zone: str, email: str, phone: str) -> Optional[str]:
+    """Avviso all'admin: un nuovo commerciante si è iscritto."""
+    rows = "".join(f'<tr><td style="padding:4px 12px 4px 0;color:#a1a1aa">{k}</td><td style="padding:4px 0;color:#fff">{_esc(v or "—")}</td></tr>'
+                   for k, v in (("Negozio", shop_name), ("Categoria", category), ("Quartiere", zone), ("Email", email), ("Telefono", phone)))
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuovo commerciante iscritto</h2>
+<table role="presentation" style="margin:0 0 16px;font-size:14px">{rows}</table>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Apri il pannello admin</a></div>
+"""
+    return await _send(to, f"Nuovo commerciante: {shop_name or 'senza nome'}", _shell(inner))
+
+
+async def send_admin_new_offer(to: str, shop_name: str, title: str, next_month: str = "") -> Optional[str]:
+    """Avviso all'admin: c'è un'offerta da approvare (nuova o modificata)."""
+    quando = f" per {_esc(next_month)}" if next_month else ""
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta da approvare{quando}</h2>
+<p style="{_P}"><strong>{_esc(shop_name or 'Un negozio')}</strong> ha inviato l'offerta <strong style="color:#00E5FF">"{_esc(title)}"</strong>.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Approva o rifiuta</a></div>
+"""
+    return await _send(to, f"Offerta da approvare: {shop_name or 'negozio'}", _shell(inner))
+
+
+async def send_account_deleted(to: str, name: str) -> Optional[str]:
+    """Conferma che l'account e i dati sono stati cancellati."""
+    name = _esc((name or "").strip().split(" ")[0] or "ciao")
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Account cancellato</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">come hai chiesto, abbiamo cancellato il tuo account {BRAND} e i dati collegati.</p>
+<p style="{_P}">Se non sei stato tu, scrivici subito a <a href="mailto:info@scontiroma.it" style="color:#00E5FF">info@scontiroma.it</a>.</p>
+"""
+    return await _send(to, f"Il tuo account {BRAND} è stato cancellato", _shell(inner))
 
 
 async def send_preferito_nuova_offerta(to: str, name: str, shop_name: str, zone: str, title: str,

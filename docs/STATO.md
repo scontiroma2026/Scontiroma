@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 03/10/2026 — ultimo commit in `main`: `4fceb00`
+Aggiornato: 03/10/2026 — ultimo commit in `main`: `9bf9b58`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -31,13 +31,13 @@ Aggiornato: 03/10/2026 — ultimo commit in `main`: `4fceb00`
 | #29 | «Condividi con un amico» con anteprima del link; titolo del sito senza 2,99 € | 07/10 |
 | #30 | Orari del negozio scritti dal commerciante, «Aperto ora» sull'offerta | 07/10 |
 | #31 | Negozi preferiti: cuore, vista «Preferiti», avviso via email solo con consenso | 07/10 |
+| #32 | Archivio delle offerte con «Riusa» / «Correggi e riusa» | 07/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | OK dell'utente sui testi |
+| #23 | Step 2: email di benvenuto, avvisi all'admin, testi pubblici senza «abbonati» | testi approvati dall'utente il 07/10; controlli verdi |
 | #26 | Proposte di testi legali per Privacy, Termini, Recesso, Cookie | OK dell'utente e del consulente |
-| #32 | Archivio delle offerte con «Riusa» / «Correggi e riusa» | controlli verdi |
 
 ## Decisioni prese
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
