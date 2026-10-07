@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { ConfigProvider } from "@/context/ConfigContext";
+import { PreferitiProvider } from "@/context/PreferitiContext";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
 import LegalFooter from "@/components/LegalFooter";
@@ -43,6 +44,7 @@ function App() {
         <AnalyticsTracker />
         <ConfigProvider>
         <AuthProvider>
+        <PreferitiProvider>
           <Navbar />
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -78,6 +80,7 @@ function App() {
           <AppFeedbackBanner />
           <PWAInstallBanner />
           <Toaster position="top-center" richColors />
+        </PreferitiProvider>
         </AuthProvider>
         </ConfigProvider>
       </BrowserRouter>

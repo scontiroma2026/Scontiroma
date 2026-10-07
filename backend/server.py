@@ -31,6 +31,7 @@ import socket
 from urllib.parse import urlparse, urljoin
 from email_service import (
     send_password_reset,
+    send_preferito_nuova_offerta,
     send_merchant_approved,
     send_merchant_rejected,
     send_monthly_discounts_notification,
@@ -1368,6 +1369,91 @@ async def share_offerta_img(discount_id: str):
     if src.startswith("https://"):
         return RedirectResponse(src, status_code=302)
     raise HTTPException(404, "Immagine non disponibile")
+
+
+# ---------- Negozi preferiti del cliente ----------
+MAX_PREFERITI = 200
+
+
+class AvvisiPreferitiIn(BaseModel):
+    attivo: bool
+
+
+@api.get("/me/preferiti")
+async def preferiti_elenco(user: dict = Depends(require_client)):
+    ids = user.get("preferiti") or []
+    sospesi = await _merchant_sospesi()
+    offerte = []
+    for d in await db.discounts.find({"merchant_id": {"$in": ids}, "active": True,
+                                      "approval_status": "approved"}).to_list(MAX_PREFERITI):
+        if d.get("merchant_id") not in sospesi:
+            offerte.append(await enrich_discount(d))
+    return {"merchant_ids": ids, "offerte": offerte,
+            "avvisi": bool((user.get("consents") or {}).get("avvisi_preferiti"))}
+
+
+@api.post("/me/preferiti/{merchant_id}")
+async def preferiti_aggiungi(merchant_id: str, user: dict = Depends(require_client)):
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"_id": 1}):
+        raise HTTPException(404, "Negozio non trovato")
+    if len(user.get("preferiti") or []) >= MAX_PREFERITI:
+        raise HTTPException(400, "Hai raggiunto il numero massimo di preferiti")
+    await db.users.update_one({"id": user["id"]}, {"$addToSet": {"preferiti": merchant_id}})
+    return {"ok": True}
+
+
+@api.delete("/me/preferiti/{merchant_id}")
+async def preferiti_togli(merchant_id: str, user: dict = Depends(require_client)):
+    await db.users.update_one({"id": user["id"]}, {"$pull": {"preferiti": merchant_id}})
+    return {"ok": True}
+
+
+@api.put("/me/preferiti/avvisi")
+async def preferiti_avvisi(payload: AvvisiPreferitiIn, user: dict = Depends(require_client)):
+    """Consenso (revocabile) a ricevere un'email quando un negozio preferito pubblica l'offerta."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one({"id": user["id"]}, {"$set": {
+        "consents.avvisi_preferiti": payload.attivo,
+        "consents.avvisi_preferiti_at": now_iso,
+    }})
+    return {"avvisi": payload.attivo}
+
+
+def _avvisi_in_background(d: dict) -> None:
+    """Gli avvisi partono dopo la risposta: l'admin non aspetta l'invio delle email."""
+    async def _invia():
+        try:
+            n = await _avvisa_preferiti(d)
+            if n:
+                logging.info(f"[preferiti] {n} avvisi per l'offerta {d.get('id', '')[:8]}")
+        except Exception as e:
+            logging.warning(f"[preferiti] avvisi non inviati: {e}")
+    asyncio.create_task(_invia())
+
+
+async def _avvisa_preferiti(d: dict) -> int:
+    """Email ai clienti che hanno il negozio tra i preferiti e hanno chiesto gli avvisi.
+    Al massimo un avviso per cliente, negozio e mese."""
+    mid = d.get("merchant_id")
+    m = await db.users.find_one({"id": mid}) or {}
+    if not mid or m.get("approved") is False:
+        return 0
+    mese = current_month_key()
+    inviati = 0
+    clienti = await db.users.find({"role": "client", "preferiti": mid,
+                                   "consents.avvisi_preferiti": True}).to_list(None)
+    for c in clienti:
+        chiave = f"{c['id']}:{mid}:{mese}"
+        if await db.avvisi_preferiti.find_one({"id": chiave}):
+            continue
+        await db.avvisi_preferiti.insert_one({"id": chiave, "user_id": c["id"], "merchant_id": mid,
+                                              "mese": mese, "inviato_at": datetime.now(timezone.utc).isoformat()})
+        prezzo = _euro(d["discounted_price"]) if d.get("discounted_price") is not None else ""
+        pieno = _euro(d["original_price"]) if d.get("original_price") else ""
+        await send_preferito_nuova_offerta(c["email"], c.get("name") or "", m.get("shop_name") or "",
+                                           m.get("zone") or "", d.get("title") or "", prezzo, pieno, d["id"])
+        inviati += 1
+    return inviati
 
 
 # ---------- Merchant Routes ----------
@@ -3130,6 +3216,8 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
             await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "")
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
+    if d.get("active", True):
+        _avvisi_in_background(d)
     return {"discount": await enrich_discount(d)}
 
 
@@ -3510,6 +3598,10 @@ async def _run_month_rollover(force: bool = False) -> dict:
             sets.update({"id": str(uuid.uuid4()), "merchant_id": mid, "created_at": now_iso})
             await db.discounts.insert_one(sets)
         await db.next_discounts.delete_one({"id": nd["id"]})
+        if st == "approved":  # l'offerta del mese è online: avviso a chi ha il negozio tra i preferiti
+            promossa = await db.discounts.find_one({"merchant_id": mid})
+            if promossa and promossa.get("active", True):
+                _avvisi_in_background(promossa)
 
     # Offerte del mese precedente senza sostituzione → scadono
     stale = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
@@ -4322,7 +4414,7 @@ async def _erase_user_data(user: dict) -> None:
         await coll.update_many({"user_id": uid}, anon)
     # 2. Elimina tutto il resto collegato all'utente
     for coll in (db.redemptions, db.qr_scans, db.consent_logs, db.reviews,
-                 db.app_feedback, db.webauthn_challenges):
+                 db.app_feedback, db.webauthn_challenges, db.avvisi_preferiti):
         await coll.delete_many({"user_id": uid})
     if user.get("email"):
         await db.login_guard.delete_many({"key": _login_guard_key(user["email"].strip().lower())})
@@ -4331,6 +4423,8 @@ async def _erase_user_data(user: dict) -> None:
     if user.get("role") == "merchant":
         for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews):
             await coll.delete_many({"merchant_id": uid})
+        await db.avvisi_preferiti.delete_many({"merchant_id": uid})
+        await db.users.update_many({"preferiti": uid}, {"$pull": {"preferiti": uid}})
 
 
 @api.delete("/gdpr/delete-account")

@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
 import { Input } from "@/components/ui/input";
-import { Search, LocateFixed } from "lucide-react";
+import { Search, LocateFixed, Heart } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import VistaPreferiti from "@/components/VistaPreferiti";
+import { usePreferiti } from "@/context/PreferitiContext";
 
 function haversineKm(a, b) {
   if (!a || !b) return Infinity;
@@ -15,6 +18,9 @@ function haversineKm(a, b) {
 }
 
 export default function Discounts() {
+  const [params, setParams] = useSearchParams();
+  const { attivo: puoPreferiti, ids: preferiti } = usePreferiti();
+  const vistaPreferiti = puoPreferiti && params.get("vista") === "preferiti";
   const [discounts, setDiscounts] = useState([]);
   const [zones, setZones] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -77,6 +83,22 @@ export default function Discounts() {
         <h1 className="mt-2 font-serif text-5xl leading-tight">Trova il tuo sconto</h1>
         <p className="mt-3 text-white/70">Filtra per zona o categoria. Le offerte cambiano ogni mese.</p>
       </div>
+
+      {puoPreferiti && (
+        <div role="tablist" className="mb-6 flex gap-2">
+          <button type="button" role="tab" aria-selected={!vistaPreferiti} data-testid="vista-tutti"
+            onClick={() => setParams({})}
+            className={`h-11 rounded-full px-5 text-sm font-semibold ${!vistaPreferiti ? "bg-fucsia text-black" : "border border-white/20 text-white/80"}`}>
+            Tutti
+          </button>
+          <button type="button" role="tab" aria-selected={vistaPreferiti} data-testid="vista-preferiti-tab"
+            onClick={() => setParams({ vista: "preferiti" })}
+            className={`flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${vistaPreferiti ? "bg-fucsia text-black" : "border border-white/20 text-white/80"}`}>
+            <Heart size={16} fill={vistaPreferiti ? "currentColor" : "none"} /> Preferiti · {preferiti.length}
+          </button>
+        </div>
+      )}
+      {vistaPreferiti ? <VistaPreferiti /> : (<>
 
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
@@ -164,6 +186,7 @@ export default function Discounts() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {sorted.map((d) => <DiscountCard key={d.id} discount={d} />)}
       </div>
+      </>)}
     </main>
   );
 }
