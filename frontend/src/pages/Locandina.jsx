@@ -140,7 +140,7 @@ export default function Locandina() {
             height: "210mm",
             background: "linear-gradient(135deg, #0A0A0F 0%, #1a0d24 100%)",
             color: "#F4F4F5",
-            fontFamily: "'Inter', system-ui, sans-serif",
+            fontFamily: "'Manrope', system-ui, sans-serif",
             boxShadow: "0 30px 80px rgba(255, 46, 147, 0.25)",
             borderRadius: "8px",
           }}
