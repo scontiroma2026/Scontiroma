@@ -16,11 +16,11 @@ export default function AdminLog({ recent }) {
     : recent;
 
   return (
-    <Card className="border-white/10 bg-white/5 p-6">
+    <Card className="border-border bg-muted p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-serif text-2xl">Log cronologico QR / sconti</h3>
-          <p className="text-xs text-white/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Ogni click su "Mostra QR Code" viene tracciato con utente, negozio, sconto, timestamp.
           </p>
         </div>
@@ -29,7 +29,7 @@ export default function AdminLog({ recent }) {
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase text-white/50 border-b border-white/10">
+            <tr className="text-left text-xs uppercase text-muted-foreground border-b border-border">
               <th className="py-2">Data / Ora</th>
               <th>Codice</th>
               <th>Utente</th>
@@ -40,26 +40,26 @@ export default function AdminLog({ recent }) {
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="py-8 text-center text-white/50">{q ? `Nessun risultato per "${q}".` : "Nessun evento registrato."}</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">{q ? `Nessun risultato per "${q}".` : "Nessun evento registrato."}</td></tr>
             )}
             {filtered.map((r) => {
               const dt = new Date(r.created_at);
               return (
-                <tr key={r.code} className="border-b border-white/5">
-                  <td className="py-2 text-white/70">
+                <tr key={r.code} className="border-b border-border">
+                  <td className="py-2 text-muted-foreground">
                     {dt.toLocaleDateString("it-IT")}{" "}
                     {dt.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
                   </td>
                   <td className="font-mono text-ciano">{r.code}</td>
-                  <td className="text-white">{r.client_name}</td>
-                  <td className="text-white">{r.shop_name}</td>
-                  <td className="text-white/70">{r.discount_title}</td>
+                  <td className="text-foreground">{r.client_name}</td>
+                  <td className="text-foreground">{r.shop_name}</td>
+                  <td className="text-muted-foreground">{r.discount_title}</td>
                   <td>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] ${
                         r.status === "redeemed"
-                          ? "bg-fucsia/20 text-fucsia"
-                          : "bg-ciano/20 text-ciano"
+                          ? "bg-fucsia/10 text-fucsia"
+                          : "bg-ciano/10 text-ciano"
                       }`}
                     >
                       {r.status === "redeemed" ? "Utilizzato" : "QR aperto"}

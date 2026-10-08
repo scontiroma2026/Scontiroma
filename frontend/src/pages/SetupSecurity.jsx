@@ -51,27 +51,27 @@ export default function SetupSecurity() {
     <main data-testid="setup-security-page" className="mx-auto max-w-lg px-6 py-12">
       <div className="mb-8">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">Sicurezza</div>
-        <h1 className="mt-2 font-serif text-4xl text-white">Entra con un tocco</h1>
-        <p className="mt-3 text-white/70">
+        <h1 className="mt-2 font-serif text-4xl text-foreground">Entra con un tocco</h1>
+        <p className="mt-3 text-muted-foreground">
           {fromAccount
             ? "Attiva il Face ID su questo telefono."
             : "Attiva il Face ID: la prossima volta entri senza scrivere email e password."}
         </p>
       </div>
 
-      <Card className="border-white/10 bg-white/5 p-6">
+      <Card className="border-border bg-muted p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ciano/20 text-ciano">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ciano/10 text-ciano">
             {bioEnrolled ? <Check size={22} /> : <ScanFace size={22} />}
           </div>
           <div>
             <div className="text-xs uppercase text-ciano tracking-wider">Facoltativo · Consigliato</div>
-            <h2 className="font-serif text-2xl text-white">Face ID / Impronta</h2>
-            <p className="text-xs text-white/60">Se non funziona, entri sempre con email e password.</p>
+            <h2 className="font-serif text-2xl text-foreground">Face ID / Impronta</h2>
+            <p className="text-xs text-muted-foreground">Se non funziona, entri sempre con email e password.</p>
           </div>
         </div>
         {devices > 0 && (
-          <p data-testid="bio-status" className="mt-4 text-sm text-white/80">
+          <p data-testid="bio-status" className="mt-4 text-sm text-foreground/80">
             Face ID attivo su {devices === 1 ? "1 dispositivo" : `${devices} dispositivi`}.
           </p>
         )}
@@ -95,7 +95,7 @@ export default function SetupSecurity() {
         </div>
       ) : (
         <div className="mt-6 flex justify-between">
-          <button data-testid="skip-security" onClick={finish} className="text-sm text-white/60 hover:text-white">
+          <button data-testid="skip-security" onClick={finish} className="text-sm text-muted-foreground hover:text-foreground">
             Salta per ora
           </button>
           <Button data-testid="finish-security" onClick={finish} className="grad-fucsia-viola text-white rounded-full px-6">

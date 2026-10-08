@@ -6,7 +6,7 @@ export const useInAreaCommerciante = () => useLocation().pathname.startsWith("/m
 
 /**
  * Mette la classe `area-commerciante` su <html> mentre si è nell'area commerciante:
- * da quel momento valgono i colori chiari di area-commerciante.css (variante «Bianco vivo»).
+ * da quel momento valgono i colori chiari di tema-chiaro.css (variante «Bianco vivo»).
  * Fuori da quelle pagine la classe viene tolta e il sito resta com'era.
  */
 export default function AreaCommercianteClasse() {

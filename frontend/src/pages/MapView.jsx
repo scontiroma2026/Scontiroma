@@ -41,16 +41,16 @@ const buildIcon = (percent) => L.divIcon({
   html: `<div style="
     position: relative;
     width: 44px; height: 44px;
-    background: linear-gradient(135deg, #FF2E93 0%, #7A5CFF 100%);
+    background: linear-gradient(135deg, #D81B72 0%, #6D4AFF 100%);
     border: 2px solid white;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    box-shadow: 0 0 20px rgba(255,46,147,0.6);
+    box-shadow: 0 0 20px rgba(26,21,48,0.35);
   "><span style="
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%) rotate(45deg);
-    color: white; font-weight: 800; font-size: 11px; font-family: 'Archivo Black', sans-serif;
+    color: white; font-weight: 800; font-size: 11px; font-family: 'Manrope', sans-serif;
     white-space: nowrap;
   ">-${percent}%</span></div>`,
   iconSize: [44, 44],
@@ -120,27 +120,26 @@ export default function MapView() {
   }), [sortedDiscounts, userPos]);
 
   return (
-    <main data-testid="map-page" className="min-h-[calc(100vh-72px)] text-white">
+    <main data-testid="map-page" className="min-h-[calc(100vh-72px)] text-foreground">
       {/* Custom leaflet overrides */}
       <style>{`
-        .leaflet-container { background: #0A0A0A; font-family: 'Manrope', sans-serif; }
-        .leaflet-tile { filter: brightness(0.65) invert(1) contrast(1.1) hue-rotate(180deg) saturate(0.4) brightness(0.85); }
+        .leaflet-container { background: #F6F1FB; font-family: 'Manrope', sans-serif; }
         .leaflet-popup-content-wrapper {
-          background: #0A0A0A; color: white; border: 1px solid rgba(255,46,147,0.4);
-          border-radius: 16px; padding: 0; box-shadow: 0 8px 30px rgba(255,46,147,0.3);
+          background: #FFFFFF; color: #1A1530; border: 1px solid #EADFF0;
+          border-radius: 16px; padding: 0; box-shadow: 0 8px 30px rgba(26,21,48,0.22);
         }
-        .leaflet-popup-tip { background: #0A0A0A; border: 1px solid rgba(255,46,147,0.4); }
+        .leaflet-popup-tip { background: #FFFFFF; border: 1px solid #EADFF0; }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
-        .leaflet-control-attribution { background: rgba(0,0,0,0.75) !important; color: rgba(255,255,255,0.85) !important; }
-        .leaflet-control-attribution a { color: #00E5FF !important; }
-        .leaflet-control-zoom a { background: #141414 !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; }
-        .leaflet-control-zoom a:hover { background: #FF2E93 !important; }
+        .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5E5875 !important; }
+        .leaflet-control-attribution a { color: #00798C !important; text-decoration: underline; }
+        .leaflet-control-zoom a { background: #FFFFFF !important; color: #1A1530 !important; border: 1px solid #B9B0D0 !important; width: 44px !important; height: 44px !important; line-height: 42px !important; }
+        .leaflet-control-zoom a:hover { background: #D81B72 !important; color: #FFFFFF !important; }
       `}</style>
 
       <div className="mx-auto max-w-7xl px-6 pt-8 pb-4">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">Sconti sulla mappa</div>
         <h1 className="mt-2 font-serif text-5xl">Roma <span className="text-grad">a colpo d'occhio</span></h1>
-        <p className="mt-2 text-white/60">
+        <p className="mt-2 text-muted-foreground">
           {stats.count} sconti attivi · fino a <span className="text-neon font-bold">−{stats.maxOff}%</span>
           {stats.nearest != null && (
             <> · più vicino a <span className="text-ciano font-bold">{stats.nearest.toFixed(1)} km</span></>
@@ -153,57 +152,57 @@ export default function MapView() {
             size="sm"
             variant="outline"
             onClick={requestLocation}
-            className="rounded-full border-ciano/50 bg-ciano/10 text-ciano hover:bg-ciano/20 hover:text-white"
+            className="rounded-full border-ciano/50 bg-ciano/10 text-ciano hover:bg-ciano/20 hover:text-foreground"
           >
             <LocateFixed size={12} className="mr-1.5" />
             {geoStatus === "granted" ? "Aggiorna posizione" : "Usa la mia posizione"}
           </Button>
           {/* La posizione si chiede solo se il cliente tocca il pulsante: mai all'apertura della mappa */}
           {geoStatus === "idle" && (
-            <span data-testid="geo-invito" className="text-white/70">Vuoi trovare gli sconti vicino a te? La posizione resta sul tuo telefono.</span>
+            <span data-testid="geo-invito" className="text-muted-foreground">Vuoi trovare gli sconti vicino a te? La posizione resta sul tuo telefono.</span>
           )}
           {geoStatus === "denied" && (
-            <span className="text-yellow-300/80">Posizione non disponibile: puoi attivarla nelle impostazioni del browser.</span>
+            <span className="text-amber-800">Posizione non disponibile: puoi attivarla nelle impostazioni del browser.</span>
           )}
           {geoStatus === "requesting" && (
-            <span className="text-white/50">Rilevo posizione…</span>
+            <span className="text-muted-foreground">Rilevo posizione…</span>
           )}
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-6 pb-4 flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             data-testid="map-search"
             placeholder="Cerca locale o offerta…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/40"
+            className="pl-9 bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
         <select
           data-testid="map-zone"
           value={zone}
           onChange={(e) => setZone(e.target.value)}
-          className="rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm md:w-56"
+          className="rounded-md border border-border bg-muted text-foreground px-3 h-11 text-sm md:w-56"
         >
           <option value="">Tutte le zone</option>
-          <ZoneOptions groups={zoneGroups} zones={zones} optionClassName="bg-[#0A0A0A]" />
+          <ZoneOptions groups={zoneGroups} zones={zones} optionClassName="bg-background" />
         </select>
         <select
           data-testid="map-category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm md:w-56"
+          className="rounded-md border border-border bg-muted text-foreground px-3 h-11 text-sm md:w-56"
         >
           <option value="">Tutte le categorie</option>
-          {categories.map((c) => <option key={c} value={c} className="bg-[#0A0A0A]">{c}</option>)}
+          {categories.map((c) => <option key={c} value={c} className="bg-background">{c}</option>)}
         </select>
       </div>
 
       <div className="mx-auto max-w-7xl px-6 pb-10">
-        <div className="relative overflow-hidden rounded-2xl border-2 border-white/10" style={{ height: "70vh", minHeight: 500 }}>
+        <div className="relative overflow-hidden rounded-2xl border-2 border-border" style={{ height: "70vh", minHeight: 500 }}>
           <MapContainer center={ROME_CENTER} zoom={13} zoomControl={false} className="h-full w-full" scrollWheelZoom>
             <TileLayer
               attribution={OSM_ATTRIBUTION}
@@ -215,7 +214,7 @@ export default function MapView() {
               <CircleMarker
                 center={userPos}
                 radius={9}
-                pathOptions={{ color: "#00E5FF", fillColor: "#00E5FF", fillOpacity: 0.9, weight: 3 }}
+                pathOptions={{ color: "#FFFFFF", fillColor: "#00798C", fillOpacity: 0.9, weight: 3 }}
               >
                 <Popup>La tua posizione</Popup>
               </CircleMarker>
@@ -241,16 +240,16 @@ export default function MapView() {
                     <div className="p-3">
                       <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ciano">
                         <MapPin size={10} /> {d.merchant.zone} · {d.merchant.category}
-                        {d._distKm != null && <span className="text-white/60">· {d._distKm.toFixed(1)} km</span>}
+                        {d._distKm != null && <span className="text-muted-foreground">· {d._distKm.toFixed(1)} km</span>}
                       </div>
-                      <div className="mt-1 font-serif text-lg text-white leading-tight group-hover:text-fucsia transition">
+                      <div className="mt-1 font-serif text-lg text-foreground leading-tight group-hover:text-fucsia transition">
                         {d.title}
                       </div>
-                      <div className="mt-1 text-xs text-white/60">{d.merchant.shop_name}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">{d.merchant.shop_name}</div>
                       <div className="mt-2 flex items-baseline justify-between">
                         <div>
                           <span className="font-serif text-xl text-fucsia">€{d.discounted_price.toFixed(2)}</span>
-                          <span className="ml-2 text-xs text-white/40 line-through">€{d.original_price.toFixed(2)}</span>
+                          <span className="ml-2 text-xs text-muted-foreground line-through">€{d.original_price.toFixed(2)}</span>
                         </div>
                         <ArrowRight size={14} className="text-fucsia" />
                       </div>
@@ -262,8 +261,8 @@ export default function MapView() {
           </MapContainer>
 
           {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-[400] pointer-events-none">
-              <div className="rounded-full bg-black/80 px-4 py-2 text-sm text-white">Caricamento sconti…</div>
+            <div className="absolute inset-0 flex items-center justify-center bg-muted z-[400] pointer-events-none">
+              <div className="rounded-full bg-white px-4 py-2 text-sm text-foreground shadow-lg border border-border">Caricamento sconti…</div>
             </div>
           )}
         </div>

@@ -33,16 +33,16 @@ export default function ForgotPassword() {
 
   return (
     <main data-testid="forgot-page" className="mx-auto max-w-md px-6 py-16">
-      <Card className="border-white/10 bg-white/5 p-8">
+      <Card className="border-border bg-muted p-8">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">Recupero</div>
-        <h1 className="mt-2 font-serif text-4xl text-white">ID o password dimenticati?</h1>
-        <p className="mt-2 text-sm text-white/60">Recupera l'accesso in un attimo.</p>
+        <h1 className="mt-2 font-serif text-4xl text-foreground">ID o password dimenticati?</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Recupera l'accesso in un attimo.</p>
 
         {!result ? (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
-              <Label className="text-white/80">Email dell'account</Label>
-              <Input data-testid="forgot-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+              <Label className="text-foreground/80">Email dell'account</Label>
+              <Input data-testid="forgot-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
             </div>
             <Button data-testid="forgot-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
               {busy ? "Invio…" : "Recupera accesso"}
@@ -50,10 +50,10 @@ export default function ForgotPassword() {
           </form>
         ) : (
           <div className="mt-6 space-y-4">
-            <div className="rounded-xl border border-fucsia/30 bg-fucsia/5 p-4 text-sm text-white/80">
+            <div className="rounded-xl border border-fucsia/30 bg-fucsia/5 p-4 text-sm text-foreground/80">
               {result.message}
             </div>
-            <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white/60">
+            <div className="rounded-xl border border-border bg-muted p-4 text-xs text-muted-foreground">
               <p>📧 Se questa email è registrata, riceverai un link per reimpostare la password entro pochi minuti.</p>
               <p className="mt-2">Controlla anche la cartella spam. Il link scade dopo 1 ora.</p>
             </div>

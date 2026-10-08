@@ -74,7 +74,7 @@ export default function Subscribe() {
   };
 
   return (
-    <main data-testid="subscribe-page" className="mx-auto max-w-3xl px-6 py-16 text-white">
+    <main data-testid="subscribe-page" className="mx-auto max-w-3xl px-6 py-16 text-foreground">
       <div className="text-center">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">{required ? "Membership Sconti Roma" : "Sconti Roma"}</div>
         {required && (
@@ -82,7 +82,7 @@ export default function Subscribe() {
         )}
       </div>
 
-      <Card className="mt-10 border-white/10 bg-white/5 backdrop-blur p-8">
+      <Card className="mt-10 border-border bg-muted backdrop-blur p-8">
         {sub ? (
           <div data-testid="active-subscription">
             <div className="flex items-center gap-3 text-fucsia">
@@ -90,14 +90,14 @@ export default function Subscribe() {
                 <Check size={22} />
               </div>
               <div>
-                <div className="font-serif text-3xl text-white">Abbonamento attivo</div>
-                <div className="text-sm text-white/60">Valido fino al {new Date(sub.end_date).toLocaleDateString("it-IT")}</div>
+                <div className="font-serif text-3xl text-foreground">Abbonamento attivo</div>
+                <div className="text-sm text-muted-foreground">Valido fino al {new Date(sub.end_date).toLocaleDateString("it-IT")}</div>
               </div>
             </div>
             <div className="mt-6 grid gap-3 text-sm">
-              <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Piano</span><span>Mensile — €{sub.price_eur}</span></div>
-              <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Provider</span><span>{sub.provider === "paypal" ? "PayPal" : "Stripe"}</span></div>
-              <div className="flex justify-between border-b border-white/10 py-2 text-white/80"><span>Stato</span><span className="text-fucsia">Attivo</span></div>
+              <div className="flex justify-between border-b border-border py-2 text-foreground/80"><span>Piano</span><span>Mensile — €{sub.price_eur}</span></div>
+              <div className="flex justify-between border-b border-border py-2 text-foreground/80"><span>Provider</span><span>{sub.provider === "paypal" ? "PayPal" : "Stripe"}</span></div>
+              <div className="flex justify-between border-b border-border py-2 text-foreground/80"><span>Stato</span><span className="text-fucsia">Attivo</span></div>
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button onClick={() => nav("/discounts")} className="w-full sm:w-auto grad-fucsia-viola text-white hover:scale-105 transition rounded-full">Sfoglia gli sconti</Button>
@@ -105,7 +105,7 @@ export default function Subscribe() {
                 data-testid="cancel-sub-btn"
                 variant="outline"
                 onClick={() => setShowCancelDialog(true)}
-                className="w-full sm:w-auto rounded-full border-white/20 text-white hover:bg-white/10"
+                className="w-full sm:w-auto rounded-full border-border text-foreground hover:bg-muted"
               >
                 Gestisci abbonamento
               </Button>
@@ -113,8 +113,8 @@ export default function Subscribe() {
           </div>
         ) : !required ? (
           <div data-testid="launch-free" className="text-center">
-            <div className="font-serif text-3xl text-white">Gratis durante la fase di lancio</div>
-            <p className="mt-3 text-sm text-white/70">
+            <div className="font-serif text-3xl text-foreground">Gratis durante la fase di lancio</div>
+            <p className="mt-3 text-sm text-muted-foreground">
               Per usare gli sconti di Sconti Roma non serve nessun abbonamento e nessun pagamento.
             </p>
             <Button onClick={() => nav("/discounts")} className="mt-6 grad-fucsia-viola text-white hover:scale-105 transition rounded-full">
@@ -125,9 +125,9 @@ export default function Subscribe() {
           <>
             <div className="flex items-baseline gap-2">
               <span className="font-serif text-7xl text-grad">€2,99</span>
-              <span className="text-white/60">/ mese</span>
+              <span className="text-muted-foreground">/ mese</span>
             </div>
-            <ul className="mt-6 space-y-3 text-sm text-white/80">
+            <ul className="mt-6 space-y-3 text-sm text-foreground/80">
               {[
                 { i: <Zap size={14} className="text-ciano" />, t: "Sconto in ogni locale partner di Roma" },
                 { i: <Sparkles size={14} className="text-neon" />, t: "Nuovi sconti aggiornati ogni mese" },
@@ -138,19 +138,19 @@ export default function Subscribe() {
               ))}
             </ul>
 
-            <div className="mt-8 rounded-xl border border-white/10 bg-black/40 p-4 text-xs text-white/60 flex items-center gap-2">
+            <div className="mt-8 rounded-xl border border-border bg-muted p-4 text-xs text-muted-foreground flex items-center gap-2">
               <Shield size={14} className="text-ciano" />
               Pagamento sicuro con Stripe o PayPal · Cancelli quando vuoi, senza penali
             </div>
 
             {/* Tab metodo di pagamento */}
-            <div className="mt-6 grid grid-cols-2 gap-2 rounded-full bg-black/40 p-1 border border-white/10">
+            <div className="mt-6 grid grid-cols-2 gap-2 rounded-full bg-muted p-1 border border-border">
               <button
                 type="button"
                 data-testid="tab-card"
                 onClick={() => setMethod("card")}
                 className={`rounded-full py-2 text-sm font-medium flex items-center justify-center gap-2 transition ${
-                  method === "card" ? "bg-white text-black" : "text-white/70 hover:text-white"
+                  method === "card" ? "bg-white text-black" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <CreditCard size={14} /> Carta (Stripe)
@@ -160,7 +160,7 @@ export default function Subscribe() {
                 data-testid="tab-paypal"
                 onClick={() => setMethod("paypal")}
                 className={`rounded-full py-2 text-sm font-medium flex items-center justify-center gap-2 transition ${
-                  method === "paypal" ? "bg-[#FFC439] text-[#003087]" : "text-white/70 hover:text-white"
+                  method === "paypal" ? "bg-[#FFC439] text-[#003087]" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span className="font-serif font-bold">Pay<span className="text-[#009cde]">Pal</span></span>
@@ -195,23 +195,23 @@ export default function Subscribe() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg rounded-2xl border border-red-500/30 bg-[#141419] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="w-full max-w-lg rounded-2xl border border-red-500/30 bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
           >
             {/* Header */}
-            <div className="flex items-start justify-between p-6 border-b border-white/10">
+            <div className="flex items-start justify-between p-6 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15 text-red-400">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15 text-red-700">
                   <AlertTriangle size={22} />
                 </div>
                 <div>
-                  <h2 className="font-serif text-2xl text-white">Sei sicuro?</h2>
-                  <div className="text-xs text-white/50">Stai per disdire l'abbonamento</div>
+                  <h2 className="font-serif text-2xl text-foreground">Sei sicuro?</h2>
+                  <div className="text-xs text-muted-foreground">Stai per disdire l'abbonamento</div>
                 </div>
               </div>
               <button
                 data-testid="cancel-close"
                 onClick={closeCancelDialog}
-                className="text-white/50 hover:text-white transition"
+                className="text-muted-foreground hover:text-foreground transition"
                 disabled={cancelling}
               >
                 <X size={20} />
@@ -222,24 +222,24 @@ export default function Subscribe() {
             <div className="p-6 space-y-4">
               {/* Cosa perdi */}
               <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-                <div className="text-xs uppercase tracking-wider text-red-300 font-semibold mb-2">
+                <div className="text-xs uppercase tracking-wider text-red-700 font-semibold mb-2">
                   Cosa perderai
                 </div>
-                <ul className="space-y-1 text-sm text-white/80">
+                <ul className="space-y-1 text-sm text-foreground/80">
                   <li className="flex items-start gap-2">
-                    <X size={14} className="text-red-400 mt-0.5 shrink-0" />
+                    <X size={14} className="text-red-700 mt-0.5 shrink-0" />
                     Accesso a tutti gli sconti dei nostri commercianti a Roma
                   </li>
                   <li className="flex items-start gap-2">
-                    <X size={14} className="text-red-400 mt-0.5 shrink-0" />
+                    <X size={14} className="text-red-700 mt-0.5 shrink-0" />
                     QR code dinamici per riscattare le offerte
                   </li>
                   {sub?.end_date && (
                     <li className="flex items-start gap-2">
-                      <Check size={14} className="text-green-400 mt-0.5 shrink-0" />
+                      <Check size={14} className="text-emerald-700 mt-0.5 shrink-0" />
                       <span>
                         Potrai continuare a usare gli sconti fino al{" "}
-                        <strong className="text-white">
+                        <strong className="text-foreground">
                           {new Date(sub.end_date).toLocaleDateString("it-IT")}
                         </strong>{" "}
                         (nessun rimborso, ma nessun altro addebito)
@@ -251,15 +251,15 @@ export default function Subscribe() {
 
               {/* Motivo opzionale */}
               <div>
-                <label className="text-xs uppercase tracking-wider text-white/60 font-semibold">
-                  Perché disdici? <span className="text-white/40 lowercase">(opzionale, ci aiuta a migliorare)</span>
+                <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  Perché disdici? <span className="text-muted-foreground lowercase">(opzionale, ci aiuta a migliorare)</span>
                 </label>
                 <select
                   data-testid="cancel-reason"
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   disabled={cancelling}
-                  className="mt-2 w-full rounded-lg bg-black/50 border border-white/10 text-white text-sm px-3 py-2"
+                  className="mt-2 w-full rounded-lg bg-card border border-input text-foreground text-sm px-3 py-2"
                 >
                   <option value="">Scegli un motivo…</option>
                   <option value="too_expensive">Troppo caro</option>
@@ -277,7 +277,7 @@ export default function Subscribe() {
                   disabled={cancelling}
                   placeholder="Vuoi dirci qualcosa di più? (facoltativo)"
                   rows={2}
-                  className="mt-2 w-full rounded-lg bg-black/50 border border-white/10 text-white text-sm px-3 py-2 placeholder:text-white/30"
+                  className="mt-2 w-full rounded-lg bg-card border border-input text-foreground text-sm px-3 py-2 placeholder:text-muted-foreground"
                 />
               </div>
 
@@ -291,14 +291,14 @@ export default function Subscribe() {
                   disabled={cancelling}
                   className="mt-0.5 h-5 w-5 shrink-0 accent-red-500 cursor-pointer"
                 />
-                <span className="text-sm text-white/85 leading-snug">
-                  <strong className="text-red-300">Confermo</strong> di voler disdire l'abbonamento a Sconti Roma. Ho letto cosa perdo e sono consapevole che l'operazione è definitiva.
+                <span className="text-sm text-foreground leading-snug">
+                  <strong className="text-red-700">Confermo</strong> di voler disdire l'abbonamento a Sconti Roma. Ho letto cosa perdo e sono consapevole che l'operazione è definitiva.
                 </span>
               </label>
             </div>
 
             {/* Footer con 2 azioni */}
-            <div className="flex flex-col-reverse sm:flex-row gap-2 border-t border-white/10 bg-black/40 p-4">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 border-t border-border bg-muted p-4">
               <Button
                 data-testid="cancel-keep-btn"
                 onClick={closeCancelDialog}
@@ -315,7 +315,7 @@ export default function Subscribe() {
                 className={`w-full sm:flex-1 rounded-full transition ${
                   finalConfirm
                     ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-white/5 text-white/40 cursor-not-allowed"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
               >
                 {cancelling ? "Cancellazione in corso…" : "Sì, disdici definitivamente"}

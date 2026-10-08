@@ -72,11 +72,12 @@ test('area commerciante: pulsanti e campi principali alti almeno 44 px', async (
   expect(await troppoPiccoli(['[data-testid=scan-code-input]', '[data-testid=scan-verify-btn]'])).toEqual([]);
 });
 
-test('area commerciante: il resto del sito resta scuro', async ({ page }) => {
+test('area commerciante: anche il resto del sito usa lo stesso fondo chiaro', async ({ page }) => {
+  // Dal tema chiaro globale (test 22) la home ha lo stesso fondo bianco dell'area commerciante
   await page.goto('/');
   const lum = await page.evaluate(() => {
     const c = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
     return (c[0] + c[1] + c[2]) / 3;
   });
-  expect(lum).toBeLessThan(40);
+  expect(lum).toBeGreaterThan(240);
 });

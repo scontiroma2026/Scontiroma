@@ -1,0 +1,84 @@
+/*
+ * Tema unico di tutto il sito: «Bianco vivo».
+ * Vale per ogni pagina (home, offerte, cliente, area commerciante, admin, pagine legali).
+ * L'unica eccezione è la locandina stampabile (/locandina), che è un foglio da stampare.
+ *
+ * - Fondo bianco, testo scuro (#1A1530); accenti vivi: fucsia #D81B72, viola #6D4AFF, teal #00798C, verde #127A47.
+ * - Pulsanti pieni o a gradiente fucsia-viola con testo bianco.
+ * - Due soli caratteri: Fraunces (titoli) e Manrope (testo), ospitati in /fonts (fonts.css).
+ * - Le variabili qui sotto ridisegnano anche i componenti condivisi (Input, Card, Switch...) senza toccarli.
+ *   Nelle pagine si usano i token (text-foreground, text-muted-foreground, bg-muted, border-border...)
+ *   o i colori `ac-*` / `fucsia` / `ciano` del file tailwind.config.js: mai bianco/nero sparsi.
+ */
+:root {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 252 43% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 252 43% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 252 43% 13%;
+  --primary: 332 74% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 255 100% 95%;
+  --secondary-foreground: 252 43% 13%;
+  --muted: 270 50% 97%;
+  --muted-foreground: 252 14% 40%;
+  --accent: 330 100% 97%;
+  --accent-foreground: 252 43% 13%;
+  --destructive: 5 77% 40%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 280 45% 91%;
+  --input: 253 29% 76%;
+  --ring: 252 100% 64%;
+  --radius: 1rem;
+}
+
+html, body, .App {
+  background-color: #ffffff;
+  color: #1a1530;
+}
+
+/* Solo Fraunces e Manrope: niente Archivo Black, niente carattere monospazio */
+h1, h2, h3, h4 {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.font-testo,
+.font-mono,
+code,
+kbd,
+pre {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+::selection { background: #d81b72; color: #ffffff; }
+:focus-visible { outline: 3px solid #6d4aff; outline-offset: 2px; }
+.ac-grad { background: linear-gradient(135deg, #d81b72 0%, #6d4aff 100%); }
+.ac-ombra-rosa { box-shadow: 0 8px 20px rgba(216, 27, 114, 0.28); }
+
+/* Scheletro di caricamento */
+@keyframes ac-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.ac-skel { background: #f0e9f8; border-radius: 10px; animation: ac-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ac-skel { animation: none; }
+}
+
+/* Piede della pagina (LegalFooter condiviso) */
+[data-testid="legal-footer"] {
+  background: #ffffff;
+  border-top: 1px solid #eadff0;
+}
+[data-testid="legal-footer"] a,
+[data-testid="legal-footer"] button {
+  color: #5e5875;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+[data-testid="legal-footer"] a:hover,
+[data-testid="legal-footer"] button:hover { color: #d81b72; }

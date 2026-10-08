@@ -97,13 +97,13 @@ export default function AddressAutocomplete({
       {label && (
         <Label>
           {label}{" "}
-          {helperText && <span className="text-xs text-white/50">({helperText})</span>}
+          {helperText && <span className="text-xs text-muted-foreground">({helperText})</span>}
         </Label>
       )}
       <div className="relative mt-1">
         <MapPin
           size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
         />
         <Input
           data-testid={`${testId}-input`}
@@ -121,9 +121,9 @@ export default function AddressAutocomplete({
           {loading ? (
             <Loader2 size={14} className="animate-spin text-fucsia" />
           ) : picked ? (
-            <Check size={14} className="text-green-400" />
+            <Check size={14} className="text-emerald-700" />
           ) : (
-            <Search size={14} className="text-white/30" />
+            <Search size={14} className="text-muted-foreground" />
           )}
         </div>
       </div>
@@ -132,9 +132,9 @@ export default function AddressAutocomplete({
       {open && suggestions.length > 0 && (
         <div
           data-testid={`${testId}-dropdown`}
-          className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-white/15 bg-[#141419] shadow-2xl overflow-hidden animate-in fade-in-0 slide-in-from-top-1"
+          className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-2xl overflow-hidden animate-in fade-in-0 slide-in-from-top-1"
         >
-          <div className="text-[10px] uppercase tracking-wider text-fucsia px-3 py-2 border-b border-white/10 bg-black/40 flex items-center justify-between">
+          <div className="text-[10px] uppercase tracking-wider text-fucsia px-3 py-2 border-b border-border bg-muted flex items-center justify-between">
             <span>{suggestions.length === 1 ? "1 indirizzo trovato" : `${suggestions.length} indirizzi trovati`} — clicca per selezionare</span>
             {(() => {
               const q = (value || "").trim();
@@ -142,7 +142,7 @@ export default function AddressAutocomplete({
               const anyNoNumber = suggestions.some((s) => !s.has_house_number);
               if (!queryHasDigit && anyNoNumber) {
                 return (
-                  <span className="text-yellow-300 text-[9px] normal-case tracking-normal flex items-center gap-1">
+                  <span className="text-amber-800 text-[9px] normal-case tracking-normal flex items-center gap-1">
                     <AlertCircle size={10} /> Aggiungi il n. civico
                   </span>
                 );
@@ -157,16 +157,16 @@ export default function AddressAutocomplete({
                   type="button"
                   data-testid={`${testId}-item-${i}`}
                   onClick={() => pick(s)}
-                  className="w-full text-left px-3 py-2 hover:bg-fucsia/10 transition border-b border-white/5 last:border-b-0"
+                  className="w-full text-left px-3 py-2 hover:bg-fucsia/10 transition border-b border-border last:border-b-0"
                 >
                   <div className="flex items-start gap-2">
-                    <MapPin size={12} className={`mt-1 shrink-0 ${s.has_house_number ? "text-fucsia" : "text-yellow-400"}`} />
+                    <MapPin size={12} className={`mt-1 shrink-0 ${s.has_house_number ? "text-fucsia" : "text-amber-800"}`} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm text-white break-words flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <div className="text-sm text-foreground break-words flex flex-wrap items-center gap-x-2 gap-y-1">
                         {conCivico(s, civico).display}
                         {!s.has_house_number && (
                           <span
-                            className="text-[9px] text-yellow-300 border border-yellow-500/40 bg-yellow-500/10 rounded px-1.5 py-0.5 shrink-0"
+                            className="text-[9px] text-amber-800 border border-yellow-500/40 bg-yellow-500/10 rounded px-1.5 py-0.5 shrink-0"
                             title="Il numero civico non è nella mappa: teniamo quello che hai scritto"
                           >
                             {civico ? `civico ${civico} da te` : "senza civico"}
@@ -174,7 +174,7 @@ export default function AddressAutocomplete({
                         )}
                       </div>
                       {s.full_display_name && s.full_display_name !== s.display && (
-                        <div className="text-[11px] text-white/50 line-clamp-2 break-words">
+                        <div className="text-[11px] text-muted-foreground line-clamp-2 break-words">
                           {s.full_display_name}
                         </div>
                       )}
@@ -184,19 +184,19 @@ export default function AddressAutocomplete({
               </li>
             ))}
           </ul>
-          <div className="text-[10px] text-white/40 px-3 py-1.5 border-t border-white/10 bg-black/40">
-            💡 <strong className="text-white/70">Tip:</strong> per suggerimenti col numero civico digita "Via, numero, città" (es. <em className="text-fucsia/80">Via del Corso 100 Roma</em>)
+          <div className="text-[10px] text-muted-foreground px-3 py-1.5 border-t border-border bg-muted">
+            💡 <strong className="text-muted-foreground">Tip:</strong> per suggerimenti col numero civico digita "Via, numero, città" (es. <em className="text-fucsia/80">Via del Corso 100 Roma</em>)
           </div>
         </div>
       )}
 
       {picked && (
-        <div className="mt-1 text-[10px] text-green-400 flex items-center gap-1">
+        <div className="mt-1 text-[10px] text-emerald-700 flex items-center gap-1">
           <Check size={10} /> Indirizzo verificato — comparirà sulla mappa
         </div>
       )}
       {picked && civicoTenuto && (
-        <div data-testid={`${testId}-civico-tenuto`} className="mt-1 text-[11px] text-white/60">
+        <div data-testid={`${testId}-civico-tenuto`} className="mt-1 text-[11px] text-muted-foreground">
           Abbiamo tenuto il civico {civicoTenuto} che hai scritto: controlla la posizione sulla mappa.
         </div>
       )}

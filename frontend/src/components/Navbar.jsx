@@ -44,12 +44,12 @@ export default function Navbar() {
   }
 
   return (
-    <header data-testid="navbar" className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/70 backdrop-blur-md">
+    <header data-testid="navbar" className="sticky top-0 z-40 w-full border-b border-border bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to="/" data-testid="brand-link" className="flex items-center gap-2">
           <div className="grad-fucsia-viola flex h-10 w-10 items-center justify-center rounded-2xl text-white font-serif text-lg glow-fucsia">S</div>
           <div className="flex flex-col leading-tight">
-            <BrandMark inline className="text-xl tracking-tight text-white" />
+            <BrandMark inline className="text-xl tracking-tight text-foreground" />
             <span className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-ciano">Roma è tua</span>
           </div>
         </Link>
@@ -61,7 +61,7 @@ export default function Navbar() {
               to={l.to}
               data-testid={`nav-${l.label.toLowerCase().replace(/\s+/g,'-')}`}
               className={({ isActive }) =>
-                `text-sm transition-colors ${isActive ? "text-fucsia" : "text-white/70 hover:text-fucsia"}`
+                `text-sm transition-colors ${isActive ? "text-fucsia" : "text-muted-foreground hover:text-fucsia"}`
               }
             >
               {l.label}
@@ -72,7 +72,7 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white">
+              <span className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs text-foreground">
                 {isMerchant ? <Store size={14} className="text-ciano" /> : <User size={14} className="text-fucsia" />}
                 {user.name || user.email}
               </span>
@@ -81,7 +81,7 @@ export default function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-muted"
               >
                 <LogOut size={16} className="mr-1.5" /> Esci
               </Button>
@@ -93,7 +93,7 @@ export default function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => nav("/login")}
-                className="text-white hover:bg-white/10"
+                className="text-foreground hover:bg-muted"
               >
                 Accedi
               </Button>
@@ -111,7 +111,7 @@ export default function Navbar() {
 
         <button
           data-testid="mobile-menu-btn"
-          className="md:hidden rounded-md p-2 text-espresso"
+          className="md:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-espresso"
           onClick={() => setOpen(!open)}
         >
           <Menu size={22} />
@@ -126,7 +126,7 @@ export default function Navbar() {
                 key={l.to}
                 to={l.to}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2 text-sm text-espresso hover:bg-parchment"
+                className="flex min-h-11 items-center rounded-md px-3 text-sm text-espresso hover:bg-parchment"
               >
                 {l.label}
               </Link>
@@ -134,14 +134,14 @@ export default function Navbar() {
             {user ? (
               <button
                 onClick={handleLogout}
-                className="mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-espresso hover:bg-parchment"
+                className="mt-2 flex min-h-11 items-center gap-2 rounded-md px-3 text-sm text-espresso hover:bg-parchment"
               >
                 <LogOut size={14} /> Esci
               </button>
             ) : (
               <>
-                <Link to="/login" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm text-espresso hover:bg-parchment">Accedi</Link>
-                <Link to="/register" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm text-terracotta">Iscriviti</Link>
+                <Link to="/login" onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-md px-3 text-sm text-espresso hover:bg-parchment">Accedi</Link>
+                <Link to="/register" onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-md px-3 text-sm font-semibold text-terracotta">Iscriviti</Link>
               </>
             )}
           </div>

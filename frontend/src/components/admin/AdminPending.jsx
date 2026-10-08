@@ -41,18 +41,18 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
     : pending;
 
   return (
-    <Card className="border-white/10 bg-white/5 p-6">
+    <Card className="border-border bg-muted p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-serif text-2xl">Offerte in attesa di approvazione</h3>
-          <p className="text-xs text-white/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Approva per pubblicare subito, o rifiuta per rimandare in bozza al commerciante.
           </p>
         </div>
         <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio o offerta…" testId="pending-search" />
       </div>
       {filtered.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-10 text-center text-white/60">
+        <div className="mt-6 rounded-xl border border-border bg-muted p-10 text-center text-muted-foreground">
           {q ? `Nessuna offerta trovata per "${q}".` : "🎉 Nessuna offerta in attesa. Ottimo lavoro!"}
         </div>
       ) : (
@@ -61,7 +61,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
             <div
               key={d.id}
               data-testid={`pending-${d.id}`}
-              className="grid grid-cols-1 md:grid-cols-[100px_1fr_auto] gap-4 rounded-xl border border-white/10 bg-black/30 p-4"
+              className="grid grid-cols-1 md:grid-cols-[100px_1fr_auto] gap-4 rounded-xl border border-border bg-muted p-4"
             >
               <img
                 src={d.image_url || d.merchant?.image_url}
@@ -72,11 +72,11 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                 <div className="text-xs uppercase tracking-wider text-ciano">
                   {d.merchant?.shop_name} · {d.merchant?.zone}
                 </div>
-                <div className="font-serif text-xl text-white mt-1">{d.title}</div>
-                <p className="text-sm text-white/70 mt-1 line-clamp-2">{d.description}</p>
+                <div className="font-serif text-xl text-foreground mt-1">{d.title}</div>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{d.description}</p>
                 <div className="mt-2 flex items-baseline gap-2 text-sm">
                   <span className="text-fucsia font-bold text-lg">€{d.discounted_price?.toFixed(2)}</span>
-                  <span className="text-white/40 line-through">€{d.original_price?.toFixed(2)}</span>
+                  <span className="text-muted-foreground line-through">€{d.original_price?.toFixed(2)}</span>
                   <span className="ml-2 text-neon text-xs">−{d.percent_off}%</span>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -88,12 +88,12 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                     🔁 {d.max_uses_per_month || 1}× al mese per cliente
                   </span>
                   {d.category && (
-                    <span className="rounded-full border border-white/10 bg-black/40 px-2.5 py-0.5 text-xs text-white/70">
+                    <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                       {d.category}
                     </span>
                   )}
                 </div>
-                {d.terms && <div className="mt-2 text-xs text-white/50">Termini: {d.terms}</div>}
+                {d.terms && <div className="mt-2 text-xs text-muted-foreground">Termini: {d.terms}</div>}
               </div>
               <div className="flex flex-col gap-2 md:justify-center">
                 <Button

@@ -16,59 +16,59 @@ export default function AdminEconomics({ hdrs }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- caricamento singolo al mount
   }, []);
 
-  if (!data) return <div className="text-white/60">Caricamento…</div>;
+  if (!data) return <div className="text-muted-foreground">Caricamento…</div>;
 
   const cards = [
     { icon: Users, label: "Abbonati attivi", value: data.active_total, sub: `+${data.new_this_month} nuovi questo mese`, color: "text-ciano" },
     { icon: TrendingUp, label: "MRR lordo", value: fmt(data.mrr_gross), sub: `${data.active_total} × ${fmt(data.price_eur)}`, color: "text-fucsia" },
     { icon: CreditCard, label: "Commissioni stimate", value: fmt(data.fees.total), sub: `Stripe ${fmt(data.fees.stripe)} · PayPal ${fmt(data.fees.paypal)}`, color: "text-gold" },
-    { icon: Euro, label: "Netto stimato / mese", value: fmt(data.net_estimated), sub: "MRR lordo − commissioni", color: "text-emerald-400" },
+    { icon: Euro, label: "Netto stimato / mese", value: fmt(data.net_estimated), sub: "MRR lordo − commissioni", color: "text-emerald-700" },
   ];
 
   return (
     <div data-testid="admin-economics" className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
-          <Card key={c.label} className="border-white/10 bg-white/5 p-5">
+          <Card key={c.label} className="border-border bg-muted p-5">
             <div className={`flex items-center gap-2 text-xs uppercase tracking-wider ${c.color}`}>
               <c.icon size={14} /> {c.label}
             </div>
-            <div className="mt-2 font-serif text-4xl text-white">{c.value}</div>
-            <div className="mt-1 text-xs text-white/50">{c.sub}</div>
+            <div className="mt-2 font-serif text-4xl text-foreground">{c.value}</div>
+            <div className="mt-1 text-xs text-muted-foreground">{c.sub}</div>
           </Card>
         ))}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="border-white/10 bg-[#141414] p-5">
+        <Card className="border-border bg-card p-5">
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
             <Wallet size={14} /> Netto per abbonato
           </div>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-white/70">Stripe ({data.by_provider.stripe} abbonati)</span>
-              <span className="font-bold text-white">{fmt(data.net_per_sub.stripe)} <span className="text-white/40 font-normal">su {fmt(data.price_eur)}</span></span>
+              <span className="text-muted-foreground">Stripe ({data.by_provider.stripe} abbonati)</span>
+              <span className="font-bold text-foreground">{fmt(data.net_per_sub.stripe)} <span className="text-muted-foreground font-normal">su {fmt(data.price_eur)}</span></span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-white/70">PayPal ({data.by_provider.paypal} abbonati)</span>
-              <span className="font-bold text-white">{fmt(data.net_per_sub.paypal)} <span className="text-white/40 font-normal">su {fmt(data.price_eur)}</span></span>
+              <span className="text-muted-foreground">PayPal ({data.by_provider.paypal} abbonati)</span>
+              <span className="font-bold text-foreground">{fmt(data.net_per_sub.paypal)} <span className="text-muted-foreground font-normal">su {fmt(data.price_eur)}</span></span>
             </div>
           </div>
-          <p className="mt-3 text-xs text-white/40">Commissioni: Stripe 1,5% + €0,25 (carte EU) · PayPal ~3,4% + €0,35.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Commissioni: Stripe 1,5% + €0,25 (carte EU) · PayPal ~3,4% + €0,35.</p>
         </Card>
 
-        <Card className="border-white/10 bg-[#141414] p-5">
+        <Card className="border-border bg-card p-5">
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-ciano">
             <Info size={14} /> Costi fissi mensili
           </div>
-          <ul className="mt-3 space-y-2 text-sm text-white/70">
-            <li className="flex justify-between"><span>Hosting server (Render)</span><span className="text-white">~$7/mese</span></li>
-            <li className="flex justify-between"><span>Sito (Render) + database (MongoDB Atlas)</span><span className="text-white">€0 (piani gratuiti)</span></li>
-            <li className="flex justify-between"><span>Email Resend</span><span className="text-white">€0 (fino a 3.000/mese)</span></li>
-            <li className="flex justify-between"><span>Mappe (OSM/Nominatim)</span><span className="text-white">€0</span></li>
-            <li className="flex justify-between"><span>Dominio + caselle Aruba</span><span className="text-white">~€10-30/anno</span></li>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <li className="flex justify-between"><span>Hosting server (Render)</span><span className="text-foreground">~$7/mese</span></li>
+            <li className="flex justify-between"><span>Sito (Render) + database (MongoDB Atlas)</span><span className="text-foreground">€0 (piani gratuiti)</span></li>
+            <li className="flex justify-between"><span>Email Resend</span><span className="text-foreground">€0 (fino a 3.000/mese)</span></li>
+            <li className="flex justify-between"><span>Mappe (OSM/Nominatim)</span><span className="text-foreground">€0</span></li>
+            <li className="flex justify-between"><span>Dominio + caselle Aruba</span><span className="text-foreground">~€10-30/anno</span></li>
           </ul>
-          <p className="mt-3 text-xs text-white/40">Le commissioni Stripe/PayPal sono stime: quelle esatte dipendono dal tipo di carta/conto del cliente.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Le commissioni Stripe/PayPal sono stime: quelle esatte dipendono dal tipo di carta/conto del cliente.</p>
         </Card>
       </div>
     </div>

@@ -36,13 +36,13 @@ export default function PaymentSuccess() {
   }, [sessionId, refresh]);
 
   return (
-    <main className="mx-auto max-w-xl px-6 py-20 text-white">
-      <Card className="border-white/10 bg-white/5 p-10 text-center">
+    <main className="mx-auto max-w-xl px-6 py-20 text-foreground">
+      <Card className="border-border bg-muted p-10 text-center">
         {status === "polling" && (
           <>
             <Loader2 size={48} className="mx-auto animate-spin text-fucsia" />
             <h1 className="mt-6 font-serif text-4xl">Confermiamo il pagamento…</h1>
-            <p className="mt-2 text-white/60">Solo qualche secondo.</p>
+            <p className="mt-2 text-muted-foreground">Solo qualche secondo.</p>
           </>
         )}
         {status === "paid" && (
@@ -51,12 +51,12 @@ export default function PaymentSuccess() {
               <Check size={32} />
             </div>
             <h1 className="mt-6 font-serif text-5xl text-grad">Sei dei nostri! ✦</h1>
-            <p className="mt-3 text-white/70">Il tuo abbonamento Sconti Roma è attivo. Roma ti aspetta.</p>
+            <p className="mt-3 text-muted-foreground">Il tuo abbonamento Sconti Roma è attivo. Roma ti aspetta.</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button onClick={() => nav("/discounts")} className="grad-fucsia-viola text-white rounded-full px-6">
                 Vai agli sconti →
               </Button>
-              <Button variant="outline" onClick={() => nav("/dashboard")} className="rounded-full border-white/20 text-white hover:bg-white/10">
+              <Button variant="outline" onClick={() => nav("/dashboard")} className="rounded-full border-border text-foreground hover:bg-muted">
                 Il mio account
               </Button>
             </div>
@@ -65,7 +65,7 @@ export default function PaymentSuccess() {
         {status === "timeout" && (
           <>
             <h1 className="font-serif text-3xl">Verifica in corso…</h1>
-            <p className="mt-3 text-white/70">Il pagamento potrebbe richiedere ancora qualche istante.</p>
+            <p className="mt-3 text-muted-foreground">Il pagamento potrebbe richiedere ancora qualche istante.</p>
             <Link to="/dashboard" className="mt-4 inline-block text-ciano hover:underline">Vai al tuo account →</Link>
           </>
         )}

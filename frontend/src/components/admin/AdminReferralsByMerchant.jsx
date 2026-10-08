@@ -42,14 +42,14 @@ export default function AdminReferralsByMerchant({ hdrs }) {
 
   if (!data) {
     return (
-      <div data-testid="admin-referrals-loading" className="text-white/60 text-sm py-8">
+      <div data-testid="admin-referrals-loading" className="text-muted-foreground text-sm py-8">
         Caricamento…
       </div>
     );
   }
   if (data.error) {
     return (
-      <div data-testid="admin-referrals-error" className="text-red-300 text-sm py-8">
+      <div data-testid="admin-referrals-error" className="text-red-700 text-sm py-8">
         Impossibile caricare i dati referral.
       </div>
     );
@@ -74,7 +74,7 @@ export default function AdminReferralsByMerchant({ hdrs }) {
         <KPI icon={<Store size={14} />} label="Negozi con iscritti" value={totals.merchants_with_referrals ?? 0} testid="kpi-shops" />
         <KPI icon={<Users size={14} />} label="Iscrizioni totali via QR" value={totals.total_signups ?? 0} testid="kpi-signups" />
         <KPI icon={<TrendingUp size={14} />} label="Abbonati almeno una volta" value={totals.total_subscribed ?? 0} testid="kpi-subscribed" />
-        <KPI icon={<CheckCircle2 size={14} className="text-green-400" />} label="Abbonamenti attivi" value={totals.total_active ?? 0} testid="kpi-active" />
+        <KPI icon={<CheckCircle2 size={14} className="text-emerald-700" />} label="Abbonamenti attivi" value={totals.total_active ?? 0} testid="kpi-active" />
       </div>
 
       {/* Search */}
@@ -84,14 +84,14 @@ export default function AdminReferralsByMerchant({ hdrs }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cerca negozio, email o quartiere…"
-          className="bg-black/40 border-white/10 text-white placeholder:text-white/40 max-w-sm"
+          className="bg-muted border-border text-foreground placeholder:text-muted-foreground max-w-sm"
         />
-        <span className="text-xs text-white/40">{filtered.length} negozi</span>
+        <span className="text-xs text-muted-foreground">{filtered.length} negozi</span>
       </div>
 
       {/* Empty state */}
       {filtered.length === 0 && (
-        <Card className="border-white/10 bg-black/30 p-6 text-center text-white/60 text-sm">
+        <Card className="border-border bg-muted p-6 text-center text-muted-foreground text-sm">
           Nessun negozio ha ancora acquisito iscritti tramite il proprio QR.
         </Card>
       )}
@@ -104,25 +104,25 @@ export default function AdminReferralsByMerchant({ hdrs }) {
             <Card
               key={m.merchant_id}
               data-testid={`referral-row-${m.merchant_id}`}
-              className="border-white/10 bg-black/30 overflow-hidden"
+              className="border-border bg-muted overflow-hidden"
             >
               <button
                 data-testid={`referral-toggle-${m.merchant_id}`}
                 onClick={() => setExpanded((s) => ({ ...s, [m.merchant_id]: !isOpen }))}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition text-left"
+                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted transition text-left"
               >
-                <span className="text-white/50">
+                <span className="text-muted-foreground">
                   {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </span>
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <QrCode size={14} className="text-fucsia shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-white font-medium truncate">
+                    <div className="text-foreground font-medium truncate">
                       {m.shop_name}
-                      {m.zone && <span className="text-white/40 text-xs ml-2">· {m.zone}</span>}
+                      {m.zone && <span className="text-muted-foreground text-xs ml-2">· {m.zone}</span>}
                     </div>
                     {m.merchant_email && (
-                      <div className="text-[11px] text-white/40 truncate">{m.merchant_email}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{m.merchant_email}</div>
                     )}
                   </div>
                 </div>
@@ -135,7 +135,7 @@ export default function AdminReferralsByMerchant({ hdrs }) {
               </button>
 
               {isOpen && (
-                <div className="border-t border-white/10 bg-black/20 px-4 py-3">
+                <div className="border-t border-border bg-muted px-4 py-3">
                   {/* Mobile metrics */}
                   <div className="sm:hidden mb-3 grid grid-cols-4 gap-2">
                     <MobileMetric label="Iscritti" value={m.total_signups} />
@@ -145,12 +145,12 @@ export default function AdminReferralsByMerchant({ hdrs }) {
                   </div>
 
                   {m.clients?.length === 0 ? (
-                    <div className="text-white/50 text-sm py-2">Nessun cliente attribuito.</div>
+                    <div className="text-muted-foreground text-sm py-2">Nessun cliente attribuito.</div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="text-left text-white/40 text-xs uppercase">
+                          <tr className="text-left text-muted-foreground text-xs uppercase">
                             <th className="py-2 pr-4">Cliente</th>
                             <th className="py-2 pr-4">Email</th>
                             <th className="py-2 pr-4">Iscritto</th>
@@ -162,28 +162,28 @@ export default function AdminReferralsByMerchant({ hdrs }) {
                             <tr
                               key={c.id}
                               data-testid={`referral-client-${c.id}`}
-                              className="border-t border-white/5"
+                              className="border-t border-border"
                             >
-                              <td className="py-2 pr-4 text-white">{c.name || "—"}</td>
-                              <td className="py-2 pr-4 text-white/70">
+                              <td className="py-2 pr-4 text-foreground">{c.name || "—"}</td>
+                              <td className="py-2 pr-4 text-muted-foreground">
                                 <span className="inline-flex items-center gap-1">
-                                  <Mail size={11} className="text-white/40" /> {c.email}
+                                  <Mail size={11} className="text-muted-foreground" /> {c.email}
                                 </span>
                               </td>
-                              <td className="py-2 pr-4 text-white/60">
+                              <td className="py-2 pr-4 text-muted-foreground">
                                 {fmt(c.referred_at || c.created_at)}
                               </td>
                               <td className="py-2 pr-4">
                                 {c.is_active_now ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-xs text-green-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-xs text-emerald-700">
                                     <CheckCircle2 size={10} /> Attivo
                                   </span>
                                 ) : c.is_subscribed ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-xs text-white/60">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                                     Scaduto
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/5 px-2 py-0.5 text-xs text-yellow-300">
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/5 px-2 py-0.5 text-xs text-amber-800">
                                     Solo registrato
                                   </span>
                                 )}
@@ -208,12 +208,12 @@ function KPI({ icon, label, value, testid }) {
   return (
     <Card
       data-testid={testid}
-      className="border-white/10 bg-black/40 p-4"
+      className="border-border bg-muted p-4"
     >
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-white/50">
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
         {icon} {label}
       </div>
-      <div className="mt-1 font-serif text-3xl text-white font-bold">{value}</div>
+      <div className="mt-1 font-serif text-3xl text-foreground font-bold">{value}</div>
     </Card>
   );
 }
@@ -221,12 +221,12 @@ function KPI({ icon, label, value, testid }) {
 function Metric({ label, value, accent }) {
   const color =
     accent === "fucsia" ? "text-fucsia"
-    : accent === "green" ? "text-green-400"
+    : accent === "green" ? "text-emerald-700"
     : accent === "ciano" ? "text-ciano"
-    : "text-white";
+    : "text-foreground";
   return (
     <div className="text-right">
-      <div className="text-[9px] uppercase text-white/40 leading-none">{label}</div>
+      <div className="text-[9px] uppercase text-muted-foreground leading-none">{label}</div>
       <div className={`font-serif text-lg font-bold ${color} leading-tight`}>{value}</div>
     </div>
   );
@@ -234,9 +234,9 @@ function Metric({ label, value, accent }) {
 
 function MobileMetric({ label, value }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-black/40 p-2 text-center">
-      <div className="text-[9px] uppercase text-white/40">{label}</div>
-      <div className="font-serif text-lg text-white font-bold">{value}</div>
+    <div className="rounded-lg border border-border bg-muted p-2 text-center">
+      <div className="text-[9px] uppercase text-muted-foreground">{label}</div>
+      <div className="font-serif text-lg text-foreground font-bold">{value}</div>
     </div>
   );
 }

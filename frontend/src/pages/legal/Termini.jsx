@@ -17,7 +17,7 @@ export default function Termini() {
           aver letto, compreso e accettato integralmente i presenti Termini.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">1. Oggetto del Servizio</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">1. Oggetto del Servizio</h2>
         <p>
           Sconti Roma è una piattaforma digitale che mette in contatto{" "}
           <strong>utenti registrati</strong> ("Clienti") con{" "}
@@ -33,7 +33,7 @@ export default function Termini() {
           capelli, pizza) resta tra il Cliente e il Commerciante.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">2. Registrazione</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">2. Registrazione</h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
             Devi avere almeno <strong>18 anni</strong> per registrarti: con la
@@ -55,8 +55,8 @@ export default function Termini() {
           </li>
         </ul>
 
-        <h2 className="font-serif text-2xl text-white mt-8">3. Costi del servizio</h2>
-        <h3 className="font-serif text-xl text-white mt-6">3.1 Per i Clienti</h3>
+        <h2 className="font-serif text-2xl text-foreground mt-8">3. Costi del servizio</h2>
+        <h3 className="font-serif text-xl text-foreground mt-6">3.1 Per i Clienti</h3>
         <p>
           Durante la <strong>fase di lancio</strong> la registrazione e l'uso
           degli sconti sono <strong>gratuiti</strong> per i Clienti. Non è
@@ -65,7 +65,7 @@ export default function Termini() {
           comunicati con almeno 30 giorni di preavviso e si attiveranno solo
           con la tua accettazione espressa.
         </p>
-        <h3 className="font-serif text-xl text-white mt-6">3.2 Per i Commercianti</h3>
+        <h3 className="font-serif text-xl text-foreground mt-6">3.2 Per i Commercianti</h3>
         <ul className="list-disc pl-6 space-y-2">
           <li>
             <strong>Fase di lancio</strong>: la partecipazione è gratuita per
@@ -100,7 +100,7 @@ export default function Termini() {
           </li>
         </ul>
 
-        <h2 className="font-serif text-2xl text-white mt-8">4. Utilizzo degli sconti</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">4. Utilizzo degli sconti</h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
             Gli sconti sono <strong>personali e non trasferibili</strong>. Ogni
@@ -135,7 +135,7 @@ export default function Termini() {
           </li>
         </ul>
 
-        <h2 className="font-serif text-2xl text-white mt-8">5. Obblighi dei Commercianti</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">5. Obblighi dei Commercianti</h2>
         <p>
           I Commercianti che aderiscono alla piattaforma si impegnano a:
         </p>
@@ -175,7 +175,7 @@ export default function Termini() {
         </ul>
 
         <div className="mt-6 rounded-xl border border-neon/30 bg-neon/5 p-5">
-          <h3 className="font-serif text-lg text-white flex items-center gap-2">
+          <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
             <span className="text-neon">✎</span> Modifiche o rimozione del negozio
           </h3>
           <p className="mt-2 text-sm">
@@ -201,7 +201,7 @@ export default function Termini() {
             in corso possono essere completate solo se il negozio non viene
             rimosso.
           </p>
-          <p className="mt-2 text-xs text-white/60">
+          <p className="mt-2 text-xs text-muted-foreground">
             Per candidature di nuovi negozi e collaborazioni B2B scrivi allo
             stesso indirizzo{" "}
             <a
@@ -215,7 +215,7 @@ export default function Termini() {
           </p>
         </div>
 
-        <h2 className="font-serif text-2xl text-white mt-8">6. Recesso e cancellazione</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">6. Recesso e cancellazione</h2>
         <p>
           Puoi eliminare il tuo account in qualsiasi momento dal profilo
           ("Elimina il mio account"). Per gli eventuali servizi a pagamento
@@ -228,7 +228,7 @@ export default function Termini() {
           .
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">7. Limitazioni di responsabilità</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">7. Limitazioni di responsabilità</h2>
         <p>
           Sconti Roma fornisce il Servizio "così com'è" e non garantisce:
         </p>
@@ -256,7 +256,7 @@ export default function Termini() {
           dannoso, salvi i casi di dolo o colpa grave.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">8. Proprietà intellettuale</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">8. Proprietà intellettuale</h2>
         <p>
           Il nome "Sconti Roma", il logo, il design della piattaforma, il
           codice sorgente e tutti i contenuti editoriali sono di proprietà
@@ -272,7 +272,7 @@ export default function Termini() {
           automatici, e di non violare diritti di terzi.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">9. Modifiche ai Termini</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">9. Modifiche ai Termini</h2>
         <p>
           Sconti Roma può modificare i Termini in qualsiasi momento. Le
           modifiche sostanziali saranno comunicate via email con almeno 15
@@ -280,7 +280,7 @@ export default function Termini() {
           vigore delle modifiche costituisce accettazione delle stesse.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">10. Legge applicabile e foro competente</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">10. Legge applicabile e foro competente</h2>
         <p>
           I presenti Termini sono regolati dalla <strong>legge italiana</strong>.
           Per qualsiasi controversia il foro competente esclusivo è quello di{" "}
@@ -289,7 +289,7 @@ export default function Termini() {
           residenza.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">11. Risoluzione alternativa delle controversie</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">11. Risoluzione alternativa delle controversie</h2>
         <p>
           Se hai un problema scrivici prima a{" "}
           <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
@@ -300,7 +300,7 @@ export default function Termini() {
           controversie previsti dalla legge.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">12. Contatti</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">12. Contatti</h2>
         <ul className="list-disc pl-6 space-y-1 text-sm">
           <li>
             Assistenza generale:{" "}

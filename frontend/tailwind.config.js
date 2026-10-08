@@ -41,6 +41,14 @@ module.exports = {
           rosso: '#B42318',
           rossoBg: '#FEE4E2',
         },
+        // Tavolozza unica del sito (tema chiaro «Bianco vivo»): stessi nomi di prima, colori adatti al fondo bianco
+        fucsia: '#B3135C', // fucsia del sito, un filo più scuro per il testo su fondi chiari (≥ 4.5:1 anche sui riquadri lavanda)
+        ciano: '#00697A',
+        neon: '#8A5200',
+        limone: '#127A47',
+        gold: '#00697A',
+        terracotta: '#D81B72',
+        espresso: '#1A1530',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

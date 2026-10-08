@@ -32,21 +32,21 @@ export default function ResetPassword() {
 
   return (
     <main data-testid="reset-page" className="mx-auto max-w-md px-6 py-16">
-      <Card className="border-white/10 bg-white/5 p-8">
+      <Card className="border-border bg-muted p-8">
         <div className="text-xs uppercase tracking-[0.2em] text-ciano">Nuova password</div>
-        <h1 className="mt-2 font-serif text-4xl text-white">Imposta nuova password</h1>
+        <h1 className="mt-2 font-serif text-4xl text-foreground">Imposta nuova password</h1>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
-            <Label className="text-white/80">Codice di recupero</Label>
-            <Input data-testid="reset-token" required value={token} onChange={(e) => setToken(e.target.value)} className="mt-1 font-mono text-xs bg-black/40 border-white/10 text-white" />
+            <Label className="text-foreground/80">Codice di recupero</Label>
+            <Input data-testid="reset-token" required value={token} onChange={(e) => setToken(e.target.value)} className="mt-1 font-mono text-xs bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/80">Nuova password</Label>
-            <PasswordInput data-testid="reset-pw" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+            <Label className="text-foreground/80">Nuova password</Label>
+            <PasswordInput data-testid="reset-pw" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/80">Conferma</Label>
-            <PasswordInput data-testid="reset-pw2" required minLength={6} value={pw2} onChange={(e) => setPw2(e.target.value)} className="mt-1 bg-black/40 border-white/10 text-white" />
+            <Label className="text-foreground/80">Conferma</Label>
+            <PasswordInput data-testid="reset-pw2" required minLength={6} value={pw2} onChange={(e) => setPw2(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
           </div>
           <Button data-testid="reset-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
             {busy ? "Salvataggio…" : "Aggiorna password"}

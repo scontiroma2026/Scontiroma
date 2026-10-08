@@ -109,7 +109,7 @@ export default function PWAInstallBanner() {
   return (
     <div
       data-testid="pwa-install-banner"
-      className="fixed inset-x-3 bottom-3 z-[9999] mx-auto max-w-md rounded-2xl border border-fucsia/40 bg-[#0F0F0F]/95 p-4 shadow-2xl backdrop-blur-md"
+      className="fixed inset-x-3 bottom-3 z-[9999] mx-auto max-w-md rounded-2xl border border-fucsia/40 bg-white/95 p-4 shadow-2xl backdrop-blur-md"
       style={{ animation: "slideUpBanner 0.5s ease-out" }}
       role="dialog"
       aria-label="Installa app Sconti Roma"
@@ -117,7 +117,7 @@ export default function PWAInstallBanner() {
       <button
         data-testid="pwa-install-dismiss"
         onClick={dismiss}
-        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white transition"
+        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition"
         aria-label="Chiudi"
       >
         <X size={18} />
@@ -125,15 +125,15 @@ export default function PWAInstallBanner() {
 
       <div className="flex items-start gap-3 pr-6">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl grad-fucsia-viola glow-fucsia">
-          <Smartphone size={22} className="text-white" />
+          <Smartphone size={22} className="text-foreground" />
         </div>
         <div className="flex-1">
-          <div className="font-serif text-lg leading-tight text-white">
-            Installa <BrandMark inline className="text-white" /> sul tuo telefono!
+          <div className="font-serif text-lg leading-tight text-foreground">
+            Installa <BrandMark inline className="text-foreground" /> sul tuo telefono!
           </div>
 
           {isIOS && (
-            <div data-testid="pwa-hint-ios" className="mt-2 text-sm text-white/75 leading-relaxed">
+            <div data-testid="pwa-hint-ios" className="mt-2 text-sm text-foreground/80 leading-relaxed">
               Clicca sul tasto <strong className="text-ciano">Condividi</strong>{" "}
               <Share size={14} className="inline align-middle text-ciano" /> in basso
               e seleziona <strong className="text-fucsia">➕ Aggiungi alla schermata Home</strong>.
@@ -141,7 +141,7 @@ export default function PWAInstallBanner() {
           )}
 
           {isAndroid && !canPrompt && (
-            <div data-testid="pwa-hint-android" className="mt-2 text-sm text-white/75 leading-relaxed">
+            <div data-testid="pwa-hint-android" className="mt-2 text-sm text-foreground/80 leading-relaxed">
               Clicca sui <strong className="text-ciano">3 puntini</strong> in alto a destra
               e seleziona <strong className="text-fucsia">Installa applicazione</strong>.
             </div>
@@ -149,7 +149,7 @@ export default function PWAInstallBanner() {
 
           {isAndroid && canPrompt && (
             <>
-              <div className="mt-2 text-sm text-white/75">
+              <div className="mt-2 text-sm text-foreground/80">
                 Aggiungila alla home per accedere ai tuoi sconti con un tap.
               </div>
               <button
@@ -163,7 +163,7 @@ export default function PWAInstallBanner() {
           )}
 
           {!isIOS && !isAndroid && (
-            <div className="mt-2 text-sm text-white/75">
+            <div className="mt-2 text-sm text-foreground/80">
               Apri Sconti Roma sul tuo smartphone per aggiungerla alla Home.
             </div>
           )}

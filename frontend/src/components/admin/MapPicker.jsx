@@ -7,9 +7,9 @@ const PIN = L.divIcon({
   className: "picker-pin",
   html: `<div style="
     position:relative;width:32px;height:32px;
-    background:#FF2E93;border:3px solid #fff;
+    background:#D81B72;border:3px solid #fff;
     border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    box-shadow:0 4px 14px rgba(255,46,147,0.5);
+    box-shadow:0 4px 14px rgba(26,21,48,0.35);
   "><div style="position:absolute;top:50%;left:50%;width:8px;height:8px;background:#fff;border-radius:50%;transform:translate(-50%,-50%) rotate(45deg);"></div></div>`,
   iconSize: [32, 32],
   iconAnchor: [16, 32],
@@ -30,7 +30,7 @@ function ClickHandler({ onPick }) {
  */
 export default function MapPicker({ value, onChange, height = 240 }) {
   return (
-    <div data-testid="map-picker" className="overflow-hidden rounded-xl border border-white/10" style={{ height }}>
+    <div data-testid="map-picker" className="overflow-hidden rounded-xl border border-border" style={{ height }}>
       <MapContainer
         center={value || [41.8933, 12.4829]}
         zoom={value ? 16 : 12}

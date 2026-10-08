@@ -20,7 +20,7 @@ export default function QRVerify() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#0A0A0A] text-white">
+      <div className="fixed inset-0 flex items-center justify-center bg-background text-foreground">
         <Loader2 size={48} className="animate-spin text-fucsia" />
       </div>
     );
@@ -30,17 +30,17 @@ export default function QRVerify() {
 
   if (result?.valid) {
     return (
-      <div data-testid="qr-valid" className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6" style={{background: "linear-gradient(135deg,#0E7A3A 0%,#1AB870 100%)"}}>
+      <div data-testid="qr-valid" className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6" style={{background: "linear-gradient(135deg,#0B6B34 0%,#127A47 100%)"}}>
         <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-2xl" style={{animation: "pop 0.4s ease-out"}}>
           <Check size={72} className="text-emerald-600" strokeWidth={3} />
         </div>
         <h1 className="font-serif text-[44px] tracking-tight sm:text-6xl sm:tracking-normal text-white text-center leading-none">SCONTO<br/>VALIDO</h1>
-        <div className="mt-8 w-full max-w-sm rounded-3xl bg-white/15 backdrop-blur-md border border-white/25 p-6 text-white text-center">
-          <div className="text-xs uppercase tracking-[0.2em] text-white/70">Cliente</div>
+        <div className="mt-8 w-full max-w-sm rounded-3xl bg-black/20 backdrop-blur-md border border-white/40 p-6 text-white text-center">
+          <div className="text-xs uppercase tracking-[0.2em] text-white">Cliente</div>
           <div className="mt-1 font-serif text-3xl">{result.client_name}</div>
-          <div className="mt-4 text-xs uppercase tracking-[0.2em] text-white/70">Sconto</div>
+          <div className="mt-4 text-xs uppercase tracking-[0.2em] text-white">Sconto</div>
           <div className="mt-1 font-serif text-2xl leading-tight">{result.discount_title}</div>
-          <div className="mt-1 text-lg text-white/80">{result.shop_name}</div>
+          <div className="mt-1 text-lg text-white">{result.shop_name}</div>
           {result.discount_percent && (
             <div className="mt-4 inline-block rounded-full bg-white text-emerald-700 px-4 py-1.5 font-bold text-lg">
               −{result.discount_percent}%
@@ -50,17 +50,17 @@ export default function QRVerify() {
             <div data-testid="usage-summary" className="mt-4 rounded-xl bg-black/25 px-4 py-2.5 text-sm">
               <div className="font-bold">Utilizzo {result.use_number} di {result.max_uses} questo mese</div>
               {result.prev_used_at && (
-                <div className="mt-0.5 text-xs text-white/75">
+                <div className="mt-0.5 text-xs text-white">
                   Utilizzo precedente: {new Date(result.prev_used_at).toLocaleDateString("it-IT")}
                 </div>
               )}
             </div>
           )}
         </div>
-        <p className="mt-6 text-sm text-white/80">
+        <p className="mt-6 text-sm text-white">
           Applica lo sconto e concludi il pagamento.
         </p>
-        <p className="mt-1 text-xs text-white/60">
+        <p className="mt-1 text-xs text-white">
           {now.toLocaleDateString("it-IT")} · {now.toLocaleTimeString("it-IT", {hour:'2-digit', minute:'2-digit'})}
         </p>
         <style>{`@keyframes pop { 0% {transform: scale(0)} 60% {transform: scale(1.15)} 100% {transform: scale(1)} }`}</style>
@@ -69,7 +69,7 @@ export default function QRVerify() {
   }
 
   return (
-    <div data-testid="qr-invalid" className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 py-8 overflow-y-auto" style={{background: "linear-gradient(135deg,#8B0F1F 0%,#DC2E4A 100%)"}}>
+    <div data-testid="qr-invalid" className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 py-8 overflow-y-auto" style={{background: "linear-gradient(135deg,#8B0F1F 0%,#B42318 100%)"}}>
       {/* Giant prohibition icon */}
       <div className="mb-6 relative">
         <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white shadow-2xl" style={{animation: "pop 0.4s ease-out"}}>
@@ -87,7 +87,7 @@ export default function QRVerify() {
       </h2>
 
       {/* Full explanation */}
-      <div className="mt-8 w-full max-w-lg rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 p-5 text-white text-center">
+      <div className="mt-8 w-full max-w-lg rounded-2xl bg-black/20 backdrop-blur-md border border-white/40 p-5 text-white text-center">
         {result?.daily_limit || (result?.reason || "").toLowerCase().includes("giornaliero") ? (
           <>
             <p className="text-lg font-bold uppercase leading-snug" data-testid="daily-limit-msg">
@@ -114,8 +114,8 @@ export default function QRVerify() {
       </div>
 
       {/* Small staff note */}
-      <div className="mt-6 w-full max-w-lg rounded-xl border-2 border-white/35 bg-black/25 backdrop-blur px-4 py-3 text-white/95 text-center">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-white/80 mb-1 font-bold">Nota per il personale</div>
+      <div className="mt-6 w-full max-w-lg rounded-xl border-2 border-white/35 bg-black/20 backdrop-blur px-4 py-3 text-white/95 text-center">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-white mb-1 font-bold">Nota per il personale</div>
         <p className="text-xs leading-relaxed">
           Non applicare lo sconto manualmente per evitare ammanchi di cassa non autorizzati.
         </p>

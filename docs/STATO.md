@@ -48,6 +48,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 | (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
 | (questa, `claude/da-fare-scadenza`) | Dashboard commerciante: scadenza reale nella pillola dell'offerta («fino al 31/10») e scheda «Da fare» con collegamenti | controlli verdi |
+| (questa) | Tema chiaro «Bianco vivo» su tutta l'app (home, offerte, mappa, cliente, accesso, legali, banner, admin); la locandina stampabile resta com'è | controlli verdi, OK del titolare sull'aspetto |
 | (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
 
 ## Decisioni prese
@@ -74,6 +75,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 - Codice del negozio (opzione C): in pausa (07/10), da riconsiderare; se si fa, «Ricorda su questo telefono» vale al massimo 90 giorni.
 - Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
 - Area commerciante (07/10): scelta la variante «D · Bianco vivo» (fondo chiaro, testi e pulsanti colorati, due soli caratteri: Fraunces e Manrope). Realizzata nel branch `claude/area-commerciante-d` (PR da aprire).
+- Aspetto di tutta l'app (08/10): stessa palette chiara «Bianco vivo» ovunque (fondo bianco, testo #1A1530, accenti fucsia #D81B72, viola #6D4AFF, teal #00798C, verde #127A47), solo Fraunces e Manrope; la locandina stampabile non cambia. Il video promozionale mostra ancora l'app scura: schermate da rifare. Branch `claude/tema-chiaro-app`.
 - Testi legali (07/10): titolare Euro Linea S.r.l.s.; i testi sono pubblicati ma il consulente deve ancora validarli (domande in docs/legale/PROPOSTE_TESTI_LEGALI.md). Sede legale e PEC da aggiungere.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 

@@ -102,16 +102,16 @@ export default function Register() {
 
   return (
     <main data-testid="register-page" className="mx-auto max-w-lg px-6 py-16">
-      <Card className="border-warm bg-[#141414] border border-white/10 p-8">
+      <Card className="border-warm bg-card border border-border p-8">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Nuovo qui?</div>
         <h1 className="mt-2 font-serif text-4xl">Crea il tuo account</h1>
 
-        <div className="mt-6 grid grid-cols-2 gap-2 rounded-lg bg-white/5 p-1">
+        <div className="mt-6 grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
           <button
             type="button"
             data-testid="role-client"
             onClick={() => setRole("client")}
-            className={`rounded-md py-2 text-sm transition ${role === "client" ? "bg-[#141414] border border-white/10 text-terracotta shadow" : "text-white/70"}`}
+            className={`rounded-md py-2 text-sm transition ${role === "client" ? "bg-card border border-border text-terracotta shadow" : "text-muted-foreground"}`}
           >
             Sono un cliente
           </button>
@@ -119,7 +119,7 @@ export default function Register() {
             type="button"
             data-testid="role-merchant"
             onClick={() => setRole("merchant")}
-            className={`rounded-md py-2 text-sm transition ${role === "merchant" ? "bg-[#141414] border border-white/10 text-terracotta shadow" : "text-white/70"}`}
+            className={`rounded-md py-2 text-sm transition ${role === "merchant" ? "bg-card border border-border text-terracotta shadow" : "text-muted-foreground"}`}
           >
             Sono un commerciante
           </button>
@@ -186,7 +186,7 @@ export default function Register() {
                 />
               </div>
               <div>
-                <Label>Telefono attività <span className="text-xs text-white/50">(es. +39 06 1234567)</span></Label>
+                <Label>Telefono attività <span className="text-xs text-muted-foreground">(es. +39 06 1234567)</span></Label>
                 <Input
                   data-testid="reg-phone"
                   type="tel"
@@ -205,7 +205,7 @@ export default function Register() {
                     value={form.zone}
                     onChange={update("zone")}
                     required
-                    className="mt-1 w-full rounded-md border border-input bg-[#141414] border border-white/10 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
                   >
                     <option value="">Seleziona…</option>
                     <ZoneOptions groups={zoneGroups} zones={zones} />
@@ -218,7 +218,7 @@ export default function Register() {
                     value={form.category}
                     onChange={update("category")}
                     required
-                    className="mt-1 w-full rounded-md border border-input bg-[#141414] border border-white/10 px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
                   >
                     <option value="">Seleziona…</option>
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -229,7 +229,7 @@ export default function Register() {
           )}
 
           {/* GDPR legal checkbox */}
-          <div className="rounded-xl border border-white/10 bg-black/40 p-3 space-y-3">
+          <div className="rounded-xl border border-border bg-muted p-3 space-y-3">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 data-testid="legal-accept"
@@ -239,7 +239,7 @@ export default function Register() {
                 required
                 className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
               />
-              <span className="text-xs text-white/80 leading-relaxed">
+              <span className="text-xs text-foreground/80 leading-relaxed">
                 <span className="text-fucsia">*</span> Dichiaro di avere almeno 18 anni, accetto i{" "}
                 <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold" data-testid="link-terms">Termini e Condizioni</a>
                 {" "}e confermo di aver letto la{" "}
@@ -258,7 +258,7 @@ export default function Register() {
                   onChange={(e) => setAcceptedSpecific(e.target.checked)}
                   className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
                 />
-                <span className="text-xs text-white/80 leading-relaxed">
+                <span className="text-xs text-foreground/80 leading-relaxed">
                   <span className="text-fucsia">*</span> Ai sensi degli artt. 1341 e 1342 c.c. approvo specificamente le clausole dei{" "}
                   <a href={LEGAL_LINKS.terms} target="_blank" rel="noopener noreferrer" className="text-fucsia hover:underline font-semibold">Termini e Condizioni</a>
                   {" "}sulle <strong>limitazioni di responsabilità (art. 7)</strong>, sulle <strong>modifiche ai Termini (art. 9)</strong> e sul <strong>foro competente (art. 10)</strong>.
@@ -274,14 +274,14 @@ export default function Register() {
                 onChange={(e) => setMarketingOptIn(e.target.checked)}
                 className="mt-1 h-4 w-4 shrink-0 accent-terracotta cursor-pointer"
               />
-              <span className="text-xs text-white/70 leading-relaxed">
-                Voglio ricevere <strong>comunicazioni promozionali</strong> via email su nuovi sconti e offerte esclusive del mese. <span className="text-white/50">(facoltativo, puoi disdire quando vuoi)</span>
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                Voglio ricevere <strong>comunicazioni promozionali</strong> via email su nuovi sconti e offerte esclusive del mese. <span className="text-muted-foreground">(facoltativo, puoi disdire quando vuoi)</span>
               </span>
             </label>
           </div>
 
           {/* Ricorda credenziali sul dispositivo */}
-          <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-white/10 bg-black/40 p-3">
+          <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-border bg-muted p-3">
             <input
               data-testid="remember-creds"
               type="checkbox"
@@ -289,9 +289,9 @@ export default function Register() {
               onChange={(e) => setRememberCreds(e.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 accent-ciano cursor-pointer"
             />
-            <span className="text-xs text-white/80 leading-relaxed">
+            <span className="text-xs text-foreground/80 leading-relaxed">
               💾 <strong className="text-ciano">Salva queste credenziali su questo dispositivo</strong> per il prossimo accesso.
-              <span className="block mt-0.5 text-white/50">
+              <span className="block mt-0.5 text-muted-foreground">
                 Al prossimo accesso troverai la tua email già scritta. L'iPhone (Portachiavi) o il browser ti proporrà di salvare anche la password.
               </span>
             </span>
@@ -302,7 +302,7 @@ export default function Register() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-white/70">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Hai già un account?{" "}
           <Link to="/login" className="text-terracotta hover:underline">Accedi</Link>
         </p>

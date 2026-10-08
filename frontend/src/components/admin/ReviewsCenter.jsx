@@ -8,7 +8,7 @@ function StarsRow({ n }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map((i) => (
-        <Star key={i} size={14} className={i <= n ? "text-yellow-400 fill-yellow-400" : "text-white/20"} />
+        <Star key={i} size={14} className={i <= n ? "text-amber-800 fill-yellow-400" : "text-muted-foreground"} />
       ))}
     </div>
   );
@@ -33,11 +33,11 @@ export default function ReviewsCenter() {
     : reviews;
 
   return (
-    <Card data-testid="reviews-center" className="border-white/10 bg-white/5 p-6">
+    <Card data-testid="reviews-center" className="border-border bg-muted p-6">
       <div className="flex items-center gap-2 mb-4">
         <MessageSquare className="text-ciano" size={20} />
-        <h2 className="font-serif text-2xl text-white">Centro Feedback Privati</h2>
-        <span className="ml-auto text-xs text-white/50">{reviews.length} recensioni · &lt;3⭐ evidenziate in rosso</span>
+        <h2 className="font-serif text-2xl text-foreground">Centro Feedback Privati</h2>
+        <span className="ml-auto text-xs text-muted-foreground">{reviews.length} recensioni · &lt;3⭐ evidenziate in rosso</span>
       </div>
 
       <div className="mb-4">
@@ -49,7 +49,7 @@ export default function ReviewsCenter() {
       )}
 
       {!loading && filtered.length === 0 && (
-        <div className="text-center py-10 text-white/50">{q ? `Nessun feedback trovato per "${q}".` : "Ancora nessun feedback ricevuto."}</div>
+        <div className="text-center py-10 text-muted-foreground">{q ? `Nessun feedback trovato per "${q}".` : "Ancora nessun feedback ricevuto."}</div>
       )}
 
       <div className="space-y-3">
@@ -60,21 +60,21 @@ export default function ReviewsCenter() {
             <div
               key={r.id}
               data-testid={`review-row-${r.id}`}
-              className={`rounded-xl border p-4 ${isNegative ? "border-red-500/50 bg-red-500/10" : "border-white/10 bg-black/20"}`}
+              className={`rounded-xl border p-4 ${isNegative ? "border-red-500/50 bg-red-500/10" : "border-border bg-muted"}`}
             >
               <div className="flex flex-wrap items-start gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
                     <StarsRow n={r.stars} />
-                    <span className="text-sm text-white/90 font-medium">{r.shop_name}</span>
-                    <span className="text-xs text-white/40">·</span>
-                    <span className="text-xs text-white/60">{r.discount_title}</span>
+                    <span className="text-sm text-foreground font-medium">{r.shop_name}</span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">{r.discount_title}</span>
                   </div>
-                  <div className="mt-2 text-xs text-white/50">
-                    da <span className="text-white/80">{r.user_name || r.user_email}</span> · {dt?.toLocaleString("it-IT", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) || "-"}
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    da <span className="text-foreground/80">{r.user_name || r.user_email}</span> · {dt?.toLocaleString("it-IT", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) || "-"}
                   </div>
                   {r.private_comment && (
-                    <div className={`mt-3 rounded-lg px-3 py-2 text-sm ${isNegative ? "bg-red-950/40 text-red-100 border border-red-500/40" : "bg-white/5 text-white/80"}`}>
+                    <div className={`mt-3 rounded-lg px-3 py-2 text-sm ${isNegative ? "bg-red-50 text-red-800 border border-red-500/40" : "bg-muted text-foreground/80"}`}>
                       "{r.private_comment}"
                     </div>
                   )}
@@ -84,7 +84,7 @@ export default function ReviewsCenter() {
                     data-testid={`review-wa-${r.id}`}
                     href={`https://wa.me/${(r.merchant_phone||"").replace(/[^0-9+]/g,"")}?text=${encodeURIComponent(`Ciao, sono l'amministratore di Sconti Roma. Un cliente ha lasciato un feedback importante sulla vostra offerta "${r.discount_title}". Possiamo parlarne?`)}`}
                     target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-green-500 hover:bg-green-400 px-3 py-1.5 text-xs font-medium text-white"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 px-3 py-1.5 text-xs font-medium text-white"
                   >
                     <Phone size={12}/> Contatta su WhatsApp
                   </a>

@@ -13,7 +13,7 @@ const PasswordInput = forwardRef(function PasswordInput({ className = "", ...pro
         tabIndex={-1}
         aria-label={visible ? "Nascondi password" : "Mostra password"}
         data-testid={props["data-testid"] ? `${props["data-testid"]}-toggle` : undefined}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/50 hover:text-fucsia hover:bg-white/5 transition"
+        className="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:text-fucsia hover:bg-muted transition"
       >
         {visible ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>

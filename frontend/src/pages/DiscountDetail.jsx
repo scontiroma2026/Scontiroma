@@ -125,7 +125,7 @@ export default function DiscountDetail() {
   }, [dialogOpen, redemption, windowSec, fetchToken]);
 
   if (loading || !discount) {
-    return <div className="mx-auto max-w-7xl px-6 py-16 text-white/60">Caricamento…</div>;
+    return <div className="mx-auto max-w-7xl px-6 py-16 text-muted-foreground">Caricamento…</div>;
   }
 
   const m = discount.merchant || {};
@@ -147,7 +147,7 @@ export default function DiscountDetail() {
 
   return (
     <main data-testid="discount-detail-page" className="mx-auto max-w-6xl px-6 py-10">
-      <button onClick={() => nav(-1)} className="mb-6 flex items-center gap-2 text-sm text-white/70 hover:text-terracotta">
+      <button onClick={() => nav(-1)} className="mb-6 flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-terracotta">
         <ArrowLeft size={16} /> Indietro
       </button>
 
@@ -228,67 +228,67 @@ export default function DiscountDetail() {
         <div>
           <div className="mb-2 flex items-center gap-3 text-xs uppercase tracking-wider">
             <span className="text-gold">{m.category}</span>
-            <span className="text-white/50">·</span>
-            <span className="flex items-center gap-1 text-white/70"><MapPin size={12} /> {m.zone}</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="flex items-center gap-1 text-muted-foreground"><MapPin size={12} /> {m.zone}</span>
           </div>
-          <h1 className="font-serif text-4xl leading-tight text-white">{discount.title}</h1>
-          <div className="mt-2 text-lg text-white/70">{m.shop_name}</div>
+          <h1 className="font-serif text-4xl leading-tight text-foreground">{discount.title}</h1>
+          <div className="mt-2 text-lg text-muted-foreground">{m.shop_name}</div>
           {discount.rating_count > 0 && (
             <div className="mt-1.5">
               <StarRating avg={discount.rating_avg} count={discount.rating_count} />
             </div>
           )}
           {m.address && (
-            <div className="mt-1 flex items-center gap-1.5 text-sm text-white/60 underline underline-offset-4 decoration-white/30">
+            <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground underline underline-offset-4 decoration-white/30">
               <MapPin size={13} className="text-terracotta shrink-0" /> {m.address}
             </div>
           )}
-          <p className="mt-5 text-white/80">{renderBold(discount.description)}</p>
+          <p className="mt-5 text-foreground/80">{renderBold(discount.description)}</p>
 
           {/* Card offerta — stile Groupon (bordo marcato, prezzo barrato, badge %, CTA grande) */}
-          <Card className="mt-6 overflow-hidden rounded-2xl border-2 border-fucsia/50 bg-white/5 p-0">
+          <Card className="mt-6 overflow-hidden rounded-2xl border-2 border-fucsia/50 bg-muted p-0">
             <div className="p-5">
-              <div className="font-bold text-xl leading-snug text-white">{discount.title}</div>
+              <div className="font-bold text-xl leading-snug text-foreground">{discount.title}</div>
               {discount.sales_this_month > 0 && (
-                <div data-testid="social-proof" className="mt-1.5 text-sm text-white/50">
+                <div data-testid="social-proof" className="mt-1.5 text-sm text-muted-foreground">
                   +{discount.sales_this_month} utilizzati questo mese
                 </div>
               )}
             </div>
-            <div className="bg-black/30 p-5">
+            <div className="bg-muted p-5">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="text-lg text-white/45 line-through">€{discount.original_price.toFixed(2)}</span>
+                <span className="text-lg text-muted-foreground line-through">€{discount.original_price.toFixed(2)}</span>
                 <span data-testid="discounted-price" className="font-serif text-4xl font-bold text-fucsia">€{discount.discounted_price.toFixed(2)}</span>
                 <span className="rounded-md bg-ciano/15 px-2.5 py-1 text-sm font-bold text-ciano">
                   {discount.percent_off}% di sconto
                 </span>
               </div>
-              <div className="mt-1 text-sm text-white/60">Risparmi <strong className="text-white">€{savings}</strong> con Sconti Roma</div>
+              <div className="mt-1 text-sm text-muted-foreground">Risparmi <strong className="text-foreground">€{savings}</strong> con Sconti Roma</div>
 
             {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
             {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (
               <div
                 data-testid="usage-counter"
-                className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm"
+                className="mt-4 flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3 text-sm"
               >
-                <div className="text-white/70">
+                <div className="text-muted-foreground">
                   Utilizzi questo mese
                 </div>
-                <div className="font-mono text-white">
-                  <span className={usageInfo.remaining > 0 ? "text-fucsia font-bold" : "text-red-400 font-bold"}>
+                <div className="font-mono text-foreground">
+                  <span className={usageInfo.remaining > 0 ? "text-fucsia font-bold" : "text-red-700 font-bold"}>
                     {usageInfo.used_count}
                   </span>
-                  <span className="text-white/40"> / {usageInfo.max_uses}</span>
+                  <span className="text-muted-foreground"> / {usageInfo.max_uses}</span>
                   {usageInfo.remaining > 0 && (
-                    <span className="ml-2 text-xs text-white/50">({usageInfo.remaining} rimasti)</span>
+                    <span className="ml-2 text-xs text-muted-foreground">({usageInfo.remaining} rimasti)</span>
                   )}
                 </div>
               </div>
             )}
             {/* Nota limite giornaliero per abbonati con sconto multi-uso */}
             {user?.role === "client" && usageInfo.max_uses > 1 && (
-              <div data-testid="daily-limit-note" className="mt-2 text-xs text-white/50">
-                ⓘ Massimo <strong className="text-white/80">1 utilizzo al giorno</strong>: i {usageInfo.max_uses} utilizzi
+              <div data-testid="daily-limit-note" className="mt-2 text-xs text-muted-foreground">
+                ⓘ Massimo <strong className="text-foreground/80">1 utilizzo al giorno</strong>: i {usageInfo.max_uses} utilizzi
                 mensili vanno usati in giornate diverse.
               </div>
             )}
@@ -305,7 +305,7 @@ export default function DiscountDetail() {
               onClick={redeem}
               disabled={alreadyUsed || (usageInfo.used_today && user?.role === "client")}
               size="lg"
-              className={`mt-5 w-full rounded-full py-6 text-lg font-bold text-white hover:scale-[1.02] transition ${alreadyUsed || (usageInfo.used_today && user?.role === "client") ? "bg-white/10 hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30"}`}
+              className={`mt-5 w-full rounded-full py-6 text-lg font-bold text-white hover:scale-[1.02] transition ${alreadyUsed || (usageInfo.used_today && user?.role === "client") ? "bg-muted text-muted-foreground hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30"}`}
             >
               {!user ? "Accedi per riscattare" :
                 user.role !== "client" ? "Riservato ai clienti" :
@@ -323,7 +323,7 @@ export default function DiscountDetail() {
               type="button"
               variant="outline"
               onClick={condividi}
-              className="mt-3 w-full rounded-full border-white/20 py-5 text-base font-semibold text-white hover:bg-white/10"
+              className="mt-3 w-full rounded-full border-border py-5 text-base font-semibold text-foreground hover:bg-muted"
             >
               <Share2 size={18} className="mr-2" /> Condividi con un amico
             </Button>
@@ -332,12 +332,12 @@ export default function DiscountDetail() {
 
           {/* Il negozio — descrizione scritta dal commerciante (stile Groupon) */}
           {m.shop_description && (
-            <Card data-testid="shop-description-section" className="mt-6 rounded-2xl border-white/10 bg-[#141414] p-6">
+            <Card data-testid="shop-description-section" className="mt-6 rounded-2xl border-border bg-card p-6">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
                 <Store size={14} /> Il negozio
               </div>
-              <div className="mt-2 font-serif text-2xl text-white">{m.shop_name}</div>
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-white/75">{renderBold(m.shop_description)}</p>
+              <div className="mt-2 font-serif text-2xl text-foreground">{m.shop_name}</div>
+              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-foreground/80">{renderBold(m.shop_description)}</p>
             </Card>
           )}
 
@@ -357,23 +357,23 @@ export default function DiscountDetail() {
             ].filter((s) => s.body && s.body.trim());
             if (sections.length === 0) return null;
             return (
-              <Card data-testid="info-sections" className="mt-6 rounded-2xl border-white/10 bg-[#141414] p-6">
+              <Card data-testid="info-sections" className="mt-6 rounded-2xl border-border bg-card p-6">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
                   <Clock size={14} /> Da sapere prima di andare
                 </div>
                 <div className="mt-4 space-y-5">
                   {sections.map((s) => (
                     <div key={s.key} data-testid={`info-${s.key}`}>
-                      <div className="text-sm font-bold text-white">{s.title}</div>
-                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-white/70">
+                      <div className="text-sm font-bold text-foreground">{s.title}</div>
+                      <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                         {renderBold(s.body)}
                         {s.extra && <><br />{s.extra}</>}
                       </p>
                     </div>
                   ))}
-                  <div data-testid="info-legal" className="border-t border-white/10 pt-4">
-                    <div className="text-sm font-bold text-white">Informative legali</div>
-                    <p className="mt-1 text-xs leading-relaxed text-white/50">
+                  <div data-testid="info-legal" className="border-t border-border pt-4">
+                    <div className="text-sm font-bold text-foreground">Informative legali</div>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       Il commerciante è l'unico responsabile verso i clienti per la cura e la qualità dei
                       prodotti e servizi pubblicizzati. Sconti Roma fa da intermediario e fornisce l'accesso
                       allo sconto; il servizio è erogato dal commerciante. Per assistenza e domande, consulta la{" "}
@@ -406,7 +406,7 @@ export default function DiscountDetail() {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="btn-whatsapp-merchant"
-                    className={`${CONTACT_BTN} bg-[#25D366] shadow-emerald-500/30`}
+                    className={`${CONTACT_BTN} bg-ac-verde shadow-emerald-500/30`}
                   >
                     <MessageCircle size={22} className="shrink-0" />
                     Scrivi su WhatsApp
@@ -431,7 +431,7 @@ export default function DiscountDetail() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent data-testid="qr-dialog" className="max-w-sm bg-[#141414] border border-white/10">
+        <DialogContent data-testid="qr-dialog" className="max-w-sm bg-card border border-border">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">Il tuo codice sconto</DialogTitle>
           </DialogHeader>
@@ -445,10 +445,10 @@ export default function DiscountDetail() {
               </div>
               {/* Countdown progress bar */}
               <div className="w-full max-w-[220px]">
-                <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <div className="h-full grad-fucsia-viola transition-all duration-1000 ease-linear" style={{width: `${(countdown / (windowSec || 20)) * 100}%`}} />
                 </div>
-                <div className="mt-2 text-center text-xs text-white/60">
+                <div className="mt-2 text-center text-xs text-muted-foreground">
                   Il codice scade tra <span className="text-fucsia font-bold">{countdown}s</span>
                 </div>
               </div>
@@ -456,10 +456,10 @@ export default function DiscountDetail() {
                 <div className="flex items-center justify-center gap-1 text-xs uppercase tracking-[0.2em] text-ciano">
                   <Shield size={12} /> Codice sicuro rotante
                 </div>
-                <div className="mt-1 font-mono text-2xl tracking-[0.3em] text-white">{redemption.code}</div>
+                <div className="mt-1 font-mono text-2xl tracking-[0.3em] text-foreground">{redemption.code}</div>
               </div>
-              <p className="text-center text-sm text-white/60">
-                Il QR cambia ogni 20 secondi per la tua sicurezza. Mostralo al commerciante di <strong className="text-white">{m.shop_name}</strong>.
+              <p className="text-center text-sm text-muted-foreground">
+                Il QR cambia ogni 20 secondi per la tua sicurezza. Mostralo al commerciante di <strong className="text-foreground">{m.shop_name}</strong>.
               </p>
             </div>
           )}
