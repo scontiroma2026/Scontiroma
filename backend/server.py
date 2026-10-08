@@ -8,7 +8,8 @@ import logging
 import secrets
 import string
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from zoneinfo import ZoneInfo
 from typing import List, Optional, Literal
 
@@ -4997,6 +4998,334 @@ async def admin_geocode_confirm(
          "$unset": {"geocode_failed": "", "geocode_failed_at": "", "geocode_failed_address": ""}},
     )
     return {"ok": True, "on_map": bool(has_coords or (m.get("lat") is not None and m.get("lng") is not None))}
+
+
+# ---------- Pagamenti dei commercianti: registro manuale (nessun addebito) ----------
+# Il titolare incassa come vuole (bonifico, PayPal, contanti) e qui annota. Questo codice NON invia
+# email, NON addebita nulla e NON cambia ciò che il commerciante vede: è solo un registro per l'admin.
+# Niente dati di carte o IBAN. Il «piano» sta in `merchant_plans` (non nel documento utente).
+PAG_METODI = ("bonifico", "paypal", "contanti", "altro")
+PAG_STATI = ("in_prova", "attivo", "scaduto", "sospeso")
+PAG_IMPORTO_SUGGERITO_CENT = 499
+PAG_IMPORTO_MAX_CENT = 100_000  # 1000 €: oltre è quasi certamente un errore di battitura
+
+
+def _pag_oggi() -> date:
+    return _rome_now().date()
+
+
+def _pag_data(valore, campo: str, obbligatoria: bool = False):
+    """Legge 'AAAA-MM-GG' (o vuoto). Errore 422 in italiano se il formato non è giusto."""
+    if valore in (None, ""):
+        if obbligatoria:
+            raise HTTPException(422, f"{campo}: la data è obbligatoria")
+        return None
+    try:
+        return date.fromisoformat(str(valore).strip())
+    except ValueError:
+        raise HTTPException(422, f"{campo}: data non valida (usa il formato AAAA-MM-GG)")
+
+
+def _pag_aggiungi_mese(d: date, mesi: int = 1) -> date:
+    m = d.month - 1 + mesi
+    anno, mese = d.year + m // 12, m % 12 + 1
+    return date(anno, mese, min(d.day, calendar.monthrange(anno, mese)[1]))
+
+
+def _pag_importo_cent(valore) -> int:
+    try:
+        euro = Decimal(str(valore).strip().replace(",", ".").replace("€", "").strip())
+    except (InvalidOperation, AttributeError):
+        raise HTTPException(422, "Importo non valido")
+    if not euro.is_finite():
+        raise HTTPException(422, "Importo non valido")
+    cent = int((euro * 100).to_integral_value(rounding=ROUND_HALF_UP))
+    if cent <= 0:
+        raise HTTPException(422, "L'importo deve essere maggiore di zero")
+    if cent > PAG_IMPORTO_MAX_CENT:
+        raise HTTPException(422, "Importo troppo alto: controlla di non aver sbagliato")
+    return cent
+
+
+def _pag_euro(cent: int) -> str:
+    return f"{cent // 100}.{cent % 100:02d}"
+
+
+def _pag_prova_default() -> Optional[date]:
+    fine = (os.environ.get("TRIAL_END_DATE") or "").strip()
+    try:
+        return date.fromisoformat(fine) if fine else None
+    except ValueError:
+        return None
+
+
+def _pag_stato(piano: dict, oggi: date) -> str:
+    """Stato del piano: «sospeso» solo se messo a mano; «attivo» se il rinnovo è oggi o dopo;
+    «scaduto» se il rinnovo o la prova sono passati; altrimenti «in prova»."""
+    if piano.get("stato_manuale") == "sospeso":
+        return "sospeso"
+    if piano.get("prossimo_rinnovo"):
+        return "attivo" if date.fromisoformat(piano["prossimo_rinnovo"]) >= oggi else "scaduto"
+    if piano.get("prova_fino_al") and date.fromisoformat(piano["prova_fino_al"]) < oggi:
+        return "scaduto"
+    return "in_prova"
+
+
+async def _pag_piano(merchant_id: str) -> dict:
+    p = await db.merchant_plans.find_one({"merchant_id": merchant_id}, {"_id": 0}) or {}
+    prova = _pag_prova_default()
+    return {
+        "merchant_id": merchant_id,
+        "prova_fino_al": p.get("prova_fino_al") or (prova.isoformat() if prova else None),
+        "prossimo_rinnovo": p.get("prossimo_rinnovo"),
+        "stato_manuale": p.get("stato_manuale"),
+        "note": p.get("note") or "",
+    }
+
+
+def _pag_pubblico(p: dict, nomi: dict) -> dict:
+    cent = int(p.get("importo_cent") or 0)
+    return {
+        "id": p["id"], "merchant_id": p["merchant_id"], "negozio": nomi.get(p["merchant_id"], "Negozio eliminato"),
+        "importo_cent": cent, "importo": _pag_euro(cent), "metodo": p.get("metodo"),
+        "data_pagamento": p.get("data_pagamento"),
+        "periodo_coperto_dal": p.get("periodo_coperto_dal"), "periodo_coperto_al": p.get("periodo_coperto_al"),
+        "nota": p.get("nota") or "", "stato": p.get("stato") or "registrato",
+        "creato_da": p.get("creato_da"), "creato_il": p.get("creato_il"),
+        "annullato_il": p.get("annullato_il"),
+    }
+
+
+async def _pag_nomi() -> dict:
+    righe = await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1}).to_list(None)
+    return {r["id"]: (r.get("shop_name") or "Senza nome") for r in righe}
+
+
+async def _pag_righe_commercianti() -> list:
+    """Un elemento per commerciante, con stato calcolato e ultimo pagamento valido."""
+    oggi = _pag_oggi()
+    nomi = await _pag_nomi()
+    prova_def = _pag_prova_default()
+    piani = {p["merchant_id"]: p for p in await db.merchant_plans.find({}, {"_id": 0}).to_list(None)}
+    ultimi: dict = {}
+    for p in await db.merchant_payments.find({"stato": {"$ne": "annullato"}}, {"_id": 0}).to_list(None):
+        v = ultimi.get(p["merchant_id"])
+        if not v or (p.get("data_pagamento") or "", p.get("creato_il") or "") > (v.get("data_pagamento") or "", v.get("creato_il") or ""):
+            ultimi[p["merchant_id"]] = p
+    out = []
+    for mid, nome in nomi.items():
+        raw = piani.get(mid) or {}
+        piano = {
+            "prova_fino_al": raw.get("prova_fino_al") or (prova_def.isoformat() if prova_def else None),
+            "prossimo_rinnovo": raw.get("prossimo_rinnovo"),
+            "stato_manuale": raw.get("stato_manuale"),
+        }
+        u = ultimi.get(mid)
+        rinnovo = piano["prossimo_rinnovo"]
+        out.append({
+            "merchant_id": mid, "negozio": nome, "stato": _pag_stato(piano, oggi),
+            "stato_manuale": piano["stato_manuale"] or "automatico",
+            "prova_fino_al": piano["prova_fino_al"], "prossimo_rinnovo": rinnovo, "note": raw.get("note") or "",
+            "giorni_al_rinnovo": (date.fromisoformat(rinnovo) - oggi).days if rinnovo else None,
+            "ultimo_pagamento": ({"data": u.get("data_pagamento"), "importo_cent": u.get("importo_cent"),
+                                  "importo": _pag_euro(int(u.get("importo_cent") or 0)), "metodo": u.get("metodo")} if u else None),
+        })
+    out.sort(key=lambda r: r["negozio"].lower())
+    return out
+
+
+class PagamentoIn(BaseModel):
+    merchant_id: str
+    importo: Optional[str] = None  # in euro, es. "4,99"; vuoto = importo suggerito
+    metodo: str
+    data_pagamento: Optional[str] = None
+    periodo_coperto_dal: Optional[str] = None
+    periodo_coperto_al: Optional[str] = None
+    nota: Optional[str] = Field(default=None, max_length=300)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _importo_testo(cls, v):
+        if isinstance(v, dict) and isinstance(v.get("importo"), (int, float)):
+            v = {**v, "importo": str(v["importo"])}
+        return v
+
+
+class PianoIn(BaseModel):
+    prova_fino_al: Optional[str] = None
+    prossimo_rinnovo: Optional[str] = None
+    stato: Optional[str] = None  # «automatico» o «sospeso»
+    note: Optional[str] = Field(default=None, max_length=500)
+
+
+@api.get("/admin/pagamenti-commercianti/commercianti")
+async def pag_elenco_commercianti(user: dict = Depends(require_admin_master)):
+    prova = _pag_prova_default()
+    return {"oggi": _pag_oggi().isoformat(), "commercianti": await _pag_righe_commercianti(),
+            "prova_predefinita": prova.isoformat() if prova else None,
+            "importo_suggerito": _pag_euro(PAG_IMPORTO_SUGGERITO_CENT)}
+
+
+@api.patch("/admin/pagamenti-commercianti/commercianti/{merchant_id}")
+async def pag_modifica_piano(merchant_id: str, payload: PianoIn, user: dict = Depends(require_admin_master)):
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"_id": 0, "id": 1}):
+        raise HTTPException(404, "Commerciante non trovato")
+    campi = payload.model_fields_set
+    if not campi:
+        raise HTTPException(400, "Nessuna modifica")
+    modifiche: dict = {}
+    if "prova_fino_al" in campi:
+        d = _pag_data(payload.prova_fino_al, "Fine prova")
+        modifiche["prova_fino_al"] = d.isoformat() if d else None
+    if "prossimo_rinnovo" in campi:
+        d = _pag_data(payload.prossimo_rinnovo, "Prossimo rinnovo")
+        modifiche["prossimo_rinnovo"] = d.isoformat() if d else None
+    if "stato" in campi:
+        if payload.stato not in ("automatico", "sospeso", None):
+            raise HTTPException(422, "Stato non valido: scegli «automatico» o «sospeso»")
+        modifiche["stato_manuale"] = "sospeso" if payload.stato == "sospeso" else None
+    if "note" in campi:
+        modifiche["note"] = (payload.note or "").strip()
+    modifiche["aggiornato_il"] = datetime.now(timezone.utc).isoformat()
+    modifiche["aggiornato_da"] = user["id"]
+    await db.merchant_plans.update_one({"merchant_id": merchant_id}, {"$set": modifiche}, upsert=True)
+    righe = [r for r in await _pag_righe_commercianti() if r["merchant_id"] == merchant_id]
+    return {"commerciante": righe[0]}
+
+
+@api.post("/admin/pagamenti-commercianti")
+async def pag_registra(payload: PagamentoIn, user: dict = Depends(require_admin_master)):
+    """Annota un pagamento già incassato. Non addebita e non scrive al commerciante."""
+    m = await db.users.find_one({"id": payload.merchant_id, "role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1})
+    if not m:
+        raise HTTPException(404, "Commerciante non trovato")
+    if payload.metodo not in PAG_METODI:
+        raise HTTPException(422, "Metodo non valido: bonifico, paypal, contanti o altro")
+    cent = _pag_importo_cent(payload.importo) if (payload.importo or "").strip() else PAG_IMPORTO_SUGGERITO_CENT
+    oggi = _pag_oggi()
+    data_pag = _pag_data(payload.data_pagamento, "Data del pagamento") or oggi
+    piano = await _pag_piano(payload.merchant_id)
+    dal = _pag_data(payload.periodo_coperto_dal, "Periodo dal")
+    al = _pag_data(payload.periodo_coperto_al, "Periodo al")
+    if not dal:
+        # Si riparte dalla copertura precedente se ancora valida (nessun giorno perso o regalato);
+        # se è finita (o non c'è mai stata) si riparte da oggi. Primo pagamento durante la prova:
+        # dalla fine della prova.
+        rinnovo = date.fromisoformat(piano["prossimo_rinnovo"]) if piano["prossimo_rinnovo"] else None
+        prova = date.fromisoformat(piano["prova_fino_al"]) if piano["prova_fino_al"] else None
+        if rinnovo and rinnovo >= oggi:
+            dal = rinnovo
+        elif not rinnovo and prova and prova >= oggi:
+            dal = prova
+        else:
+            dal = oggi
+    if not al:
+        al = _pag_aggiungi_mese(dal, 1)
+    if al <= dal:
+        raise HTTPException(422, "Il periodo coperto deve finire dopo il giorno di inizio")
+    doc = {
+        "id": str(uuid.uuid4()), "merchant_id": payload.merchant_id, "importo_cent": cent,
+        "metodo": payload.metodo, "data_pagamento": data_pag.isoformat(),
+        "periodo_coperto_dal": dal.isoformat(), "periodo_coperto_al": al.isoformat(),
+        "nota": (payload.nota or "").strip(), "stato": "registrato",
+        "creato_da": user["id"], "creato_il": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.merchant_payments.insert_one(dict(doc))
+    await db.merchant_plans.update_one(
+        {"merchant_id": payload.merchant_id},
+        {"$set": {"prossimo_rinnovo": al.isoformat(), "aggiornato_il": doc["creato_il"], "aggiornato_da": user["id"]}},
+        upsert=True,
+    )
+    logging.info("Pagamento commerciante registrato (importo_cent=%s)", cent)
+    return {"pagamento": _pag_pubblico(doc, {m["id"]: m.get("shop_name") or "Senza nome"}), "prossimo_rinnovo": al.isoformat()}
+
+
+@api.delete("/admin/pagamenti-commercianti/{payment_id}")
+async def pag_annulla(payment_id: str, user: dict = Depends(require_admin_master)):
+    """Annulla (non cancella) un pagamento registrato per errore. Il rinnovo torna alla copertura precedente."""
+    p = await db.merchant_payments.find_one({"id": payment_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(404, "Pagamento non trovato")
+    if p.get("stato") == "annullato":
+        raise HTTPException(409, "Pagamento già annullato")
+    adesso = datetime.now(timezone.utc).isoformat()
+    await db.merchant_payments.update_one({"id": payment_id}, {"$set": {"stato": "annullato", "annullato_il": adesso, "annullato_da": user["id"]}})
+    piano = await db.merchant_plans.find_one({"merchant_id": p["merchant_id"]}, {"_id": 0}) or {}
+    if piano.get("prossimo_rinnovo") == p.get("periodo_coperto_al"):
+        rimasti = await db.merchant_payments.find({"merchant_id": p["merchant_id"], "stato": {"$ne": "annullato"}}, {"_id": 0}).to_list(None)
+        fini = [x["periodo_coperto_al"] for x in rimasti if x.get("periodo_coperto_al")]
+        await db.merchant_plans.update_one({"merchant_id": p["merchant_id"]},
+                                           {"$set": {"prossimo_rinnovo": max(fini) if fini else None, "aggiornato_il": adesso, "aggiornato_da": user["id"]}})
+    return {"ok": True}
+
+
+@api.get("/admin/pagamenti-commercianti")
+async def pag_elenco(merchant_id: Optional[str] = None, user: dict = Depends(require_admin_master)):
+    filtro = {"merchant_id": merchant_id} if merchant_id else {}
+    righe = await db.merchant_payments.find(filtro, {"_id": 0}).to_list(None)
+    righe.sort(key=lambda p: (p.get("data_pagamento") or "", p.get("creato_il") or ""), reverse=True)
+    nomi = await _pag_nomi()
+    return {"pagamenti": [_pag_pubblico(p, nomi) for p in righe[:500]]}
+
+
+@api.get("/admin/pagamenti-commercianti/rinnovi")
+async def pag_rinnovi(user: dict = Depends(require_admin_master)):
+    """Rinnovi nei prossimi 30 giorni, e prove che finiscono nei prossimi 30 giorni (senza pagamenti)."""
+    limite = _pag_oggi() + timedelta(days=30)
+    righe = await _pag_righe_commercianti()
+    rinnovi = [r for r in righe if r["stato"] == "attivo" and date.fromisoformat(r["prossimo_rinnovo"]) <= limite]
+    prove = [r for r in righe if r["stato"] == "in_prova" and r["prova_fino_al"] and date.fromisoformat(r["prova_fino_al"]) <= limite]
+    rinnovi.sort(key=lambda r: r["prossimo_rinnovo"])
+    prove.sort(key=lambda r: r["prova_fino_al"])
+    return {"rinnovi": rinnovi, "prove_in_scadenza": prove}
+
+
+@api.get("/admin/pagamenti-commercianti/scaduti")
+async def pag_scaduti(user: dict = Depends(require_admin_master)):
+    righe = [r for r in await _pag_righe_commercianti() if r["stato"] == "scaduto"]
+    righe.sort(key=lambda r: r["prossimo_rinnovo"] or r["prova_fino_al"] or "")
+    return {"scaduti": righe}
+
+
+@api.get("/admin/pagamenti-commercianti/riepilogo")
+async def pag_riepilogo(mese: Optional[str] = None, user: dict = Depends(require_admin_master)):
+    """Totale incassato nel mese (di Roma, per data del pagamento), numero di pagamenti, commercianti per stato."""
+    mese = mese or _pag_oggi().strftime("%Y-%m")
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", mese):
+        raise HTTPException(422, "Mese non valido (usa AAAA-MM)")
+    validi = await db.merchant_payments.find({"stato": {"$ne": "annullato"}}, {"_id": 0}).to_list(None)
+    del_mese = [p for p in validi if (p.get("data_pagamento") or "").startswith(mese)]
+    totale = sum(int(p.get("importo_cent") or 0) for p in del_mese)
+    per_stato = {s: 0 for s in PAG_STATI}
+    for r in await _pag_righe_commercianti():
+        per_stato[r["stato"]] += 1
+    return {"mese": mese, "mese_etichetta": month_label_it(mese), "totale_cent": totale, "totale": _pag_euro(totale),
+            "numero_pagamenti": len(del_mese), "commercianti_per_stato": per_stato}
+
+
+def _csv_cella(v) -> str:
+    s = "" if v is None else str(v)
+    if s[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        s = "'" + s  # niente formule eseguite da Excel
+    return '"' + s.replace('"', '""') + '"'
+
+
+@api.get("/admin/pagamenti-commercianti/esporta.csv")
+async def pag_esporta_csv(user: dict = Depends(require_admin_master)):
+    """Solo nome dell'attività, importo, metodo e date: niente note, email o altri dati."""
+    righe = await db.merchant_payments.find({}, {"_id": 0}).to_list(None)
+    righe.sort(key=lambda p: (p.get("data_pagamento") or "", p.get("creato_il") or ""))
+    nomi = await _pag_nomi()
+    intest = ["Attività", "Importo (€)", "Metodo", "Data pagamento", "Periodo dal", "Periodo al", "Stato"]
+    linee = [";".join(_csv_cella(h) for h in intest)]
+    for p in righe:
+        cent = int(p.get("importo_cent") or 0)
+        linee.append(";".join(_csv_cella(v) for v in [
+            nomi.get(p["merchant_id"], "Negozio eliminato"), f"{cent // 100},{cent % 100:02d}", p.get("metodo"),
+            p.get("data_pagamento"), p.get("periodo_coperto_dal"), p.get("periodo_coperto_al"), p.get("stato") or "registrato"]))
+    corpo = "﻿" + "\r\n".join(linee) + "\r\n"
+    return Response(content=corpo, media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": 'attachment; filename="pagamenti-commercianti.csv"'})
 
 
 # ---------- Include Router & CORS (LAST) ----------
