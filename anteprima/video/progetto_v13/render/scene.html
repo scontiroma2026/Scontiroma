@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root { --fucsia: #FF2E93; --ciano: #00E5FF; --nero: #050507; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--nero); }
+  body { font-family: 'Manrope', sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  .layer { position: absolute; inset: 0; }
+  /* sfondo: sfumatura di brand in movimento lento (+ eventuale clip AI sfocata) */
+  #bgclip, #bgclip2 { width: 100%; height: 100%; object-fit: cover; filter: blur(var(--bgblur, 9px)) saturate(1.05) brightness(var(--bgbright, .72)); transform: scale(1.12); opacity: 0; }
+  body.conclip .orb { opacity: .22; }            /* v6: con la clip il velo di brand è più leggero */
+  body.conclip #veil { opacity: .6; }
+  body.confoto .orb { opacity: .06; }            /* v11: sulle foto quasi niente velo colorato: devono sembrare foto */
+  body.confoto #veil { opacity: .25; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(140px); opacity: .55; }
+  #o1 { width: 900px; height: 900px; background: var(--fucsia); }
+  #o2 { width: 1000px; height: 1000px; background: var(--ciano); }
+  #o3 { width: 700px; height: 700px; background: #6a3cff; opacity: .35; }
+  #veil { background: linear-gradient(160deg, rgba(255,46,147,.28), rgba(5,5,7,.35) 45%, rgba(0,229,255,.24)); }
+  #grain { background-size: 1080px 1920px; opacity: .10; mix-blend-mode: overlay; }
+  #vign { background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%); }
+
+  .scene { opacity: 0; }
+  .serif { font-family: 'Fraunces', serif; font-optical-sizing: auto; letter-spacing: -0.01em; }
+  .center { position: absolute; left: 0; right: 0; text-align: center; }
+  .f { color: var(--fucsia); } .c { color: var(--ciano); }
+
+  /* scena 1 */
+  #s1 .h1 { font-size: 128px; font-weight: 600; line-height: 1.02; }
+  #s1 .h2 { font-size: 64px; font-weight: 700; }
+
+  /* telefono 3D */
+  #stage { perspective: 2400px; perspective-origin: 50% 45%; }
+  #phone { position: absolute; left: 136px; top: 38px; width: 808px; height: 1626px; transform-style: preserve-3d; }
+  #phone .body { position: absolute; inset: 0; border-radius: 86px; background: linear-gradient(145deg, #2a2a33, #0c0c10 40%, #1b1b22);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.10) inset, 0 60px 120px rgba(0,0,0,.65), 0 0 60px rgba(255,46,147,.25); }
+  #phone .screen { position: absolute; left: 12px; top: 12px; width: 784px; height: 1602px; border-radius: 74px; overflow: hidden; background: #0a0a0a; }
+  #phone .screen img { position: absolute; left: 0; top: 0; width: 784px; }
+  #phone .glare { position: absolute; left: 12px; top: 12px; width: 784px; height: 1602px; border-radius: 74px;
+    background: linear-gradient(115deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 32%, rgba(255,255,255,0) 70%, rgba(255,255,255,.05) 100%); pointer-events: none; }
+  #shadow { position: absolute; left: 190px; top: 1650px; width: 700px; height: 90px; border-radius: 50%; background: rgba(0,0,0,.6); filter: blur(40px); }
+
+  /* etichetta "Esempio" (vetro, bordo fucsia) */
+  .tag { position: absolute; padding: 14px 34px; border-radius: 999px; border: 2px solid rgba(255,46,147,.9);
+    background: rgba(12,12,18,.55); backdrop-filter: blur(14px); font-weight: 700; font-size: 40px; letter-spacing: .02em; }
+
+  /* scheda esempio (vetro) */
+  #card { position: absolute; left: 90px; top: 870px; width: 900px; height: 560px; border-radius: 48px; padding: 44px 52px;
+    background: linear-gradient(160deg, rgba(28,28,38,.82), rgba(12,12,18,.78)); backdrop-filter: blur(22px);
+    border: 1.5px solid rgba(255,255,255,.14); box-shadow: 0 40px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(255,46,147,.15); }
+  #card .prod { font-size: 48px; font-weight: 700; }
+  #card .old { position: absolute; right: 52px; top: 26px; font-size: 118px; font-weight: 600; }
+  #card .old::after { content: ""; position: absolute; left: -6px; right: -6px; top: 54%; height: 8px; border-radius: 4px; background: var(--fucsia);
+    transform-origin: left center; transform: scaleX(var(--strike, 0)); }
+  #card .badge { position: absolute; left: 52px; top: 150px; padding: 8px 30px; border-radius: 26px; background: var(--fucsia); font-size: 80px; font-weight: 700; }
+  #card .chips { position: absolute; left: 52px; top: 340px; display: flex; gap: 16px; flex-wrap: wrap; width: 796px; }
+  #card .chip { padding: 12px 26px; border-radius: 999px; border: 2px solid rgba(0,229,255,.8); color: #dff9ff; font-size: 38px; font-weight: 700; background: rgba(0,229,255,.08); }
+  #card .new { position: absolute; right: 52px; top: 130px; font-size: 200px; font-weight: 700; color: var(--ciano); text-shadow: 0 0 40px rgba(0,229,255,.45); }
+  #card .foot { position: absolute; left: 52px; bottom: 34px; font-size: 38px; color: rgba(255,255,255,.85); font-weight: 600; }
+
+  /* scena 7 */
+  #s7 .q { font-size: 88px; font-weight: 600; }
+  #zero { font-size: 250px; padding: 0 30px; font-weight: 800; line-height: 1; background: linear-gradient(120deg, var(--fucsia), #ff7ac0 45%, var(--ciano));
+    -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 20px 60px rgba(255,46,147,.35)); }
+  .item { position: absolute; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 24px; font-size: 44px; font-weight: 700; white-space: nowrap; }
+  .item svg { width: 64px; height: 64px; flex: none; }
+  #s7sub { font-size: 76px; font-weight: 600; }
+  .nv { font-size: 68px; font-weight: 800; }
+  .nvt { font-size: 54px; font-weight: 700; }
+  .pill { display: inline-block; padding: 18px 44px; border-radius: 999px; background: rgba(255,46,147,.18); border: 2px solid var(--fucsia); }
+
+
+  /* logo (variante a tratto sottile di BrandMark) */
+  .logo { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; transform-origin: 50% 0; }
+  .logo .mk { width: 300px; height: 240px; }
+  .logo .wm { font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 118px; letter-spacing: -0.01em; margin-top: 10px; }
+  .toptag { position: absolute; left: 0; right: 0; top: 24px; text-align: center; }
+  .toptag .tag { position: relative; display: inline-block; }
+  #s9 .cta { font-size: 92px; font-weight: 600; }
+  #s9 .lanc { font-size: 50px; font-weight: 700; color: var(--fucsia); }
+  #s9 .mail { font-size: 76px; font-weight: 800; color: var(--ciano); letter-spacing: .005em; }
+  /* intestazione fissa dell'app sopra la pagina che scorre */
+  #stick { position: absolute; left: 0; top: 0; width: 784px; overflow: hidden; }
+  #stick img { position: absolute; left: 0; top: 0; width: 784px; }
+
+  /* sottotitoli: dentro la zona sicura (sotto y = 1632) */
+  #wmk { position: absolute; left: 0; right: 0; top: 1792px; display: flex; align-items: center; justify-content: center; gap: 14px; opacity: .92; }
+  #wmk .wmk { width: 70px; height: 56px; }
+  #wmk span { font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 40px; letter-spacing: -0.01em; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  #cap { position: absolute; left: 60px; right: 60px; bottom: 318px; text-align: center; }
+  #cap span { display: inline-block; max-width: 960px; padding: 14px 30px; border-radius: 28px; background: rgba(8,8,12,.72);
+    backdrop-filter: blur(10px); font-size: 52px; font-weight: 700; line-height: 1.22; }
+  #cap b { font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="layer" id="bg">
+  <img id="bgclip" class="layer" alt=""><img id="bgclip2" class="layer" alt="">
+  <div class="orb" id="o1"></div><div class="orb" id="o2"></div><div class="orb" id="o3"></div>
+  <div class="layer" id="veil"></div>
+</div>
+
+<!-- SCENA 1 -->
+<div class="layer scene" id="s1">
+  <div class="center serif h1" id="s1a" style="top:640px">Hai un'attività</div>
+  <div class="center serif h1 f" id="s1b" style="top:780px">a Roma?</div>
+  <div class="center h2 c" id="s1c" style="top:1060px">Nuovi clienti</div>
+  <div class="center h2" id="s1d" style="top:1150px">nel tuo negozio.</div>
+</div>
+
+<!-- TELEFONO (scene con app) -->
+<div class="layer scene" id="stage">
+  <div id="shadow"></div>
+  <div id="phone"><div class="body"></div><div class="screen"><img id="shot" alt=""><div id="stick"><img id="shotTop" alt=""></div></div><div class="glare"></div></div>
+</div>
+
+<!-- SCENA 5: esempio -->
+<div class="layer scene" id="s5">
+  <div class="center" id="s5tagw" style="top:24px"><div class="tag" id="s5tag" style="position:relative;display:inline-block">Esempio</div></div>
+  <div id="card">
+    <div class="prod" id="c_prod">Menù di pesce</div>
+    <div class="old serif" id="c_old">€40</div>
+    <div class="badge serif" id="c_badge">Offerta</div>
+    <div class="chips"><div class="chip" id="c_ch1">Mer e Ven</div><div class="chip" id="c_ch2">1 volta al mese a persona</div></div>
+    <div class="new serif" id="c_new">€20</div>
+    <div class="foot" id="c_foot">…e riempi i giorni più tranquilli</div>
+  </div>
+</div>
+
+<!-- SCENA 7: costi (v8: niente "0 €"; testi del copione nuovo) -->
+<div class="layer scene" id="s7">
+  <div class="center serif q" id="s7q" style="top:250px">E quanto costa?</div>
+  <div class="center serif" id="zero" style="top:430px">Gratis</div>
+  <div class="center serif" id="s7sub" style="top:730px">durante la fase di lancio</div>
+  <div id="s7list">
+  <div class="item" id="i1" style="top:950px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#00E5FF" stroke-width="4"/><path d="M19 33 l9 9 l18 -19" fill="none" stroke="#00E5FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Poi <b class="c">4,99 € al mese</b>, IVA inclusa</span></div>
+  <div class="item" id="i2" style="top:1050px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#00E5FF" stroke-width="4"/><path d="M19 33 l9 9 l18 -19" fill="none" stroke="#00E5FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Prezzo bloccato per chi parte adesso</span></div>
+  <div class="item" id="i3" style="top:1150px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#00E5FF" stroke-width="4"/><path d="M19 33 l9 9 l18 -19" fill="none" stroke="#00E5FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ti avvisiamo 30 giorni prima</span></div>
+  <div class="item" id="i4" style="top:1250px"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#00E5FF" stroke-width="4"/><path d="M19 33 l9 9 l18 -19" fill="none" stroke="#00E5FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Non paghi nulla senza la tua conferma</span></div>
+  </div>
+  <div class="center" id="s7v1" style="top:990px"><span class="pill nv">Decidi tu.</span></div>
+  <div class="center nvt" id="s7v2" style="top:1230px">Mantieni lo sconto fino a fine mese,</div>
+  <div class="center nvt" id="s7v3" style="top:1305px">poi decidi tu se rinnovarlo.</div>
+  <div class="center nvt c" id="s7v4" style="top:1135px;display:none"></div>
+</div>
+
+<!-- SCENA 2: logo -->
+<div class="layer scene" id="s2"><div class="logo" id="logo2" style="top:620px"><svg class="mk" viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 34.5 3.6 L 35.6 5.9 L 37.9 7 L 35.6 8.1 L 34.5 10.4 L 33.4 8.1 L 31.1 7 L 33.4 5.9 Z" fill="#00E5FF"/>
+      <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#FF2E93" stroke-width="1.15" stroke-linecap="round"/>
+      <path d="M 4 27 L 4 11 L 18 11 L 18 14 L 30 14 L 30 27" fill="none" stroke="#fff" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 6 26.5 L 6 20 Q 6 16.5 9 16.5 Q 12 16.5 12 20 L 12 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+      <path d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z" fill="#FF2E93"/>
+      <path d="M 21 26.5 L 21 20 Q 21 16.5 23.5 16.5 Q 26 16.5 26 20 L 26 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+      <path d="M 27 26.5 L 27 21.5 Q 27 18.5 29 18.5 Q 31 18.5 31 21.5 L 31 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+    </svg><div class="wm">Sconti Roma</div></div></div>
+<!-- SCENA 3: etichetta -->
+<div class="layer scene" id="s3"><div class="toptag"><div class="tag" id="s3tag">Esempi</div></div></div>
+<!-- SCENA 9: chiusura -->
+<div class="layer scene" id="s9">
+  <div class="logo" id="logo9" style="top:300px"><svg class="mk" viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 34.5 3.6 L 35.6 5.9 L 37.9 7 L 35.6 8.1 L 34.5 10.4 L 33.4 8.1 L 31.1 7 L 33.4 5.9 Z" fill="#00E5FF"/>
+      <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#FF2E93" stroke-width="1.15" stroke-linecap="round"/>
+      <path d="M 4 27 L 4 11 L 18 11 L 18 14 L 30 14 L 30 27" fill="none" stroke="#fff" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 6 26.5 L 6 20 Q 6 16.5 9 16.5 Q 12 16.5 12 20 L 12 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+      <path d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z" fill="#FF2E93"/>
+      <path d="M 21 26.5 L 21 20 Q 21 16.5 23.5 16.5 Q 26 16.5 26 20 L 26 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+      <path d="M 27 26.5 L 27 21.5 Q 27 18.5 29 18.5 Q 31 18.5 31 21.5 L 31 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+    </svg><div class="wm">Sconti Roma</div></div>
+  <div class="center serif cta" id="s9a" style="top:840px">Iscriviti</div>
+  <div class="center" id="s9c" style="top:975px"><span class="lanc">Gratis durante la fase di lancio</span></div>
+  <div class="center" id="s9b" style="top:1090px"><span class="pill mail">info@scontiroma.it</span></div>
+</div>
+
+<div class="layer" id="grain"></div>
+<div class="layer" id="vign"></div>
+<div id="wmk"><svg class="wmk" viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 34.5 3.6 L 35.6 5.9 L 37.9 7 L 35.6 8.1 L 34.5 10.4 L 33.4 8.1 L 31.1 7 L 33.4 5.9 Z" fill="#00E5FF"/>
+      <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#FF2E93" stroke-width="1.15" stroke-linecap="round"/>
+      <path d="M 4 27 L 4 11 L 18 11 L 18 14 L 30 14 L 30 27" fill="none" stroke="#fff" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 6 26.5 L 6 20 Q 6 16.5 9 16.5 Q 12 16.5 12 20 L 12 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+      <path d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z" fill="#FF2E93"/>
+      <path d="M 21 26.5 L 21 20 Q 21 16.5 23.5 16.5 Q 26 16.5 26 20 L 26 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+      <path d="M 27 26.5 L 27 21.5 Q 27 18.5 29 18.5 Q 31 18.5 31 21.5 L 31 26.5" fill="none" stroke="#fff" stroke-width="0.85" stroke-linecap="round"/>
+    </svg><span>Sconti Roma</span></div>
+<div id="cap"><span id="capt"></span></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const easeBack = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+const prog = (t, t0, d) => clamp((t - t0) / d);
+// entrata: dissolvenza + salita + scala con rimbalzo
+function enter(el, t, t0, d = 0.55, dy = 40, s0 = 0.92) {
+  const p = prog(t, t0, d), e = easeOut(p), b = easeBack(p);
+  el.style.opacity = e; el.style.transform = `translateY(${(1 - e) * dy}px) scale(${s0 + (1 - s0) * b})`;
+}
+let CAPS = [], SCENES = {}, SHOT = null;
+function setup(data) {
+  CAPS = data.captions; SCENES = data.scenes; SF = data.sfondi || {}; if (data.ancore) ANCORE = data.ancore;
+  const srcs = data.preload || [];
+  return Promise.all(srcs.map(s => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = s; })));
+}
+
+// v6: clip AI di atmosfera per scena (solo sfondo: sfocate, tinte, mai protagoniste)
+const BGPLAN = {
+  s1: ['foto_strada'], s2: ['viale'], s3: ['foto_pizza', 'foto_locale', 'parrucchiere'], s4: ['foto_commerciante'],
+  s5: ['foto_cliente'], s6: ['cliente_telefono'], s7: ['foto_quartieri'], s8: ['foto_cupola', 'frutta'], s9: ['foto_strada'],
+};
+// v11: le foto (strada, cliente, commerciante, quartieri) restano nitide, così si leggono come fotografie;
+// le clip della v10 restano sfocate come prima (volti non riconoscibili)
+const BGBLUR = { s1: 3, s3: 8, s4: 5, s5: 4, s6: 22, s7: 4, s8: 10, s9: 4 };   // v12: pizza, locale e cupola sono già sfocate
+// luminosità per scena: più scura dove ci sono solo scritte grandi (titolo, costi e chiusura), così restano leggibili
+const BGBRIGHT = { s1: .6, s4: .62, s5: .66, s7: .5, s9: .55 };
+const XF = 15;                                          // fotogrammi di dissolvenza (0,5 s) per loop e cambi clip
+let SF = {};
+function clipAt(name, lt) {                              // fotogramma di una clip in loop con dissolvenza incrociata
+  const n = SF[name], P = Math.max(1, n - XF), k = Math.floor(lt * 30);
+  const j = k % P, f = i => `../app/sfondi/${name}/${String(i + 1).padStart(5, '0')}.jpg`;
+  if (k >= P && j < XF) return [f(P + j), f(j), j / XF];  // coda che sfuma nella testa
+  return [f(j), null, 0];
+}
+function bgClip(t) {
+  const a = $('bgclip'), b = $('bgclip2');
+  const sc = Object.keys(SCENES).find(k => t >= SCENES[k][0] && t < SCENES[k][1]);
+  const plan = (BGPLAN[sc] || []).filter(n => SF[n]);
+  if (!plan.length) { a.style.opacity = 0; b.style.opacity = 0; document.body.classList.remove('conclip', 'confoto'); return; }
+  document.body.classList.add('conclip');
+  document.body.classList.toggle('confoto', plan[0].startsWith('foto_'));
+  document.body.style.setProperty('--bgblur', (BGBLUR[sc] || 9) + 'px');
+  document.body.style.setProperty('--bgbright', BGBRIGHT[sc] || .72);
+  const [t0, t1] = SCENES[sc], seg = (t1 - t0) / plan.length;
+  const i = Math.min(plan.length - 1, Math.floor((t - t0) / seg)), lt = t - t0 - i * seg;
+  let [src, src2, w] = clipAt(plan[i], lt);
+  if (i > 0 && lt < XF / 30) { src2 = src; src = clipAt(plan[i - 1], lt + seg)[0]; w = lt * 30 / XF; }  // cambio clip
+  if (a.getAttribute('src') !== src) a.src = src;
+  a.style.opacity = 1;
+  if (src2) { if (b.getAttribute('src') !== src2) b.src = src2; b.style.opacity = w; } else b.style.opacity = 0;
+}
+
+function background(t, tc) {
+  bgClip(tc == null ? t : tc);
+  $('o1').style.transform = `translate(${-200 + 120 * Math.sin(t / 5)}px, ${-150 + 90 * Math.cos(t / 6)}px)`;
+  $('o2').style.transform = `translate(${420 + 110 * Math.cos(t / 7)}px, ${1150 + 120 * Math.sin(t / 5.5)}px)`;
+  $('o3').style.transform = `translate(${520 + 80 * Math.sin(t / 4)}px, ${300 + 80 * Math.cos(t / 4.5)}px)`;
+  $('grain').style.backgroundImage = `url(grain/g${Math.floor(t * 30) % 8}.png)`;
+}
+
+// scorrimento della pagina: y0 fisso oppure chiavi [[t, y], ...] con transizioni morbide
+function scrollAt(t, keys) {
+  if (!Array.isArray(keys)) return keys;
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    const [ta, ya] = keys[i - 1], [tb, yb] = keys[i];
+    if (t <= tb) { const p = (t - ta) / (tb - ta); const e = p * p * (3 - 2 * p); return ya + (yb - ya) * e; }
+  }
+  return keys[keys.length - 1][1];
+}
+// telefono: stessa posizione e dimensione in tutte le scene con app (sopra la zona sottotitoli).
+// o: { t0e: inizio entrata (null = già in scena), keys: scorrimento, sticky: px CSS dell'intestazione fissa, out: inizio uscita }
+const SC = 0.98, DY = 40;                            // v7: telefono un po' più grande (0,78 → 0,84), sempre sopra i sottotitoli
+function phone(t, t0, shot, o = {}) {
+  const img = $('shot');
+  if (SHOT !== shot) { img.src = shot; SHOT = shot; }
+  const k = 784 / 390;                               // px schermo per px CSS dello screenshot
+  img.style.transform = `translateY(${-scrollAt(t, o.keys || 0) * k}px)`;
+  const st = o.sticky || 0;
+  $('stick').style.height = st * k + 'px'; $('stick').style.display = st ? 'block' : 'none';
+  if (st && $('shotTop').getAttribute('src') !== shot) $('shotTop').src = shot;
+  const inP = o.t0e == null ? 1 : easeOut(prog(t, o.t0e, 0.7));
+  const outP = o.out == null ? 0 : easeOut(prog(t, o.out, 0.5));
+  img.style.opacity = o.fade ? easeOut(prog(t, t0, 0.25)) : 1; $('shotTop').style.opacity = img.style.opacity;
+  const ry = -7 + 3.5 * Math.sin(t * 0.55);            // rotazione max ~10°
+  const rx = 3 + 1.5 * Math.sin(t * 0.42 + 1);
+  const fy = 10 * Math.sin(t * 0.9);                   // fluttuazione lenta
+  $('phone').style.transformOrigin = '50% 0';
+  $('phone').style.transform = `translateY(${(1 - inP) * 160 + outP * 220 + fy + DY}px) scale(${SC * (1 - 0.08 * outP)}) rotateY(${ry}deg) rotateX(${rx}deg)`;
+  $('stage').style.opacity = inP * (1 - outP);
+  $('shadow').style.transform = `translateY(${(SC - 1) * 1626 + DY}px) translateX(${ry * 4}px) scale(${SC * (1 - fy / 200)})`;
+  $('bg').style.transform = `translateX(${-ry * 3}px) scale(1.08)`;  // parallasse; scala: nessun bordo scoperto
+}
+// fotogramma di una clip reale estratta in app/frames/<nome>/NNNNN.jpg
+const RITOCCATE = {};   // v10: conferma reale «SCONTO VALIDO», nessun ritocco   // v8: "ABBONAMENTO VALIDO" → "SCONTO VALIDO"
+function frame(name, n, clipT) {
+  const i = Math.max(1, Math.min(n, Math.floor(clipT * 30) + 1));
+  return `${RITOCCATE[name] || '../app/frames/' + name}/${String(i).padStart(5, '0')}.jpg`;
+}
+
+function captions(t) {
+  const c = CAPS.find(c => t >= c.a && t < c.b);
+  const el = $('capt');
+  if (!c) { el.style.opacity = 0; return; }
+  if (el.dataset.k !== String(c.a)) { el.innerHTML = c.h; el.dataset.k = String(c.a); }
+  const p = easeOut(prog(t, c.a, 0.12));
+  el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * 10}px) scale(${0.96 + 0.04 * p})`;
+}
+
+function s7draw(T, op) {                                 // v8: T sulla linea del tempo nuova
+  $('s7').style.opacity = op;
+  enter($('s7q'), T, 52.92, 0.6, 30);
+  const zp = prog(T, 54.85, 0.7);
+  $('zero').style.opacity = easeOut(zp);
+  $('zero').style.transform = `perspective(1600px) rotateY(${5 * Math.sin((T - 54) * 0.5)}deg) rotateX(${3 * Math.sin((T - 54) * 0.37)}deg) scale(${0.6 + 0.4 * easeBack(zp)}) translateY(${6 * Math.sin((T - 54) * 1.1)}px)`;
+  enter($('s7sub'), T, 55.25, 0.6, 24);
+  enter($('i1'), T, 57.45, 0.5, 20); enter($('i2'), T, 60.15, 0.5, 20); enter($('i3'), T, 62.65, 0.5, 20); enter($('i4'), T, 64.55, 0.5, 20);
+  const lo = easeOut(prog(T, 66.55, 0.4));                  // le quattro voci escono, entra "Nessun vincolo"
+  $('s7list').style.opacity = 1 - lo; $('s7list').style.transform = `translateY(${-30 * lo}px)`;
+  enter($('s7v1'), T, 66.8, 0.55, 30, 0.85); enter($('s7v2'), T, 67.5, 0.5, 20); enter($('s7v3'), T, 68.6, 0.5, 20); enter($('s7v4'), T, 67.0, 0.5, 20);   // v9: «Disdici quando vuoi.»
+}
+
+// scena 8 (v6): l'offerta online nel catalogo reale, al posto della dashboard con i contatori a zero
+function scene8phone(t) {
+  const S = SCENES;
+  phone(t, S.s8[0], '../app/sconti_full.png', { t0e: S.s8[0] - 0.35, keys: [[S.s8[0], 520], [70.6, 560]], sticky: 76 });
+}
+
+// v7: registrazioni reali mostrate più lente, con tagli sulle parti morte.
+// Ogni segmento: [inizio scena, fine scena, inizio clip, fine clip] (secondi).
+// v10: scrittura a velocità reale (registrata più lenta), meno campi ma leggibili.
+const FORM_SEG = [                // v13: ripresa nuova con l'app chiara (08/10)
+  [22.12, 24.12, 0.9, 2.7],     // titolo «Menù di pesce» (si parte con le prime lettere: il segnaposto del campo non si vede)
+  [24.12, 25.52, 2.7, 4.2],     // scorrimento lento ai prezzi
+  [25.52, 27.52, 4.2, 6.4],     // prezzi 40 → 20
+  [27.52, 29.92, 6.4, 9.0],     // scorrimento lento fino a «quante volte al mese»
+  [29.92, 30.72, 9.0, 9.8],     // «1 volta»
+  [30.72, 32.28, 10.6, 12.2],   // invio e «Offerta inviata!»
+];
+const CONF_SEG = [                // v13: «Codice valido» → codice del negozio → «SCONTO VALIDO»
+  [49.6, 50.7, 0.6, 2.4],
+  [50.7, 52.87, 2.4, 4.6],
+];
+const REG_SEG = [
+  [71.19, 73.79, 0.4, 3.0],     // nome, email e password
+  [73.79, 75.60, 3.0, 4.8],     // nome dell'attività
+];
+function segT(t, segs) {
+  const g = segs.find(g => t < g[1]) || segs[segs.length - 1];
+  return g[2] + (g[3] - g[2]) * clamp((t - g[0]) / (g[1] - g[0]));
+}
+
+// v8: la scena 7 dura D7 secondi in più (testi nuovi leggibili). T = tempo nuovo, t = tempo della v7.
+const D7 = 48 / 11, S7FINE = 65.65;                      // 4,36 s = due accordi della musica
+function renderV8(T) {
+  for (const id of ['s1', 's2', 's3', 'stage', 's5', 's7', 's9']) $(id).style.opacity = 0;
+  $('bg').style.transform = '';
+  if (T >= 52.87 && T < S7FINE + D7) { background(T, 52.87 + (T - 52.87) * 0.7); s7draw(T, 1); }  // v11: la foto si muove piano anche qui
+  else render0(T < 52.87 ? T : T - D7, T);
+  // v9: niente stacchi netti a 6,0 s (scena 1 → 2) e a 52,87 s (scena 6 → 7): l'uscita sfuma in 0,35 s
+  for (const [fine, id] of [[SCENES.s1[1], 's1'], [52.87, 'stage']]) {
+    if (T >= fine - 0.35 && T < fine) $(id).style.opacity = String(parseFloat($(id).style.opacity || 1) * (fine - T) / 0.35);
+  }
+}
+// v9: voce nuova (copione del 03/10). T = tempo della voce nuova; le scene della v8 si
+// riallineano frase per frase (ANCORE: [tempo voce nuova, tempo v8]); i sottotitoli usano T.
+let ANCORE = [[0, 0], [1, 1]];
+function warp(T) {
+  for (let i = 1; i < ANCORE.length; i++) {
+    const [a0, b0] = ANCORE[i - 1], [a1, b1] = ANCORE[i];
+    if (T <= a1 || i === ANCORE.length - 1) return b0 + (b1 - b0) * (T - a0) / (a1 - a0);
+  }
+}
+function render(T) {
+  renderV8(warp(T)); captions(T);
+  // v11: logo piccolo in basso per tutto il video, tranne dove c'è già il logo grande (scene 2 e 9)
+  const grande = Math.max(parseFloat($('s2').style.opacity) || 0, parseFloat($('s9').style.opacity) || 0);
+  $('wmk').style.opacity = String(0.92 * (1 - grande));
+}
+function render0(t, T) {
+  background(T, t);
+  const S = SCENES;
+  if (t < S.s1[1]) {                                     // 1 — titolo
+    $('s1').style.opacity = 1;
+    const p0 = easeOut(prog(t, 0, 0.8));
+    $('s1a').style.transform = `translateY(${(1 - p0) * 18}px)`; $('s1b').style.transform = `translateY(${(1 - p0) * 26}px)`;
+    enter($('s1c'), t, 3.15); enter($('s1d'), t, 4.45);
+  } else if (t < S.s2[1]) {                              // 2 — logo + home reale
+    $('s2').style.opacity = 1;
+    const lg = $('logo2');
+    const pin = easeOut(prog(t, S.s2[0], 0.7)), up = easeOut(prog(t, 8.1, 0.8));
+    lg.style.opacity = pin;
+    lg.style.transform = `translateY(${(1 - pin) * 30 - up * 596}px) scale(${(0.9 + 0.1 * easeBack(pin)) * (1 - 0.8 * up)})`;
+    if (t >= 8.1) phone(t, 8.1, '../app/home_full.png', { t0e: 8.1 });
+  } else if (t < S.s3[1]) {                              // 3 — il cliente sfoglia gli sconti (esempi)
+    $('s3').style.opacity = 1; enter($('s3tag'), t, S.s3[0] + 0.2, 0.5, -20);
+    phone(t, S.s3[0], '../app/sconti_full.png', { keys: [[S.s3[0], 525], [15.6, 525], [21.9, 1250]]   /* v13: sconti nuovi, scorre fino alla terza scheda */, sticky: 76, fade: true });
+  } else if (t < S.s4[1]) {                              // 4 — form reale di creazione offerta (1,3x)
+    phone(t, S.s4[0], frame('clip_form_offerta', 425, segT(t, FORM_SEG)), { fade: t < S.s4[0] + 0.3 });
+  } else if (t < S.s5[1]) {                              // 5 — esempio
+    phone(t, S.s5[0], '../app/offerta_full.png', { keys: [[32.3, 70], [35.2, 70], [40.6, 560], [46.7, 700]]   /* v12: un solo scorrimento lento */, sticky: 76, fade: true });
+    $('s5').style.opacity = 1;
+    enter($('s5tag'), t, S.s5[0] + 0.2, 0.5, -20);
+    enter($('card'), t, 34.1, 0.7, 80, 0.9);
+    const cardTilt = 2 * Math.sin((t - 34) * 0.6);
+    $('card').style.transform += ` rotateX(${cardTilt}deg)`;
+    enter($('c_old'), t, 35.25, 0.5, 20);
+    enter($('c_badge'), t, 37.55, 0.45, 20, 0.6);
+    enter($('c_ch1'), t, 38.75, 0.45, 16); enter($('c_ch2'), t, 40.2, 0.45, 16);
+    const st = easeOut(prog(t, 42.1, 0.35));
+    $('c_old').style.setProperty('--strike', st);
+    if (t > 42.1) { $('c_old').style.opacity = 1 - 0.55 * st; $('c_old').style.transform = `scale(${1 - 0.35 * st}) translate(${st * 40}px, ${-st * 16}px)`; }
+    $('c_badge').style.left = '52px';
+    enter($('c_new'), t, 42.35, 0.6, 30, 0.5);
+    enter($('c_foot'), t, 44.1, 0.6, 16);
+    const cout = easeOut(prog(t, 46.2, 0.45));           // la scheda esce prima della scena QR
+    if (cout > 0) { $('card').style.opacity = 1 - cout; }
+  } else if (t < S.s6[1]) {                              // 6 — QR reale del cliente, poi conferma reale
+    if (t < 49.6) phone(t, S.s6[0], frame('clip_qr_cliente', 182, 0.9 + (t - S.s6[0])), { fade: false });
+    else phone(t, 49.6, frame('clip_qr_conferma', 174, segT(t, CONF_SEG)), { fade: true });
+  } else if (t < S.s7[1]) {                              // 7 — costi
+    const x0 = S.s8[0] - 0.35;                           // v6: dissolvenza incrociata 7 → 8, nessun fotogramma vuoto
+    s7draw(t + D7, 1 - easeOut(prog(t, x0, 0.55)));
+    if (t >= x0) scene8phone(t);
+  } else if (t < S.s8[1]) {                              // 8 — dashboard reale del commerciante
+    // v6: l'offerta online nel catalogo reale (niente dashboard a zeri); dissolvenza incrociata con la scena 7
+    scene8phone(t);
+    if (t < S.s8[0] + 0.25) s7draw(t + D7, 1 - easeOut(prog(t, S.s8[0] - 0.35, 0.55)));
+  } else {                                               // 9 — iscrizione reale accelerata, poi chiusura
+    if (t < 75.6) phone(t, S.s9[0], frame('clip_iscrizione', 379, segT(t, REG_SEG)), { fade: true, out: 75.05 });
+    if (t >= 75.05) {
+      $('s9').style.opacity = 1;
+      enter($('logo9'), t, 75.25, 0.7, 30, 0.85); enter($('s9a'), t, 75.7, 0.6, 30); enter($('s9c'), t, 75.95, 0.6, 24); enter($('s9b'), t, 76.3, 0.6, 30, 0.85);
+    }
+  }
+}
+window.setup = setup; window.render = render;
+</script>
+</body>
+</html>

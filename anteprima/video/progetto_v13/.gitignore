@@ -1,0 +1,16 @@
+# Nel repository: script, testi e schermate piccole. Tutto il resto (video, fotogrammi, caratteri, grana,
+# clip e foto di lavorazione) resta sul computer di chi monta il video.
+export/
+stems
+app/
+render/fr/
+render/seq/
+render/fonts/
+render/grain/
+render/*.log
+render/*.log.mbtree
+render/x264pass*
+riprese/foto/
+riprese/demo_ids.json
+*.mp4
+*.wav
