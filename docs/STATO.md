@@ -43,6 +43,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
+| (questa) | «Migliora foto con IA»: messaggio chiaro quando la quota dell'IA è esaurita (errore 429) | controlli verdi |
 | (questa) | Zone: solo le 16 aree nel menu (senza i quartieri); «Da fare»: «Non adesso» per il Face ID | controlli verdi |
 | (questa) | Guida passo passo per l'ambiente di prova su Render (`docs/guide/AMBIENTE_DI_PROVA.md`) | controlli verdi; poi la crea il titolare |
 | (questa) | App aperta a tutta Roma e dintorni: zone (quartieri, Ostia, Fiumicino, Castelli Romani), home e FAQ senza «tre quartieri» | controlli verdi |

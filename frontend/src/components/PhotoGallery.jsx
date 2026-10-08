@@ -27,6 +27,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
     const st = e?.response?.status;
     if (st === 503) return "L'ottimizzazione con IA non è attiva in questo momento. La foto resta com'è.";
     if (st === 413) return "Foto troppo grande per l'IA (massimo 8 MB). La foto resta com'è.";
+    if (st === 429) return "Il miglioramento delle foto con l'IA ha raggiunto il limite per ora. Riprova più tardi: la foto resta com'è.";
     if (st === 502) return "L'IA non è riuscita a migliorare questa foto. Riprova tra poco o con un'altra foto. La foto resta com'è.";
     if (!e?.response) return "Connessione interrotta mentre miglioravo la foto. La foto resta com'è.";
     return `${formatApiError(e)} La foto resta com'è.`;
