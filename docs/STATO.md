@@ -61,6 +61,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
+| Video v13 (`claude/video-v13`) | Video per i commercianti con l'app nuova: riprese rifatte (tema chiaro, area «D», 16 zone, codice del negozio), «Roma e dintorni», senza «-50%» e senza «Nessun vincolo». Script e testi in `anteprima/video/progetto_v13`; i video stanno in `export/` (non nel repository) | Rifare in voce tre frasi (vedi `DIFFERENZE_v13.md`); scelta dell'utente su «nessun vincolo» |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 
@@ -104,7 +105,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 4. **Nuovo aspetto** in stile Groupon: scelta fra le tre proposte e realizzazione (caratteri ospitati da noi).
 5. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
 6. **Mappe** Protomaps + LocationIQ: serve la chiave LocationIQ (solo su Render) e il file di Roma da ospitare.
-7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
+7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%». Video: bozza v13 pronta (riprese nuove, sottotitoli aggiornati); da rifare in voce tre frasi (tre quartieri, «cinquanta per cento», «Nessun vincolo»).
 8. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
 9. Pulizie: file di Archivo Black non più usati; `frontend/plugins/health-check` da valutare; righe vecchie; revoca di `EMERGENT_LLM_KEY` (non urgente); locandine già stampate con il QR vecchio da ristampare se esistono.
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
