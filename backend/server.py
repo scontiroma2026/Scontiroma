@@ -1522,12 +1522,27 @@ async def _avvisa_preferiti(d: dict) -> int:
 
 
 # ---------- Merchant Routes ----------
+def _offerta_valida_fino_al(d: dict):
+    """Ultimo giorno in cui l'offerta si vede ai clienti, come «AAAA-MM-GG»: la fine del mese di
+    approvazione (le offerte scadono il 1° del mese dopo). None se l'offerta non è visibile."""
+    if d.get("approval_status") != "approved" or d.get("active") is False:
+        return None
+    mese = d.get("locked_month") or current_month_key()
+    try:
+        anno, m = (int(x) for x in mese.split("-"))
+        return f"{anno:04d}-{m:02d}-{calendar.monthrange(anno, m)[1]:02d}"
+    except Exception:
+        return None
+
+
 @api.get("/merchants/me/discount")
 async def merchant_get_discount(user: dict = Depends(require_merchant)):
     d = await db.discounts.find_one({"merchant_id": user["id"]})
     if not d:
         return {"discount": None}
-    return {"discount": await enrich_discount(d)}
+    out = await enrich_discount(d)
+    out["valid_until"] = _offerta_valida_fino_al(d)  # campo in più: i client vecchi lo ignorano
+    return {"discount": out}
 
 
 @api.post("/merchants/me/discount")
@@ -1592,7 +1607,9 @@ def _enrich_next(nd: dict) -> dict:
 async def merchant_get_next_discount(user: dict = Depends(require_merchant)):
     window = await next_offer_window()
     nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
-    return {"next_discount": _enrich_next(nd) if nd else None, "window": window}
+    u = await db.users.find_one({"id": user["id"]}) or {}
+    return {"next_discount": _enrich_next(nd) if nd else None, "window": window,
+            "no_renew": u.get("no_renew_month") == window["next_month"]}
 
 
 @api.post("/merchants/me/next-discount")
