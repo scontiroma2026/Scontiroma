@@ -17,7 +17,6 @@ test('commerciante crea l\'offerta, admin approva, il cliente la vede', async ({
   await page.getByTestId('disc-original').fill('40');
   await page.getByTestId('disc-discounted').fill('20');
   await page.locator('input[type=file]').first().setInputFiles(FOTO);
-  await page.getByTestId('photo-add-confirm').click();
   await expect(page.getByTestId('photo-tile-0')).toBeVisible();
 
   // 2. "Migliora foto": Gemini è simulato da server_e2e.py e restituisce un PNG fisso
@@ -25,6 +24,8 @@ test('commerciante crea l\'offerta, admin approva, il cliente la vede', async ({
   await page.getByTestId('photo-ai-enhance-0').click();
   const r = await risposta;
   expect(r.status()).toBe(200);
+  // La foto cambia solo se il commerciante sceglie «Usa la migliorata»
+  await page.getByTestId('photo-compare-use-enhanced').click();
   await expect(page.getByTestId('photo-tile-0').locator('img')).toHaveAttribute('src', /^data:image\/png;base64,/);
 
   await page.getByTestId('disc-validity-info').fill('Solo mercoledì e venerdì');

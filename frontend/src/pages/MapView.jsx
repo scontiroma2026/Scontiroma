@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Search, MapPin, ArrowRight, LocateFixed } from "lucide-react";
 import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
 import ZoneOptions from "@/components/ZoneOptions";
+import { FotoOfferta } from "@/components/NoPhoto";
 
 const ROME_CENTER = [41.8955, 12.4823];
 
@@ -228,11 +229,13 @@ export default function MapView() {
                 <Popup>
                   <Link to={`/discounts/${d.id}`} className="block group">
                     <div className="relative">
-                      <img
-                        src={d.image_url || d.merchant.image_url}
-                        alt={d.title}
-                        className="h-32 w-full object-cover"
-                      />
+                      <div className="h-32 w-full overflow-hidden">
+                        <FotoOfferta
+                          src={d.image_url || d.merchant.image_url}
+                          alt={d.title}
+                          className="h-32 w-full object-cover"
+                        />
+                      </div>
                       <div className="absolute right-2 top-2 rounded-full bg-fucsia px-2 py-1 text-xs font-bold text-white shadow-lg">
                         −{d.percent_off}%
                       </div>
