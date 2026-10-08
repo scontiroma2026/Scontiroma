@@ -2905,18 +2905,22 @@ async def merchant_shop_code(user: dict = Depends(require_merchant)):
     return await _shop_code_doc(user["id"])
 
 
-@api.post("/merchants/me/shop-code/regenerate")
-async def merchant_shop_code_regenerate(user: dict = Depends(require_merchant)):
+async def _shop_code_regenerate(merchant_id: str) -> dict:
     """Nuovo codice: il vecchio smette di valere e, con la nuova versione, anche i telefoni «ricordati»."""
-    cur = await _shop_code_doc(user["id"])
+    cur = await _shop_code_doc(merchant_id)
     now = datetime.now(timezone.utc).isoformat()
     await db.users.update_one(
-        {"id": user["id"]},
+        {"id": merchant_id},
         {"$set": {"shop_code": _new_shop_code(exclude=cur["code"]), "shop_code_changed_at": now},
          "$inc": {"shop_code_version": 1}},
     )
-    await db.shop_code_attempts.delete_one({"merchant_id": user["id"]})
-    return await _shop_code_doc(user["id"])
+    await db.shop_code_attempts.delete_one({"merchant_id": merchant_id})
+    return await _shop_code_doc(merchant_id)
+
+
+@api.post("/merchants/me/shop-code/regenerate")
+async def merchant_shop_code_regenerate(user: dict = Depends(require_merchant)):
+    return await _shop_code_regenerate(user["id"])
 
 
 def _device_token(merchant_id: str, version: int) -> str:
@@ -3922,6 +3926,21 @@ async def admin_delete_merchant(merchant_id: str, user: dict = Depends(require_a
     await _erase_user_data(m)
     await db.users.delete_one({"id": merchant_id, "role": "merchant"})
     return {"ok": True}
+
+
+@api.get("/admin/merchants/{merchant_id}/shop-code")
+async def admin_merchant_shop_code(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Solo admin (con master password), un negozio alla volta: mai nelle liste, mai nei log."""
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"id": 1}):
+        raise HTTPException(404, "Commerciante non trovato")
+    return await _shop_code_doc(merchant_id)
+
+
+@api.post("/admin/merchants/{merchant_id}/shop-code/regenerate")
+async def admin_merchant_shop_code_regenerate(merchant_id: str, user: dict = Depends(require_admin_master)):
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"id": 1}):
+        raise HTTPException(404, "Commerciante non trovato")
+    return await _shop_code_regenerate(merchant_id)
 
 
 @api.put("/admin/discounts/{discount_id}")

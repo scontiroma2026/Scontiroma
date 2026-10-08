@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil } from "lucide-react";
+import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 
@@ -169,6 +169,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
           <MerchantRow
             key={m.id}
             m={m}
+            hdrs={hdrs}
             editing={editing === m.id}
             form={form}
             setForm={setForm}
@@ -229,7 +230,7 @@ function Azione({ testid, onClick, icon: Icon, children, tono = "neutro", disabl
  * le azioni scritte per esteso, divise tra "Offerta" e "Negozio".
  */
 function MerchantRow({
-  m, editing, form, setForm, busy,
+  m, hdrs, editing, form, setForm, busy,
   onStartEdit, onSaveEdit, onCancelEdit,
   onToggleApprove, onToggleDiscountActive,
   onApproveInline, onRejectInline, onOpenDiscountEdit,
@@ -313,6 +314,8 @@ function MerchantRow({
         </button>
       </div>
 
+      {!editing && <AdminShopCode m={m} hdrs={hdrs} />}
+
       {/* Negozio */}
       <div className="mt-3 flex flex-wrap gap-2">
         {editing ? (
@@ -330,6 +333,65 @@ function MerchantRow({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Codice a 4 cifre del negozio: solo l'admin, un negozio alla volta, caricato solo quando lo chiede
+ * (non sta mai nella lista dei commercianti). «Rigenera» vale come per il commerciante: il vecchio
+ * codice smette di valere e i telefoni «ricordati» si scollegano.
+ */
+function AdminShopCode({ m, hdrs }) {
+  const [dati, setDati] = useState(null);
+  const [conferma, setConferma] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const id = m.id;
+
+  const mostra = async () => {
+    setBusy(true);
+    try { const { data } = await api.get(`/admin/merchants/${id}/shop-code`, hdrs()); setDati(data); }
+    catch (err) { toast.error(formatApiError(err)); }
+    finally { setBusy(false); }
+  };
+  const rigenera = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/admin/merchants/${id}/shop-code/regenerate`, {}, hdrs());
+      setDati(data); setConferma(false);
+      toast.success("Nuovo codice attivo. Il vecchio non vale più.");
+    } catch (err) { toast.error(formatApiError(err)); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div data-testid={`admin-shopcode-${id}`} className="mt-3 rounded-xl border border-border bg-muted p-3">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Codice del negozio (al banco)</div>
+      {!dati ? (
+        <div className="mt-2">
+          <Azione testid={`shopcode-show-${id}`} onClick={mostra} icon={KeyRound} disabled={busy}>Mostra codice</Azione>
+        </div>
+      ) : (
+        <>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <span data-testid={`shopcode-value-${id}`} aria-label={`Codice ${dati.code.split("").join(" ")}`}
+              className="font-mono text-2xl font-bold tracking-[0.3em] text-foreground">{dati.code}</span>
+            <span className="text-xs text-muted-foreground">versione {dati.version}</span>
+            <Azione testid={`shopcode-hide-${id}`} onClick={() => { setDati(null); setConferma(false); }} icon={EyeOff}>Nascondi</Azione>
+          </div>
+          {!conferma ? (
+            <div className="mt-2"><Azione testid={`shopcode-regen-${id}`} onClick={() => setConferma(true)} icon={KeyRound} tono="giallo">Rigenera codice</Azione></div>
+          ) : (
+            <div role="alert" className="mt-2">
+              <p className="text-xs text-foreground">Il codice attuale smette di valere subito, anche sui telefoni che lo ricordano. Rigenerarlo?</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Azione testid={`shopcode-regen-confirm-${id}`} onClick={rigenera} icon={Check} tono="giallo" disabled={busy}>Sì, rigenera</Azione>
+                <Azione testid={`shopcode-regen-cancel-${id}`} onClick={() => setConferma(false)} icon={X} disabled={busy}>Annulla</Azione>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
