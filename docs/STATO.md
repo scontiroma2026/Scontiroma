@@ -61,7 +61,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | OK del titolare per l'unione |
-| #PRNUM | Libreria foto di esempio da 100 a 422 (tutte verificate con HEAD, nessun duplicato), miniature leggere nel catalogo «Esempi» | Scelta: tenere 422 o cercare altre foto per arrivare a 500 |
+| #61 | Libreria foto di esempio da 100 a 422 (tutte verificate con HEAD, nessun duplicato), miniature leggere nel catalogo «Esempi» | Scelta: tenere 422 o cercare altre foto per arrivare a 500 |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -116,7 +116,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Per l'utente:
   - quale delle tre proposte di aspetto (1, 2 o 3);
   - #59: va bene che l'admin veda il codice del negozio (con «Rigenera»)?
-  - libreria di immagini di esempio: va bene con 422 foto (PR #PRNUM), o si cerca altro per arrivare a 500 (padel, calcetto, meccanici e abbigliamento sono le categorie più corte)?
+  - libreria di immagini di esempio: va bene con 422 foto (PR #61), o si cerca altro per arrivare a 500 (padel, calcetto, meccanici e abbigliamento sono le categorie più corte)?
   - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
   - mesi di prova e `TRIAL_END_DATE`;
   - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).
