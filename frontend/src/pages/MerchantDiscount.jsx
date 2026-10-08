@@ -338,7 +338,7 @@ export default function MerchantDiscount() {
             <form onSubmit={submit} className="space-y-5">
               <div>
                 <Label htmlFor="disc-title" className={ETICHETTA}>Titolo offerta</Label>
-                <Input id="disc-title" data-testid="disc-title" required value={form.title} onChange={upd("title")} className={CAMPO} placeholder="Es. Menu degustazione a metà prezzo" />
+                <Input id="disc-title" data-testid="disc-title" required value={form.title} onChange={upd("title")} className={CAMPO} placeholder="Es. Menu degustazione di pesce" />
               </div>
               <div>
                 <Label htmlFor="disc-description" className={ETICHETTA}>Descrizione</Label>

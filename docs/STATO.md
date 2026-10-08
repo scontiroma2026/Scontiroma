@@ -60,7 +60,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
-| #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | OK del titolare per l'unione |
+| #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | Unita (OK del titolare 08/10) |
 | #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | OK del titolare per l'unione |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
@@ -98,7 +98,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Zone (08/10): il menu mostra solo 16 aree con titolo descrittivo (es. «Aurelio · Boccea, Primavalle, Casalotti») più «Fuori Roma»; il filtro riconosce anche i commercianti registrati con un quartiere.
 - «Migliora foto con IA» (08/10): confronto «Originale / Migliorata», si sceglie quale tenere. Serve fatturazione sulla chiave Gemini (limite di spesa), altrimenti messaggio «ha raggiunto il limite».
 - Libreria di esempio (08/10): decisione del titolare: bastano 422 foto in 10 categorie, **copiate sul nostro sito** (non più collegate a Unsplash). Sono in `frontend/public/esempi/` (800×450) e `esempi/mini/` (400×225), nome = identificativo Unsplash, JPEG ricompressi, circa 26 MB in tutto; licenza Unsplash (uso libero) in `esempi/LICENZA.txt`. Il server manda percorsi relativi (`/esempi/<id>.jpg`); alla scelta il sito li rende assoluti col proprio indirizzo (se un giorno cambia il dominio, le offerte già salvate con quel dominio vanno aggiornate). Gli sconti già salvati con indirizzi Unsplash restano com'erano e continuano a funzionare.
-- Codice del negozio (08/10): blocco di 15 minuti dopo 5 errori; permesso breve di 2 minuti approvato; l'admin lo vede e lo rigenera dal tab «Negozi» (#59, in attesa di OK).
+- Codice del negozio (08/10): blocco di 15 minuti dopo 5 errori; permesso breve di 2 minuti approvato; l'admin lo vede e lo rigenera dal tab «Negozi» (#59, unita).
 
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
@@ -115,9 +115,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 ## Domande aperte
 - Per l'utente:
   - quale delle tre proposte di aspetto (1, 2 o 3);
-  - #59: va bene che l'admin veda il codice del negozio (con «Rigenera»)?
   - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
-  - mesi di prova e `TRIAL_END_DATE`;
+  - **Pagamenti commercianti, tema messo da parte (08/10):** da approfondire insieme più avanti: come funziona il lancio gratis (30 o 60 giorni), quando scatta il primo pagamento, da quando e a che ora (mezzanotte) parte il rinnovo automatico, e se i Termini devono prevedere il vincolo/impossibilità di disdire per il mese in corso (scarico di responsabilità). Qui rientra anche la domanda sui mesi di prova e `TRIAL_END_DATE`: nessuna data da impostare per ora.
   - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).
 - Per il consulente / commercialista:
   - P.IVA e dati dell'azienda (REA, capitale sociale) nei testi del sito;
