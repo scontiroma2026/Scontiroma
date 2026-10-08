@@ -43,6 +43,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
+| (questa) | Sede legale del titolare nei testi legali (Privacy e Termini) | OK del titolare e consulente; manca la PEC |
 | (questa) | Locandina: tolte le «pescherie» e frasi riscritte (categorie reali, testo più chiaro) | controlli verdi |
 | (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
