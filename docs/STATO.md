@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
+Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -39,27 +39,30 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
 | #36 | QR della locandina verso la pagina del negozio con l'offerta del mese; negozio di provenienza ricordato 30 giorni; testi nuovi della locandina | 07/10 |
 | #37 | Pulizia residui Emergent, parte 1: file e vecchi test; bozze dei messaggi per i commercianti | 07/10 |
 | #26 | Testi legali aggiornati (Privacy, Termini, Recesso, Cookie): titolare Euro Linea S.r.l.s., niente abbonamento clienti, seconda casella per i commercianti, cookie e dati reali. **Pubblicati su ordine del titolare; il consulente deve ancora validarli** | 07/10 |
+| #39 | Caratteri ospitati sul nostro sito (niente Google Fonts) | 07/10 |
+| #42 | Area commerciante nella variante «Bianco vivo» | 08/10 |
+| #43 | Locandina: tolte le «pescherie», frasi riscritte | 08/10 |
+| #44 | Dashboard commerciante: scadenza nella pillola dell'offerta e scheda «Da fare» | 08/10 |
+| #45 | App aperta a tutta Roma e dintorni (home e FAQ senza «tre quartieri») | 08/10 |
+| #46 | Tema chiaro su tutta l'app | 08/10 |
+| #47 | Admin: scheda «Pagamenti», registro manuale dei pagamenti dei commercianti (nessun addebito) | 08/10 |
+| #48 | Guida per l'ambiente di prova su Render (`docs/guide/AMBIENTE_DI_PROVA.md`) | 08/10 |
+| #49 | Zone: solo le 16 aree nel menu; «Da fare»: «Non adesso» per il Face ID | 08/10 |
+| #50 | Bozza dell'offerta che non si perde; menu a tendina che si chiudono | 08/10 |
+| #51 | Foto: entrano subito, errori chiari, confronto «Originale / Migliorata» con l'IA | 08/10 |
+| #52 | Conteggio delle scansioni del QR (link corto `/q/<codice>`) | 08/10 |
+| #53 | «Migliora foto con IA»: messaggio chiaro con la quota esaurita | 08/10 |
+| #54 | Codice del negozio a 4 cifre al banco: il nome del cliente solo dopo il codice | 08/10 |
+| #56 | Sfondi neutri: tolti i fondi rosa e lilla | 08/10 |
+| #57 | Codice del negozio: permesso breve di 2 minuti se il QR scade mentre si scrive | 08/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| (questa) | Sfondi neutri: tolti i fondi rosa e lilla dal tema chiaro (restano gli accenti) | controlli verdi |
-| (questa) | «Migliora foto con IA»: messaggio chiaro quando la quota dell'IA è esaurita (errore 429) | controlli verdi |
-| (questa) | Zone: solo le 16 aree nel menu (senza i quartieri); «Da fare»: «Non adesso» per il Face ID | controlli verdi |
-| (questa) | Guida passo passo per l'ambiente di prova su Render (`docs/guide/AMBIENTE_DI_PROVA.md`) | controlli verdi; poi la crea il titolare |
-| (questa) | App aperta a tutta Roma e dintorni: zone (quartieri, Ostia, Fiumicino, Castelli Romani), home e FAQ senza «tre quartieri» | controlli verdi |
-| (questa) | Locandina: tolte le «pescherie» e frasi riscritte (categorie reali, testo più chiaro) | controlli verdi |
-| (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
-| (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
-| (questa, `claude/da-fare-scadenza`) | Dashboard commerciante: scadenza reale nella pillola dell'offerta («fino al 31/10») e scheda «Da fare» con collegamenti | controlli verdi |
-| (questa) | Tema chiaro «Bianco vivo» su tutta l'app (home, offerte, mappa, cliente, accesso, legali, banner, admin); la locandina stampabile resta com'è | controlli verdi, OK del titolare sull'aspetto |
-| (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
-| (branch `claude/bozza-offerta-menu`) | Bozza locale dell'offerta e della descrizione del negozio (riquadro «Hai una bozza non salvata», cancellata a invio e logout) + menu a tendina che si chiudono sempre dopo la scelta (iPhone); nuovo test `25-bozza-menu` | PR da aprire, controlli verdi, prova da iPhone |
-| (branch `claude/pagamenti-commercianti`) | Admin: scheda «Pagamenti», registro manuale dei pagamenti dei commercianti (stato piano, rinnovi a 30 giorni, scaduti, riepilogo del mese, annulla, CSV); nessun addebito, nessuna email | PR da aprire, controlli verdi |
-| (branch `claude/qr-scansioni`) | Conteggio delle scansioni del QR (opzione B): link corto `/q/<codice>` (codice stabile di 5 caratteri per negozio, `/n/<id>` ancora valido), solo un numero per negozio e giorno, antiduplicati; admin: percorso scansioni → iscrizioni → sconti usati (30 giorni e da sempre) nella scheda «Referral QR»; il commerciante vede il numero delle sue scansioni; nuovo test `26-qr-scansioni`; frase di Privacy solo proposta in `docs/legale` | PR da aprire, controlli verdi |
-| (branch `claude/foto-confronto-ia`) | Foto: la foto scattata/scelta entra subito nella galleria (prima serviva un tasto «Aggiungi» facile da dimenticare), ridotta a 1600 px in JPEG, messaggi chiari («Foto troppo grande», «Formato non supportato», HEIC), «Nessuna foto» al posto dell'immagine di cibo di default; «Migliora con IA» con confronto Originale/Migliorata e «Ripristina l'originale»; nuovo test `24-foto` | PR da aprire, controlli verdi |
-| (branch `claude/codice-negozio`) | Codice del negozio a 4 cifre per la convalida al banco: il QR inquadrato mostra solo «Codice valido» + offerta, il nome del cliente solo dopo il codice (5 errori = blocco 15 min), «Ricorda su questo telefono» 90 giorni, «Cambia codice» nella dashboard; commerciante collegato senza codice; test `27-codice-negozio` | PR da aprire, controlli verdi, OK del titolare; frase privacy proposta in `docs/legale/PROPOSTE_TESTI_LEGALI.md` (consulente) |
-| (branch `claude/permesso-breve`) | Codice del negozio: «permesso breve» di 2 minuti rilasciato all'apertura della pagina di convalida, così il QR (20-40 s) non scade mentre si scrive il codice; monouso, legato a QR e negozio, non sostituisce il codice | PR da aprire, controlli verdi |
+| #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
+| #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
+
+Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 
 ## Decisioni prese
 - Pagamenti commercianti (08/10): registro manuale, nessun addebito. L'admin annota i pagamenti incassati (bonifico, PayPal, contanti); nessuna email, nessuna sospensione automatica, il commerciante non vede cambiamenti. Da decidere: sospensione dopo la scadenza, promemoria, fatture.
@@ -82,28 +85,40 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
 - Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
 - Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Commercianti (07/10): 5 macro aree (Mangiare e bere, Bellezza e benessere, Sport e tempo libero, Negozi, Servizi); niente SMS o WhatsApp in serie senza consenso.
-- Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B): fatto nel branch `claude/qr-scansioni` (08/10).
-- Codice del negozio (opzione C): approvato dal titolare l'08/10 e realizzato nel branch `claude/codice-negozio`; «Ricorda su questo telefono» vale al massimo 90 giorni.
+- Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B): fatto (#52) (08/10).
+- Codice del negozio (opzione C): approvato dal titolare l'08/10 e realizzato (#54; permesso breve di 2 minuti: #57); «Ricorda su questo telefono» vale al massimo 90 giorni.
 - Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
-- Area commerciante (07/10): scelta la variante «D · Bianco vivo» (fondo chiaro, testi e pulsanti colorati, due soli caratteri: Fraunces e Manrope). Realizzata nel branch `claude/area-commerciante-d` (PR da aprire).
+- Area commerciante (07/10): scelta la variante «D · Bianco vivo» (fondo chiaro, testi e pulsanti colorati, due soli caratteri: Fraunces e Manrope). Realizzata (#42).
 - Aspetto di tutta l'app (08/10): stessa palette chiara «Bianco vivo» ovunque (fondo bianco, testo #1A1530, accenti fucsia #D81B72, viola #6D4AFF, teal #00798C, verde #127A47), solo Fraunces e Manrope; la locandina stampabile non cambia. Il video promozionale mostra ancora l'app scura: schermate da rifare. Branch `claude/tema-chiaro-app`.
 - Testi legali (07/10): titolare Euro Linea S.r.l.s.; i testi sono pubblicati ma il consulente deve ancora validarli (domande in docs/legale/PROPOSTE_TESTI_LEGALI.md). Sede legale e PEC da aggiungere.
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
+- Aspetto (08/10): palette chiara senza sfondi rosa né lilla (#56); restano gli accenti (fucsia, viola, teal). La palette calda è stata scartata (#55). Tre proposte di nuovo aspetto sul modello Groupon (Menta e corallo, Terracotta e sabbia, Cielo e sole) in attesa di scelta: caratteri più morbidi, ospitati da noi.
+- Zone (08/10): il menu mostra solo 16 aree con titolo descrittivo (es. «Aurelio · Boccea, Primavalle, Casalotti») più «Fuori Roma»; il filtro riconosce anche i commercianti registrati con un quartiere.
+- «Migliora foto con IA» (08/10): confronto «Originale / Migliorata», si sceglie quale tenere. Serve fatturazione sulla chiave Gemini (limite di spesa), altrimenti messaggio «ha raggiunto il limite».
+- Codice del negozio (08/10): blocco di 15 minuti dopo 5 errori; permesso breve di 2 minuti approvato; il codice non è visibile all'admin (da decidere).
 
 ## Da fare, in ordine
-1. Testi legali: validazione del consulente; sede legale e PEC da inserire; "Mario R.": risolto nel branch `claude/codice-negozio` (il nome esce solo dopo il codice del negozio); resta la frase di Privacy/Termini da far vedere al consulente.
-2. Mappe Protomaps + LocationIQ. (Codice del negozio: fatto nel branch, manca la PR.)
-3. Area commerciante nella variante «D · Bianco vivo»: fatta nel branch, manca la PR e l'OK del titolare dopo averla vista da iPhone.
-4. Pulizia Emergent: file e test (#37) e pacchetti (questa PR); resta da valutare `frontend/plugins/health-check`.
+1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
+2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): servizi e database di prova, poi ramo `prova`.
+3. **Testi legali:** validazione del consulente (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`); sede legale in #40; PEC facoltativa; frasi proposte su nome visibile dopo il codice e sul contatore delle scansioni.
+4. **Nuovo aspetto** in stile Groupon: scelta fra le tre proposte e realizzazione (caratteri ospitati da noi).
+5. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
+6. **Mappe** Protomaps + LocationIQ: serve la chiave LocationIQ (solo su Render) e il file di Roma da ospitare.
+7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
+8. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
+9. Pulizie: file di Archivo Black non più usati; `frontend/plugins/health-check` da valutare; righe vecchie; revoca di `EMERGENT_LLM_KEY` (non urgente); locandine già stampate con il QR vecchio da ristampare se esistono.
+10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
 
 ## Domande aperte
 - Per l'utente:
-  - frase "nessun vincolo" nel video (A o B);
-  - clausola 5-bis dei Termini;
-  - lentezza del server (correzione nel codice o piano Render a pagamento);
-  - cancellazione dei branch già uniti.
+  - quale delle tre proposte di aspetto (1, 2 o 3);
+  - il codice del negozio deve vederlo anche l'admin?
+  - la libreria di 100 immagini di esempio resta così?
+  - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
+  - mesi di prova e `TRIAL_END_DATE`;
+  - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).
 - Per il consulente / commercialista:
-  - identità del titolare del trattamento e P.IVA;
+  - P.IVA e dati dell'azienda (REA, capitale sociale) nei testi del sito;
   - contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google;
   - Gemini su piano a pagamento;
-  - testi legali.
+  - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
