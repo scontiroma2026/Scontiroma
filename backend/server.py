@@ -4516,7 +4516,11 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
         raise
     except Exception as e:
         logging.error(f"[ai-enhance] failed for merchant {user['id'][:8]}: {e}")
-        raise HTTPException(502, f"Errore AI: {str(e)[:120]}")
+        testo_errore = str(e)
+        if "429" in testo_errore or "RESOURCE_EXHAUSTED" in testo_errore:
+            # Quota o credito del fornitore dell'IA esauriti: messaggio chiaro, senza il testo tecnico
+            raise HTTPException(429, "Il miglioramento delle foto con l'IA ha raggiunto il limite per ora.")
+        raise HTTPException(502, "L'IA non è riuscita a migliorare la foto.")
 
 
 # =====================================================================
