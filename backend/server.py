@@ -133,8 +133,80 @@ logger = logging.getLogger(__name__)
 # Unico punto da aggiornare quando cambiano i testi legali (es. "2026-11").
 LEGAL_VERSION = "2026-10"
 
-# Solo le tre zone pilota (decisione dell'utente del 03/10): iscrizione, filtri e mappa.
-ZONES = ["Garbatella", "San Paolo", "Marconi"]
+# Zone di Roma e dintorni (decisione dell'utente dell'08/10): iscrizione, filtri e mappa.
+# Raggruppate per area, con titoli descrittivi (senza numeri di municipio). Le prime attività da cercare restano Garbatella, San Paolo e Marconi,
+# ma l'app è aperta a tutta Roma.
+ZONE_GROUPS = [
+    ("Centro storico · Prati, Trastevere, Monti", [
+        "Centro Storico", "Aventino", "Borgo", "Campitelli", "Campo Marzio", "Castro Pretorio", "Celio",
+        "Colonna", "Esquilino", "Ludovisi", "Monti", "Parione", "Pigna", "Ponte", "Prati", "Regola",
+        "Ripa", "San Saba", "Sallustiano", "Sant'Eustachio", "Testaccio", "Trastevere", "Trevi",
+    ]),
+    ("Parioli · Nomentano, San Lorenzo, Trieste", [
+        "Africano", "Bologna", "Flaminio", "Parioli", "Pinciano", "Policlinico", "Salario",
+        "San Lorenzo", "Trieste", "Nomentano", "Villa Ada", "Villaggio Olimpico",
+    ]),
+    ("Monte Sacro · Talenti, Conca d'Oro, Serpentara", [
+        "Bufalotta", "Casal Boccone", "Castel Giubileo", "Città Giardino", "Conca d'Oro", "Fidene",
+        "Monte Sacro", "Porta di Roma", "Sacco Pastore", "Serpentara", "Settebagni", "Talenti",
+        "Tufello", "Val Melaina", "Vigne Nuove",
+    ]),
+    ("Tiburtino · Pietralata, Rebibbia, San Basilio", [
+        "Casal de' Pazzi", "Casal Monastero", "Colli Aniene", "Pietralata", "Ponte Mammolo",
+        "Portonaccio", "Rebibbia", "San Basilio", "Settecamini", "Tiburtino", "Tor Cervara",
+    ]),
+    ("Prenestino · Centocelle, Pigneto, Tor Pignattara", [
+        "Alessandrino", "Casilino", "Centocelle", "La Rustica", "Pigneto", "Prenestino",
+        "Quarticciolo", "Tor Pignattara", "Tor Sapienza", "Tor Tre Teste", "Villa Gordiani",
+    ]),
+    ("Tor Bella Monaca · Torre Angela, Lunghezza", [
+        "Borghesiana", "Finocchio", "Giardinetti", "Lunghezza", "Tor Bella Monaca", "Tor Vergata",
+        "Torre Angela", "Torre Gaia", "Torre Maura",
+    ]),
+    ("Appio · Tuscolano, Cinecittà, San Giovanni", [
+        "Appio Claudio", "Appio Latino", "Appio Pignatelli", "Capannelle", "Cinecittà", "Colli Albani",
+        "Don Bosco", "Furio Camillo", "Quadraro", "Re di Roma", "San Giovanni", "Tor Fiscale",
+        "Torre Spaccata", "Tuscolano",
+    ]),
+    ("Garbatella · Ostiense, San Paolo", [
+        "Appia Antica", "Ardeatino", "Garbatella", "Grottaperfetta", "Montagnola", "Navigatori",
+        "Ostiense", "San Paolo", "Tor Marancia",
+    ]),
+    ("EUR · Laurentino, Spinaceto, Torrino", [
+        "Cecchignola", "Decima", "EUR", "Fonte Meravigliosa", "Giuliano-Dalmata", "Laurentino",
+        "Mostacciano", "Spinaceto", "Tor de' Cenci", "Torrino", "Tre Fontane",
+    ]),
+    ("Ostia · Acilia, Infernetto, Casal Palocco", [
+        "Acilia", "Axa", "Casal Palocco", "Castel Fusano", "Dragona", "Infernetto", "Malafede",
+        "Ostia Antica", "Ostia Lido", "Vitinia",
+    ]),
+    ("Portuense · Marconi, Magliana, Trullo", [
+        "Casetta Mattei", "Corviale", "Magliana", "Marconi", "Muratella", "Ponte Galeria",
+        "Poggio Verde", "Portuense", "Trullo",
+    ]),
+    ("Monteverde · Gianicolense, Pisana", [
+        "Bravetta", "Colli Portuensi", "Gianicolense", "Gianicolo", "Monteverde", "Pisana",
+        "Villa Pamphilj",
+    ]),
+    ("Aurelio · Boccea, Primavalle, Casalotti", [
+        "Aurelio", "Boccea", "Casalotti", "Cornelia", "Monte Spaccato", "Primavalle",
+        "Selva Candida", "Torrevecchia", "Valle Aurelia",
+    ]),
+    ("Monte Mario · Trionfale, Balduina, Ottavia", [
+        "Balduina", "Camilluccia", "Cipro", "Giustiniana", "Medaglie d'Oro", "Monte Mario", "Ottavia",
+        "Pineta Sacchetti", "Santa Maria della Pietà", "Trionfale",
+    ]),
+    ("Cassia · Flaminia, Ponte Milvio, La Storta", [
+        "Cassia", "Cesano", "Due Ponti", "Grottarossa", "Isola Farnese", "La Storta", "Labaro",
+        "Olgiata", "Ponte Milvio", "Prima Porta", "Saxa Rubra", "Tor di Quinto", "Vigna Clara",
+    ]),
+    ("Fuori Roma · Fiumicino, Castelli Romani", [
+        "Albano Laziale", "Anzio", "Bracciano", "Castelli Romani", "Ciampino", "Fiumicino", "Frascati",
+        "Fregene", "Genzano di Roma", "Grottaferrata", "Guidonia Montecelio", "Maccarese", "Marino",
+        "Monterotondo", "Nettuno", "Pomezia", "Tivoli", "Altra zona di Roma e dintorni",
+    ]),
+]
+ZONES = [z for _, gruppo in ZONE_GROUPS for z in gruppo]
 
 CATEGORIES = [
     "Ristorante", "Bar & Caffè", "Pizzeria", "Gelateria",
@@ -1021,7 +1093,7 @@ async def reset_password(payload: ResetIn):
 # ---------- Meta ----------
 @api.get("/zones")
 async def zones():
-    return {"zones": ZONES}
+    return {"zones": ZONES, "groups": [{"name": n, "zones": z} for n, z in ZONE_GROUPS]}
 
 
 @api.get("/categories")
@@ -1403,7 +1475,7 @@ async def share_offerta(discount_id: str, request: Request):
     else:
         dest = f"{front}/discounts"
         titolo = "Sconti Roma"
-        desc = "Sconti nei negozi di Garbatella, San Paolo e Marconi."
+        desc = "Sconti nei negozi di Roma e dintorni."
     e = html_escape
     og_img = f'<meta property="og:image" content="{e(img)}">' if img else ""
     pagina = f"""<!doctype html><html lang="it"><head><meta charset="utf-8">

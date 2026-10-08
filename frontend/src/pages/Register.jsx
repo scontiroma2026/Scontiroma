@@ -12,6 +12,7 @@ import { leggiReferral, salvaReferral } from "@/lib/referral";
 import PasswordInput from "@/components/PasswordInput";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
+import ZoneOptions from "@/components/ZoneOptions";
 
 export default function Register() {
   const { register } = useAuth();
@@ -32,6 +33,7 @@ export default function Register() {
     address: "",
   });
   const [zones, setZones] = useState([]);
+  const [zoneGroups, setZoneGroups] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
@@ -41,7 +43,7 @@ export default function Register() {
   const [rememberCreds, setRememberCreds] = useState(true);
 
   useEffect(() => {
-    api.get("/zones").then((r) => setZones(r.data.zones || []));
+    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneGroups(r.data.groups || []); });
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
   }, []);
 
@@ -206,7 +208,7 @@ export default function Register() {
                     className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
                   >
                     <option value="">Seleziona…</option>
-                    {zones.map((z) => <option key={z} value={z}>{z}</option>)}
+                    <ZoneOptions groups={zoneGroups} zones={zones} />
                   </select>
                 </div>
                 <div>

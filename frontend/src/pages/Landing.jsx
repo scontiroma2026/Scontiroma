@@ -45,7 +45,7 @@ export default function Landing() {
               </p>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">
                 Ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
-                <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
+                <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. In tutta Roma e dintorni.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link to="/register">
@@ -69,7 +69,7 @@ export default function Landing() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
                   <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
-                  <div className="text-sm text-muted-foreground">Si parte da Garbatella, San Paolo e Marconi</div>
+                  <div className="text-sm text-muted-foreground">Dal centro alla periferia</div>
                 </div>
               </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
@@ -104,27 +104,19 @@ export default function Landing() {
       <section className="relative border-y border-border bg-muted">
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
-            <div className="text-xs uppercase tracking-[0.2em] text-neon">I quartieri</div>
-            <h2 className="mt-2 font-serif text-5xl">Partiamo da <span className="text-grad">tre quartieri</span></h2>
+            <div className="text-xs uppercase tracking-[0.2em] text-neon">Dove siamo</div>
+            <h2 className="mt-2 font-serif text-5xl">Il tuo <span className="text-grad">quartiere</span>, ovunque a Roma</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { name: "Garbatella", grad: "grad-fucsia-viola", c: "text-fucsia" },
-              { name: "San Paolo", grad: "grad-ciano-fucsia", c: "text-ciano" },
-              { name: "Marconi", grad: "grad-neon", c: "text-neon" },
-            ].map((q) => (
-              <Link key={q.name} to="/discounts" className="group relative aspect-[5/3] md:aspect-[4/5] overflow-hidden rounded-3xl border border-border bg-card">
-                <div className={`absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 ${q.grad}`} />
-                <div className="absolute inset-x-0 bottom-0 p-6">
-                  <div className={`text-xs uppercase tracking-widest ${q.c}`}>Si parte da qui</div>
-                  <div className="font-serif text-4xl text-foreground">{q.name}</div>
-                  <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin size={12} /> Roma
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Link to="/discounts" className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-12">
+            <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 grad-fucsia-viola" />
+            <div className="relative">
+              <div className="text-xs uppercase tracking-widest text-fucsia">Roma e dintorni</div>
+              <div className="mt-2 font-serif text-4xl text-foreground md:text-5xl">Dal centro alla periferia</div>
+              <div className="mt-3 flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin size={14} /> Scopri le offerte vicino a te
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
 
@@ -139,7 +131,7 @@ export default function Landing() {
                 Un solo sconto,<br/>nuovi clienti dal quartiere.
               </h2>
               <p className="mt-4 text-white max-w-md">
-                Hai un'attività a Garbatella, San Paolo o Marconi? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.
+                Hai un'attività a Roma o nei dintorni? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.
               </p>
               <Link to="/register?role=merchant">
                 <Button data-testid="cta-merchant" className="mt-6 rounded-full bg-white text-ac-ink hover:bg-white/90 px-8 py-6">
@@ -177,7 +169,7 @@ export default function Landing() {
             { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e usi scorretti: il codice è unico e vale solo per pochi secondi, così il commerciante sa che lo sconto è davvero tuo." },
             { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
             { q: "Le offerte cambiano?", a: "Sì: ogni mese i commercianti possono pubblicare un'offerta nuova. Prima di comparire, ogni offerta viene controllata da noi." },
-            { q: "In quali quartieri di Roma funziona?", a: "Stiamo partendo da Garbatella, San Paolo e Marconi, con le prime attività di questi quartieri. Poi arriveremo nel resto di Roma." },
+            { q: "In quali zone funziona?", a: "In tutta Roma, dal centro alla periferia, e nelle zone appena fuori città. Se nella tua zona ci sono ancora poche offerte, ricontrolla più avanti: i commercianti ne pubblicano di nuove ogni mese." },
             { q: "Come accedo all'app?", a: "Con email e password: il telefono può ricordarle per te. Se vuoi, attiva il Face ID dalla sezione «Sicurezza» del tuo account ed entri con un tocco. Dopo 5 tentativi sbagliati l'accesso si blocca per 15 minuti; se hai dimenticato la password usa «Password dimenticata?»." },
             { q: "Come cancello il mio account?", a: "Dalla pagina del tuo account, con il pulsante «Elimina il mio account». Per qualsiasi problema scrivici dalla pagina Assistenza, in fondo a ogni pagina." },
           ]},
