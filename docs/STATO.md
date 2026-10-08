@@ -61,8 +61,8 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | Unita (OK del titolare 08/10) |
-| #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | OK del titolare per l'unione |
-| (nuova) | Mappe: sfondo Protomaps con `roma.pmtiles` (ripiego su OpenStreetMap finché il file non c'è) e indirizzi con LocationIQ se c'è `LOCATIONIQ_API_KEY` (limite 2 richieste/s, cache; senza chiave resta Nominatim). Guida `docs/guide/MAPPE.md`, script `scripts/estrai_mappa_roma.sh` | **Bloccato:** il file `roma.pmtiles` va estratto da una rete che raggiunga `build.protomaps.com`; serve la chiave LocationIQ su Render |
+| #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | Unita (OK del titolare 08/10) |
+| #67 | Mappe: sfondo Protomaps con `roma.pmtiles` (ripiego su OpenStreetMap finché il file non c'è) e indirizzi con LocationIQ se c'è `LOCATIONIQ_API_KEY` (limite 2 richieste/s, cache; senza chiave resta Nominatim). Guida `docs/guide/MAPPE.md`, script `scripts/estrai_mappa_roma.sh` | **Bloccato:** il file `roma.pmtiles` va estratto da una rete che raggiunga `build.protomaps.com`; serve la chiave LocationIQ su Render |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -103,7 +103,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
-2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): servizi e database di prova, poi ramo `prova`.
+2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): **in pausa (08/10)**. Fatto: ramo `prova` (copia di `main` dell'08/10), utente Atlas `prova` con solo `readWrite@scontiroma_prova` (tolto `readWriteAnyDatabase`), servizio `scontiroma-prova-api` creato con avvio corretto; ultimo ostacolo: password in `MONGO_URL` (errore «bad auth»). Da fare alla ripresa: sistemare la password, controllare `/api/`, creare il sito di prova (Passo 3), allineare `prova` a `main`.
 3. **Testi legali:** validazione del consulente (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`); sede legale in #40; PEC facoltativa; frasi proposte su nome visibile dopo il codice e sul contatore delle scansioni.
 4. **Nuovo aspetto** in stile Groupon: scelta fra le tre proposte e realizzazione (caratteri ospitati da noi).
 5. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
