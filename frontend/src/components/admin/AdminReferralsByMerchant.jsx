@@ -89,6 +89,9 @@ export default function AdminReferralsByMerchant({ hdrs }) {
         <span className="text-xs text-muted-foreground">{filtered.length} negozi</span>
       </div>
 
+      {/* Percorso: scansioni del QR -> iscrizioni -> sconti usati (solo numeri) */}
+      <PercorsoQr merchants={filtered} totals={totals} />
+
       {/* Empty state */}
       {filtered.length === 0 && (
         <Card className="border-border bg-muted p-6 text-center text-muted-foreground text-sm">
@@ -201,6 +204,59 @@ export default function AdminReferralsByMerchant({ hdrs }) {
         })}
       </div>
     </div>
+  );
+}
+
+function PercorsoQr({ merchants, totals }) {
+  const righe = merchants.filter((m) => m.scansioni_totali || m.iscrizioni_totali || m.sconti_usati_totali);
+  const th = "py-2 px-2 text-right font-semibold";
+  const td = "py-2 px-2 text-right tabular-nums";
+  return (
+    <Card data-testid="admin-percorso-qr" className="border-border bg-muted p-4">
+      <div className="text-sm font-semibold text-foreground">Percorso del QR: scansioni, iscrizioni, sconti usati</div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Le scansioni sono solo un numero per negozio e per giorno (nessun dato di chi inquadra). Sconti usati: codici consumati al banco.
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[34rem] text-sm">
+          <thead>
+            <tr className="text-xs uppercase text-muted-foreground">
+              <th rowSpan={2} className="py-2 pr-2 text-left align-bottom font-semibold">Negozio</th>
+              <th colSpan={2} className="px-2 text-right font-semibold">Scansioni</th>
+              <th colSpan={2} className="px-2 text-right font-semibold">Iscrizioni</th>
+              <th colSpan={2} className="px-2 text-right font-semibold">Sconti usati</th>
+            </tr>
+            <tr className="text-[10px] uppercase text-muted-foreground">
+              <th className={th}>30 giorni</th><th className={th}>Sempre</th>
+              <th className={th}>30 giorni</th><th className={th}>Sempre</th>
+              <th className={th}>30 giorni</th><th className={th}>Sempre</th>
+            </tr>
+          </thead>
+          <tbody>
+            {righe.map((m) => (
+              <tr key={m.merchant_id} data-testid={`percorso-${m.merchant_id}`} className="border-t border-border">
+                <td className="py-2 pr-2 text-foreground">{m.shop_name}</td>
+                <td className={td} data-col="scansioni-30">{m.scansioni_30_giorni}</td>
+                <td className={td} data-col="scansioni-tot">{m.scansioni_totali}</td>
+                <td className={td} data-col="iscrizioni-30">{m.iscrizioni_30_giorni}</td>
+                <td className={td} data-col="iscrizioni-tot">{m.iscrizioni_totali}</td>
+                <td className={td} data-col="sconti-30">{m.sconti_usati_30_giorni}</td>
+                <td className={td} data-col="sconti-tot">{m.sconti_usati_totali}</td>
+              </tr>
+            ))}
+            <tr data-testid="percorso-totale" className="border-t-2 border-border font-bold text-foreground">
+              <td className="py-2 pr-2">Totale</td>
+              <td className={td}>{totals.scansioni_30_giorni ?? 0}</td>
+              <td className={td}>{totals.scansioni_totali ?? 0}</td>
+              <td className={td}>{totals.iscrizioni_30_giorni ?? 0}</td>
+              <td className={td}>{totals.iscrizioni_totali ?? 0}</td>
+              <td className={td}>{totals.sconti_usati_30_giorni ?? 0}</td>
+              <td className={td}>{totals.sconti_usati_totali ?? 0}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
 

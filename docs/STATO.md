@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
+Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -52,6 +52,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 | (questa) | Tema chiaro «Bianco vivo» su tutta l'app (home, offerte, mappa, cliente, accesso, legali, banner, admin); la locandina stampabile resta com'è | controlli verdi, OK del titolare sull'aspetto |
 | (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
 | (branch `claude/pagamenti-commercianti`) | Admin: scheda «Pagamenti», registro manuale dei pagamenti dei commercianti (stato piano, rinnovi a 30 giorni, scaduti, riepilogo del mese, annulla, CSV); nessun addebito, nessuna email | PR da aprire, controlli verdi |
+| (branch `claude/qr-scansioni`) | Conteggio delle scansioni del QR (opzione B): link corto `/q/<codice>` (codice stabile di 5 caratteri per negozio, `/n/<id>` ancora valido), solo un numero per negozio e giorno, antiduplicati; admin: percorso scansioni → iscrizioni → sconti usati (30 giorni e da sempre) nella scheda «Referral QR»; il commerciante vede il numero delle sue scansioni; nuovo test `26-qr-scansioni`; frase di Privacy solo proposta in `docs/legale` | PR da aprire, controlli verdi |
 
 ## Decisioni prese
 - Pagamenti commercianti (08/10): registro manuale, nessun addebito. L'admin annota i pagamenti incassati (bonifico, PayPal, contanti); nessuna email, nessuna sospensione automatica, il commerciante non vede cambiamenti. Da decidere: sospensione dopo la scadenza, promemoria, fatture.
@@ -74,7 +75,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 - Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
 - Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Commercianti (07/10): 5 macro aree (Mangiare e bere, Bellezza e benessere, Sport e tempo libero, Negozi, Servizi); niente SMS o WhatsApp in serie senza consenso.
-- Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B) in coda.
+- Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B): fatto nel branch `claude/qr-scansioni` (08/10).
 - Codice del negozio (opzione C): in pausa (07/10), da riconsiderare; se si fa, «Ricorda su questo telefono» vale al massimo 90 giorni.
 - Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
 - Area commerciante (07/10): scelta la variante «D · Bianco vivo» (fondo chiaro, testi e pulsanti colorati, due soli caratteri: Fraunces e Manrope). Realizzata nel branch `claude/area-commerciante-d` (PR da aprire).

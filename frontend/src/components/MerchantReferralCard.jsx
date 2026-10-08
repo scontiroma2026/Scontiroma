@@ -62,6 +62,12 @@ export default function MerchantReferralCard() {
             Più clienti porti, più diventi un partner strategico di Sconti Roma.
           </p>
 
+          {/* Quante volte è stato scansionato il QR: solo il numero */}
+          <div data-testid="referral-scansioni" className="mt-3 rounded-xl border border-ac-line bg-ac-tint px-3 py-2 text-sm text-ac-soft">
+            <strong className="font-serif text-lg text-ac-ink">{data.scansioni_30_giorni ?? 0}</strong> scansioni negli ultimi 30 giorni
+            <span className="text-xs"> · {data.scansioni_totali ?? 0} in tutto</span>
+          </div>
+
           {/* Link URL */}
           <div
             data-testid="referral-url-box"

@@ -12,17 +12,34 @@ import { MapPin } from "lucide-react";
  * in corso (sempre aggiornata, anche se la locandina è stampata da mesi) e pulsante «Iscriviti».
  */
 export default function NegozioQR() {
-  const { id } = useParams();
+  const { id, codice } = useParams();   // /n/:id (vecchio QR) oppure /q/:codice (link corto, conta la scansione)
   const { user } = useAuth();
   const [dati, setDati] = useState(null);
   const [errore, setErrore] = useState(false);
 
   useEffect(() => {
-    salvaReferral(id);
-    api.get(`/negozio/${encodeURIComponent(id)}`)
-      .then(({ data }) => setDati(data))
-      .catch(() => setErrore(true));
-  }, [id]);
+    let attivo = true;
+    if (id) salvaReferral(id);
+    let url = `/negozio/${encodeURIComponent(id)}`;
+    if (codice) {
+      // Stesso browser che ricarica entro 30 secondi: non si conta di nuovo (nessun dato salvato, solo sessionStorage)
+      const chiave = `qr_scansione_${String(codice).toUpperCase()}`;
+      let recente = false;
+      try {
+        recente = Date.now() - Number(sessionStorage.getItem(chiave) || 0) < 30000;
+        if (!recente) sessionStorage.setItem(chiave, String(Date.now()));
+      } catch (_) { /* sessionStorage non disponibile */ }
+      url = `/q/${encodeURIComponent(codice)}${recente ? "?r=1" : ""}`;
+    }
+    api.get(url)
+      .then(({ data }) => {
+        if (!attivo) return;
+        if (codice) salvaReferral(data.negozio.id);
+        setDati(data);
+      })
+      .catch(() => attivo && setErrore(true));
+    return () => { attivo = false; };
+  }, [id, codice]);
 
   if (errore) {
     return (
