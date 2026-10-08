@@ -1411,19 +1411,100 @@ async def get_discount(discount_id: str):
     return {"discount": await enrich_discount(d)}
 
 
+async def _payload_negozio(m: dict) -> dict:
+    """Nome del negozio e offerta del mese in corso, uguali per `/negozio/<id>` e `/q/<codice>`.
+    Nessun dato personale: solo nome, quartiere, categoria e l'offerta già visibile a tutti."""
+    d = await db.discounts.find_one({"merchant_id": m["id"], "active": True, "approval_status": "approved"})
+    return {
+        "negozio": {"id": m["id"], "shop_name": m.get("shop_name") or m.get("name"),
+                    "zone": m.get("zone"), "category": m.get("category"),
+                    "qr_code": await codice_qr_negozio(m)},
+        "discount": await enrich_discount(d) if d else None,
+    }
+
+
 @api.get("/negozio/{merchant_id}")
 async def pagina_negozio(merchant_id: str):
-    """Pagina pubblica a cui porta il QR della locandina: nome del negozio e offerta del mese in corso.
-    Nessun dato personale: solo nome, quartiere, categoria e l'offerta già visibile a tutti."""
+    """Pagina pubblica a cui porta il vecchio QR (`/n/<id>`, ancora valido) e da cui la locandina
+    legge il codice breve: nome del negozio e offerta del mese in corso. Non conta le scansioni."""
     m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
     if not m or merchant_id in await _merchant_sospesi():
         raise HTTPException(404, "Negozio non trovato")
-    d = await db.discounts.find_one({"merchant_id": merchant_id, "active": True, "approval_status": "approved"})
-    return {
-        "negozio": {"id": m["id"], "shop_name": m.get("shop_name") or m.get("name"),
-                    "zone": m.get("zone"), "category": m.get("category")},
-        "discount": await enrich_discount(d) if d else None,
-    }
+    return await _payload_negozio(m)
+
+
+# ---------- Conteggio delle scansioni del QR della locandina ----------
+# Si conta solo un NUMERO per negozio e per giorno (collezione `scansioni_locandina`): nessun IP, nessuno user agent,
+# nessun cookie, nessun identificativo. Il nome `qr_scans` è già usato dal registro delle convalide al banco.
+# Anti-duplicati: (1) finestra per NEGOZIO e non per persona, tenuta in memoria (solo l'id del negozio e l'ora
+# dell'ultimo conteggio, mai chi ha scansionato); (2) ricaricamenti dello stesso browser: lo evita il sito
+# con sessionStorage (`?r=1` = «già contata da poco», non si conta); (3) bot ovvi riconosciuti dall'intestazione
+# del momento, che non viene salvata.
+QR_ALFABETO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"   # senza 0 O 1 I L (si confondono a mano e a stampa)
+QR_LUNGHEZZA = 5
+QR_FINESTRA_SEC = 10
+_QR_FORMATO = re.compile(r"^[A-Za-z0-9]{4,6}$")
+_QR_BOT = re.compile(r"bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|curl|wget|python-requests|"
+                     r"httpx|monitor|uptime|lighthouse", re.I)
+_qr_ultimo_conteggio: dict = {}
+
+
+async def codice_qr_negozio(m: dict) -> str:
+    """Codice breve stabile del negozio: generato la prima volta e salvato sul commerciante."""
+    if m.get("qr_code"):
+        return m["qr_code"]
+    for _ in range(30):
+        cod = "".join(secrets.choice(QR_ALFABETO) for _ in range(QR_LUNGHEZZA))
+        if await db.users.find_one({"qr_code": cod}):
+            continue
+        res = await db.users.update_one({"id": m["id"], "qr_code": {"$exists": False}}, {"$set": {"qr_code": cod}})
+        if res.modified_count == 1:
+            m["qr_code"] = cod
+            return cod
+        attuale = await db.users.find_one({"id": m["id"]})   # un'altra richiesta ha vinto la gara
+        if attuale and attuale.get("qr_code"):
+            m["qr_code"] = attuale["qr_code"]
+            return attuale["qr_code"]
+    raise HTTPException(503, "Riprova tra poco")
+
+
+def _scansione_da_contare(merchant_id: str, request: Request, ricarica: bool) -> bool:
+    if ricarica or _QR_BOT.search(request.headers.get("user-agent", "")):
+        return False
+    adesso = time.monotonic()
+    ultimo = _qr_ultimo_conteggio.get(merchant_id)
+    if ultimo is not None and adesso - ultimo < QR_FINESTRA_SEC:
+        return False
+    if len(_qr_ultimo_conteggio) > 5000:
+        for k in [k for k, t in _qr_ultimo_conteggio.items() if adesso - t > QR_FINESTRA_SEC]:
+            _qr_ultimo_conteggio.pop(k, None)
+    _qr_ultimo_conteggio[merchant_id] = adesso
+    return True
+
+
+@api.get("/q/{codice}")
+async def scansione_qr(codice: str, request: Request, r: int = 0):
+    """Link corto del QR della locandina (`/q/AB12`): conta la scansione e restituisce la pagina del negozio."""
+    if not _QR_FORMATO.match(codice):
+        raise HTTPException(404, "Negozio non trovato")
+    m = await db.users.find_one({"qr_code": codice.upper(), "role": "merchant"})
+    if not m or m["id"] in await _merchant_sospesi():
+        raise HTTPException(404, "Negozio non trovato")
+    if _scansione_da_contare(m["id"], request, bool(r)):
+        await db.scansioni_locandina.update_one(
+            {"merchant_id": m["id"], "giorno": _rome_day()}, {"$inc": {"conteggio": 1}}, upsert=True)
+    return JSONResponse(await _payload_negozio(m), headers={"Cache-Control": "no-store"})
+
+
+async def _scansioni_per_negozio() -> dict:
+    """{merchant_id: (ultimi 30 giorni, da sempre)}"""
+    da = (datetime.now(ROME_TZ) - timedelta(days=29)).strftime("%Y-%m-%d")
+    out: dict = {}
+    for d in await db.scansioni_locandina.find({}, {"_id": 0}).to_list(length=None):
+        a, b = out.get(d["merchant_id"], (0, 0))
+        n = int(d.get("conteggio") or 0)
+        out[d["merchant_id"]] = (a + (n if d["giorno"] >= da else 0), b + n)
+    return out
 
 
 # ---------- Condivisione di un'offerta (anteprima del link per WhatsApp e simili) ----------
@@ -1869,11 +1950,15 @@ async def merchant_referrals(user: dict = Depends(require_merchant)):
     """
     # Priorità: FRONTEND_URL (canonical, aggiornato in .env) → APP_URL (fallback legacy).
     app_url = (os.environ.get("FRONTEND_URL") or os.environ.get("APP_URL") or "").rstrip("/")
+    cod = await codice_qr_negozio(user)
+    s30, tot = (await _scansioni_per_negozio()).get(user["id"], (0, 0))
     return {
         "merchant_id": user["id"],
         "shop_name": user.get("shop_name"),
-        "referral_url": f"{app_url}/n/{user['id']}",
+        "referral_url": f"{app_url}/q/{cod}",
         "flyer_url": f"{app_url}/locandina?ref={user['id']}",
+        "scansioni_30_giorni": s30,
+        "scansioni_totali": tot,
     }
 
 
@@ -3303,14 +3388,18 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
          "data_scadenza_abbonamento": 1},
     ).sort("referred_at", -1).to_list(length=None)
 
-    if not clients:
-        return {"merchants": [], "totals": {"merchants_with_referrals": 0,
-                                             "total_signups": 0,
-                                             "total_subscribed": 0,
-                                             "total_active": 0}}
+    scansioni = await _scansioni_per_negozio()
+    da30 = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    sconti_tot: dict = {}
+    sconti_30: dict = {}
+    async for rd in db.redemptions.find({"status": "redeemed"}, {"_id": 0, "merchant_id": 1, "redeemed_at": 1}):
+        mid = rd.get("merchant_id")
+        sconti_tot[mid] = sconti_tot.get(mid, 0) + 1
+        if (rd.get("redeemed_at") or "") >= da30:
+            sconti_30[mid] = sconti_30.get(mid, 0) + 1
 
     # Lookup subscriptions per determinare "abbonato almeno una volta" e "attivo ora"
-    client_ids = [c["id"] for c in clients]
+    client_ids = [c["id"] for c in clients] or [""]
     subs = await db.subscriptions.find(
         {"user_id": {"$in": client_ids}},
         {"_id": 0, "user_id": 1, "status": 1, "end_date": 1},
@@ -3325,6 +3414,8 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
     for c in clients:
         mid = c["referred_by"]
         by_merchant.setdefault(mid, []).append(c)
+    for mid in scansioni:            # negozi con scansioni ma ancora senza iscritti
+        by_merchant.setdefault(mid, [])
 
     # Merchant metadata
     merchant_ids = list(by_merchant.keys())
@@ -3362,17 +3453,27 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
             "total_signups": len(cl),
             "subscribed_count": subscribed,
             "active_subscribers": active,
+            "scansioni_30_giorni": scansioni.get(mid, (0, 0))[0],
+            "scansioni_totali": scansioni.get(mid, (0, 0))[1],
+            "iscrizioni_30_giorni": sum(1 for c in cl if (c.get("referred_at") or c.get("created_at") or "") >= da30),
+            "iscrizioni_totali": len(cl),
+            "sconti_usati_30_giorni": sconti_30.get(mid, 0),
+            "sconti_usati_totali": sconti_tot.get(mid, 0),
             "conversion_rate": round((subscribed / len(cl)) * 100, 1) if cl else 0.0,
             "clients": clients_enriched,
         })
 
     # Sort: prima chi ha più abbonati attivi, poi più iscritti totali
-    rows.sort(key=lambda r: (r["active_subscribers"], r["total_signups"]), reverse=True)
+    rows.sort(key=lambda r: (r["active_subscribers"], r["total_signups"], r["scansioni_totali"]), reverse=True)
+    percorso = {k: sum(r[k] for r in rows) for k in (
+        "scansioni_30_giorni", "scansioni_totali", "iscrizioni_30_giorni", "iscrizioni_totali",
+        "sconti_usati_30_giorni", "sconti_usati_totali")}
 
     return {
         "merchants": rows,
         "totals": {
-            "merchants_with_referrals": len(rows),
+            "merchants_with_referrals": sum(1 for r in rows if r["total_signups"]),
+            **percorso,
             "total_signups": len(clients),
             "total_subscribed": len(subscribed_ids),
             "total_active": len(active_ids),
@@ -3959,6 +4060,8 @@ async def on_startup():
     await db.subscriptions.create_index("user_id")
     await db.redemptions.create_index("code", unique=True)
     await db.redemptions.create_index("merchant_id")
+    await db.scansioni_locandina.create_index([("merchant_id", 1), ("giorno", 1)], unique=True)
+    await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
@@ -4516,7 +4619,11 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
         raise
     except Exception as e:
         logging.error(f"[ai-enhance] failed for merchant {user['id'][:8]}: {e}")
-        raise HTTPException(502, f"Errore AI: {str(e)[:120]}")
+        testo_errore = str(e)
+        if "429" in testo_errore or "RESOURCE_EXHAUSTED" in testo_errore:
+            # Quota o credito del fornitore dell'IA esauriti: messaggio chiaro, senza il testo tecnico
+            raise HTTPException(429, "Il miglioramento delle foto con l'IA ha raggiunto il limite per ora.")
+        raise HTTPException(502, "L'IA non è riuscita a migliorare la foto.")
 
 
 # =====================================================================
@@ -4616,6 +4723,7 @@ async def _erase_user_data(user: dict) -> None:
         for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews):
             await coll.delete_many({"merchant_id": uid})
         await db.avvisi_preferiti.delete_many({"merchant_id": uid})
+        await db.scansioni_locandina.delete_many({"merchant_id": uid})
         await db.users.update_many({"preferiti": uid}, {"$pull": {"preferiti": uid}})
 
 

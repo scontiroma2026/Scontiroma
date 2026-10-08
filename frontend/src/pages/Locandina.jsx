@@ -17,14 +17,16 @@ export default function Locandina() {
   const ref = params.get("ref");
   // Usa l'origin corrente: in produzione sarà scontiroma.it, in preview l'URL di test.
   const origin = window.location.origin;
-  const APP_URL = ref
-    ? `${origin}/n/${encodeURIComponent(ref)}`
-    : `${origin}/register`;
   const [nomeNegozio, setNomeNegozio] = useState("");
+  const [codiceQr, setCodiceQr] = useState("");
+  // Il QR porta al link corto /q/<codice> (conta le scansioni); il vecchio /n/<id> resta valido come ripiego.
+  const APP_URL = ref
+    ? (codiceQr ? `${origin}/q/${codiceQr}` : `${origin}/n/${encodeURIComponent(ref)}`)
+    : `${origin}/register`;
   useEffect(() => {
     if (!ref) return;
     api.get(`/negozio/${encodeURIComponent(ref)}`)
-      .then(({ data }) => setNomeNegozio(data.negozio?.shop_name || ""))
+      .then(({ data }) => { setNomeNegozio(data.negozio?.shop_name || ""); setCodiceQr(data.negozio?.qr_code || ""); })
       .catch(() => {});
   }, [ref]);
 
@@ -422,6 +424,8 @@ export default function Locandina() {
               }}
             >
               <div
+                data-testid="locandina-qr"
+                data-qr-url={APP_URL}
                 style={{
                   flex: "0 0 32mm",
                   background: "#fff",

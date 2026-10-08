@@ -142,7 +142,7 @@ def test_nessuna_risposta_contiene_campi_riservati(monkeypatch):
         admin_h = {**admin["h"], "X-Admin-Master": m.json()["token"]}
 
         hashes = [u["password_hash"] async for u in server.db.users.find({}, {"password_hash": 1})]
-        params = {"discount_id": did, "merchant_id": merchant["id"], "rid": rid, "archivio_id": "inesistente"}
+        params = {"discount_id": did, "merchant_id": merchant["id"], "rid": rid, "archivio_id": "inesistente", "codice": "ZZZZZ"}
         ruoli = {"anonimo": {}, "cliente": client["h"], "commerciante": merchant["h"], "admin": admin_h}
 
         controllate = 0

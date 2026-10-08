@@ -55,6 +55,7 @@ def test_negozio_con_offerta():
         r = await c.get(f"/api/negozio/{mid}")
         assert r.status_code == 200, r.text
         j = r.json()
+        assert len(j["negozio"].pop("qr_code")) == 5
         assert j["negozio"] == {"id": mid, "shop_name": "Osteria dell'Esempio", "zone": "Garbatella", "category": "Ristorante"}
         assert j["discount"]["id"] == did and j["discount"]["percent_off"] == 50
         assert "password_hash" not in r.text and "email" not in j["negozio"]

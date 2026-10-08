@@ -237,6 +237,15 @@ test('«Migliora con IA»: senza chiave (503) o con errore, messaggio chiaro e f
   await expect(page.getByTestId('photo-compare-error')).toContainText('non è riuscita a migliorare');
   await page.getByTestId('photo-compare-close').click();
   await expect(tile).toHaveAttribute('src', originale);
+
+  // Quota del fornitore dell'IA esaurita (429): messaggio chiaro, senza testo tecnico
+  await page.unroute('**/api/ai/enhance-image');
+  await simulaIA(page, { stato: 429 });
+  await page.getByTestId('photo-ai-enhance-0').click();
+  await expect(page.getByTestId('photo-compare-error')).toContainText('ha raggiunto il limite per ora');
+  await expect(page.getByTestId('photo-compare-error')).not.toContainText('RESOURCE_EXHAUSTED');
+  await page.getByTestId('photo-compare-close').click();
+  await expect(tile).toHaveAttribute('src', originale);
 });
 
 test('offerta senza foto: «Nessuna foto», mai un\'immagine di default', async ({ page, request }) => {
