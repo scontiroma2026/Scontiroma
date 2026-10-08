@@ -63,6 +63,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #65 | Pulizie tecniche: tolti Archivo Black e il plugin `health-check`, STATO riordinato (vedi «Pulizie tecniche») | Controlli verdi e unione |
+| (in apertura) | Admin: nome e cognome completi dei clienti nel Registro Frodi e in Feedback App (Log completo, Referral QR, Abbonati, Feedback recensioni e classifica clienti li mostravano già). Il modello utente ha un solo campo `name`. Commercianti e pubblico invariati («Giulia E.») | Controlli verdi; il consulente deve vedere la nota privacy |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -99,6 +100,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Zone (08/10): il menu mostra solo 16 aree con titolo descrittivo (es. «Aurelio · Boccea, Primavalle, Casalotti») più «Fuori Roma»; il filtro riconosce anche i commercianti registrati con un quartiere.
 - «Migliora foto con IA» (08/10): confronto «Originale / Migliorata», si sceglie quale tenere. Serve fatturazione sulla chiave Gemini (limite di spesa), altrimenti messaggio «ha raggiunto il limite».
 - Libreria di esempio (08/10): decisione del titolare: bastano 422 foto in 10 categorie, **copiate sul nostro sito** (non più collegate a Unsplash). Sono in `frontend/public/esempi/` (800×450) e `esempi/mini/` (400×225), nome = identificativo Unsplash, JPEG ricompressi, circa 26 MB in tutto; licenza Unsplash (uso libero) in `esempi/LICENZA.txt`. Il server manda percorsi relativi (`/esempi/<id>.jpg`); alla scelta il sito li rende assoluti col proprio indirizzo (se un giorno cambia il dominio, le offerte già salvate con quel dominio vanno aggiornate). Gli sconti già salvati con indirizzi Unsplash restano com'erano e continuano a funzionare.
+
+- Admin e nomi dei clienti (08/10): l'admin vede il nome per intero (campo unico `name`, non esiste un cognome separato) in Registro Frodi, Feedback App, Log completo, Referral QR, Abbonati, Feedback e classifica clienti; commercianti e pubblico solo «Nome C.». Nessun nome nei log del server. Da citare nell'informativa privacy (consulente).
 
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.

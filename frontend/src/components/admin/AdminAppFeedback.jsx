@@ -21,7 +21,7 @@ export default function AdminAppFeedback({ hdrs }) {
 
   const needle = q.trim().toLowerCase();
   const filtered = needle
-    ? data.feedback.filter((f) => [f.email, f.comment, f.role].filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
+    ? data.feedback.filter((f) => [f.name, f.email, f.comment, f.role].filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
     : data.feedback;
 
   return (
@@ -36,7 +36,7 @@ export default function AdminAppFeedback({ hdrs }) {
             </div>
             <div className="mt-1 text-sm text-muted-foreground">{data.count} feedback ricevuti</div>
           </div>
-          <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca email o commento…" testId="appfeedback-search" />
+          <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca nome, email o commento…" testId="appfeedback-search" />
         </div>
       </Card>
       <div className="space-y-3">
@@ -49,7 +49,7 @@ export default function AdminAppFeedback({ hdrs }) {
                 ))}
               </div>
               <div className="text-xs text-muted-foreground">
-                {f.email} · {f.role} · {new Date(f.updated_at).toLocaleDateString("it-IT")}
+                {f.name ? `${f.name} · ` : ""}{f.email} · {f.role} · {new Date(f.updated_at).toLocaleDateString("it-IT")}
               </div>
             </div>
             {f.comment && <p className="mt-2 text-sm text-foreground/80">{f.comment}</p>}
