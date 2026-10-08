@@ -18,6 +18,29 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)'
       },
       colors: {
+        // Area commerciante, variante «D · Bianco vivo»: fondo chiaro, accenti vivi.
+        // Usati solo dalle pagine /merchant/* (vedi src/area-commerciante.css)
+        ac: {
+          ink: '#1A1530',      // testo principale (su bianco: 16:1)
+          soft: '#5E5875',     // testo secondario (su bianco: 6.9:1)
+          mute: '#6B6580',     // testo di servizio (su bianco: 5.6:1)
+          line: '#EADFF0',     // bordi leggeri
+          campo: '#B9B0D0',    // bordo dei campi da compilare
+          tint: '#F6F1FB',     // fondo lavanda chiarissimo
+          rosa: '#D81B72',     // fucsia del sito, versione per fondo bianco
+          rosaBg: '#FFE3F0',
+          rosaSoft: '#FFF0F7',
+          viola: '#6D4AFF',
+          violaBg: '#EDE8FF',
+          teal: '#00798C',
+          tealBg: '#E6F7FA',
+          verde: '#127A47',
+          verdeBg: '#DDF6EA',
+          ambra: '#8A5200',
+          ambraBg: '#FFF1D6',
+          rosso: '#B42318',
+          rossoBg: '#FEE4E2',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

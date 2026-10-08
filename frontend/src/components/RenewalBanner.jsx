@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import api from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { CLASSE_PRIMARIO } from "@/components/AreaUI";
 import { AlertTriangle, CalendarX, CheckCircle2, Clock } from "lucide-react";
 
 /** Banner di scadenza dell'offerta nella dashboard del commerciante.
@@ -39,18 +39,19 @@ export default function RenewalBanner() {
     }
   };
 
-  const box = "mb-8 rounded-2xl border p-5 flex flex-wrap items-center justify-between gap-4";
+  const box = "mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4";
+  const primario = `${CLASSE_PRIMARIO} min-h-12 px-5 text-sm`;
+  const secondario =
+    "inline-flex min-h-12 items-center justify-center rounded-xl border-2 border-ac-soft bg-white px-4 text-sm font-extrabold text-ac-ink transition hover:bg-ac-tint disabled:opacity-50";
 
   if (st.current_expired && !st.next_status) {
     return (
-      <div data-testid="renewal-banner" data-state="expired" className={`${box} border-white/20 bg-white/5`}>
-        <div className="flex items-start gap-3">
-          <CalendarX className="mt-0.5 shrink-0 text-white/70" size={20} />
-          <p className="text-sm text-white/80">La tua offerta è terminata e il negozio non compare tra gli sconti. Pubblica una nuova offerta: dopo l'approvazione torna visibile.</p>
+      <div data-testid="renewal-banner" data-state="expired" className={`${box} border-ac-line bg-ac-tint`}>
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <CalendarX className="mt-0.5 shrink-0 text-ac-soft" size={20} aria-hidden="true" />
+          <p className="text-sm font-semibold text-ac-ink">La tua offerta è terminata e il negozio non compare tra gli sconti. Pubblica una nuova offerta: dopo l'approvazione torna visibile.</p>
         </div>
-        <Link to="/merchant/discount">
-          <Button className="grad-fucsia-viola text-white">Pubblica una nuova offerta</Button>
-        </Link>
+        <Link to="/merchant/discount" className={`${primario} w-full sm:w-auto`}>Pubblica una nuova offerta</Link>
       </div>
     );
   }
@@ -59,44 +60,43 @@ export default function RenewalBanner() {
 
   if (st.no_renew) {
     return (
-      <div data-testid="renewal-banner" data-state="no-renew" className={`${box} border-white/20 bg-white/5`}>
-        <div className="flex items-start gap-3">
-          <CalendarX className="mt-0.5 shrink-0 text-white/70" size={20} />
-          <p className="text-sm text-white/80">Hai scelto di non rinnovare: la tua offerta termina il <strong>{st.expires_on}</strong> e il 1° non riparte nulla.</p>
+      <div data-testid="renewal-banner" data-state="no-renew" className={`${box} border-ac-line bg-ac-tint`}>
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <CalendarX className="mt-0.5 shrink-0 text-ac-soft" size={20} aria-hidden="true" />
+          <p className="text-sm font-semibold text-ac-ink">Hai scelto di non rinnovare: la tua offerta termina il <strong>{st.expires_on}</strong> e il 1° non riparte nulla.</p>
         </div>
-        <Button data-testid="renewal-undo-btn" variant="outline" disabled={busy}
-          className="border-white/20 text-white hover:bg-white/10" onClick={() => setNoRenew(false)}>
+        <button type="button" data-testid="renewal-undo-btn" disabled={busy} className={`${secondario} w-full sm:w-auto`} onClick={() => setNoRenew(false)}>
           Annulla, voglio rinnovare
-        </Button>
+        </button>
       </div>
     );
   }
 
   const noRenewBtn = (
-    <Button data-testid="renewal-no-renew-btn" variant="outline" disabled={busy}
-      className="border-white/20 text-white hover:bg-white/10" onClick={() => setNoRenew(true)}>
+    <button type="button" data-testid="renewal-no-renew-btn" disabled={busy} className={`${secondario} sm:flex-none`} onClick={() => setNoRenew(true)}>
       Non rinnovo
-    </Button>
+    </button>
   );
 
   if (st.next_status) {
     const ok = st.next_status === "approved";
     const rejected = st.next_status === "rejected";
+    const colori = ok ? "border-ac-verde/40 bg-ac-verdeBg" : rejected ? "border-ac-rosso/40 bg-ac-rossoBg" : "border-ac-ambra/40 bg-ac-ambraBg";
     return (
-      <div data-testid="renewal-banner" data-state={st.next_status} className={`${box} border-white/15 bg-white/5`}>
-        <div className="flex items-start gap-3">
-          {ok ? <CheckCircle2 className="mt-0.5 shrink-0 text-fucsia" size={20} /> : <Clock className="mt-0.5 shrink-0 text-neon" size={20} />}
-          <p className="text-sm text-white/80">
+      <div data-testid="renewal-banner" data-state={st.next_status} className={`${box} ${colori}`}>
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          {ok
+            ? <CheckCircle2 className="mt-0.5 shrink-0 text-ac-verde" size={20} aria-hidden="true" />
+            : <Clock className={`mt-0.5 shrink-0 ${rejected ? "text-ac-rosso" : "text-ac-ambra"}`} size={20} aria-hidden="true" />}
+          <p className="text-sm font-semibold text-ac-ink">
             {ok && <>L'offerta di {label} è approvata: parte il 1°.</>}
             {!ok && !rejected && <>L'offerta di {label} è in attesa di approvazione.</>}
             {rejected && <>L'offerta di {label} è stata rifiutata: modificala entro il <strong>{st.expires_on}</strong>, altrimenti il 1° il negozio resta senza offerta.</>}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           {rejected && (
-            <Link to="/merchant/discount?tab=next">
-              <Button className="grad-fucsia-viola text-white">Modifica l'offerta</Button>
-            </Link>
+            <Link to="/merchant/discount?tab=next" className={`${primario} sm:flex-none`}>Modifica l'offerta</Link>
           )}
           {noRenewBtn}
         </div>
@@ -105,18 +105,16 @@ export default function RenewalBanner() {
   }
 
   return (
-    <div data-testid="renewal-banner" data-state="expiring" className={`${box} border-orange-400/50 bg-orange-500/10`}>
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 shrink-0 text-orange-300" size={20} />
-        <p className="text-sm text-white/90">
+    <div data-testid="renewal-banner" data-state="expiring" className={`${box} border-ac-ambra/50 bg-ac-ambraBg`}>
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <AlertTriangle className="mt-0.5 shrink-0 text-ac-ambra" size={20} aria-hidden="true" />
+        <p className="text-sm font-semibold text-ac-ink">
           La tua offerta scade il <strong>{st.expires_on}</strong> e non si rinnova da sola.
           Carica quella di {label} oppure scegli di non rinnovare.
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link to="/merchant/discount?tab=next">
-          <Button data-testid="renewal-upload-btn" className="grad-fucsia-viola text-white">Carica l'offerta di {label}</Button>
-        </Link>
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <Link to="/merchant/discount?tab=next" data-testid="renewal-upload-btn" className={`${primario} sm:flex-none`}>Carica l'offerta di {label}</Link>
         {noRenewBtn}
       </div>
     </div>
