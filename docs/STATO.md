@@ -60,6 +60,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
+| #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | OK del titolare per l'unione |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -95,7 +96,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Aspetto (08/10): palette chiara senza sfondi rosa né lilla (#56); restano gli accenti (fucsia, viola, teal). La palette calda è stata scartata (#55). Tre proposte di nuovo aspetto sul modello Groupon (Menta e corallo, Terracotta e sabbia, Cielo e sole) in attesa di scelta: caratteri più morbidi, ospitati da noi.
 - Zone (08/10): il menu mostra solo 16 aree con titolo descrittivo (es. «Aurelio · Boccea, Primavalle, Casalotti») più «Fuori Roma»; il filtro riconosce anche i commercianti registrati con un quartiere.
 - «Migliora foto con IA» (08/10): confronto «Originale / Migliorata», si sceglie quale tenere. Serve fatturazione sulla chiave Gemini (limite di spesa), altrimenti messaggio «ha raggiunto il limite».
-- Codice del negozio (08/10): blocco di 15 minuti dopo 5 errori; permesso breve di 2 minuti approvato; il codice non è visibile all'admin (da decidere).
+- Codice del negozio (08/10): blocco di 15 minuti dopo 5 errori; permesso breve di 2 minuti approvato; l'admin lo vede e lo rigenera dal tab «Negozi» (#59, in attesa di OK).
 
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
@@ -112,7 +113,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 ## Domande aperte
 - Per l'utente:
   - quale delle tre proposte di aspetto (1, 2 o 3);
-  - il codice del negozio deve vederlo anche l'admin?
+  - #59: va bene che l'admin veda il codice del negozio (con «Rigenera»)?
   - la libreria di 100 immagini di esempio resta così?
   - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
   - mesi di prova e `TRIAL_END_DATE`;
