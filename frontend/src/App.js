@@ -54,6 +54,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/n/:id" element={<NegozioQR />} />
+            <Route path="/q/:codice" element={<NegozioQR />} />
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/discounts/:id" element={<DiscountDetail />} />
             <Route path="/subscribe" element={<ProtectedRoute role="client"><Subscribe /></ProtectedRoute>} />
