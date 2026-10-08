@@ -51,6 +51,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 | (questa, `claude/da-fare-scadenza`) | Dashboard commerciante: scadenza reale nella pillola dell'offerta («fino al 31/10») e scheda «Da fare» con collegamenti | controlli verdi |
 | (questa) | Tema chiaro «Bianco vivo» su tutta l'app (home, offerte, mappa, cliente, accesso, legali, banner, admin); la locandina stampabile resta com'è | controlli verdi, OK del titolare sull'aspetto |
 | (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
+| (branch `claude/bozza-offerta-menu`) | Bozza locale dell'offerta e della descrizione del negozio (riquadro «Hai una bozza non salvata», cancellata a invio e logout) + menu a tendina che si chiudono sempre dopo la scelta (iPhone); nuovo test `25-bozza-menu` | PR da aprire, controlli verdi, prova da iPhone |
 | (branch `claude/pagamenti-commercianti`) | Admin: scheda «Pagamenti», registro manuale dei pagamenti dei commercianti (stato piano, rinnovi a 30 giorni, scaduti, riepilogo del mese, annulla, CSV); nessun addebito, nessuna email | PR da aprire, controlli verdi |
 
 ## Decisioni prese

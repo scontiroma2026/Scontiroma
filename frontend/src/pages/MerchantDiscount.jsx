@@ -11,6 +11,8 @@ import { Clock, CheckCircle2, XCircle, Lock, AlertTriangle, CalendarClock, Calen
 import PhotoGallery from "@/components/PhotoGallery";
 import ArchivioOfferte from "@/components/ArchivioOfferte";
 import { Scheda, TONI, ErroreRiprova, Scheletro } from "@/components/AreaUI";
+import RiquadroBozza from "@/components/RiquadroBozza";
+import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
 
 const EMPTY_FORM = {
   title: "", description: "", original_price: "", discounted_price: "",
@@ -29,6 +31,14 @@ const formFrom = (d) => ({
   validity_info: d.validity_info || "",
   additional_info: d.additional_info || "",
 });
+
+// Bozza locale: solo questi campi dell'offerta (nessun dato personale o riservato), foto a parte
+const CAMPI_FOTO = ["image_url", "image_urls"];
+const soloCampiOfferta = (f) => Object.fromEntries(Object.keys(EMPTY_FORM).map((k) => [k, f[k] ?? EMPTY_FORM[k]]));
+const bozzaVuota = (f) => !(
+  ["title", "description", "original_price", "discounted_price", "terms", "plan_ahead", "validity_info", "additional_info"]
+    .some((k) => String(f[k] ?? "").trim() !== "") || (f.image_urls && f.image_urls.length > 0)
+);
 
 // Stili dei campi (variante «Bianco vivo»): alti almeno 44 px, bordo ben visibile, testo scuro
 const CAMPO = "mt-1.5 h-12 rounded-xl border-ac-campo bg-white text-base text-ac-ink";
@@ -74,6 +84,9 @@ export default function MerchantDiscount() {
   // (anche lenta, server appena svegliato) cancellerebbe quello che il commerciante ha già scritto.
   const [loaded, setLoaded] = useState(false);
   const [erroreCarica, setErroreCarica] = useState(false);
+  // Dati «puliti» del server per la scheda aperta: la bozza si confronta con questi
+  const [base, setBase] = useState(EMPTY_FORM);
+  const [inviato, setInviato] = useState(false); // dopo l'invio, finché non arrivano i dati nuovi
 
   useEffect(() => { load(mode); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -89,30 +102,52 @@ export default function MerchantDiscount() {
       setExisting(c);
       setNextOffer(n);
       setWin(nxt.data.window);
-      if (targetMode === "next") setForm(n ? formFrom(n) : (c ? formFrom(c) : EMPTY_FORM));
-      else setForm(c ? formFrom(c) : EMPTY_FORM);
+      const f = targetMode === "next" ? (n ? formFrom(n) : (c ? formFrom(c) : EMPTY_FORM)) : (c ? formFrom(c) : EMPTY_FORM);
+      setForm(f);
+      setBase(f);
     } catch (e) {
       setErroreCarica(true);
       toast.error(formatApiError(e) || "Impossibile caricare l'offerta, riprova.");
     } finally {
       setLoaded(true);
+      setInviato(false);
     }
   };
 
   const switchMode = (m) => {
     if (m === mode) return;
     setMode(m);
-    if (m === "next") setForm(nextOffer ? formFrom(nextOffer) : (existing ? formFrom(existing) : EMPTY_FORM));
-    else setForm(existing ? formFrom(existing) : EMPTY_FORM);
+    const f = m === "next" ? (nextOffer ? formFrom(nextOffer) : (existing ? formFrom(existing) : EMPTY_FORM)) : (existing ? formFrom(existing) : EMPTY_FORM);
+    setForm(f);
+    setBase(f);
   };
 
   const isNext = mode === "next";
+
+  // ---- Bozza: scheda = offerta del mese / mese prossimo / nuova ----
+  const scheda = isNext ? "next" : (existing ? "current" : "nuova");
+  const chiave = user?.id ? chiaveBozza(user.id, scheda) : null;
+  const bloccataDaOrdine = isNext ? Boolean(win && !win.open) : Boolean(existing?.locked_this_month);
+  const bozza = useBozza({
+    chiave,
+    valore: soloCampiOfferta(form),
+    base: soloCampiOfferta(base),
+    pronto: loaded && mode !== "archivio" && !erroreCarica,
+    bloccato: bloccataDaOrdine || inviato,
+    vuoto: bozzaVuota,
+    campiGrandi: CAMPI_FOTO,
+    applica: (dati, fotoPerse) => setForm((f) => ({
+      ...EMPTY_FORM, ...dati,
+      ...(fotoPerse ? { image_url: f.image_url, image_urls: f.image_urls } : {}),
+    })),
+  });
 
   // «Riusa» dall'archivio: copia l'offerta passata nel modulo del mese prossimo (da controllare e inviare)
   const riusa = async (archivioId) => {
     try {
       const { data } = await api.get(`/merchants/me/archive/${archivioId}`);
       setMode("next");
+      setBase(nextOffer ? formFrom(nextOffer) : (existing ? formFrom(existing) : EMPTY_FORM));
       setForm(formFrom({ ...data.offerta, active: true }));
       toast.success("Offerta copiata: controllala e inviala per il mese prossimo.");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -145,6 +180,10 @@ export default function MerchantDiscount() {
         await api.post("/merchants/me/discount", payload);
         toast.success("Offerta inviata! Attende approvazione dell'amministratore.");
       }
+      // Inviata: la bozza non serve più
+      if (user?.id) ["nuova", "current", "next"].filter((x) => (x === "next") === isNext).forEach((x) => togliBozza(chiaveBozza(user.id, x)));
+      bozza.cancella();
+      setInviato(true);
       load(mode);
     } catch (err) {
       toast.error(formatApiError(err));
@@ -288,6 +327,10 @@ export default function MerchantDiscount() {
               </span>
             )}
           </Avviso>
+        )}
+
+        {bozza.inAttesa && !readOnly && (
+          <RiquadroBozza fotoPerse={bozza.fotoPerse} onRiprendi={bozza.riprendi} onScarta={bozza.scarta} />
         )}
 
         <Scheda className="!p-4 sm:!p-6">

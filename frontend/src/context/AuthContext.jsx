@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import api, { formatApiError } from "@/lib/api";
+import { togliTutteLeBozze } from "@/lib/bozza";
 
 const AuthContext = createContext(null);
 
@@ -57,6 +58,7 @@ export function AuthProvider({ children }) {
     }
     // Cleanup difensivo: rimuovi eventuali token legacy in localStorage
     try { localStorage.removeItem("access_token"); } catch (_) { /* localStorage disabled */ }
+    togliTutteLeBozze(); // le bozze non restano a un altro utente dello stesso telefono
     setUser(false);
   };
 
