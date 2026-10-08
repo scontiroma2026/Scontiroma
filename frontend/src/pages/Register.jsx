@@ -33,7 +33,7 @@ export default function Register() {
     address: "",
   });
   const [zones, setZones] = useState([]);
-  const [zoneGroups, setZoneGroups] = useState([]);
+  const [zoneAree, setZoneAree] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [acceptedLegal, setAcceptedLegal] = useState(false);
@@ -43,7 +43,7 @@ export default function Register() {
   const [rememberCreds, setRememberCreds] = useState(true);
 
   useEffect(() => {
-    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneGroups(r.data.groups || []); });
+    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneAree(r.data.areas || []); });
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
   }, []);
 
@@ -208,7 +208,7 @@ export default function Register() {
                     className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
                   >
                     <option value="">Seleziona…</option>
-                    <ZoneOptions groups={zoneGroups} zones={zones} />
+                    <ZoneOptions areas={zoneAree} zones={zones} />
                   </select>
                 </div>
                 <div>

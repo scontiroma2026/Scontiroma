@@ -115,6 +115,14 @@ Cosa è stato cambiato rispetto alla bozza precedente, su indicazione del titola
 
 Domande aperte per il consulente (oltre alle 8 sopra): approvazione specifica art. 1341 c.c. così com'è scritta; responsabilità verso i clienti; ODR; obblighi della piattaforma verso le imprese (Reg. UE 2019/1150) e segnalazione dei contenuti (Digital Services Act); fatturazione ai commercianti dopo il lancio.
 
+## Proposta del 08/10/2026 — conteggio delle scansioni del QR della locandina (nessuna modifica ai testi del sito)
+
+Il link corto del QR (`/q/<codice>`) conta quante volte viene aperto. Si salva **solo un numero per negozio e per giorno**: nessun IP, nessun user agent, nessun cookie nuovo, nessun identificativo. Per questo non si è toccato né il banner né la Cookie Policy né la Privacy. Se il consulente preferisce comunque dichiararlo, frase proposta per la Privacy (sezione sulle statistiche di utilizzo):
+
+> «Quando si apre il link stampato sulla locandina di un negozio contiamo la visita come semplice numero aggregato per negozio e per giorno. Non salviamo indirizzo IP, tipo di dispositivo o altri dati che permettano di riconoscere chi ha inquadrato il QR.»
+
+Domanda per il consulente: un contatore aggregato senza alcun dato personale è fuori dall'ambito GDPR e ePrivacy? (Per la finestra anti-duplicati il server tiene in memoria, per pochi secondi, solo l'id del negozio e l'ora dell'ultimo conteggio.)
+
 ## Proposta del 08/10/2026 — «Codice del negozio» e nome del cliente al banco
 
 **Solo proposta, da far vedere al consulente prima di pubblicare.** Nessun testo legale del sito è stato modificato.

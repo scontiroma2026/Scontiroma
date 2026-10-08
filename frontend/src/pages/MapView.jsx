@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Search, MapPin, ArrowRight, LocateFixed } from "lucide-react";
 import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
 import ZoneOptions from "@/components/ZoneOptions";
+import { FotoOfferta } from "@/components/NoPhoto";
 
 const ROME_CENTER = [41.8955, 12.4823];
 
@@ -61,7 +62,7 @@ const buildIcon = (percent) => L.divIcon({
 export default function MapView() {
   const [discounts, setDiscounts] = useState([]);
   const [zones, setZones] = useState([]);
-  const [zoneGroups, setZoneGroups] = useState([]);
+  const [zoneAree, setZoneAree] = useState([]);
   const [categories, setCategories] = useState([]);
   const [zone, setZone] = useState("");
   const [category, setCategory] = useState("");
@@ -87,7 +88,7 @@ export default function MapView() {
   };
 
   useEffect(() => {
-    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneGroups(r.data.groups || []); });
+    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneAree(r.data.areas || []); });
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
   }, []);
 
@@ -188,7 +189,7 @@ export default function MapView() {
           className="rounded-md border border-border bg-muted text-foreground px-3 h-11 text-sm md:w-56"
         >
           <option value="">Tutte le zone</option>
-          <ZoneOptions groups={zoneGroups} zones={zones} optionClassName="bg-background" />
+          <ZoneOptions areas={zoneAree} zones={zones} optionClassName="bg-background" />
         </select>
         <select
           data-testid="map-category"
@@ -228,11 +229,13 @@ export default function MapView() {
                 <Popup>
                   <Link to={`/discounts/${d.id}`} className="block group">
                     <div className="relative">
-                      <img
-                        src={d.image_url || d.merchant.image_url}
-                        alt={d.title}
-                        className="h-32 w-full object-cover"
-                      />
+                      <div className="h-32 w-full overflow-hidden">
+                        <FotoOfferta
+                          src={d.image_url || d.merchant.image_url}
+                          alt={d.title}
+                          className="h-32 w-full object-cover"
+                        />
+                      </div>
                       <div className="absolute right-2 top-2 rounded-full bg-fucsia px-2 py-1 text-xs font-bold text-white shadow-lg">
                         −{d.percent_off}%
                       </div>

@@ -5,6 +5,10 @@ import { Store, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Scheda, CLASSE_PRIMARIO } from "@/components/AreaUI";
+import RiquadroBozza from "@/components/RiquadroBozza";
+import { useBozza, chiaveBozza } from "@/lib/bozza";
+
+const testoVuoto = (t) => String(t || "").trim() === "";
 
 const MAX_LEN = 1500;
 
@@ -13,10 +17,11 @@ const MAX_LEN = 1500;
  * (stile Groupon "Il negozio"). Il testo appare nella pagina pubblica dello sconto.
  */
 export default function ShopDescriptionCard() {
-  const { refresh } = useAuth();
+  const { user, refresh } = useAuth();
   const [text, setText] = useState("");
   const [saved, setSaved] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pronto, setPronto] = useState(false);
 
   useEffect(() => {
     api.get("/auth/me")
@@ -25,14 +30,23 @@ export default function ShopDescriptionCard() {
         setText(v);
         setSaved(v);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setPronto(true));
   }, []);
+
+  // Bozza locale del testo: resta se il commerciante cambia pagina prima di salvare
+  const bozza = useBozza({
+    chiave: user?.id ? chiaveBozza(user.id, "descrizione-negozio") : null,
+    valore: text.trim(), base: saved, pronto, vuoto: testoVuoto,
+    applica: (dati) => setText(String(dati).slice(0, MAX_LEN)),
+  });
 
   const save = async () => {
     setBusy(true);
     try {
       await api.put("/merchants/me/profile", { shop_description: text.trim() });
       setSaved(text.trim());
+      bozza.cancella();
       refresh(); // aggiorna «Da fare»
       toast.success("Descrizione del negozio salvata! Sarà visibile sulla pagina della tua offerta.");
     } catch (err) {
@@ -50,6 +64,11 @@ export default function ShopDescriptionCard() {
         Racconta la tua attività ai clienti: storia, specialità, atmosfera. Questo testo apparirà
         nella sezione <strong className="text-ac-ink">"Il negozio"</strong> sulla pagina pubblica della tua offerta.
       </p>
+      {bozza.inAttesa && (
+        <div className="mt-4">
+          <RiquadroBozza testid="bozza-negozio" onRiprendi={bozza.riprendi} onScarta={bozza.scarta} />
+        </div>
+      )}
       <label htmlFor="shop-description" className="sr-only">Descrizione del negozio</label>
       <Textarea
         id="shop-description"
