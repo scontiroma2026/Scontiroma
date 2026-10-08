@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import "@/tema-chiaro.css";
 import App from "@/App";
+import { chiudiMenuDopoLaScelta } from "@/lib/chiudiMenu";
+
+chiudiMenuDopoLaScelta();
 
 const queryClient = new QueryClient({
   defaultOptions: {
