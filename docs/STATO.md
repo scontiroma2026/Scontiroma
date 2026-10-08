@@ -62,6 +62,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | Unita (OK del titolare 08/10) |
 | #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | OK del titolare per l'unione |
+| nuova | Pagina pubblica «Per i commercianti» (`/per-i-commercianti`, link in menu e footer, riquadro video con segnaposto per `/video/commercianti.mp4`) e copione della telefonata (`docs/comunicazione/COPIONE_TELEFONATA.md`) | Test in CI; il video v13 è ancora in lavorazione |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.

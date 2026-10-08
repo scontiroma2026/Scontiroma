@@ -201,6 +201,11 @@ export default function Landing() {
         <span className="inline-flex items-center gap-2">
           © {new Date().getFullYear()} <BrandMark inline className="text-muted-foreground" /> — Made con amore ♡
         </span>
+        <div className="mt-3">
+          <Link data-testid="landing-footer-commercianti" to="/per-i-commercianti" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-fucsia">
+            Per i commercianti
+          </Link>
+        </div>
       </footer>
     </main>
   );
