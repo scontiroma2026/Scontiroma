@@ -50,6 +50,7 @@ export default function QRVerify() {
     try {
       const { data } = await api.post("/qr/redeem", {
         token,
+        permit: anteprima?.permit || undefined, // permesso breve: il QR non scade mentre si scrive il codice
         shop_code: opzioni.conCodice ? codice : undefined,
         device_token: opzioni.conTelefono ? telefono : undefined,
         remember: Boolean(opzioni.conCodice && ricorda),

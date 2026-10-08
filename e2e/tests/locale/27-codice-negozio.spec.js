@@ -190,3 +190,32 @@ test('codice del negozio: sezione nella dashboard del commerciante', async ({ pa
   const me = await chiama(request, 'GET', '/auth/me', { token: m.token });
   expect(JSON.stringify(me.data)).not.toContain('shop_code');
 });
+
+test('codice del negozio: il QR scade mentre si scrive il codice, il permesso breve basta', async ({ page, request }) => {
+  test.setTimeout(150_000);
+  const m = await registra(request, 'merchant');
+  const offerta = await creaOffertaApprovata(request, m.token, { title: `Permesso breve ${Date.now()}` });
+  const codice = (await chiama(request, 'GET', '/merchants/me/shop-code', { token: m.token })).data.code;
+  const q = await nuovoQr(request, offerta);
+  await page.goto(q.url);
+  await expect(page.getByTestId('qr-codice-valido')).toBeVisible();
+  // La finestra di 20 secondi del QR passa (come in 04-qr: si aspetta davvero)
+  const slot = Number(q.token.split('.')[1]);
+  await page.waitForTimeout(Math.max(0, (slot + 2) * 20_000 + 1500 - Date.now()));
+  // Il QR da solo ormai è scaduto...
+  const scaduto = await chiama(request, 'POST', '/qr/redeem', { body: { token: q.token, shop_code: codice } });
+  expect(scaduto.data.reason).toBe('QR code scaduto');
+  // ...ma la pagina aperta in tempo ha il permesso: serve comunque il codice del negozio
+  await page.getByTestId('shop-code-input').fill(sbagliato(codice));
+  await page.getByTestId('shop-code-apply').click();
+  await expect(page.getByTestId('shop-code-error')).toContainText('Codice del negozio errato');
+  await expect(page.getByTestId('qr-codice-valido')).not.toContainText('Giulia');
+  await page.getByTestId('shop-code-input').fill(codice);
+  await page.getByTestId('shop-code-apply').click();
+  await expect(page.getByRole('heading', { name: /SCONTO\s*VALIDO/i })).toBeVisible();
+  await expect(page.getByText('Giulia P.')).toBeVisible();
+  expect(await stato(request, m.token, q.code)).toBe('redeemed');
+  // Senza permesso lo stesso QR non vale più
+  const dopo = await chiama(request, 'POST', '/qr/redeem', { body: { token: q.token, shop_code: codice } });
+  expect(dopo.status).toBe(400);
+});
