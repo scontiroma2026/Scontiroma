@@ -133,8 +133,17 @@ logger = logging.getLogger(__name__)
 # Unico punto da aggiornare quando cambiano i testi legali (es. "2026-11").
 LEGAL_VERSION = "2026-10"
 
-# Solo le tre zone pilota (decisione dell'utente del 03/10): iscrizione, filtri e mappa.
-ZONES = ["Garbatella", "San Paolo", "Marconi"]
+# Zone di Roma e dintorni (decisione dell'utente dell'08/10): iscrizione, filtri e mappa.
+# Le prime attività da cercare restano Garbatella, San Paolo e Marconi, ma l'app è aperta a tutta Roma.
+ZONES = [
+    "Acilia", "Appio Latino", "Aurelio", "Aventino", "Axa", "Balduina", "Boccea", "Bologna",
+    "Casal Palocco", "Cassia", "Castelli Romani", "Centocelle", "Centro Storico", "Ciampino",
+    "Esquilino", "EUR", "Fiumicino", "Flaminio", "Garbatella", "Gianicolense", "Infernetto",
+    "Laurentina", "Magliana", "Marconi", "Monte Mario", "Monteverde", "Monti", "Nomentano",
+    "Ostia", "Ostiense", "Parioli", "Pigneto", "Portuense", "Prati", "Prenestino", "Salario",
+    "San Giovanni", "San Lorenzo", "San Paolo", "Talenti", "Testaccio", "Tiburtino",
+    "Torre Angela", "Trastevere", "Trieste", "Trionfale", "Tuscolano", "Altra zona di Roma e dintorni",
+]
 
 CATEGORIES = [
     "Ristorante", "Bar & Caffè", "Pizzeria", "Gelateria",
@@ -1403,7 +1412,7 @@ async def share_offerta(discount_id: str, request: Request):
     else:
         dest = f"{front}/discounts"
         titolo = "Sconti Roma"
-        desc = "Sconti nei negozi di Garbatella, San Paolo e Marconi."
+        desc = "Sconti nei negozi di Roma e dintorni."
     e = html_escape
     og_img = f'<meta property="og:image" content="{e(img)}">' if img else ""
     pagina = f"""<!doctype html><html lang="it"><head><meta charset="utf-8">

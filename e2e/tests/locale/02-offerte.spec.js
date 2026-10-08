@@ -68,10 +68,13 @@ test('"Migliora foto" senza essere commerciante: rifiutato', async ({ request })
   expect(r.status).toBe(403);
 });
 
-test('filtro zone degli sconti: solo Garbatella, San Paolo e Marconi', async ({ page }) => {
+test('filtro zone degli sconti: tutta Roma, Ostia, Fiumicino e Castelli Romani', async ({ page }) => {
   await page.goto('/discounts');
   const opzioni = page.getByTestId('filter-zone').locator('option');
-  await expect(opzioni).toHaveText(['Tutte le zone', 'Garbatella', 'San Paolo', 'Marconi']);
+  await expect(opzioni.first()).toHaveText('Tutte le zone');
+  for (const z of ['Garbatella', 'San Paolo', 'Marconi', 'Trastevere', 'Ostia', 'Fiumicino', 'Castelli Romani']) {
+    await expect(opzioni.filter({ hasText: new RegExp(`^${z}$`) })).toHaveCount(1);
+  }
 });
 
 test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun consiglio sotto', async ({ page, request }) => {

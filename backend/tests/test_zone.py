@@ -1,4 +1,4 @@
-"""Zone: solo le tre zone pilota (Garbatella, San Paolo, Marconi) nei menu di
+"""Zone: Roma, quartieri e dintorni (Ostia, Fiumicino, Castelli Romani) nei menu di
 iscrizione, nei filtri degli sconti e nella mappa. Nessun database: /api/zones è fisso."""
 import asyncio
 import os
@@ -12,11 +12,15 @@ import httpx  # noqa: E402
 import server  # noqa: E402
 
 
-def test_solo_zone_pilota():
+def test_zone_di_roma_e_dintorni():
     async def main():
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             return await c.get("/api/zones")
     r = asyncio.run(main())
     assert r.status_code == 200
-    assert r.json() == {"zones": ["Garbatella", "San Paolo", "Marconi"]}
+    zone = r.json()["zones"]
+    for z in ("Garbatella", "San Paolo", "Marconi", "Ostia", "Fiumicino", "Castelli Romani", "Trastevere"):
+        assert z in zone
+    assert len(zone) == len(set(zone))
+    assert zone[-1].startswith("Altra zona")
