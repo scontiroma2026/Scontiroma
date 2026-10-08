@@ -113,3 +113,19 @@ test('Da fare: il server vecchio senza data non rompe la pillola', async ({ page
   await page.goto('/merchant/dashboard');
   await expect(page.getByTestId('stato-offerta')).toHaveText('Offerta visibile ai clienti');
 });
+
+test('Da fare: «Non adesso» nasconde la voce facoltativa del Face ID', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  await creaOffertaApprovata(request, m.token, { title: `Non adesso e2e ${Date.now()}`, image_url: FOTO });
+  await autenticatoreVirtuale(page);
+  await loginNelBrowser(page, m.email, m.password);
+  await page.goto('/merchant/dashboard');
+  await expect(page.getByTestId('da-fare-faceid')).toBeVisible();
+  await page.getByTestId('da-fare-faceid-non-adesso').click();
+  await expect(page.getByTestId('da-fare-faceid')).toHaveCount(0);
+  // Le altre voci restano, e dopo un ricaricamento la voce non ricompare
+  await expect(page.getByTestId('da-fare-descrizione')).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId('da-fare-descrizione')).toBeVisible();
+  await expect(page.getByTestId('da-fare-faceid')).toHaveCount(0);
+});

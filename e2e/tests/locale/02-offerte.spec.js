@@ -68,13 +68,15 @@ test('"Migliora foto" senza essere commerciante: rifiutato', async ({ request })
   expect(r.status).toBe(403);
 });
 
-test('filtro zone degli sconti: tutta Roma, con i quartieri raggruppati per area, e i dintorni', async ({ page }) => {
+test('filtro zone degli sconti: 16 aree di Roma e dintorni, senza i singoli quartieri', async ({ page }) => {
   await page.goto('/discounts');
   const opzioni = page.getByTestId('filter-zone').locator('option');
+  await expect(opzioni).toHaveCount(17);   // «Tutte le zone» + 16 aree
   await expect(opzioni.first()).toHaveText('Tutte le zone');
-  for (const z of ['Garbatella', 'San Paolo', 'Marconi', 'Trastevere', 'Primavalle', 'Ostia Lido', 'Fiumicino', 'Castelli Romani']) {
-    await expect(opzioni.filter({ hasText: new RegExp(`^${z}$`) })).toHaveCount(1);
-  }
+  await expect(opzioni.filter({ hasText: /^Aurelio · Boccea/ })).toHaveCount(1);
+  await expect(opzioni.filter({ hasText: /^Garbatella · / })).toHaveCount(1);
+  await expect(opzioni.filter({ hasText: /^Fuori Roma · / })).toHaveCount(1);
+  await expect(opzioni.filter({ hasText: /Municipio/ })).toHaveCount(0);
 });
 
 test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun consiglio sotto', async ({ page, request }) => {

@@ -1,11 +1,7 @@
-// Opzioni del menu «Zona»: raggruppate per municipio se il server le manda così, altrimenti elenco semplice.
-export default function ZoneOptions({ groups, zones, optionClassName }) {
-  if (groups && groups.length) {
-    return groups.map((g) => (
-      <optgroup key={g.name} label={g.name}>
-        {g.zones.map((z) => <option key={z} value={z} className={optionClassName}>{z}</option>)}
-      </optgroup>
-    ));
+// Opzioni del menu «Zona»: le aree (circa 16) con titolo descrittivo; valore breve salvato sul negozio.
+export default function ZoneOptions({ areas, zones, optionClassName }) {
+  if (areas && areas.length) {
+    return areas.map((a) => <option key={a.value} value={a.value} className={optionClassName}>{a.label}</option>);
   }
   return zones.map((z) => <option key={z} value={z} className={optionClassName}>{z}</option>);
 }
