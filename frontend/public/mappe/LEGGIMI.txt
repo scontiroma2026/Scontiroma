@@ -1,0 +1,14 @@
+Mappe di Sconti Roma
+====================
+
+Qui va il file roma.pmtiles (tile vettoriali di Roma e dintorni, zoom fino a 15).
+Si crea con:  bash scripts/estrai_mappa_roma.sh   (guida: docs/guide/MAPPE.md)
+
+Finché il file non c'è il sito usa i tile pubblici di OpenStreetMap.
+
+Origine dei dati e licenza
+- Dati della mappa: © OpenStreetMap contributors, licenza ODbL
+  https://www.openstreetmap.org/copyright
+- Tile e stili: Protomaps https://protomaps.com (build pubbliche di OpenStreetMap;
+  stili del pacchetto protomaps-leaflet / @protomaps/basemaps, licenza BSD-3-Clause)
+L'attribuzione «© OpenStreetMap contributors · Protomaps» resta sempre visibile in mappa.

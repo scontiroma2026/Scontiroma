@@ -62,6 +62,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | Unita (OK del titolare 08/10) |
 | #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | OK del titolare per l'unione |
+| (nuova) | Mappe: sfondo Protomaps con `roma.pmtiles` (ripiego su OpenStreetMap finché il file non c'è) e indirizzi con LocationIQ se c'è `LOCATIONIQ_API_KEY` (limite 2 richieste/s, cache; senza chiave resta Nominatim). Guida `docs/guide/MAPPE.md`, script `scripts/estrai_mappa_roma.sh` | **Bloccato:** il file `roma.pmtiles` va estratto da una rete che raggiunga `build.protomaps.com`; serve la chiave LocationIQ su Render |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -84,7 +85,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Nuove funzioni approvate il 04/10: negozi preferiti (avviso via email solo con consenso), «Condividi con un amico», orari scritti dal commerciante, archivio delle offerte con «Riusa». Ordine: condividi, orari, preferiti, archivio.
 - «Telefoni della cassa» scartato (04/10): la convalida resta veloce per tutti i dipendenti. Scelta l'opzione C (vedi sotto).
 - Convalida dello sconto (04/10): **opzione C**, codice del negozio a 4 cifre (uno per negozio, visibile al titolare e all'admin, «Ricorda su questo telefono», «Cambia codice»). In coda dopo orari, preferiti, archivio.
-- Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito.
+- Mappe (04/10): Protomaps ospitata da noi + LocationIQ per gli indirizzi, senza carta di credito. Realizzato (08/10): `protomaps-leaflet` sopra Leaflet (pin e popup invariati), codice di Protomaps caricato solo all'apertura di una mappa; attribuzione «© OpenStreetMap contributors · Protomaps»; LocationIQ attivo solo con `LOCATIONIQ_API_KEY`, altrimenti Nominatim, e Nominatim anche come ripiego se LocationIQ rifiuta o è al limite.
 - Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Commercianti (07/10): 5 macro aree (Mangiare e bere, Bellezza e benessere, Sport e tempo libero, Negozi, Servizi); niente SMS o WhatsApp in serie senza consenso.
 - Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B): fatto (#52) (08/10).
@@ -106,7 +107,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 3. **Testi legali:** validazione del consulente (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`); sede legale in #40; PEC facoltativa; frasi proposte su nome visibile dopo il codice e sul contatore delle scansioni.
 4. **Nuovo aspetto** in stile Groupon: scelta fra le tre proposte e realizzazione (caratteri ospitati da noi).
 5. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
-6. **Mappe** Protomaps + LocationIQ: serve la chiave LocationIQ (solo su Render) e il file di Roma da ospitare.
+6. **Mappe** Protomaps + LocationIQ: codice pronto (ramo `claude/mappe-protomaps`). Mancano: la chiave LocationIQ (solo su Render, guida `docs/guide/MAPPE.md`) e il file `roma.pmtiles` (`bash scripts/estrai_mappa_roma.sh` da una rete che raggiunga `build.protomaps.com`; se supera 90 MB non entra in GitHub: vedi la guida).
 7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
 8. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
 9. Pulizie: file di Archivo Black non più usati; `frontend/plugins/health-check` da valutare; righe vecchie; revoca di `EMERGENT_LLM_KEY` (non urgente); locandine già stampate con il QR vecchio da ristampare se esistono.

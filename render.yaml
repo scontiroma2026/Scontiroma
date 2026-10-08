@@ -73,6 +73,9 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      # Facoltativa: indirizzi con LocationIQ (piano gratuito). Vuota = Nominatim. Guida: docs/guide/MAPPE.md
+      - key: LOCATIONIQ_API_KEY
+        sync: false
 
   # ---------- Sito React (statico, gratuito) ----------
   - type: web
