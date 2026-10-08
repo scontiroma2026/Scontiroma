@@ -34,7 +34,7 @@ export default function Landing() {
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
-                <Sparkles size={12} className="text-neon" /> Solo Roma
+                <Sparkles size={12} className="text-neon" /> Roma e dintorni
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
@@ -142,7 +142,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 gap-4">
               {[
                 { n: "Gratis", l: "fase di lancio" },
-                { n: "3", l: "quartieri pilota" },
+                { n: "16", l: "zone tra Roma e dintorni" },
                 { n: "1", l: "offerta al mese" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
