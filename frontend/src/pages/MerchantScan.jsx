@@ -31,7 +31,7 @@ export default function MerchantScan() {
     <main data-testid="merchant-scan-page" className="text-ac-ink">
       <section className="bg-ac-rosaSoft">
         <div className="mx-auto max-w-xl px-4 pb-6 pt-8 text-center sm:px-6">
-          <div className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-ac-viola">Verifica codice</div>
+          <div className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-ac-teal">Verifica codice</div>
           <h1 className="mt-2 text-[32px] leading-[1.1] sm:text-5xl">Scansiona lo sconto</h1>
           <p className="mt-2 text-base font-medium text-ac-soft">Inserisci il codice del cliente per applicare lo sconto.</p>
         </div>
@@ -52,7 +52,7 @@ export default function MerchantScan() {
                 placeholder="ABC12345"
                 autoComplete="off"
                 autoCapitalize="characters"
-                className="mt-2 h-16 rounded-2xl border-2 border-ac-campo bg-white text-center font-testo text-2xl font-extrabold uppercase tracking-[0.3em] text-ac-ink placeholder:font-semibold placeholder:tracking-[0.2em] placeholder:text-ac-campo focus-visible:border-ac-viola focus-visible:ring-0 md:text-2xl"
+                className="mt-2 h-16 rounded-2xl border-2 border-ac-campo bg-white text-center font-testo text-2xl font-extrabold uppercase tracking-[0.3em] text-ac-ink placeholder:font-semibold placeholder:tracking-[0.2em] placeholder:text-ac-campo focus-visible:border-ac-teal focus-visible:ring-0 md:text-2xl"
                 maxLength={12}
                 required
               />

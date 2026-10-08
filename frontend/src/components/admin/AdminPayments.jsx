@@ -19,7 +19,7 @@ const STATI = {
   scaduto: { testo: "Scaduto", tono: "rosso" },
   sospeso: { testo: "Sospeso", tono: "ambra" },
 };
-const CAMPO = "min-h-11 w-full rounded-xl border border-ac-campo bg-white px-3 text-base text-ac-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ac-viola";
+const CAMPO = "min-h-11 w-full rounded-xl border border-ac-campo bg-white px-3 text-base text-ac-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ac-teal";
 const ETICHETTA = "mb-1 block text-xs font-extrabold text-ac-soft";
 
 const data = (iso) => {

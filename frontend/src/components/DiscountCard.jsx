@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { MapPin, ArrowRight, Zap, TrendingUp } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import CuorePreferito from "@/components/CuorePreferito";
+import { FotoOfferta } from "@/components/NoPhoto";
 
 export default function DiscountCard({ discount }) {
   const m = discount.merchant || {};
@@ -11,16 +12,15 @@ export default function DiscountCard({ discount }) {
   const sales = discount.sales_this_month ?? 0;
   return (
     <Link to={`/discounts/${discount.id}`} data-testid={`discount-card-${discount.id}`} className="group block" onClick={() => trackClick("discount_click")}>
-      <Card className="overflow-hidden border-border bg-muted backdrop-blur transition-all hover:-translate-y-1 hover:border-fucsia hover:shadow-[0_0_40px_rgba(255,46,147,0.3)]">
+      <Card className="overflow-hidden border-border bg-muted backdrop-blur transition-all hover:-translate-y-1 hover:border-fucsia hover:shadow-[0_0_40px_rgba(244,168,29,0.35)]">
         <div className="relative aspect-[4/3] overflow-hidden">
-          <img
-          src={discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"}
+          <FotoOfferta
+            src={discount.image_url || m.image_url}
             alt={discount.title}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full grad-fucsia-viola px-3 py-1.5 text-xs font-bold text-white shadow-lg glow-fucsia">
+          <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-ac-miele px-3 py-1.5 text-xs font-bold text-ac-mieleInk shadow-lg">
             <Zap size={12} /> −{discount.percent_off}%
           </div>
           <CuorePreferito merchantId={m.id} className="absolute right-3 top-3" />

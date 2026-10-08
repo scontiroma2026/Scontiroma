@@ -3,9 +3,10 @@
  * Vale per ogni pagina (home, offerte, cliente, area commerciante, admin, pagine legali).
  * L'unica eccezione è la locandina stampabile (/locandina), che è un foglio da stampare.
  *
- * - Fondo bianco e avorio (#FAF8F5), bordi caldi (#ECE7DF), testo nero caldo (#221E1B); accenti vivi: fucsia #D81B72,
- *   arancio bruciato #C2410C, teal #00798C, azzurro #0B6FA4, verde #127A47. Niente viola né lilla.
- * - Pulsanti pieni o a gradiente caldo fucsia-arancio con testo bianco.
+ * - Fondo bianco alternato a pesca (#FFF6F0) e miele (#FFF9E8), bordi sabbia (#EFE5D8), testo nero caldo (#221C10).
+ *   Colori con un ruolo ciascuno: corallo #D6355C (pulsanti principali, gradiente verso #C2410C, testo bianco),
+ *   miele #F4A81D (evidenziazioni, badge, fasce; testo scuro #221C10), teal #0C768C (etichette, link, icone),
+ *   verde #127A47 (stati positivi). Niente viola né lilla.
  * - Due soli caratteri: Fraunces (titoli) e Manrope (testo), ospitati in /fonts (fonts.css).
  * - Le variabili qui sotto ridisegnano anche i componenti condivisi (Input, Card, Switch...) senza toccarli.
  *   Nelle pagine si usano i token (text-foreground, text-muted-foreground, bg-muted, border-border...)
@@ -14,22 +15,22 @@
 :root {
   color-scheme: light;
   --background: 0 0% 100%;
-  --foreground: 26 11% 12%;
+  --foreground: 40 36% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 26 11% 12%;
+  --card-foreground: 40 36% 10%;
   --popover: 0 0% 100%;
-  --popover-foreground: 26 11% 12%;
-  --primary: 332 74% 48%;
+  --popover-foreground: 40 36% 10%;
+  --primary: 346 66% 52%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 38 35% 94%;
-  --secondary-foreground: 26 11% 12%;
-  --muted: 36 33% 97%;
+  --secondary: 41 100% 92%;
+  --secondary-foreground: 40 36% 10%;
+  --muted: 44 100% 95%;
   --muted-foreground: 30 8% 33%;
-  --accent: 25 100% 96%;
-  --accent-foreground: 26 11% 12%;
+  --accent: 24 100% 97%;
+  --accent-foreground: 40 36% 10%;
   --destructive: 5 77% 40%;
   --destructive-foreground: 0 0% 100%;
-  --border: 37 22% 89%;
+  --border: 34 41% 89%;
   --input: 37 12% 65%;
   --ring: 190 85% 36%;
   --radius: 1rem;
@@ -37,7 +38,7 @@
 
 html, body, .App {
   background-color: #ffffff;
-  color: #221e1b;
+  color: #221c10;
 }
 
 /* Solo Fraunces e Manrope: niente Archivo Black, niente carattere monospazio */
@@ -55,14 +56,14 @@ pre {
   font-variant-numeric: tabular-nums;
 }
 
-::selection { background: #d81b72; color: #ffffff; }
+::selection { background: #d6355c; color: #ffffff; }
 :focus-visible { outline: 3px solid #0e8fa8; outline-offset: 2px; }
-.ac-grad { background: linear-gradient(135deg, #d81b72 0%, #c2410c 100%); }
-.ac-ombra-rosa { box-shadow: 0 8px 20px rgba(216, 27, 114, 0.28); }
+.ac-grad { background: linear-gradient(135deg, #d6355c 0%, #c2410c 100%); }
+.ac-ombra-rosa { box-shadow: 0 8px 20px rgba(214, 53, 92, 0.28); }
 
 /* Scheletro di caricamento */
 @keyframes ac-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-.ac-skel { background: #f1ece4; border-radius: 10px; animation: ac-pulse 1.4s ease-in-out infinite; }
+.ac-skel { background: #f6ecdc; border-radius: 10px; animation: ac-pulse 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .ac-skel { animation: none; }
 }
@@ -70,7 +71,7 @@ pre {
 /* Piede della pagina (LegalFooter condiviso) */
 [data-testid="legal-footer"] {
   background: #ffffff;
-  border-top: 1px solid #ece7df;
+  border-top: 1px solid #efe5d8;
 }
 [data-testid="legal-footer"] a,
 [data-testid="legal-footer"] button {
@@ -82,4 +83,4 @@ pre {
   text-underline-offset: 3px;
 }
 [data-testid="legal-footer"] a:hover,
-[data-testid="legal-footer"] button:hover { color: #d81b72; }
+[data-testid="legal-footer"] button:hover { color: #c42a50; }

@@ -96,7 +96,7 @@ export default function MerchantReferralCard() {
               href={refUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-ac-viola px-4 text-sm font-extrabold text-ac-viola transition hover:bg-ac-violaBg/60"
+              className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-ac-teal px-4 text-sm font-extrabold text-ac-teal transition hover:bg-ac-violaBg/60"
             >
               <ExternalLink size={16} aria-hidden="true" /> Prova il link
             </a>

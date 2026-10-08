@@ -27,14 +27,14 @@ export default function Landing() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
-        <div className="absolute -left-40 top-20 h-[500px] w-[500px] rounded-full bg-neon/10 blur-[120px]" />
+        <div className="absolute -left-40 top-20 h-[500px] w-[500px] rounded-full bg-miele/25 blur-[120px]" />
         <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-ciano/15 blur-[100px]" />
 
         <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
-                <Sparkles size={12} className="text-neon" /> Solo Roma
+              <div className="inline-flex items-center gap-2 rounded-full bg-ac-miele px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-ac-mieleInk">
+                <Sparkles size={12} /> Solo Roma
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
@@ -122,20 +122,20 @@ export default function Landing() {
 
       {/* MERCHANT CTA */}
       <section className="relative mx-auto max-w-7xl px-6 pb-20">
-        <div className="relative overflow-hidden rounded-3xl border border-border ac-grad p-10 md:p-14">
-          <div className="absolute top-4 right-8 text-6xl text-white opacity-30" style={{animation: 'spin-slow 10s linear infinite'}}>✦</div>
+        <div className="relative overflow-hidden rounded-3xl bg-ac-miele p-10 md:p-14">
+          <div className="absolute top-4 right-8 text-6xl text-ac-mieleInk opacity-30" style={{animation: 'spin-slow 10s linear infinite'}}>✦</div>
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-white">Per i commercianti</div>
-              <h2 className="mt-3 font-serif text-5xl text-white leading-tight">
+              <div className="text-xs uppercase tracking-[0.2em] text-ac-mieleInk font-bold">Per i commercianti</div>
+              <h2 className="mt-3 font-serif text-5xl text-ac-mieleInk leading-tight">
                 Un solo sconto,<br/>nuovi clienti dal quartiere.
               </h2>
-              <p className="mt-4 text-white max-w-md">
+              <p className="mt-4 text-ac-mieleInk max-w-md">
                 Hai un'attività a Roma o nei dintorni? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.
               </p>
               <Link to="/register?role=merchant">
-                <Button data-testid="cta-merchant" className="mt-6 rounded-full bg-white text-ac-ink hover:bg-white/90 px-8 py-6">
-                  Diventa partner <Heart size={16} className="ml-2 text-fucsia" />
+                <Button data-testid="cta-merchant" className="mt-6 rounded-full grad-fucsia-viola text-white hover:brightness-105 px-8 py-6">
+                  Diventa partner <Heart size={16} className="ml-2 text-white" />
                 </Button>
               </Link>
             </div>

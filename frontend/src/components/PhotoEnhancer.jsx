@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, Sparkles, Loader2, X, RefreshCw } from "lucide-react";
-
-const MAX_DIM = 1200;
-const JPEG_QUALITY = 0.85;
+import { FotoError, leggiFoto, disegnaRidotta, canvasInJpeg } from "@/lib/foto";
 
 // Soft-sharpen convolution kernel (compensates hand micro-shake)
 const SHARPEN_KERNEL = [
@@ -10,16 +8,6 @@ const SHARPEN_KERNEL = [
   -0.6, 3.4, -0.6,
   0, -0.6, 0,
 ];
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
 
 function applyConvolution(src, kernel) {
   const { width, height, data } = src;
@@ -51,31 +39,38 @@ function applyConvolution(src, kernel) {
   return out;
 }
 
+// Safari/iPhone non supporta ctx.filter: in quel caso luce, contrasto e colori si applicano a mano.
+function ritoccoManuale(imgData) {
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i] * 1.15, g = d[i + 1] * 1.15, b = d[i + 2] * 1.15;
+    r = (r - 128) * 1.1 + 128; g = (g - 128) * 1.1 + 128; b = (b - 128) * 1.1 + 128;
+    const grigio = 0.299 * r + 0.587 * g + 0.114 * b;
+    d[i] = Math.min(255, Math.max(0, grigio + (r - grigio) * 1.15));
+    d[i + 1] = Math.min(255, Math.max(0, grigio + (g - grigio) * 1.15));
+    d[i + 2] = Math.min(255, Math.max(0, grigio + (b - grigio) * 1.15));
+  }
+}
+
+// Legge la foto, la riduce a 1600 px di lato massimo, la ritocca e la restituisce in JPEG (qualità 0,85).
 async function enhance(file) {
-  const url = URL.createObjectURL(file);
-  const img = await loadImage(url);
-  URL.revokeObjectURL(url);
-
-  const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
-  const w = Math.round(img.width * scale);
-  const h = Math.round(img.height * scale);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-
-  // 1. Brightness +15%, Contrast +10%, Saturation +15% via Canvas filter
-  ctx.filter = "brightness(1.15) contrast(1.10) saturate(1.15)";
-  ctx.drawImage(img, 0, 0, w, h);
-
-  // 2. Sharpening via convolution
-  ctx.filter = "none";
-  const imgData = ctx.getImageData(0, 0, w, h);
-  const sharpened = applyConvolution(imgData, SHARPEN_KERNEL);
-  ctx.putImageData(sharpened, 0, 0);
-
-  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+  const img = await leggiFoto(file);
+  const { canvas, ctx, w, h } = disegnaRidotta(img);
+  const haFiltri = typeof ctx.filter === "string";
+  if (haFiltri) {
+    // 1. Luce +15%, contrasto +10%, colori +15% con il filtro del canvas
+    const bozza = document.createElement("canvas");
+    bozza.width = w; bozza.height = h;
+    const bctx = bozza.getContext("2d");
+    bctx.filter = "brightness(1.15) contrast(1.10) saturate(1.15)";
+    bctx.drawImage(canvas, 0, 0);
+    ctx.drawImage(bozza, 0, 0);
+  }
+  let imgData = ctx.getImageData(0, 0, w, h);
+  if (!haFiltri) ritoccoManuale(imgData);
+  // 2. Nitidezza
+  ctx.putImageData(applyConvolution(imgData, SHARPEN_KERNEL), 0, 0);
+  return canvasInJpeg(canvas);
 }
 
 export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" }) {
@@ -94,14 +89,6 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
 
   const process = async (file) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Formato non supportato. Usa JPG o PNG.");
-      return;
-    }
-    if (file.size > 15 * 1024 * 1024) {
-      setError("Immagine troppo grande (max 15MB)");
-      return;
-    }
     setError(null);
     setProcessing(true);
     lastFileRef.current = file;
@@ -113,7 +100,8 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
       setTimeout(() => setShowBadge(false), 4000);
     } catch (e) {
       console.warn("[photo-enhancer] enhance failed:", e?.message || e);
-      setError("Errore durante l'ottimizzazione. Riprova con un'altra foto.");
+      setError(e instanceof FotoError ? e.message : "Non sono riuscito a preparare la foto. Riprova con un'altra foto.");
+      if (inputRef.current) inputRef.current.value = ""; // così si può riscegliere la stessa foto
     } finally {
       setProcessing(false);
     }
@@ -157,7 +145,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
           {processing ? (
             <>
               <Loader2 size={32} className="mx-auto animate-spin text-ac-rosa" />
-              <div className="mt-3 text-sm font-semibold text-ac-soft">Ottimizzazione in corso…</div>
+              <div className="mt-3 text-sm font-semibold text-ac-soft">Preparo la foto…</div>
             </>
           ) : (
             <>
@@ -165,7 +153,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
                 <Camera size={24} />
               </div>
               <div className="mt-3 font-serif text-lg font-bold text-ac-ink">Carica una foto</div>
-              <div className="text-sm text-ac-soft">JPG o PNG · L'app la ottimizzerà automaticamente</div>
+              <div className="text-sm text-ac-soft">Scatta o scegli una foto · la riduciamo noi e la ottimizziamo</div>
             </>
           )}
         </button>
@@ -229,7 +217,7 @@ export default function PhotoEnhancer({ value, onChange, testIdPrefix = "photo" 
       )}
 
       {error && (
-        <div className="rounded-xl border border-ac-rosso/40 bg-ac-rossoBg p-3 text-sm font-semibold text-ac-rosso" data-testid={`${testIdPrefix}-error`}>
+        <div role="alert" className="rounded-xl border border-ac-rosso/40 bg-ac-rossoBg p-3 text-sm font-semibold text-ac-rosso" data-testid={`${testIdPrefix}-error`}>
           {error}
         </div>
       )}

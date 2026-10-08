@@ -12,14 +12,14 @@ export default function NavbarCommerciante({ user, navLinks, open, setOpen, onLo
     <header
       data-testid="navbar"
       className="sticky top-0 z-40 w-full bg-white"
-      style={{ borderBottom: "3px solid transparent", borderImage: "linear-gradient(90deg,#D81B72,#F59E3F,#00A3B8) 1" }}
+      style={{ borderBottom: "3px solid transparent", borderImage: "linear-gradient(90deg,#D6355C,#F4A81D,#0E8FA8) 1" }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" data-testid="brand-link" className="flex min-h-11 items-center gap-2.5">
           <BrandMark iconOnly className="text-[26px] text-ac-ink" />
           <span className="flex flex-col leading-tight">
             <span className="font-serif text-lg font-bold text-ac-ink">Sconti Roma</span>
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.06em] text-ac-viola">Area commerciante</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.06em] text-ac-teal">Area commerciante</span>
           </span>
         </Link>
 
@@ -42,7 +42,7 @@ export default function NavbarCommerciante({ user, navLinks, open, setOpen, onLo
 
         <div className="hidden items-center gap-3 md:flex">
           <span className="flex min-h-11 items-center gap-2 rounded-full border border-ac-line bg-ac-tint px-4 text-xs font-bold text-ac-ink">
-            <Store size={14} className="text-ac-viola" />
+            <Store size={14} className="text-ac-teal" />
             {user.name || user.email}
           </span>
           <button

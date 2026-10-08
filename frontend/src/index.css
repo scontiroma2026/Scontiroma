@@ -15,25 +15,25 @@
 @layer utilities {
   /* Nomi storici, mappati sulla tavolozza chiara (i colori fucsia/ciano/neon... sono in tailwind.config.js) */
   .bg-cream { background-color: #FFFFFF; }
-  .bg-parchment { background-color: #FAF8F5; }
-  .border-warm { border-color: #ECE7DF; }
+  .bg-parchment { background-color: #FFF6F0; }
+  .border-warm { border-color: #EFE5D8; }
 
   /* Gradiente caldo del sito (nome storico «fucsia-viola»): fucsia -> arancio bruciato, testo bianco sempre >= 4.5:1 */
-  .grad-fucsia-viola { background: linear-gradient(135deg, #D81B72 0%, #C2410C 100%); }
-  .grad-ciano-fucsia { background: linear-gradient(135deg, #00798C 0%, #0B6FA4 100%); }
+  .grad-fucsia-viola { background: linear-gradient(135deg, #D6355C 0%, #C2410C 100%); }
+  .grad-ciano-fucsia { background: linear-gradient(135deg, #0C768C 0%, #0E8FA8 100%); }
   .grad-neon { background: linear-gradient(135deg, #D81B72 0%, #8A5200 100%); }
   .text-grad {
-    background: linear-gradient(135deg, #D81B72 0%, #C2410C 100%);
+    background: linear-gradient(135deg, #C42A50 0%, #C2410C 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 
-  .glow-fucsia { box-shadow: 0 8px 24px rgba(216,27,114,0.28); }
+  .glow-fucsia { box-shadow: 0 8px 24px rgba(214,53,92,0.28); }
   .glow-ciano { box-shadow: 0 8px 24px rgba(0,121,140,0.25); }
 
   .hero-noise {
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(216,27,114,0.10) 0, transparent 40%),
-      radial-gradient(circle at 80% 60%, rgba(245,158,63,0.10) 0, transparent 45%);
+      radial-gradient(circle at 20% 20%, rgba(244,168,29,0.12) 0, transparent 40%),
+      radial-gradient(circle at 80% 60%, rgba(214,53,92,0.07) 0, transparent 45%);
   }
 
   .fade-in-up { animation: fadeInUp 0.6s ease-out both; }

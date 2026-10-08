@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store, Share2 } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
+import { FotoOfferta } from "@/components/NoPhoto";
 import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
 import OrariNegozio from "@/components/OrariNegozio";
@@ -155,20 +156,19 @@ export default function DiscountDetail() {
         {(() => {
           const gallery = (Array.isArray(discount.image_urls) && discount.image_urls.length > 0)
             ? discount.image_urls
-            : [discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"];
-          const current = gallery[photoIdx] || gallery[0];
+            : [discount.image_url || m.image_url].filter(Boolean);
+          const current = gallery[photoIdx] || gallery[0] || "";
           const hasMulti = gallery.length > 1;
           return (
             <div>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-neon/15 to-ciano/10">
-                <img
-                  data-testid="discount-hero-image"
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-miele/25 to-ciano/10">
+                <FotoOfferta
+                  testId="discount-hero-image"
                   src={current}
                   alt={discount.title}
                   className="h-full w-full object-cover transition-opacity duration-300"
-                  onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
                 />
-                <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
+                <div className="absolute left-4 top-4 rounded-full bg-ac-miele px-4 py-2 text-sm font-bold text-ac-mieleInk shadow-lg">
                   −{discount.percent_off}%
                 </div>
                 <CuorePreferito merchantId={m.id} className="absolute right-4 top-4" />
@@ -259,7 +259,7 @@ export default function DiscountDetail() {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="text-lg text-muted-foreground line-through">€{discount.original_price.toFixed(2)}</span>
                 <span data-testid="discounted-price" className="font-serif text-4xl font-bold text-fucsia">€{discount.discounted_price.toFixed(2)}</span>
-                <span className="rounded-md bg-ciano/15 px-2.5 py-1 text-sm font-bold text-ciano">
+                <span className="rounded-md bg-ac-miele px-2.5 py-1 text-sm font-bold text-ac-mieleInk">
                   {discount.percent_off}% di sconto
                 </span>
               </div>
@@ -294,7 +294,7 @@ export default function DiscountDetail() {
             )}
             {/* Badge informativo per NON abbonati */}
             {(!user || user.role !== "client") && discount.max_uses_per_month > 1 && (
-              <div className="mt-4 rounded-lg border border-fucsia/30 bg-fucsia/10 px-4 py-2 text-xs text-fucsia">
+              <div className="mt-4 rounded-lg border border-ciano/30 bg-ciano/10 px-4 py-2 text-xs text-ciano">
                 Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per cliente (max 1 al giorno)
               </div>
             )}

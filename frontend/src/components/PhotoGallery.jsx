@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { X, ChevronUp, ChevronDown, Plus, Star, ImagePlus, Sparkles, Loader2, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, ChevronUp, ChevronDown, Plus, Star, ImagePlus, Sparkles, Loader2, ZoomIn, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DefaultImagePicker from "@/components/DefaultImagePicker";
 import PhotoEnhancer from "@/components/PhotoEnhancer";
+import PhotoCompareDialog from "@/components/PhotoCompareDialog";
 import api, { formatApiError } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -13,41 +14,95 @@ import { toast } from "sonner";
  */
 export default function PhotoGallery({ value = [], onChange, max = 8, disabled = false, category = "" }) {
   const photos = Array.isArray(value) ? value : [];
-  const [staged, setStaged] = useState("");
   const [enhancingIdx, setEnhancingIdx] = useState(-1);
   const [lightboxIdx, setLightboxIdx] = useState(-1); // -1 = chiuso
+  const [confronto, setConfronto] = useState(null); // finestra «Originale / Migliorata»
+  // Foto originali tenute in memoria finché la pagina è aperta: { urlMigliorata: urlOriginale }
+  const [originali, setOriginali] = useState({});
+  const [slotKey, setSlotKey] = useState(0); // riparte il selettore dopo ogni foto aggiunta
+  const tokenRef = useRef(0);
   const canAdd = photos.length < max && !disabled;
+
+  const messaggioIA = (e) => {
+    const st = e?.response?.status;
+    if (st === 503) return "L'ottimizzazione con IA non è attiva in questo momento. La foto resta com'è.";
+    if (st === 413) return "Foto troppo grande per l'IA (massimo 8 MB). La foto resta com'è.";
+    if (st === 502) return "L'IA non è riuscita a migliorare questa foto. Riprova tra poco o con un'altra foto. La foto resta com'è.";
+    if (!e?.response) return "Connessione interrotta mentre miglioravo la foto. La foto resta com'è.";
+    return `${formatApiError(e)} La foto resta com'è.`;
+  };
 
   const enhanceAt = async (i) => {
     if (disabled || enhancingIdx !== -1) return;
+    const originale = photos[i];
+    const mio = ++tokenRef.current;
     setEnhancingIdx(i);
+    setConfronto({ fase: "attesa", originale });
     try {
-      const { data } = await api.post("/ai/enhance-image", {
-        image_url: photos[i],
-        category: category || "",
-      });
-      const enhanced = data.enhanced_image_url;
-      if (!enhanced) throw new Error("Nessuna immagine restituita");
-      const next = [...photos];
-      next[i] = enhanced;
-      onChange(next);
-      toast.success("Foto ottimizzata con AI ✨");
+      const { data } = await api.post(
+        "/ai/enhance-image",
+        { image_url: originale, category: category || "" },
+        { timeout: 120000 },
+      );
+      if (mio !== tokenRef.current) return; // annullato: si tiene l'originale
+      const migliorata = data?.enhanced_image_url;
+      if (!migliorata) throw new Error("Nessuna immagine restituita");
+      setConfronto({ fase: "confronto", originale, migliorata });
     } catch (e) {
-      toast.error(formatApiError(e));
-    } finally {
-      setEnhancingIdx(-1);
+      if (mio !== tokenRef.current) return;
+      setConfronto({ fase: "errore", originale, errore: messaggioIA(e) });
     }
   };
 
-  const addStaged = () => {
-    if (!staged) return;
-    if (photos.includes(staged)) {
-      // no duplicati
-      setStaged("");
+  // Chiudere / annullare / «Tieni l'originale»: la foto non cambia.
+  const tieniOriginale = () => {
+    tokenRef.current += 1;
+    setConfronto(null);
+    setEnhancingIdx(-1);
+  };
+
+  const usaMigliorata = () => {
+    if (!confronto || confronto.fase !== "confronto") return;
+    const { originale, migliorata } = confronto;
+    const i = photos.indexOf(originale);
+    tokenRef.current += 1;
+    setConfronto(null);
+    setEnhancingIdx(-1);
+    if (i === -1) return;
+    const next = [...photos];
+    next[i] = migliorata;
+    setOriginali((o) => ({ ...o, [migliorata]: originale }));
+    onChange(next);
+    toast.success("Foto ottimizzata con IA");
+  };
+
+  const ripristinaAt = (i) => {
+    const originale = originali[photos[i]];
+    if (disabled || !originale) return;
+    const next = [...photos];
+    next[i] = originale;
+    setOriginali((o) => {
+      const { [photos[i]]: _tolta, ...resto } = o;
+      return resto;
+    });
+    onChange(next);
+    toast.success("Foto originale ripristinata");
+  };
+
+  // La foto scelta o scattata entra SUBITO nella galleria: nessun passaggio di conferma da dimenticare.
+  const addPhoto = (url) => {
+    if (!url) return;
+    if (photos.length >= max) {
+      toast.error(`Hai già ${max} foto: toglierne una per aggiungerne un'altra.`);
       return;
     }
-    onChange([...photos, staged]);
-    setStaged("");
+    if (photos.includes(url)) {
+      toast.info("Questa foto è già nella galleria.");
+    } else {
+      onChange([...photos, url]);
+      toast.success("Foto aggiunta alla galleria");
+    }
+    setSlotKey((k) => k + 1);
   };
 
   const removeAt = (i) => {
@@ -72,7 +127,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
           <ImagePlus size={14} className="mr-1 inline text-ac-rosa" aria-hidden="true" />
           <strong className="text-ac-ink">{photos.length}</strong> / {max} foto
           {photos.length > 0 && (
-            <span className="ml-2 text-xs font-bold text-ac-viola">
+            <span className="ml-2 text-xs font-bold text-ac-teal">
               (la 1ª è la copertina)
             </span>
           )}
@@ -86,8 +141,8 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
       {photos.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {photos.map((url, i) => (
+            <div key={`${url.slice(-40)}-${i}`} className="space-y-1.5">
             <div
-              key={`${url}-${i}`}
               data-testid={`photo-tile-${i}`}
               className="group relative aspect-square overflow-hidden rounded-xl border border-ac-line bg-ac-tint"
             >
@@ -170,19 +225,37 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                       ? "bg-black/60 text-white/40 cursor-wait"
                       : "bg-black/80 text-white hover:ac-grad border border-white/40"
                   }`}
-                  title="Ottimizza questa foto con l'intelligenza artificiale (Gemini Nano Banana)"
+                  title="Migliora questa foto con l'intelligenza artificiale"
                 >
                   {enhancingIdx === i ? (
                     <>
-                      <Loader2 size={12} className="animate-spin" /> Ottimizzo…
+                      <Loader2 size={12} className="animate-spin" /> Sto migliorando…
                     </>
                   ) : (
                     <>
-                      <Sparkles size={12} className="text-pink-700" /> Ottimizza con AI
+                      <Sparkles size={12} /> Migliora con IA
                     </>
                   )}
                 </button>
               )}
+            </div>
+            {originali[url] && (
+              <div className="space-y-1">
+                <div data-testid={`photo-ai-badge-${i}`} className="flex items-center gap-1 text-xs font-extrabold text-ac-rosa">
+                  <Sparkles size={12} aria-hidden="true" /> Foto ottimizzata con IA
+                </div>
+                {!disabled && (
+                  <button
+                    type="button"
+                    data-testid={`photo-restore-${i}`}
+                    onClick={() => ripristinaAt(i)}
+                    className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border-2 border-ac-soft bg-white px-3 py-1.5 text-xs font-extrabold text-ac-ink hover:bg-ac-tint"
+                  >
+                    <Undo2 size={14} aria-hidden="true" /> Ripristina l'originale
+                  </button>
+                )}
+              </div>
+            )}
             </div>
           ))}
         </div>
@@ -191,57 +264,22 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
       {/* Picker per aggiungere una nuova foto (visibile solo se sotto il max) */}
       {canAdd && (
         <div className="rounded-2xl border-2 border-dashed border-ac-campo bg-white p-4">
-          <div className="mb-3 flex items-center gap-1.5 text-[13px] font-extrabold text-ac-viola">
+          <div className="mb-3 flex items-center gap-1.5 text-[13px] font-extrabold text-ac-teal">
             <Plus size={14} aria-hidden="true" /> Aggiungi la {photos.length + 1}ª foto
           </div>
 
-          {/* Preview staged + conferma */}
-          {staged ? (
-            <div className="flex items-start gap-3 rounded-xl border border-ac-rosa/40 bg-ac-rosaSoft p-3">
-              <img
-                src={staged}
-                alt="anteprima"
-                className="h-20 w-20 object-cover rounded-lg"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="mb-2 text-sm font-bold text-ac-ink">Anteprima foto</div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    data-testid="photo-add-confirm"
-                    onClick={addStaged}
-                    className="ac-grad h-11 rounded-xl px-4 font-extrabold text-white hover:brightness-105"
-                  >
-                    <Plus size={16} className="mr-1" /> Aggiungi alla galleria
-                  </Button>
-                  <Button
-                    type="button"
-                    data-testid="photo-add-cancel"
-                    onClick={() => setStaged("")}
-                    variant="outline"
-                    className="h-11 rounded-xl border-2 border-ac-soft bg-white px-4 font-extrabold text-ac-ink hover:bg-ac-tint"
-                  >
-                    Annulla
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Libreria + Upload */}
-              <div className="space-y-3">
-                <DefaultImagePicker
-                  selectedUrl=""
-                  onSelect={(url) => setStaged(url)}
-                />
-                <PhotoEnhancer
-                  value=""
-                  onChange={(url) => setStaged(url)}
-                  testIdPrefix={`gallery-slot-${photos.length}`}
-                />
-              </div>
-            </>
-          )}
+          <div className="space-y-3">
+            <DefaultImagePicker
+              selectedUrl=""
+              onSelect={(url) => addPhoto(url)}
+            />
+            <PhotoEnhancer
+              key={slotKey}
+              value=""
+              onChange={(url) => addPhoto(url)}
+              testIdPrefix={`gallery-slot-${photos.length}`}
+            />
+          </div>
         </div>
       )}
 
@@ -250,6 +288,8 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
           Nessuna foto caricata
         </div>
       )}
+
+      <PhotoCompareDialog stato={confronto} onUsa={usaMigliorata} onTieni={tieniOriginale} />
 
       {/* Lightbox — foto ingrandita full-screen con navigazione ← / → */}
       {lightboxIdx >= 0 && photos[lightboxIdx] && (

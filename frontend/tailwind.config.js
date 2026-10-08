@@ -21,34 +21,40 @@ module.exports = {
         // Area commerciante, variante «D · Bianco vivo»: fondo chiaro, accenti vivi.
         // Usati solo dalle pagine /merchant/* (vedi src/area-commerciante.css)
         ac: {
-          ink: '#221E1B',      // testo principale, nero caldo (su bianco: 16.5:1)
+          ink: '#221C10',      // testo principale, nero caldo (su bianco: 16.9:1); è anche il testo sopra l'ambra
           soft: '#5B544D',     // testo secondario (su bianco: 7.4:1)
           mute: '#6A635B',     // testo di servizio (su bianco: 5.9:1)
-          line: '#ECE7DF',     // bordi leggeri, grigio-caldo
+          line: '#EFE5D8',     // bordi leggeri, sabbia chiara
           campo: '#A39B8F',    // bordo dei campi da compilare
-          tint: '#FAF8F5',     // fondo avorio chiarissimo
-          rosa: '#D81B72',     // fucsia del sito, versione per fondo bianco
-          rosaBg: '#FFEEF2',
-          rosaSoft: '#FFF6EE',
-          viola: '#0B6FA4',      // nome storico: ora è l'azzurro (secondo accento al posto del viola)
-          violaBg: '#E8F3F9',
-          teal: '#00798C',
-          tealBg: '#E9F6F8',
+          tint: '#FFF9E8',     // fondo miele chiarissimo
+          pesca: '#FFF6F0',    // fondo pesca chiarissimo
+          miele: '#F4A81D',    // ambra/miele pieno: evidenziazioni, badge, fasce (testo sopra: mieleInk, 8.4:1)
+          mieleInk: '#221C10',
+          mieleBg: '#FFF9E8',
+          rosa: '#C42A50',      // corallo scuro per testi e bordi (≥ 4.9:1 anche sui fondi pesca e miele)
+          corallo: '#D6355C',  // corallo pieno dei pulsanti (testo bianco 4.6:1)     // fucsia del sito, versione per fondo bianco
+          rosaBg: '#FFEEF1',
+          rosaSoft: '#FFF6F0',
+          viola: '#F4A81D',      // nome storico: ora è il miele pieno (riempimenti, barre, puntini)
+          violaBg: '#FFF4D6',
+          teal: '#0C768C',       // teal di etichette, link e icone (su bianco 5.3:1)
+          tealBg: '#EAF6F8',
           verde: '#127A47',
-          verdeBg: '#DDF6EA',
+          verdeBg: '#E4F6EC',
           ambra: '#8A5200',
           ambraBg: '#FFF1D6',
           rosso: '#B42318',
           rossoBg: '#FEE4E2',
         },
         // Tavolozza unica del sito (tema chiaro «Bianco vivo», versione calda: niente viola/lilla): stessi nomi di prima, colori adatti al fondo bianco
-        fucsia: '#B3135C', // fucsia del sito, un filo più scuro per il testo su fondi chiari (≥ 4.5:1 anche sui riquadri avorio)
-        ciano: '#00697A',
+        fucsia: '#C42A50', // corallo scuro per il testo e i bordi (nome storico «fucsia», ≥ 4.9:1 anche sui riquadri pesca e miele)
+        miele: '#F4A81D',
+        ciano: '#0C768C',
         neon: '#8A5200',
         limone: '#127A47',
-        gold: '#00697A',
-        terracotta: '#D81B72',
-        espresso: '#221E1B',
+        gold: '#0C768C',
+        terracotta: '#D6355C',
+        espresso: '#221C10',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

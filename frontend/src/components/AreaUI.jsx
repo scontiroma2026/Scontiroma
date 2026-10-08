@@ -9,7 +9,8 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 // Ogni «tono» è una famiglia di colori vivi (testo scuro abbastanza da restare leggibile su bianco).
 export const TONI = {
   rosa: { testo: "text-ac-rosa", punto: "bg-ac-rosa", fondo: "bg-ac-rosaBg", bordo: "border-ac-rosa" },
-  viola: { testo: "text-ac-viola", punto: "bg-ac-viola", fondo: "bg-ac-violaBg", bordo: "border-ac-viola" },
+  // «viola» (nome storico) = miele: puntino e fondo ambra pieni, testo scuro
+  viola: { testo: "text-ac-mieleInk", punto: "bg-ac-miele", fondo: "bg-ac-miele", bordo: "border-ac-miele" },
   teal: { testo: "text-ac-teal", punto: "bg-ac-teal", fondo: "bg-ac-tealBg", bordo: "border-ac-teal" },
   verde: { testo: "text-ac-verde", punto: "bg-ac-verde", fondo: "bg-ac-verdeBg", bordo: "border-ac-verde" },
   ambra: { testo: "text-ac-ambra", punto: "bg-ac-ambra", fondo: "bg-ac-ambraBg", bordo: "border-ac-ambra" },
@@ -21,7 +22,7 @@ export function Scheda({ titolo, tono = "rosa", icona, destra, children, classNa
   const t = TONI[tono];
   return (
     <section
-      className={`rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(34,30,27,0.03)] ${className}`}
+      className={`rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(34,28,16,0.03)] ${className}`}
       {...rest}
     >
       {(titolo || destra) && (
@@ -94,7 +95,7 @@ export const CLASSE_PRIMARIO =
 /** Pulsante con bordo colorato e testo dello stesso colore (azione secondaria). */
 export const CLASSE_BORDO = {
   rosa: "border-2 border-ac-rosa text-ac-rosa hover:bg-ac-rosaSoft",
-  viola: "border-2 border-ac-viola text-ac-viola hover:bg-ac-violaBg/60",
+  viola: "border-2 border-ac-miele text-ac-mieleInk hover:bg-ac-mieleBg",
   teal: "border-2 border-ac-teal text-ac-teal hover:bg-ac-tealBg",
 };
 export const CLASSE_BASE_SECONDARIO =

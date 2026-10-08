@@ -53,7 +53,7 @@ export default function MerchantInsights() {
 const FONDI = {
   rosa: "bg-ac-rosaBg text-ac-rosa",
   teal: "bg-ac-tealBg text-ac-teal",
-  viola: "bg-ac-violaBg text-ac-viola",
+  viola: "bg-ac-miele text-ac-mieleInk",
   verde: "bg-ac-verdeBg text-ac-verde",
 };
 

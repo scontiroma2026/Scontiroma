@@ -83,13 +83,13 @@ export default function GdprSection({ claro = false }) {
   const k = claro
     ? {
         card: "rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(34,30,27,0.03)]",
-        titolo: "font-testo flex items-center gap-2 text-[13px] font-extrabold text-ac-viola",
+        titolo: "font-testo flex items-center gap-2 text-[13px] font-extrabold text-ac-teal",
         testo: "mt-2 text-sm leading-relaxed text-ac-soft",
         box: "mt-4 flex items-start justify-between gap-4 rounded-2xl border border-ac-line bg-ac-tint p-4",
         boxTitolo: "flex items-center gap-2 text-sm font-bold text-ac-ink",
         icona: "text-ac-rosa",
         boxTesto: "mt-1 text-xs text-ac-soft",
-        toggle: "relative h-7 w-12 rounded-full bg-ac-campo peer-checked:bg-ac-rosa transition after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-ac-viola",
+        toggle: "relative h-7 w-12 rounded-full bg-ac-campo peer-checked:bg-ac-rosa transition after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-ac-teal",
         scarica: "min-h-12 rounded-xl border-2 border-ac-teal bg-transparent font-extrabold text-ac-teal hover:bg-ac-tealBg",
         elimina: "min-h-12 rounded-xl border-2 border-ac-rosso bg-transparent font-extrabold text-ac-rosso hover:bg-ac-rossoBg",
         conferma: "col-span-full rounded-2xl border border-ac-rosso/40 bg-ac-rossoBg p-4",

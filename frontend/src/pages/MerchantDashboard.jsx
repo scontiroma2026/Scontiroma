@@ -226,7 +226,7 @@ function StatoOfferta({ discount }) {
 }
 
 function Numero({ label, value, tono, caricamento }) {
-  const colori = { rosa: "bg-ac-rosaBg text-ac-rosa", teal: "bg-ac-tealBg text-ac-teal", viola: "bg-ac-violaBg text-ac-viola" }[tono];
+  const colori = { rosa: "bg-ac-rosaBg text-ac-rosa", teal: "bg-ac-tealBg text-ac-teal", viola: "bg-ac-miele text-ac-mieleInk" }[tono];
   return (
     <div className={`flex flex-col gap-0.5 rounded-[14px] px-2.5 py-3 ${colori}`}>
       {caricamento ? (
@@ -234,7 +234,7 @@ function Numero({ label, value, tono, caricamento }) {
       ) : (
         <span className="font-serif text-[30px] font-bold leading-[1.05]">{value}</span>
       )}
-      <span className="text-xs font-semibold leading-snug text-ac-soft">{label}</span>
+      <span className={`text-xs font-semibold leading-snug ${tono === "viola" ? "text-ac-mieleInk" : "text-ac-soft"}`}>{label}</span>
     </div>
   );
 }

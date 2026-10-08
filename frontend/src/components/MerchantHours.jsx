@@ -102,7 +102,7 @@ export default function MerchantHours() {
         ))}
       </div>
 
-      <button type="button" onClick={copiaLunedi} className="mt-1 min-h-11 text-sm font-bold text-ac-viola underline underline-offset-4">
+      <button type="button" onClick={copiaLunedi} className="mt-1 min-h-11 text-sm font-bold text-ac-teal underline underline-offset-4">
         Copia gli orari del lunedì da martedì a venerdì
       </button>
 
