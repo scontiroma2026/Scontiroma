@@ -13,7 +13,7 @@ const SHOP_PIN = L.divIcon({
     border:3px solid #fff;
     border-radius:50% 50% 50% 0;
     transform:rotate(-45deg);
-    box-shadow:0 4px 14px rgba(26,21,48,0.35);
+    box-shadow:0 4px 14px rgba(34,30,27,0.35);
   "><div style="
     position:absolute;top:50%;left:50%;
     width:8px;height:8px;background:#fff;border-radius:50%;
@@ -39,12 +39,12 @@ export default function MiniMap({ lat, lng, shopName, address, zoom = 16 }) {
     <div data-testid="mini-map" className="rounded-2xl overflow-hidden border border-border bg-muted">
       {/* Stili leaflet coerenti con MapView */}
       <style>{`
-        .mini-map-container .leaflet-container { background: #F6F1FB; }
-        .mini-map-container .leaflet-popup-content-wrapper { background:#fff;color:#1A1530;border:1px solid #EADFF0;border-radius:12px; }
-        .mini-map-container .leaflet-popup-tip { background:#fff;border:1px solid #EADFF0; }
-        .mini-map-container .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5E5875 !important; font-size: 10px; }
+        .mini-map-container .leaflet-container { background: #FAF8F5; }
+        .mini-map-container .leaflet-popup-content-wrapper { background:#fff;color:#221E1B;border:1px solid #ECE7DF;border-radius:12px; }
+        .mini-map-container .leaflet-popup-tip { background:#fff;border:1px solid #ECE7DF; }
+        .mini-map-container .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5B544D !important; font-size: 10px; }
         .mini-map-container .leaflet-control-attribution a { color: #00798C !important; text-decoration: underline; }
-        .mini-map-container .leaflet-control-zoom a { background:#fff !important;color:#1A1530 !important;border:1px solid #B9B0D0 !important; }
+        .mini-map-container .leaflet-control-zoom a { background:#fff !important;color:#221E1B !important;border:1px solid #A39B8F !important; }
         .mini-map-container .leaflet-control-zoom a:hover { background:#D81B72 !important;color:#fff !important; }
       `}</style>
 

@@ -21,19 +21,19 @@ module.exports = {
         // Area commerciante, variante «D · Bianco vivo»: fondo chiaro, accenti vivi.
         // Usati solo dalle pagine /merchant/* (vedi src/area-commerciante.css)
         ac: {
-          ink: '#1A1530',      // testo principale (su bianco: 16:1)
-          soft: '#5E5875',     // testo secondario (su bianco: 6.9:1)
-          mute: '#6B6580',     // testo di servizio (su bianco: 5.6:1)
-          line: '#EADFF0',     // bordi leggeri
-          campo: '#B9B0D0',    // bordo dei campi da compilare
-          tint: '#F6F1FB',     // fondo lavanda chiarissimo
+          ink: '#221E1B',      // testo principale, nero caldo (su bianco: 16.5:1)
+          soft: '#5B544D',     // testo secondario (su bianco: 7.4:1)
+          mute: '#6A635B',     // testo di servizio (su bianco: 5.9:1)
+          line: '#ECE7DF',     // bordi leggeri, grigio-caldo
+          campo: '#A39B8F',    // bordo dei campi da compilare
+          tint: '#FAF8F5',     // fondo avorio chiarissimo
           rosa: '#D81B72',     // fucsia del sito, versione per fondo bianco
-          rosaBg: '#FFE3F0',
-          rosaSoft: '#FFF0F7',
-          viola: '#6D4AFF',
-          violaBg: '#EDE8FF',
+          rosaBg: '#FFEEF2',
+          rosaSoft: '#FFF6EE',
+          viola: '#0B6FA4',      // nome storico: ora è l'azzurro (secondo accento al posto del viola)
+          violaBg: '#E8F3F9',
           teal: '#00798C',
-          tealBg: '#E6F7FA',
+          tealBg: '#E9F6F8',
           verde: '#127A47',
           verdeBg: '#DDF6EA',
           ambra: '#8A5200',
@@ -41,14 +41,14 @@ module.exports = {
           rosso: '#B42318',
           rossoBg: '#FEE4E2',
         },
-        // Tavolozza unica del sito (tema chiaro «Bianco vivo»): stessi nomi di prima, colori adatti al fondo bianco
-        fucsia: '#B3135C', // fucsia del sito, un filo più scuro per il testo su fondi chiari (≥ 4.5:1 anche sui riquadri lavanda)
+        // Tavolozza unica del sito (tema chiaro «Bianco vivo», versione calda: niente viola/lilla): stessi nomi di prima, colori adatti al fondo bianco
+        fucsia: '#B3135C', // fucsia del sito, un filo più scuro per il testo su fondi chiari (≥ 4.5:1 anche sui riquadri avorio)
         ciano: '#00697A',
         neon: '#8A5200',
         limone: '#127A47',
         gold: '#00697A',
         terracotta: '#D81B72',
-        espresso: '#1A1530',
+        espresso: '#221E1B',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

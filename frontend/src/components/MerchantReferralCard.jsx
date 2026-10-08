@@ -47,7 +47,7 @@ export default function MerchantReferralCard() {
               value={refUrl}
               size={140}
               level="H"
-              fgColor="#1A1530"
+              fgColor="#221E1B"
               bgColor="#ffffff"
               includeMargin={false}
             />

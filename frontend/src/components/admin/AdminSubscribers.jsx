@@ -52,7 +52,7 @@ const providerBadge = (p) => {
   if (!p) return null;
   const colors =
     p === "stripe"
-      ? "border-indigo-400/40 bg-indigo-400/10 text-indigo-700"
+      ? "border-sky-500/40 bg-sky-500/10 text-sky-800"
       : "border-yellow-400/40 bg-yellow-400/10 text-amber-800";
   return (
     <span

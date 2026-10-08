@@ -27,7 +27,7 @@ export default function Landing() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
-        <div className="absolute -left-40 top-20 h-[500px] w-[500px] rounded-full bg-fucsia/15 blur-[120px]" />
+        <div className="absolute -left-40 top-20 h-[500px] w-[500px] rounded-full bg-neon/10 blur-[120px]" />
         <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-ciano/15 blur-[100px]" />
 
         <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">

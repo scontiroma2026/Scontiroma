@@ -12,7 +12,7 @@ export default function NavbarCommerciante({ user, navLinks, open, setOpen, onLo
     <header
       data-testid="navbar"
       className="sticky top-0 z-40 w-full bg-white"
-      style={{ borderBottom: "3px solid transparent", borderImage: "linear-gradient(90deg,#D81B72,#6D4AFF,#00A3B8) 1" }}
+      style={{ borderBottom: "3px solid transparent", borderImage: "linear-gradient(90deg,#D81B72,#F59E3F,#00A3B8) 1" }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" data-testid="brand-link" className="flex min-h-11 items-center gap-2.5">

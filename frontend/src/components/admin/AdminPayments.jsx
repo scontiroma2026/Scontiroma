@@ -251,7 +251,7 @@ function Numero({ etichetta, valore, testid }) {
 
 function Stato({ stato, testid }) {
   const s = STATI[stato] || STATI.in_prova;
-  return <Pillola tono={s.tono} data-testid={testid} className={stato === "in_prova" ? "!text-[#4A2BC4]" : ""}>{s.testo}</Pillola>;
+  return <Pillola tono={s.tono} data-testid={testid}>{s.testo}</Pillola>;
 }
 
 function Riga({ c, dettaglio, azione, testid }) {

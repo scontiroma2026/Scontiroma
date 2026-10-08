@@ -21,7 +21,7 @@ export function Scheda({ titolo, tono = "rosa", icona, destra, children, classNa
   const t = TONI[tono];
   return (
     <section
-      className={`rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(26,21,48,0.03)] ${className}`}
+      className={`rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(34,30,27,0.03)] ${className}`}
       {...rest}
     >
       {(titolo || destra) && (

@@ -160,7 +160,7 @@ export default function DiscountDetail() {
           const hasMulti = gallery.length > 1;
           return (
             <div>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-fucsia/20 to-ciano/10">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-neon/15 to-ciano/10">
                 <img
                   data-testid="discount-hero-image"
                   src={current}

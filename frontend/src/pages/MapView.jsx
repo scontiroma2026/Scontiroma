@@ -41,11 +41,11 @@ const buildIcon = (percent) => L.divIcon({
   html: `<div style="
     position: relative;
     width: 44px; height: 44px;
-    background: linear-gradient(135deg, #D81B72 0%, #6D4AFF 100%);
+    background: linear-gradient(135deg, #D81B72 0%, #C2410C 100%);
     border: 2px solid white;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    box-shadow: 0 0 20px rgba(26,21,48,0.35);
+    box-shadow: 0 0 20px rgba(34,30,27,0.35);
   "><span style="
     position: absolute;
     top: 50%; left: 50%;
@@ -123,16 +123,16 @@ export default function MapView() {
     <main data-testid="map-page" className="min-h-[calc(100vh-72px)] text-foreground">
       {/* Custom leaflet overrides */}
       <style>{`
-        .leaflet-container { background: #F6F1FB; font-family: 'Manrope', sans-serif; }
+        .leaflet-container { background: #FAF8F5; font-family: 'Manrope', sans-serif; }
         .leaflet-popup-content-wrapper {
-          background: #FFFFFF; color: #1A1530; border: 1px solid #EADFF0;
-          border-radius: 16px; padding: 0; box-shadow: 0 8px 30px rgba(26,21,48,0.22);
+          background: #FFFFFF; color: #221E1B; border: 1px solid #ECE7DF;
+          border-radius: 16px; padding: 0; box-shadow: 0 8px 30px rgba(34,30,27,0.22);
         }
-        .leaflet-popup-tip { background: #FFFFFF; border: 1px solid #EADFF0; }
+        .leaflet-popup-tip { background: #FFFFFF; border: 1px solid #ECE7DF; }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
-        .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5E5875 !important; }
+        .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5B544D !important; }
         .leaflet-control-attribution a { color: #00798C !important; text-decoration: underline; }
-        .leaflet-control-zoom a { background: #FFFFFF !important; color: #1A1530 !important; border: 1px solid #B9B0D0 !important; width: 44px !important; height: 44px !important; line-height: 42px !important; }
+        .leaflet-control-zoom a { background: #FFFFFF !important; color: #221E1B !important; border: 1px solid #A39B8F !important; width: 44px !important; height: 44px !important; line-height: 42px !important; }
         .leaflet-control-zoom a:hover { background: #D81B72 !important; color: #FFFFFF !important; }
       `}</style>
 

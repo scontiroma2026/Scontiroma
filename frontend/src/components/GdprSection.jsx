@@ -82,7 +82,7 @@ export default function GdprSection({ claro = false }) {
   // `claro`: variante «Bianco vivo» dell'area commerciante. Senza, resta l'aspetto scuro del cliente.
   const k = claro
     ? {
-        card: "rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(26,21,48,0.03)]",
+        card: "rounded-[18px] border border-ac-line bg-white p-[18px] shadow-[0_1px_0_rgba(34,30,27,0.03)]",
         titolo: "font-testo flex items-center gap-2 text-[13px] font-extrabold text-ac-viola",
         testo: "mt-2 text-sm leading-relaxed text-ac-soft",
         box: "mt-4 flex items-start justify-between gap-4 rounded-2xl border border-ac-line bg-ac-tint p-4",
