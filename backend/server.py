@@ -4521,6 +4521,9 @@ async def admin_app_feedback(user: dict = Depends(require_admin_master)):
     out = []
     async for f in db.app_feedback.find().sort("updated_at", -1).limit(500):
         f.pop("_id", None)
+        # Solo admin: nome e cognome completi (il modello utente ha un unico campo `name`).
+        u = await db.users.find_one({"id": f.get("user_id")}, {"_id": 0, "name": 1})
+        f["name"] = (u or {}).get("name") or ""
         out.append(f)
     avg = round(sum(f["stars"] for f in out) / len(out), 1) if out else None
     return {"feedback": out, "avg": avg, "count": len(out)}
@@ -4571,6 +4574,14 @@ async def admin_fraud_log(user: dict = Depends(require_admin_master), limit: int
         if not s.get("shop_name") and s.get("merchant_id"):
             m = await db.users.find_one({"id": s["merchant_id"]})
             s["shop_name"] = m.get("shop_name") if m else "-"
+        # Solo admin: nome e cognome completi del cliente (non salvati nel registro, letti al momento).
+        s["client_name"] = ""
+        s["client_email"] = ""
+        if s.get("user_id"):
+            u = await db.users.find_one({"id": s["user_id"]}, {"_id": 0, "name": 1, "email": 1})
+            if u:
+                s["client_name"] = u.get("name") or ""
+                s["client_email"] = u.get("email") or ""
         out.append(s)
     return {"scans": out}
 

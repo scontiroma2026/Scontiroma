@@ -27,7 +27,7 @@ export default function FraudLog() {
 
   const needle = q.trim().toLowerCase();
   const filtered = needle
-    ? scans.filter((s) => [s.shop_name, s.reason].filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
+    ? scans.filter((s) => [s.shop_name, s.reason, s.client_name, s.client_email].filter(Boolean).some((v) => String(v).toLowerCase().includes(needle)))
     : scans;
 
   return (
@@ -46,7 +46,7 @@ export default function FraudLog() {
       </div>
 
       <div className="mb-4">
-        <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio o motivo…" testId="fraud-search" />
+        <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio, cliente o motivo…" testId="fraud-search" />
       </div>
 
       {loading && (
@@ -66,6 +66,7 @@ export default function FraudLog() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
                 <th className="py-3 pr-4">Data/Ora</th>
+                <th className="py-3 pr-4">Cliente</th>
                 <th className="py-3 pr-4">Negozio</th>
                 <th className="py-3 pr-4">Motivo</th>
               </tr>
@@ -78,6 +79,10 @@ export default function FraudLog() {
                   <tr key={s.id} data-testid={`fraud-row-${s.id}`} className="border-b border-border hover:bg-muted">
                     <td className="py-3 pr-4 text-foreground/80 font-mono text-xs whitespace-nowrap">
                       {dt ? dt.toLocaleString("it-IT", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "-"}
+                    </td>
+                    <td className="py-3 pr-4 text-foreground" data-testid={`fraud-client-${s.id}`}>
+                      {s.client_name || <span className="text-muted-foreground">—</span>}
+                      {s.client_email && <div className="text-xs text-muted-foreground">{s.client_email}</div>}
                     </td>
                     <td className="py-3 pr-4 text-foreground">{s.shop_name || <span className="text-muted-foreground">— non tracciato —</span>}</td>
                     <td className="py-3 pr-4">
