@@ -61,7 +61,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `10a7457`
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log) | OK del titolare per l'unione |
-| #61 | Libreria foto di esempio da 100 a 422 (tutte verificate con HEAD, nessun duplicato), miniature leggere nel catalogo «Esempi» | Scelta: tenere 422 o cercare altre foto per arrivare a 500 |
+| #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | OK del titolare per l'unione |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -97,7 +97,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Aspetto (08/10): palette chiara senza sfondi rosa né lilla (#56); restano gli accenti (fucsia, viola, teal). La palette calda è stata scartata (#55). Tre proposte di nuovo aspetto sul modello Groupon (Menta e corallo, Terracotta e sabbia, Cielo e sole) in attesa di scelta: caratteri più morbidi, ospitati da noi.
 - Zone (08/10): il menu mostra solo 16 aree con titolo descrittivo (es. «Aurelio · Boccea, Primavalle, Casalotti») più «Fuori Roma»; il filtro riconosce anche i commercianti registrati con un quartiere.
 - «Migliora foto con IA» (08/10): confronto «Originale / Migliorata», si sceglie quale tenere. Serve fatturazione sulla chiave Gemini (limite di spesa), altrimenti messaggio «ha raggiunto il limite».
-- Libreria di esempio (08/10): 422 foto in 10 categorie, tutte con indirizzo Unsplash verificato (risposta 200, tipo immagine) e senza ripetizioni; le 100 storiche restano in testa a ogni elenco. Nel catalogo «Esempi» le miniature sono 400×225 e si caricano solo quando compaiono.
+- Libreria di esempio (08/10): decisione del titolare: bastano 422 foto in 10 categorie, **copiate sul nostro sito** (non più collegate a Unsplash). Sono in `frontend/public/esempi/` (800×450) e `esempi/mini/` (400×225), nome = identificativo Unsplash, JPEG ricompressi, circa 26 MB in tutto; licenza Unsplash (uso libero) in `esempi/LICENZA.txt`. Il server manda percorsi relativi (`/esempi/<id>.jpg`); alla scelta il sito li rende assoluti col proprio indirizzo (se un giorno cambia il dominio, le offerte già salvate con quel dominio vanno aggiornate). Gli sconti già salvati con indirizzi Unsplash restano com'erano e continuano a funzionare.
 - Codice del negozio (08/10): blocco di 15 minuti dopo 5 errori; permesso breve di 2 minuti approvato; l'admin lo vede e lo rigenera dal tab «Negozi» (#59, in attesa di OK).
 
 ## Da fare, in ordine
@@ -116,7 +116,6 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Per l'utente:
   - quale delle tre proposte di aspetto (1, 2 o 3);
   - #59: va bene che l'admin veda il codice del negozio (con «Rigenera»)?
-  - libreria di immagini di esempio: va bene con 422 foto (PR #61), o si cerca altro per arrivare a 500 (padel, calcetto, meccanici e abbigliamento sono le categorie più corte)?
   - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
   - mesi di prova e `TRIAL_END_DATE`;
   - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).

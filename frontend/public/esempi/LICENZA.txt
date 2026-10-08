@@ -1,0 +1,17 @@
+Foto di esempio di Sconti Roma
+==============================
+
+Le immagini in questa cartella (esempi/ e esempi/mini/) provengono da Unsplash
+(https://unsplash.com) e sono usate secondo la Licenza Unsplash
+(https://unsplash.com/license): uso libero, anche commerciale, senza obbligo di
+attribuzione ne' di chiedere il permesso agli autori. L'attribuzione e' comunque
+gradita; il nome di ogni foto (identificativo Unsplash) e' il nome del file.
+
+Cosa e' stato fatto: ogni foto e' stata ritagliata a 800x450 pixel, ricompressa in JPEG
+(qualita' circa 72, senza metadati) e affiancata da una miniatura 400x225 in mini/.
+
+Limiti della licenza Unsplash: non si possono vendere le foto cosi' come sono, ne'
+usarle per costruire un servizio concorrente di fotografie. Sconti Roma le offre solo
+come sfondo per le offerte dei commercianti.
+
+Questa nota va conservata insieme alle foto.

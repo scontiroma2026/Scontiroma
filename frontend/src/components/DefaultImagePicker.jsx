@@ -11,8 +11,12 @@ import { Images, Check, Loader2 } from "lucide-react";
  * vista (lazy), così anche con molte foto per categoria il dialog resta veloce su iPhone.
  */
 
-// Miniatura 400x225 dello stesso indirizzo: la foto scelta resta l'originale 800x450.
-const miniatura = (url) => url.replace("w=800&h=450", "w=400&h=225");
+// Le foto sono copiate sul nostro sito: /esempi/<id>.jpg (800x450) e /esempi/mini/<id>.jpg (400x225).
+// Nel catalogo si vedono le miniature; alla scelta si salva la foto grande.
+const miniatura = (url) => url.replace("/esempi/", "/esempi/mini/");
+// Alla scelta l'indirizzo diventa assoluto (con l'indirizzo del sito), così funziona anche
+// fuori dal sito: anteprime di condivisione, email, altre pagine.
+const assoluto = (url) => (url.startsWith("/") ? `${window.location.origin}${url}` : url);
 export default function DefaultImagePicker({ onSelect, selectedUrl }) {
   const [open, setOpen] = useState(false);
   const [library, setLibrary] = useState(null);
@@ -35,7 +39,7 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
     : null;
 
   const pick = (url) => {
-    onSelect(url);
+    onSelect(assoluto(url));
     setOpen(false);
   };
 
@@ -98,7 +102,7 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
               <div className="flex-1 overflow-y-auto pt-4 pr-1">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {(library[activeCat] || []).map((url, i) => {
-                    const isSelected = selectedUrl === url;
+                    const isSelected = selectedUrl === assoluto(url);
                     return (
                       <button
                         key={url}

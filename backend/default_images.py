@@ -1,24 +1,26 @@
 """
-Libreria di immagini di default (422 foto in 10 categorie) per gli sconti dei commercianti.
-URL diretti Unsplash CDN, ottimizzati a 800x450px.
+Libreria di immagini di esempio (422 foto in 10 categorie) per gli sconti dei commercianti.
+Le foto sono COPIATE sul nostro sito, in frontend/public/esempi/<id>.jpg (800x450) e
+frontend/public/esempi/mini/<id>.jpg (400x225): niente piu' collegamenti diretti a Unsplash.
+Qui si tengono percorsi relativi al sito ("/esempi/<id>.jpg"): il sito li rende assoluti
+con il proprio indirizzo quando il commerciante sceglie una foto, cosi' funzionano uguali
+su Render, in locale e nei test end-to-end senza rete.
+Gli sconti gia' salvati con indirizzi Unsplash continuano a funzionare: sono semplici
+indirizzi esterni e il server non li tocca.
+Fonte e licenza: vedi frontend/public/esempi/LICENZA.txt (licenza Unsplash, uso libero).
 Estetica europea/mediterranea (evita lo stock "americano" patinato), senza persone
-riconoscibili in primo piano e senza loghi o marchi visibili.
-Tutti gli URL sono stati verificati con richieste HEAD (HTTP 200, content-type image/*);
-nessun ID e' ripetuto, ne' nella stessa categoria ne' fra categorie.
-La prima parte di ogni elenco sono le 10 foto storiche: non vanno spostate, perche'
-le offerte gia' pubblicate le usano per indirizzo.
+riconoscibili in primo piano e senza loghi o marchi visibili. Nessun ID e' ripetuto.
+Le prime 10 foto di ogni elenco sono le storiche: non vanno spostate.
 Il numero di foto per categoria non e' fisso: i test controllano solo la struttura.
 """
 
-# 800x450 crop centrale, JPEG auto-format, quality 80
-_Q = "?w=800&h=450&fit=crop&auto=format&q=80"
+# Percorso (sul sito) delle foto copiate; le miniature stanno in <percorso>/mini/.
+PERCORSO_ESEMPI = "/esempi"
 
 
 def _u(pid: str) -> str:
-    """Build the full Unsplash CDN URL for a given photo id."""
-    if pid.startswith("premium_"):
-        return f"https://plus.unsplash.com/{pid}{_Q}"
-    return f"https://images.unsplash.com/{pid}{_Q}"
+    """Percorso relativo della foto copiata sul sito, dall'id Unsplash ("photo-...")."""
+    return f"{PERCORSO_ESEMPI}/{pid.removeprefix('photo-')}.jpg"
 
 
 DEFAULT_IMAGE_LIBRARY = {
