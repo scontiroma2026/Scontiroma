@@ -161,7 +161,7 @@ export default function DiscountDetail() {
           const hasMulti = gallery.length > 1;
           return (
             <div>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-fucsia/20 to-ciano/10">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-muted to-ciano/10">
                 <FotoOfferta
                   testId="discount-hero-image"
                   src={current}
@@ -294,7 +294,7 @@ export default function DiscountDetail() {
             )}
             {/* Badge informativo per NON abbonati */}
             {(!user || user.role !== "client") && discount.max_uses_per_month > 1 && (
-              <div className="mt-4 rounded-lg border border-fucsia/30 bg-fucsia/10 px-4 py-2 text-xs text-fucsia">
+              <div className="mt-4 rounded-lg border border-fucsia/30 bg-muted px-4 py-2 text-xs text-fucsia">
                 Fino a <strong>{discount.max_uses_per_month} utilizzi al mese</strong> per cliente (max 1 al giorno)
               </div>
             )}

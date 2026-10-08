@@ -24,14 +24,14 @@ module.exports = {
           ink: '#1A1530',      // testo principale (su bianco: 16:1)
           soft: '#5E5875',     // testo secondario (su bianco: 6.9:1)
           mute: '#6B6580',     // testo di servizio (su bianco: 5.6:1)
-          line: '#EADFF0',     // bordi leggeri
-          campo: '#B9B0D0',    // bordo dei campi da compilare
-          tint: '#F6F1FB',     // fondo lavanda chiarissimo
+          line: '#E2E6EB',     // bordi leggeri
+          campo: '#AEB5BF',    // bordo dei campi da compilare
+          tint: '#F5F6F8',     // fondo grigio chiarissimo (neutro)
           rosa: '#D81B72',     // fucsia del sito, versione per fondo bianco
-          rosaBg: '#FFE3F0',
-          rosaSoft: '#FFF0F7',
+          rosaBg: '#F1F3F6',
+          rosaSoft: '#F7F8FA',
           viola: '#6D4AFF',
-          violaBg: '#EDE8FF',
+          violaBg: '#F1F3F6',
           teal: '#00798C',
           tealBg: '#E6F7FA',
           verde: '#127A47',

@@ -304,7 +304,7 @@ export default function Subscribe() {
                 onClick={closeCancelDialog}
                 disabled={cancelling}
                 variant="outline"
-                className="w-full sm:w-auto rounded-full border-fucsia/40 bg-fucsia/10 text-fucsia hover:bg-fucsia/20"
+                className="w-full sm:w-auto rounded-full border-fucsia/40 bg-muted text-fucsia hover:bg-muted"
               >
                 No, mantieni l'abbonamento
               </Button>

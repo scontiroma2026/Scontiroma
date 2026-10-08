@@ -124,12 +124,12 @@ export default function MapView() {
     <main data-testid="map-page" className="min-h-[calc(100vh-72px)] text-foreground">
       {/* Custom leaflet overrides */}
       <style>{`
-        .leaflet-container { background: #F6F1FB; font-family: 'Manrope', sans-serif; }
+        .leaflet-container { background: #F5F6F8; font-family: 'Manrope', sans-serif; }
         .leaflet-popup-content-wrapper {
-          background: #FFFFFF; color: #1A1530; border: 1px solid #EADFF0;
+          background: #FFFFFF; color: #1A1530; border: 1px solid #E2E6EB;
           border-radius: 16px; padding: 0; box-shadow: 0 8px 30px rgba(26,21,48,0.22);
         }
-        .leaflet-popup-tip { background: #FFFFFF; border: 1px solid #EADFF0; }
+        .leaflet-popup-tip { background: #FFFFFF; border: 1px solid #E2E6EB; }
         .leaflet-popup-content { margin: 0; width: 260px !important; }
         .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5E5875 !important; }
         .leaflet-control-attribution a { color: #00798C !important; text-decoration: underline; }

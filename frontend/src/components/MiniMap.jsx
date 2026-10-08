@@ -39,9 +39,9 @@ export default function MiniMap({ lat, lng, shopName, address, zoom = 16 }) {
     <div data-testid="mini-map" className="rounded-2xl overflow-hidden border border-border bg-muted">
       {/* Stili leaflet coerenti con MapView */}
       <style>{`
-        .mini-map-container .leaflet-container { background: #F6F1FB; }
-        .mini-map-container .leaflet-popup-content-wrapper { background:#fff;color:#1A1530;border:1px solid #EADFF0;border-radius:12px; }
-        .mini-map-container .leaflet-popup-tip { background:#fff;border:1px solid #EADFF0; }
+        .mini-map-container .leaflet-container { background: #F5F6F8; }
+        .mini-map-container .leaflet-popup-content-wrapper { background:#fff;color:#1A1530;border:1px solid #E2E6EB;border-radius:12px; }
+        .mini-map-container .leaflet-popup-tip { background:#fff;border:1px solid #E2E6EB; }
         .mini-map-container .leaflet-control-attribution { background: rgba(255,255,255,0.92) !important; color: #5E5875 !important; font-size: 10px; }
         .mini-map-container .leaflet-control-attribution a { color: #00798C !important; text-decoration: underline; }
         .mini-map-container .leaflet-control-zoom a { background:#fff !important;color:#1A1530 !important;border:1px solid #B9B0D0 !important; }
@@ -69,7 +69,7 @@ export default function MiniMap({ lat, lng, shopName, address, zoom = 16 }) {
           href={gmapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1 rounded-full bg-fucsia/15 border border-fucsia/40 text-fucsia px-3 py-1.5 text-xs font-semibold hover:bg-fucsia/25 transition"
+          className="shrink-0 inline-flex items-center gap-1 rounded-full bg-muted border border-fucsia/40 text-fucsia px-3 py-1.5 text-xs font-semibold hover:bg-muted transition"
           title="Apri in Google Maps"
         >
           <Navigation size={12} /> Portami qui

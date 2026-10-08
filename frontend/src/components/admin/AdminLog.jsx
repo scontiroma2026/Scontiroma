@@ -58,7 +58,7 @@ export default function AdminLog({ recent }) {
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] ${
                         r.status === "redeemed"
-                          ? "bg-fucsia/10 text-fucsia"
+                          ? "bg-muted text-fucsia"
                           : "bg-ciano/10 text-ciano"
                       }`}
                     >

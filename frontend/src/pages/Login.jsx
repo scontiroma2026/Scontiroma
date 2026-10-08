@@ -134,7 +134,7 @@ export default function Login() {
                 data-testid="face-id-btn"
                 onClick={goBiometric}
                 disabled={!email || busy}
-                className="group relative w-full overflow-hidden rounded-3xl border-2 border-fucsia bg-gradient-to-br from-fucsia/10 to-transparent p-6 text-foreground transition hover:scale-[1.01] hover:glow-fucsia disabled:opacity-50"
+                className="group relative w-full overflow-hidden rounded-3xl border-2 border-fucsia bg-gradient-to-br from-muted to-transparent p-6 text-foreground transition hover:scale-[1.01] hover:glow-fucsia disabled:opacity-50"
               >
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl grad-fucsia-viola glow-fucsia">

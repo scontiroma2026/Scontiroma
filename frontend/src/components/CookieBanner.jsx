@@ -127,7 +127,7 @@ export default function CookieBanner() {
         {!showPrefs ? (
           <div className="p-5 sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fucsia/10 text-fucsia">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-fucsia">
                 <Cookie size={20} />
               </div>
               <div className="flex-1">

@@ -20,16 +20,16 @@
   --popover-foreground: 252 43% 13%;
   --primary: 332 74% 48%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 255 100% 95%;
+  --secondary: 220 14% 95%;
   --secondary-foreground: 252 43% 13%;
-  --muted: 270 50% 97%;
+  --muted: 220 14% 97%;
   --muted-foreground: 252 14% 40%;
-  --accent: 330 100% 97%;
+  --accent: 220 14% 96%;
   --accent-foreground: 252 43% 13%;
   --destructive: 5 77% 40%;
   --destructive-foreground: 0 0% 100%;
-  --border: 280 45% 91%;
-  --input: 253 29% 76%;
+  --border: 220 13% 90%;
+  --input: 220 12% 70%;
   --ring: 252 100% 64%;
   --radius: 1rem;
 }
@@ -61,7 +61,7 @@ pre {
 
 /* Scheletro di caricamento */
 @keyframes ac-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-.ac-skel { background: #f0e9f8; border-radius: 10px; animation: ac-pulse 1.4s ease-in-out infinite; }
+.ac-skel { background: #eef0f3; border-radius: 10px; animation: ac-pulse 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .ac-skel { animation: none; }
 }
@@ -69,7 +69,7 @@ pre {
 /* Piede della pagina (LegalFooter condiviso) */
 [data-testid="legal-footer"] {
   background: #ffffff;
-  border-top: 1px solid #eadff0;
+  border-top: 1px solid #e2e6eb;
 }
 [data-testid="legal-footer"] a,
 [data-testid="legal-footer"] button {
