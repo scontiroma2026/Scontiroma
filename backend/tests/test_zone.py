@@ -25,5 +25,5 @@ def test_zone_di_roma_e_dintorni():
     assert len(zone) == len(set(zone))
     assert zone[-1].startswith("Altra zona")
     gruppi = r.json()["groups"]
-    assert len(gruppi) == 16 and gruppi[0]["name"].startswith("Municipio I ")
+    assert len(gruppi) == 16 and gruppi[0]["name"].startswith("Centro storico") and not any("Municipio" in g["name"] for g in gruppi)
     assert sum(len(g["zones"]) for g in gruppi) == len(zone)

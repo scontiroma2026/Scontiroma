@@ -68,7 +68,7 @@ test('"Migliora foto" senza essere commerciante: rifiutato', async ({ request })
   expect(r.status).toBe(403);
 });
 
-test('filtro zone degli sconti: tutta Roma, per municipio, e i dintorni', async ({ page }) => {
+test('filtro zone degli sconti: tutta Roma, con i quartieri raggruppati per area, e i dintorni', async ({ page }) => {
   await page.goto('/discounts');
   const opzioni = page.getByTestId('filter-zone').locator('option');
   await expect(opzioni.first()).toHaveText('Tutte le zone');

@@ -134,73 +134,73 @@ logger = logging.getLogger(__name__)
 LEGAL_VERSION = "2026-10"
 
 # Zone di Roma e dintorni (decisione dell'utente dell'08/10): iscrizione, filtri e mappa.
-# Raggruppate per municipio. Le prime attività da cercare restano Garbatella, San Paolo e Marconi,
+# Raggruppate per area, con titoli descrittivi (senza numeri di municipio). Le prime attività da cercare restano Garbatella, San Paolo e Marconi,
 # ma l'app è aperta a tutta Roma.
 ZONE_GROUPS = [
-    ("Municipio I · Centro storico", [
+    ("Centro storico · Prati, Trastevere, Monti", [
         "Centro Storico", "Aventino", "Borgo", "Campitelli", "Campo Marzio", "Castro Pretorio", "Celio",
         "Colonna", "Esquilino", "Ludovisi", "Monti", "Parione", "Pigna", "Ponte", "Prati", "Regola",
         "Ripa", "San Saba", "Sallustiano", "Sant'Eustachio", "Testaccio", "Trastevere", "Trevi",
     ]),
-    ("Municipio II · Parioli, Nomentano", [
+    ("Parioli · Nomentano, San Lorenzo, Trieste", [
         "Africano", "Bologna", "Flaminio", "Parioli", "Pinciano", "Policlinico", "Salario",
         "San Lorenzo", "Trieste", "Nomentano", "Villa Ada", "Villaggio Olimpico",
     ]),
-    ("Municipio III · Monte Sacro", [
+    ("Monte Sacro · Talenti, Conca d'Oro, Serpentara", [
         "Bufalotta", "Casal Boccone", "Castel Giubileo", "Città Giardino", "Conca d'Oro", "Fidene",
         "Monte Sacro", "Porta di Roma", "Sacco Pastore", "Serpentara", "Settebagni", "Talenti",
         "Tufello", "Val Melaina", "Vigne Nuove",
     ]),
-    ("Municipio IV · Tiburtino", [
+    ("Tiburtino · Pietralata, Rebibbia, San Basilio", [
         "Casal de' Pazzi", "Casal Monastero", "Colli Aniene", "Pietralata", "Ponte Mammolo",
         "Portonaccio", "Rebibbia", "San Basilio", "Settecamini", "Tiburtino", "Tor Cervara",
     ]),
-    ("Municipio V · Prenestino, Centocelle", [
+    ("Prenestino · Centocelle, Pigneto, Tor Pignattara", [
         "Alessandrino", "Casilino", "Centocelle", "La Rustica", "Pigneto", "Prenestino",
         "Quarticciolo", "Tor Pignattara", "Tor Sapienza", "Tor Tre Teste", "Villa Gordiani",
     ]),
-    ("Municipio VI · Roma delle Torri", [
+    ("Tor Bella Monaca · Torre Angela, Lunghezza", [
         "Borghesiana", "Finocchio", "Giardinetti", "Lunghezza", "Tor Bella Monaca", "Tor Vergata",
         "Torre Angela", "Torre Gaia", "Torre Maura",
     ]),
-    ("Municipio VII · Appio, Tuscolano, Cinecittà", [
+    ("Appio · Tuscolano, Cinecittà, San Giovanni", [
         "Appio Claudio", "Appio Latino", "Appio Pignatelli", "Capannelle", "Cinecittà", "Colli Albani",
         "Don Bosco", "Furio Camillo", "Quadraro", "Re di Roma", "San Giovanni", "Tor Fiscale",
         "Torre Spaccata", "Tuscolano",
     ]),
-    ("Municipio VIII · Garbatella, Ostiense", [
+    ("Garbatella · Ostiense, San Paolo", [
         "Appia Antica", "Ardeatino", "Garbatella", "Grottaperfetta", "Montagnola", "Navigatori",
         "Ostiense", "San Paolo", "Tor Marancia",
     ]),
-    ("Municipio IX · EUR", [
+    ("EUR · Laurentino, Spinaceto, Torrino", [
         "Cecchignola", "Decima", "EUR", "Fonte Meravigliosa", "Giuliano-Dalmata", "Laurentino",
         "Mostacciano", "Spinaceto", "Tor de' Cenci", "Torrino", "Tre Fontane",
     ]),
-    ("Municipio X · Ostia e litorale", [
+    ("Ostia · Acilia, Infernetto, Casal Palocco", [
         "Acilia", "Axa", "Casal Palocco", "Castel Fusano", "Dragona", "Infernetto", "Malafede",
         "Ostia Antica", "Ostia Lido", "Vitinia",
     ]),
-    ("Municipio XI · Portuense, Marconi", [
+    ("Portuense · Marconi, Magliana, Trullo", [
         "Casetta Mattei", "Corviale", "Magliana", "Marconi", "Muratella", "Ponte Galeria",
         "Poggio Verde", "Portuense", "Trullo",
     ]),
-    ("Municipio XII · Monteverde", [
+    ("Monteverde · Gianicolense, Pisana", [
         "Bravetta", "Colli Portuensi", "Gianicolense", "Gianicolo", "Monteverde", "Pisana",
         "Villa Pamphilj",
     ]),
-    ("Municipio XIII · Aurelio", [
+    ("Aurelio · Boccea, Primavalle, Casalotti", [
         "Aurelio", "Boccea", "Casalotti", "Cornelia", "Monte Spaccato", "Primavalle",
         "Selva Candida", "Torrevecchia", "Valle Aurelia",
     ]),
-    ("Municipio XIV · Monte Mario, Trionfale", [
+    ("Monte Mario · Trionfale, Balduina, Ottavia", [
         "Balduina", "Camilluccia", "Cipro", "Giustiniana", "Medaglie d'Oro", "Monte Mario", "Ottavia",
         "Pineta Sacchetti", "Santa Maria della Pietà", "Trionfale",
     ]),
-    ("Municipio XV · Cassia, Flaminia", [
+    ("Cassia · Flaminia, Ponte Milvio, La Storta", [
         "Cassia", "Cesano", "Due Ponti", "Grottarossa", "Isola Farnese", "La Storta", "Labaro",
         "Olgiata", "Ponte Milvio", "Prima Porta", "Saxa Rubra", "Tor di Quinto", "Vigna Clara",
     ]),
-    ("Fuori Roma · dintorni", [
+    ("Fuori Roma · Fiumicino, Castelli Romani", [
         "Albano Laziale", "Anzio", "Bracciano", "Castelli Romani", "Ciampino", "Fiumicino", "Frascati",
         "Fregene", "Genzano di Roma", "Grottaferrata", "Guidonia Montecelio", "Maccarese", "Marino",
         "Monterotondo", "Nettuno", "Pomezia", "Tivoli", "Altra zona di Roma e dintorni",
