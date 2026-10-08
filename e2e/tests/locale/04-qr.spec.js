@@ -1,5 +1,5 @@
-// QR: il cliente (registrato, senza abbonamento: fase di lancio) genera il QR dal sito, il commerciante lo scansiona (pagina di
-// conferma), la seconda scansione è bloccata e il QR scade dopo la finestra di 20 secondi.
+// QR: il cliente (registrato, senza abbonamento: fase di lancio) genera il QR dal sito, il banco lo scansiona (pagina
+// «Codice valido» + codice del negozio, poi conferma), la seconda scansione è bloccata e il QR scade dopo la finestra di 20 secondi.
 const { test, expect, API, chiama, registra, creaOffertaApprovata, loginNelBrowser } = require('../fixtures');
 
 const FINESTRA = 20; // secondi, ROTATION_WINDOW_SEC nel server
@@ -30,10 +30,19 @@ test('QR: generazione, scansione del commerciante, doppia scansione bloccata, sc
   const payload = `${tk.data.code}.${tk.data.slot}.${tk.data.token}`;
   expect(tk.data.qr_value).toContain(`/qr/${payload}`);
 
-  // 3. Il commerciante inquadra il QR: si apre la pagina di conferma
+  // 3. Chi lavora al banco inquadra il QR: la pagina dice solo «Codice valido» (offerta e negozio), senza il nome
+  //    del cliente; con il codice del negozio lo sconto si applica e compare «SCONTO VALIDO» con il nome breve.
+  const sc = await chiama(request, 'GET', '/merchants/me/shop-code', { token: m.token });
+  expect(sc.status).toBe(200);
   await page.goto(tk.data.qr_value);
+  await expect(page.getByRole('heading', { name: 'Codice valido' })).toBeVisible();
+  await expect(page.getByText(offerta.title)).toBeVisible();
+  await expect(page.getByTestId('qr-codice-valido')).not.toContainText('Giulia');
+  await page.getByTestId('shop-code-input').fill(sc.data.code);
+  await page.getByTestId('shop-code-apply').click();
   await expect(page.getByRole('heading', { name: /SCONTO\s*VALIDO/i })).toBeVisible();
   await expect(page.getByText(offerta.title)).toBeVisible();
+  await expect(page.getByText('Giulia P.')).toBeVisible();
 
   // 4. Seconda scansione dello stesso codice: bloccata
   const doppia = await chiama(request, 'POST', '/redemptions/verify', { token: m.token, body: { code: payload } });

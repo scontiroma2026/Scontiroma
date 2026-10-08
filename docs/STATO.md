@@ -57,6 +57,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
 | (branch `claude/pagamenti-commercianti`) | Admin: scheda «Pagamenti», registro manuale dei pagamenti dei commercianti (stato piano, rinnovi a 30 giorni, scaduti, riepilogo del mese, annulla, CSV); nessun addebito, nessuna email | PR da aprire, controlli verdi |
 | (branch `claude/qr-scansioni`) | Conteggio delle scansioni del QR (opzione B): link corto `/q/<codice>` (codice stabile di 5 caratteri per negozio, `/n/<id>` ancora valido), solo un numero per negozio e giorno, antiduplicati; admin: percorso scansioni → iscrizioni → sconti usati (30 giorni e da sempre) nella scheda «Referral QR»; il commerciante vede il numero delle sue scansioni; nuovo test `26-qr-scansioni`; frase di Privacy solo proposta in `docs/legale` | PR da aprire, controlli verdi |
 | (branch `claude/foto-confronto-ia`) | Foto: la foto scattata/scelta entra subito nella galleria (prima serviva un tasto «Aggiungi» facile da dimenticare), ridotta a 1600 px in JPEG, messaggi chiari («Foto troppo grande», «Formato non supportato», HEIC), «Nessuna foto» al posto dell'immagine di cibo di default; «Migliora con IA» con confronto Originale/Migliorata e «Ripristina l'originale»; nuovo test `24-foto` | PR da aprire, controlli verdi |
+| (branch `claude/codice-negozio`) | Codice del negozio a 4 cifre per la convalida al banco: il QR inquadrato mostra solo «Codice valido» + offerta, il nome del cliente solo dopo il codice (5 errori = blocco 15 min), «Ricorda su questo telefono» 90 giorni, «Cambia codice» nella dashboard; commerciante collegato senza codice; test `27-codice-negozio` | PR da aprire, controlli verdi, OK del titolare; frase privacy proposta in `docs/legale/PROPOSTE_TESTI_LEGALI.md` (consulente) |
 
 ## Decisioni prese
 - Pagamenti commercianti (08/10): registro manuale, nessun addebito. L'admin annota i pagamenti incassati (bonifico, PayPal, contanti); nessuna email, nessuna sospensione automatica, il commerciante non vede cambiamenti. Da decidere: sospensione dopo la scadenza, promemoria, fatture.
@@ -80,7 +81,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
 - Fase pilota (07/10): nessuna promessa di numeri (utenti, «migliaia») né di sconti del 50% ovunque; la posizione si chiede solo quando il cliente tocca «Usa la mia posizione».
 - Commercianti (07/10): 5 macro aree (Mangiare e bere, Bellezza e benessere, Sport e tempo libero, Negozi, Servizi); niente SMS o WhatsApp in serie senza consenso.
 - Locandina (07/10): sulla carta solo cose che non cambiano (nome del negozio e QR); l'offerta del mese si vede dalla pagina `/n/<id>` a cui porta il QR. Conteggio delle scansioni (opzione B): fatto nel branch `claude/qr-scansioni` (08/10).
-- Codice del negozio (opzione C): in pausa (07/10), da riconsiderare; se si fa, «Ricorda su questo telefono» vale al massimo 90 giorni.
+- Codice del negozio (opzione C): approvato dal titolare l'08/10 e realizzato nel branch `claude/codice-negozio`; «Ricorda su questo telefono» vale al massimo 90 giorni.
 - Messaggi ai commercianti (07/10): firmati «Sconti Roma», senza nomi di persone né prima persona singolare; bozze in docs/comunicazione/.
 - Area commerciante (07/10): scelta la variante «D · Bianco vivo» (fondo chiaro, testi e pulsanti colorati, due soli caratteri: Fraunces e Manrope). Realizzata nel branch `claude/area-commerciante-d` (PR da aprire).
 - Aspetto di tutta l'app (08/10): stessa palette chiara «Bianco vivo» ovunque (fondo bianco, testo #1A1530, accenti fucsia #D81B72, viola #6D4AFF, teal #00798C, verde #127A47), solo Fraunces e Manrope; la locandina stampabile non cambia. Il video promozionale mostra ancora l'app scura: schermate da rifare. Branch `claude/tema-chiaro-app`.
@@ -88,8 +89,8 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `723f21a`
 - Variabili verificate dall'utente su Render: `ADMIN_PASSWORD` ≥ 12 caratteri, `ADMIN_EMAIL` impostata.
 
 ## Da fare, in ordine
-1. Testi legali: validazione del consulente; sede legale e PEC da inserire; "Mario R.": l'indirizzo `/api/qr/verify` è pubblico, da decidere se restringerlo.
-2. Mappe Protomaps + LocationIQ. (Codice del negozio: in pausa.)
+1. Testi legali: validazione del consulente; sede legale e PEC da inserire; "Mario R.": risolto nel branch `claude/codice-negozio` (il nome esce solo dopo il codice del negozio); resta la frase di Privacy/Termini da far vedere al consulente.
+2. Mappe Protomaps + LocationIQ. (Codice del negozio: fatto nel branch, manca la PR.)
 3. Area commerciante nella variante «D · Bianco vivo»: fatta nel branch, manca la PR e l'OK del titolare dopo averla vista da iPhone.
 4. Pulizia Emergent: file e test (#37) e pacchetti (questa PR); resta da valutare `frontend/plugins/health-check`.
 

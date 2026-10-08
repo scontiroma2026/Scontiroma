@@ -122,3 +122,17 @@ Il link corto del QR (`/q/<codice>`) conta quante volte viene aperto. Si salva *
 > «Quando si apre il link stampato sulla locandina di un negozio contiamo la visita come semplice numero aggregato per negozio e per giorno. Non salviamo indirizzo IP, tipo di dispositivo o altri dati che permettano di riconoscere chi ha inquadrato il QR.»
 
 Domanda per il consulente: un contatore aggregato senza alcun dato personale è fuori dall'ambito GDPR e ePrivacy? (Per la finestra anti-duplicati il server tiene in memoria, per pochi secondi, solo l'id del negozio e l'ora dell'ultimo conteggio.)
+
+## Proposta del 08/10/2026 — «Codice del negozio» e nome del cliente al banco
+
+**Solo proposta, da far vedere al consulente prima di pubblicare.** Nessun testo legale del sito è stato modificato.
+
+Cosa cambia nel funzionamento: chi inquadra il QR di un cliente vede solo che il codice è valido (titolo dell'offerta e nome del negozio). Il nome del cliente (nome e iniziale del cognome, es. «Mario R.») compare soltanto dopo aver scritto il «codice del negozio» a 4 cifre, oppure se il commerciante ha fatto l'accesso con il suo account.
+
+Frase attuale (Privacy, «Dati condivisi con il commerciante»): «quando il commerciante scansiona il tuo codice QR vede soltanto il tuo nome e l'iniziale del cognome (es. "Mario R."), l'ora, l'offerta e se sei un cliente nuovo o di ritorno».
+
+Frase proposta (al posto di «il commerciante scansiona il tuo codice QR vede»): «quando il commerciante, o una persona del suo personale a cui ha comunicato il codice del negozio, applica lo sconto dal tuo codice QR, vede soltanto… (resto invariato). Chi inquadra il QR senza il codice del negozio non vede alcun dato personale.» Versione breve alternativa: «Il commerciante e le persone autorizzate dal commerciante a cui comunica il codice del negozio (per esempio i dipendenti al banco) vedono solo il nome e l'iniziale del cognome, nel momento in cui applicano lo sconto. Chi inquadra il QR senza il codice del negozio non vede alcun dato personale del cliente.»
+
+Per i Termini (obblighi del commerciante): «Il commerciante custodisce il codice del negozio, lo comunica solo al personale autorizzato e lo cambia quando una persona smette di lavorare con lui. Il commerciante è responsabile dell'uso del codice da parte del suo personale.»
+
+Domande per il consulente: la frase sul personale del commerciante è sufficiente (il commerciante è titolare autonomo per quei dati)? Il telefono «ricordato» (un attestato firmato salvato sul telefono del dipendente, valido al massimo 90 giorni, senza dati personali) va citato nella Cookie Policy tra gli strumenti tecnici? Proposta: sì, come memoria del browser `sr_codice_negozio_v1`, necessaria al servizio richiesto, scelta dal dipendente.
