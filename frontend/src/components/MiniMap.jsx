@@ -1,8 +1,8 @@
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
+import { MapContainer, Marker, Popup, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Navigation } from "lucide-react";
-import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
+import MappaBase from "@/components/MappaBase";
 
 // Custom pin fucsia (coerente con MapView)
 const SHOP_PIN = L.divIcon({
@@ -86,10 +86,7 @@ export default function MiniMap({ lat, lng, shopName, address, zoom = 16 }) {
           scrollWheelZoom={false}
           dragging
         >
-          <TileLayer
-            attribution={OSM_ATTRIBUTION}
-            url={OSM_TILE_URL}
-          />
+          <MappaBase />
           <Marker position={[lat, lng]} icon={SHOP_PIN}>
             <Popup>
               <div className="text-xs">
