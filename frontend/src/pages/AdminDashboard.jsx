@@ -13,6 +13,7 @@ import GeocodeIssuesWidget from "@/components/admin/GeocodeIssuesWidget";
 import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import AdminGate from "@/components/admin/AdminGate";
 import AdminLaunch from "@/components/admin/AdminLaunch";
+import AdminPayments from "@/components/admin/AdminPayments";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminPending from "@/components/admin/AdminPending";
 import AdminLog from "@/components/admin/AdminLog";
@@ -116,6 +117,7 @@ export default function AdminDashboard() {
   const SUBSCRIPTION_TABS = ["economics", "subscribers"];
   const tabs = [
     ["launch", "Fase di lancio"],
+    ["payments", "Pagamenti"],
     ["analytics", "Analytics"],
     ["economics", "Economics"],
     ["traffic", "Traffico"],
@@ -173,6 +175,7 @@ export default function AdminDashboard() {
       </div>
 
       {tab === "launch" && <AdminLaunch hdrs={hdrs} />}
+      {tab === "payments" && <AdminPayments hdrs={hdrs} />}
       {tab === "analytics" && <AdminAnalytics stats={stats} />}
       {tab === "subscribers" && subscriptionRequired && <AdminSubscribers hdrs={hdrs} />}
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}

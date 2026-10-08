@@ -50,8 +50,10 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 | (questa, `claude/da-fare-scadenza`) | Dashboard commerciante: scadenza reale nella pillola dell'offerta («fino al 31/10») e scheda «Da fare» con collegamenti | controlli verdi |
 | (questa) | Tema chiaro «Bianco vivo» su tutta l'app (home, offerte, mappa, cliente, accesso, legali, banner, admin); la locandina stampabile resta com'è | controlli verdi, OK del titolare sull'aspetto |
 | (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
+| (branch `claude/pagamenti-commercianti`) | Admin: scheda «Pagamenti», registro manuale dei pagamenti dei commercianti (stato piano, rinnovi a 30 giorni, scaduti, riepilogo del mese, annulla, CSV); nessun addebito, nessuna email | PR da aprire, controlli verdi |
 
 ## Decisioni prese
+- Pagamenti commercianti (08/10): registro manuale, nessun addebito. L'admin annota i pagamenti incassati (bonifico, PayPal, contanti); nessuna email, nessuna sospensione automatica, il commerciante non vede cambiamenti. Da decidere: sospensione dopo la scadenza, promemoria, fatture.
 - App aperta a tutta Roma e dintorni (08/10): iscrizione e filtri su tutte le zone; la ricerca di commercianti in background resta su Garbatella, San Paolo e Marconi. Video e messaggi da aggiornare dopo.
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
 - Dopo la prova: commercianti 4,99 €/mese IVA inclusa, prezzo bloccato per i fondatori, preavviso di 30 giorni, nessun addebito senza conferma. Oggi nessun addebito (manca la P.IVA).
