@@ -43,6 +43,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
+| (questa) | App aperta a tutta Roma e dintorni: zone (quartieri, Ostia, Fiumicino, Castelli Romani), home e FAQ senza «tre quartieri» | controlli verdi |
 | (questa) | Locandina: tolte le «pescherie» e frasi riscritte (categorie reali, testo più chiaro) | controlli verdi |
 | (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
@@ -50,6 +51,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 | (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
 
 ## Decisioni prese
+- App aperta a tutta Roma e dintorni (08/10): iscrizione e filtri su tutte le zone; la ricerca di commercianti in background resta su Garbatella, San Paolo e Marconi. Video e messaggi da aggiornare dopo.
 - Fase di lancio di circa 2 mesi: app gratuita per clienti e commercianti. Mai scrivere "gratis per sempre" né "nessuna commissione".
 - Dopo la prova: commercianti 4,99 €/mese IVA inclusa, prezzo bloccato per i fondatori, preavviso di 30 giorni, nessun addebito senza conferma. Oggi nessun addebito (manca la P.IVA).
 - Stripe e PayPal restano nel codice, spenti.
