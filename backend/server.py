@@ -252,6 +252,8 @@ _PRIVATE_USER_FIELDS = (
     "webauthn_credentials", "webauthn_user_id",
     # PIN rimosso il 03/10: i campi possono restare negli account vecchi finché non rientrano.
     "pin_set", "pin_locked_until",
+    # Codice del negozio (4 cifre al banco): lo legge solo il commerciante, dall'endpoint dedicato.
+    "shop_code", "shop_code_version", "shop_code_changed_at",
 )
 
 
@@ -2787,68 +2789,226 @@ async def _log_scan(valid: bool, reason: str, redemption: Optional[dict] = None)
         logging.warning(f"scan log failed: {e}")
 
 
-@api.get("/qr/verify")
-async def qr_verify_public(token: str):
+# ---------- Codice del negozio (convalida al banco) ----------
+# Il QR del cliente, inquadrato con la fotocamera, apre una pagina pubblica che dice solo «codice valido»
+# (offerta e negozio). Per consumare lo sconto e vedere il nome del cliente serve una di queste prove:
+#  - essere il commerciante di quel negozio, già collegato (come prima);
+#  - il codice a 4 cifre del negozio (massimo 5 errori ogni 15 minuti per negozio);
+#  - l'attestato «ricordato su questo telefono» (firmato dal server, 90 giorni, legato alla versione del codice).
+SHOP_CODE_MAX_ERRORS = 5
+SHOP_CODE_WINDOW_MIN = 15
+SHOP_DEVICE_DAYS = 90
+
+
+def _new_shop_code(exclude: Optional[str] = None) -> str:
+    """4 cifre casuali dal generatore sicuro del sistema (mai sequenziali), diverse dal codice precedente."""
+    while True:
+        c = f"{secrets.randbelow(10000):04d}"
+        if c != exclude:
+            return c
+
+
+async def _shop_code_doc(merchant_id: str) -> dict:
+    """Codice del negozio e versione; lo crea la prima volta. Il codice sta SOLO nel documento del
+    negozio sul server: 4 cifre non sono una password, e il commerciante deve poterlo rivedere."""
+    u = await db.users.find_one({"id": merchant_id}) or {}
+    if not u.get("shop_code"):
+        now = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one(
+            {"id": merchant_id, "shop_code": {"$in": [None, ""]}},
+            {"$set": {"shop_code": _new_shop_code(), "shop_code_version": 1, "shop_code_changed_at": now}},
+        )
+        u = await db.users.find_one({"id": merchant_id}) or {}
+    return {"code": u.get("shop_code") or "", "version": int(u.get("shop_code_version") or 1),
+            "changed_at": u.get("shop_code_changed_at")}
+
+
+@api.get("/merchants/me/shop-code")
+async def merchant_shop_code(user: dict = Depends(require_merchant)):
+    return await _shop_code_doc(user["id"])
+
+
+@api.post("/merchants/me/shop-code/regenerate")
+async def merchant_shop_code_regenerate(user: dict = Depends(require_merchant)):
+    """Nuovo codice: il vecchio smette di valere e, con la nuova versione, anche i telefoni «ricordati»."""
+    cur = await _shop_code_doc(user["id"])
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"shop_code": _new_shop_code(exclude=cur["code"]), "shop_code_changed_at": now},
+         "$inc": {"shop_code_version": 1}},
+    )
+    await db.shop_code_attempts.delete_one({"merchant_id": user["id"]})
+    return await _shop_code_doc(user["id"])
+
+
+def _device_token(merchant_id: str, version: int) -> str:
+    exp = datetime.now(timezone.utc) + timedelta(days=SHOP_DEVICE_DAYS)
+    return jwt.encode({"type": "shop_device", "sub": merchant_id, "ver": version, "exp": exp},
+                      JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def _device_token_ok(token: Optional[str], merchant_id: str, version: int) -> bool:
+    if not token:
+        return False
+    try:
+        p = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.InvalidTokenError:
+        return False
+    return p.get("type") == "shop_device" and p.get("sub") == merchant_id and p.get("ver") == version
+
+
+async def _optional_user(request: Request) -> Optional[dict]:
+    try:
+        return await get_current_user(request)
+    except HTTPException:
+        return None
+
+
+async def _qr_find_redemption(token: str):
+    """Controlla il QR (formato, finestra di 20 s, firma, esistenza). Ritorna (redemption, None) oppure (None, motivo)."""
     code, slot, hmac_tok = parse_rotating_code(token)
     if slot is None or hmac_tok is None:
         await _log_scan(False, "Formato codice non valido")
-        return {"valid": False, "reason": "Formato codice non valido"}
-    cur = current_slot()
-    if abs(cur - slot) > 1:
+        return None, "Formato codice non valido"
+    if abs(current_slot() - slot) > 1:
         await _log_scan(False, "QR code scaduto")
-        return {"valid": False, "reason": "QR code scaduto"}
+        return None, "QR code scaduto"
     if not hmac_lib.compare_digest(_rotating_hmac(code, slot), hmac_tok):
         await _log_scan(False, "QR code manomesso")
-        return {"valid": False, "reason": "QR code manomesso"}
+        return None, "QR code manomesso"
     r = await db.redemptions.find_one({"code": code})
     if not r:
         await _log_scan(False, "Codice non trovato")
-        return {"valid": False, "reason": "Codice non trovato"}
+        return None, "Codice non trovato"
+    return r, None
+
+
+@api.get("/qr/verify")
+async def qr_verify_public(token: str):
+    """Pagina pubblica del QR: dice solo se il codice è valido e per quale offerta. Non consuma lo sconto
+    e non mostra mai il cliente né altri dati personali."""
+    r, errore = await _qr_find_redemption(token)
+    if errore:
+        return {"valid": False, "reason": errore}
     if r.get("status") == "redeemed":
-        # If redeemed in same slot window (~40s), still show green as freshly scanned
-        try:
-            ts = datetime.fromisoformat(r.get("redeemed_at",""))
-            if (datetime.now(timezone.utc) - ts).total_seconds() < ROTATION_WINDOW_SEC * 2:
-                pass  # allow re-display
-            else:
-                await _log_scan(False, "Codice già utilizzato", r)
-                return {"valid": False, "reason": "Codice già utilizzato"}
-        except Exception:
-            await _log_scan(False, "Codice già utilizzato", r)
-            return {"valid": False, "reason": "Codice già utilizzato"}
-    # Utilizzo precedente (escluso il corrente) — serve per limite giornaliero e riepilogo merchant
-    prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
-    # Consume on first successful scan
-    if r.get("status") == "pending":
-        # LIMITE GIORNALIERO: il cliente non può usare lo stesso sconto 2 volte nello stesso giorno
-        if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
-            await _log_scan(False, "Limite giornaliero: cliente ha già usato lo sconto oggi", r)
-            return {"valid": False, "reason": "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi", "daily_limit": True}
-        res = await db.redemptions.update_one(
-            {"id": r["id"], "status": "pending"},
-            {"$set": {"status": "redeemed",
-                      "redeemed_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        # Con due scansioni simultanee vince una sola: il log di successo va scritto una volta.
-        if res.modified_count == 1:
-            await _log_scan(True, "OK", r)
-    # Fetch enriched data
+        await _log_scan(False, "Codice già utilizzato", r)
+        return {"valid": False, "reason": "Codice già utilizzato"}
     disc = await db.discounts.find_one({"id": r.get("discount_id")})
     m = await db.users.find_one({"id": r.get("merchant_id")})
-    c = await db.users.find_one({"id": r.get("user_id")})
     return {
         "valid": True,
+        "shop_id": r.get("merchant_id"),
+        "shop_name": (m.get("shop_name") if m else None) or "-",
+        "discount_title": disc.get("title") if disc else "-",
+    }
+
+
+class QrRedeemIn(BaseModel):
+    token: str
+    shop_code: Optional[str] = Field(default=None, max_length=16)
+    device_token: Optional[str] = Field(default=None, max_length=2000)
+    remember: bool = False
+
+
+def _redeem_error(status: int, error: str, reason: str, **extra):
+    return JSONResponse(status_code=status, content={"valid": False, "error": error, "reason": reason, **extra})
+
+
+async def _shop_code_attempt(merchant_id: str):
+    """Prenota un tentativo PRIMA di confrontare il codice (così più richieste insieme non superano il limite).
+    Ritorna (consentito, secondi_di_attesa, id_tentativo)."""
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(minutes=SHOP_CODE_WINDOW_MIN)).isoformat()
+    stamp = f"{now.isoformat()}#{secrets.token_hex(4)}"
+    await db.shop_code_attempts.update_one({"merchant_id": merchant_id}, {"$pull": {"t": {"$lt": cutoff}}})
+    doc = await db.shop_code_attempts.find_one_and_update(
+        {"merchant_id": merchant_id}, {"$push": {"t": stamp}}, upsert=True, return_document=ReturnDocument.AFTER)
+    times = sorted(doc.get("t") or [])
+    if len(times) > SHOP_CODE_MAX_ERRORS:
+        await db.shop_code_attempts.update_one({"merchant_id": merchant_id}, {"$pull": {"t": stamp}})
+        oldest = datetime.fromisoformat(times[0].split("#")[0])
+        wait = int((oldest + timedelta(minutes=SHOP_CODE_WINDOW_MIN) - now).total_seconds()) + 1
+        return False, max(wait, 1), stamp
+    return True, 0, stamp
+
+
+@api.post("/qr/redeem")
+async def qr_redeem(payload: QrRedeemIn, request: Request):
+    """Applica lo sconto dal QR del cliente. Il nome del cliente esce solo dopo una prova valida."""
+    r, errore = await _qr_find_redemption(payload.token)
+    if errore:
+        return _redeem_error(400, "invalid", errore)
+    mid = r["merchant_id"]
+    user = await _optional_user(request)
+    autorizzato = bool(user and user.get("role") == "merchant" and user.get("id") == mid)
+    device_token_new = None
+    if not autorizzato:
+        cur = await _shop_code_doc(mid)
+        if payload.device_token and _device_token_ok(payload.device_token, mid, cur["version"]):
+            autorizzato = True
+        else:
+            code_in = (payload.shop_code or "").strip()
+            if not code_in:
+                if payload.device_token:
+                    return _redeem_error(403, "device_invalid",
+                                         "Il codice del negozio è cambiato o l'attestato è scaduto: scrivi il codice.")
+                return _redeem_error(403, "code_required", "Scrivi il codice del negozio.")
+            ok_slot, wait, stamp = await _shop_code_attempt(mid)
+            if not ok_slot:
+                await _log_scan(False, "Codice del negozio: troppi errori", r)
+                return _redeem_error(429, "locked",
+                                     f"Troppi tentativi. Riprova tra {max(1, -(-wait // 60))} minuti.",
+                                     retry_after_sec=wait)
+            if not hmac_lib.compare_digest(code_in.encode(), cur["code"].encode()):
+                await _log_scan(False, "Codice del negozio errato", r)
+                times = (await db.shop_code_attempts.find_one({"merchant_id": mid}) or {}).get("t") or []
+                return _redeem_error(403, "wrong_code", "Codice del negozio errato",
+                                     attempts_left=max(0, SHOP_CODE_MAX_ERRORS - len(times)))
+            await db.shop_code_attempts.update_one({"merchant_id": mid}, {"$pull": {"t": stamp}})
+            autorizzato = True
+            if payload.remember:
+                device_token_new = _device_token(mid, cur["version"])
+    # A questo punto la prova c'è: si consuma lo sconto come prima.
+    if r.get("status") == "redeemed":
+        try:
+            ts = datetime.fromisoformat(r.get("redeemed_at", ""))
+            rivisto = (datetime.now(timezone.utc) - ts).total_seconds() < ROTATION_WINDOW_SEC * 2
+        except Exception:
+            rivisto = False
+        if not rivisto:
+            await _log_scan(False, "Codice già utilizzato", r)
+            return _redeem_error(400, "used", "Codice già utilizzato")
+    prev = await _last_redeemed(r["user_id"], mid, exclude_id=r["id"])
+    if r.get("status") == "pending":
+        if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
+            await _log_scan(False, "Limite giornaliero: cliente ha già usato lo sconto oggi", r)
+            return _redeem_error(400, "daily_limit",
+                                 "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi", daily_limit=True)
+        res = await db.redemptions.update_one(
+            {"id": r["id"], "status": "pending"},
+            {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat()}})
+        if res.modified_count == 1:
+            await _log_scan(True, "OK", r)
+        r = await db.redemptions.find_one({"id": r["id"]}) or r
+    disc = await db.discounts.find_one({"id": r.get("discount_id")})
+    m = await db.users.find_one({"id": mid})
+    c = await db.users.find_one({"id": r.get("user_id")})
+    out = {
+        "valid": True,
         "client_name": short_client_name(c.get("name") if c else None),
-        "client_initial": ((c.get("name","?")[:1] or "?").upper()) if c else "?",
         "shop_name": m.get("shop_name") if m else "-",
         "discount_title": disc.get("title") if disc else "-",
-        "discount_percent": None if not disc or not disc.get("original_price") else round((1 - disc["discounted_price"]/disc["original_price"])*100),
+        "discount_percent": None if not disc or not disc.get("original_price") else round((1 - disc["discounted_price"] / disc["original_price"]) * 100),
         "redeemed_at": r.get("redeemed_at") or datetime.now(timezone.utc).isoformat(),
-        # Riepilogo utilizzi per il commerciante
         "use_number": r.get("use_number") or 1,
         "max_uses": r.get("max_uses_per_month") or 1,
         "prev_used_at": prev.get("redeemed_at") if prev else None,
     }
+    if device_token_new:
+        out["device_token"] = device_token_new
+        out["device_days"] = SHOP_DEVICE_DAYS
+    return out
 
 
 @api.post("/redemptions/verify")

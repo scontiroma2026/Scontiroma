@@ -76,6 +76,11 @@ def test_scansione_qr_solo_nome_e_iniziale():
         tok = f"QQQ22222.{slot}.{server._rotating_hmac('QQQ22222', slot)}"
         r = await c.get("/api/qr/verify", params={"token": tok})
         assert r.json()["valid"] is True, r.text
+        assert "client_name" not in r.json() and "Mario" not in r.text  # senza codice del negozio niente nome
+        assert "Rossi" not in r.text and cid not in r.text
+        # Con il codice del negozio lo sconto si applica e compare il nome breve
+        r = await c.post("/api/qr/redeem", json={"token": tok, "shop_code": (await server._shop_code_doc(mid2))["code"]})
+        assert r.json()["valid"] is True, r.text
         assert r.json()["client_name"] == "Mario R."
         assert "Rossi" not in r.text and cid not in r.text
     run(body, required=False)

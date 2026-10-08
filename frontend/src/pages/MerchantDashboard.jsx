@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { QrCode, TicketPercent, ChevronRight, Eye, Pencil, PlusCircle } from "lucide-react";
 import GdprSection from "@/components/GdprSection";
 import MerchantReferralCard from "@/components/MerchantReferralCard";
+import ShopCodeCard from "@/components/ShopCodeCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
 import MerchantHours from "@/components/MerchantHours";
 import NextOfferCard from "@/components/NextOfferCard";
@@ -179,6 +180,8 @@ export default function MerchantDashboard() {
               <ShopDescriptionCard />
               <MerchantHours />
             </div>
+
+            <ShopCodeCard />
 
             <div id="qr" className="scroll-mt-24">
               <MerchantReferralCard />
