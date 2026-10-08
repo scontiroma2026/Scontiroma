@@ -2942,13 +2942,39 @@ async def _optional_user(request: Request) -> Optional[dict]:
         return None
 
 
-async def _qr_find_redemption(token: str):
-    """Controlla il QR (formato, finestra di 20 s, firma, esistenza). Ritorna (redemption, None) oppure (None, motivo)."""
+SHOP_PERMIT_SEC = 120
+
+
+def _qr_permit(r: dict) -> str:
+    """Permesso breve (2 minuti) rilasciato quando la pagina si apre con un QR ancora valido: lega QR e negozio,
+    così il QR non scade mentre si scrive il codice. Non è una prova del negozio e non contiene dati personali."""
+    exp = datetime.now(timezone.utc) + timedelta(seconds=SHOP_PERMIT_SEC)
+    return jwt.encode({"type": "qr_permit", "sub": r["id"], "code": r["code"], "mid": r["merchant_id"],
+                       "jti": secrets.token_hex(8), "exp": exp}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def _qr_permit_claims(permit: Optional[str], r: dict) -> Optional[dict]:
+    """Le informazioni del permesso se è valido per questo QR e questo negozio e non è già stato usato."""
+    if not permit:
+        return None
+    try:
+        p = jwt.decode(permit, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.InvalidTokenError:
+        return None
+    if p.get("type") != "qr_permit" or p.get("sub") != r.get("id") or p.get("code") != r.get("code") \
+            or p.get("mid") != r.get("merchant_id") or r.get("permit_used") == p.get("jti"):
+        return None
+    return p
+
+
+async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
+    """Controlla il QR (formato, finestra di 20 s, firma, esistenza). Ritorna (redemption, None) oppure (None, motivo).
+    Con `ignora_finestra` (permesso breve valido) salta solo il controllo dei 20 secondi: la firma resta."""
     code, slot, hmac_tok = parse_rotating_code(token)
     if slot is None or hmac_tok is None:
         await _log_scan(False, "Formato codice non valido")
         return None, "Formato codice non valido"
-    if abs(current_slot() - slot) > 1:
+    if abs(current_slot() - slot) > 1 and not ignora_finestra:
         await _log_scan(False, "QR code scaduto")
         return None, "QR code scaduto"
     if not hmac_lib.compare_digest(_rotating_hmac(code, slot), hmac_tok):
@@ -2978,11 +3004,14 @@ async def qr_verify_public(token: str):
         "shop_id": r.get("merchant_id"),
         "shop_name": (m.get("shop_name") if m else None) or "-",
         "discount_title": disc.get("title") if disc else "-",
+        "permit": _qr_permit(r),
+        "permit_sec": SHOP_PERMIT_SEC,
     }
 
 
 class QrRedeemIn(BaseModel):
     token: str
+    permit: Optional[str] = Field(default=None, max_length=2000)
     shop_code: Optional[str] = Field(default=None, max_length=16)
     device_token: Optional[str] = Field(default=None, max_length=2000)
     remember: bool = False
@@ -3014,6 +3043,15 @@ async def _shop_code_attempt(merchant_id: str):
 async def qr_redeem(payload: QrRedeemIn, request: Request):
     """Applica lo sconto dal QR del cliente. Il nome del cliente esce solo dopo una prova valida."""
     r, errore = await _qr_find_redemption(payload.token)
+    permit = None
+    if errore == "QR code scaduto" and payload.permit:
+        # La finestra dei 20 secondi è passata mentre si scriveva il codice: vale il permesso breve (2 minuti).
+        r, errore = await _qr_find_redemption(payload.token, ignora_finestra=True)
+        permit = _qr_permit_claims(payload.permit, r) if r else None
+        if not errore and not permit:
+            return _redeem_error(400, "permit_expired", "Il tempo è scaduto: chiedi al cliente di mostrare di nuovo il QR")
+    elif payload.permit and r:
+        permit = _qr_permit_claims(payload.permit, r)
     if errore:
         return _redeem_error(400, "invalid", errore)
     mid = r["merchant_id"]
@@ -3064,7 +3102,8 @@ async def qr_redeem(payload: QrRedeemIn, request: Request):
                                  "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi", daily_limit=True)
         res = await db.redemptions.update_one(
             {"id": r["id"], "status": "pending"},
-            {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat()}})
+            {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat(),
+                      **({"permit_used": permit["jti"]} if permit else {})}})
         if res.modified_count == 1:
             await _log_scan(True, "OK", r)
         r = await db.redemptions.find_one({"id": r["id"]}) or r
