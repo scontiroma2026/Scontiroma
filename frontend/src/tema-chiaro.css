@@ -39,7 +39,7 @@ html, body, .App {
   color: #1a1530;
 }
 
-/* Solo Fraunces e Manrope: niente Archivo Black, niente carattere monospazio */
+/* Solo Fraunces e Manrope: niente carattere monospazio */
 h1, h2, h3, h4 {
   font-family: 'Fraunces', ui-serif, Georgia, serif;
   font-weight: 700;
