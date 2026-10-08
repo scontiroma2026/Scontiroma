@@ -20,10 +20,10 @@
 
   /* Gradiente caldo del sito (nome storico «fucsia-viola»): fucsia -> arancio bruciato, testo bianco sempre >= 4.5:1 */
   .grad-fucsia-viola { background: linear-gradient(135deg, #D6355C 0%, #C2410C 100%); }
-  .grad-ciano-fucsia { background: linear-gradient(135deg, #0C768C 0%, #0E8FA8 100%); }
+  .grad-ciano-fucsia { background: linear-gradient(135deg, #0A6F85 0%, #0B5F73 100%); }
   .grad-neon { background: linear-gradient(135deg, #D81B72 0%, #8A5200 100%); }
   .text-grad {
-    background: linear-gradient(135deg, #C42A50 0%, #C2410C 100%);
+    background: linear-gradient(135deg, #BA2548 0%, #C2410C 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 

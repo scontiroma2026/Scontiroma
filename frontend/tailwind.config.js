@@ -31,13 +31,13 @@ module.exports = {
           miele: '#F4A81D',    // ambra/miele pieno: evidenziazioni, badge, fasce (testo sopra: mieleInk, 8.4:1)
           mieleInk: '#221C10',
           mieleBg: '#FFF9E8',
-          rosa: '#C42A50',      // corallo scuro per testi e bordi (≥ 4.9:1 anche sui fondi pesca e miele)
+          rosa: '#BA2548',      // corallo scuro per testi e bordi (≥ 4.9:1 anche sui fondi pesca e miele)
           corallo: '#D6355C',  // corallo pieno dei pulsanti (testo bianco 4.6:1)     // fucsia del sito, versione per fondo bianco
           rosaBg: '#FFEEF1',
           rosaSoft: '#FFF6F0',
           viola: '#F4A81D',      // nome storico: ora è il miele pieno (riempimenti, barre, puntini)
           violaBg: '#FFF4D6',
-          teal: '#0C768C',       // teal di etichette, link e icone (su bianco 5.3:1)
+          teal: '#0A6F85',       // teal di etichette, link e icone (su bianco 5.3:1)
           tealBg: '#EAF6F8',
           verde: '#127A47',
           verdeBg: '#E4F6EC',
@@ -47,12 +47,12 @@ module.exports = {
           rossoBg: '#FEE4E2',
         },
         // Tavolozza unica del sito (tema chiaro «Bianco vivo», versione calda: niente viola/lilla): stessi nomi di prima, colori adatti al fondo bianco
-        fucsia: '#C42A50', // corallo scuro per il testo e i bordi (nome storico «fucsia», ≥ 4.9:1 anche sui riquadri pesca e miele)
+        fucsia: '#BA2548', // corallo scuro per il testo e i bordi (nome storico «fucsia», ≥ 4.9:1 anche sui riquadri pesca e miele)
         miele: '#F4A81D',
-        ciano: '#0C768C',
+        ciano: '#0A6F85',
         neon: '#8A5200',
         limone: '#127A47',
-        gold: '#0C768C',
+        gold: '#0A6F85',
         terracotta: '#D6355C',
         espresso: '#221C10',
         background: 'hsl(var(--background))',

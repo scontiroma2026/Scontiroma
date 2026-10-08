@@ -18,7 +18,7 @@ export default function RiquadroBozza({ fotoPerse, onRiprendi, onScarta, testid 
           )}
           <div className="mt-3 flex flex-wrap gap-2">
             <button type="button" data-testid="bozza-riprendi" onClick={onRiprendi}
-              className="inline-flex min-h-11 items-center rounded-full bg-ac-viola px-5 text-sm font-extrabold text-white">
+              className="inline-flex min-h-11 items-center rounded-full bg-ac-viola px-5 text-sm font-extrabold text-ac-mieleInk">
               Riprendi
             </button>
             <button type="button" data-testid="bozza-scarta" onClick={onScarta}
