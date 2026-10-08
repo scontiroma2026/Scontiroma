@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 08/10/2026 — ultimo commit in `main`: `224e40e` (unione della #61)
+Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -102,7 +102,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
-2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): servizi e database di prova, poi ramo `prova`.
+2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): **in pausa (08/10)**. Fatto: ramo `prova` (copia di `main` dell'08/10), utente Atlas `prova` con solo `readWrite@scontiroma_prova` (tolto `readWriteAnyDatabase`), servizio `scontiroma-prova-api` creato con avvio corretto; ultimo ostacolo: password in `MONGO_URL` (errore «bad auth»). Da fare alla ripresa: sistemare la password, controllare `/api/`, creare il sito di prova (Passo 3), allineare `prova` a `main`.
 3. **Testi legali:** validazione del consulente (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`); sede legale in #40; PEC facoltativa; frasi proposte su nome visibile dopo il codice e sul contatore delle scansioni.
 4. **Nuovo aspetto** in stile Groupon: scelta fra le tre proposte e realizzazione (caratteri ospitati da noi).
 5. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
