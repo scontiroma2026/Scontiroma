@@ -62,7 +62,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `224e40e` (unione della #61)
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
-| PR_NUM | Pulizie tecniche: tolti Archivo Black e il plugin `health-check`, STATO riordinato (vedi «Pulizie tecniche») | Controlli verdi e unione |
+| #65 | Pulizie tecniche: tolti Archivo Black e il plugin `health-check`, STATO riordinato (vedi «Pulizie tecniche») | Controlli verdi e unione |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -109,10 +109,10 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 6. **Mappe** Protomaps + LocationIQ: serve la chiave LocationIQ (solo su Render) e il file di Roma da ospitare.
 7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
 8. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
-9. Pulizie: fatte in PR_NUM (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
+9. Pulizie: fatte in #65 (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
 
-## Pulizie tecniche (PR_NUM, 08/10)
+## Pulizie tecniche (#65, 08/10)
 - Tolti i file del carattere Archivo Black (due `.woff2`, licenza, regole in `fonts.css`): nessun CSS o JS li usava. Restano solo Fraunces e Manrope; il test e2e 19 controlla solo quelli.
 - Tolto `frontend/plugins/health-check` e il suo aggancio in `craco.config.js`: si attivava solo con `ENABLE_HEALTH_CHECK=true`, variabile mai impostata né in CI né su Render; residuo della piattaforma Emergent. L'endpoint di salute di Render è `/api/` (`render.yaml`), non quello del plugin.
 - Riferimenti a Emergent rimasti: solo `MIGRAZIONE.md` (guida storica della migrazione) e questo file. Nessun codice, configurazione o CI usa `EMERGENT_LLM_KEY` né servizi Emergent: non c'è codice morto da togliere.
