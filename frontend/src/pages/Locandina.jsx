@@ -280,10 +280,10 @@ export default function Locandina() {
               >
                 Con <strong style={{ color: "#FFD93D" }}>Sconti Roma</strong> hai gli sconti dei
                 <strong style={{ color: "#FF2E93" }}> negozi del tuo quartiere</strong>:
-                pizzerie, bar, pescherie, parrucchieri e molto altro.
+                ristoranti, bar, parrucchieri, centri estetici, palestre e molto altro.
                 <br />
                 <span style={{ color: "rgba(244,244,245,0.65)", fontSize: "10pt" }}>
-                  Basta una scansione, mostri il QR al banco, paghi il prezzo scontato.
+                  Scegli l'offerta, mostra il QR al banco e paghi il prezzo scontato.
                 </span>
               </div>
             </div>
