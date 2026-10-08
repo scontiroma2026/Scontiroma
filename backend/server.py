@@ -134,16 +134,79 @@ logger = logging.getLogger(__name__)
 LEGAL_VERSION = "2026-10"
 
 # Zone di Roma e dintorni (decisione dell'utente dell'08/10): iscrizione, filtri e mappa.
-# Le prime attività da cercare restano Garbatella, San Paolo e Marconi, ma l'app è aperta a tutta Roma.
-ZONES = [
-    "Acilia", "Appio Latino", "Aurelio", "Aventino", "Axa", "Balduina", "Boccea", "Bologna",
-    "Casal Palocco", "Cassia", "Castelli Romani", "Centocelle", "Centro Storico", "Ciampino",
-    "Esquilino", "EUR", "Fiumicino", "Flaminio", "Garbatella", "Gianicolense", "Infernetto",
-    "Laurentina", "Magliana", "Marconi", "Monte Mario", "Monteverde", "Monti", "Nomentano",
-    "Ostia", "Ostiense", "Parioli", "Pigneto", "Portuense", "Prati", "Prenestino", "Salario",
-    "San Giovanni", "San Lorenzo", "San Paolo", "Talenti", "Testaccio", "Tiburtino",
-    "Torre Angela", "Trastevere", "Trieste", "Trionfale", "Tuscolano", "Altra zona di Roma e dintorni",
+# Raggruppate per municipio. Le prime attività da cercare restano Garbatella, San Paolo e Marconi,
+# ma l'app è aperta a tutta Roma.
+ZONE_GROUPS = [
+    ("Municipio I · Centro storico", [
+        "Centro Storico", "Aventino", "Borgo", "Campitelli", "Campo Marzio", "Castro Pretorio", "Celio",
+        "Colonna", "Esquilino", "Ludovisi", "Monti", "Parione", "Pigna", "Ponte", "Prati", "Regola",
+        "Ripa", "San Saba", "Sallustiano", "Sant'Eustachio", "Testaccio", "Trastevere", "Trevi",
+    ]),
+    ("Municipio II · Parioli, Nomentano", [
+        "Africano", "Bologna", "Flaminio", "Parioli", "Pinciano", "Policlinico", "Salario",
+        "San Lorenzo", "Trieste", "Nomentano", "Villa Ada", "Villaggio Olimpico",
+    ]),
+    ("Municipio III · Monte Sacro", [
+        "Bufalotta", "Casal Boccone", "Castel Giubileo", "Città Giardino", "Conca d'Oro", "Fidene",
+        "Monte Sacro", "Porta di Roma", "Sacco Pastore", "Serpentara", "Settebagni", "Talenti",
+        "Tufello", "Val Melaina", "Vigne Nuove",
+    ]),
+    ("Municipio IV · Tiburtino", [
+        "Casal de' Pazzi", "Casal Monastero", "Colli Aniene", "Pietralata", "Ponte Mammolo",
+        "Portonaccio", "Rebibbia", "San Basilio", "Settecamini", "Tiburtino", "Tor Cervara",
+    ]),
+    ("Municipio V · Prenestino, Centocelle", [
+        "Alessandrino", "Casilino", "Centocelle", "La Rustica", "Pigneto", "Prenestino",
+        "Quarticciolo", "Tor Pignattara", "Tor Sapienza", "Tor Tre Teste", "Villa Gordiani",
+    ]),
+    ("Municipio VI · Roma delle Torri", [
+        "Borghesiana", "Finocchio", "Giardinetti", "Lunghezza", "Tor Bella Monaca", "Tor Vergata",
+        "Torre Angela", "Torre Gaia", "Torre Maura",
+    ]),
+    ("Municipio VII · Appio, Tuscolano, Cinecittà", [
+        "Appio Claudio", "Appio Latino", "Appio Pignatelli", "Capannelle", "Cinecittà", "Colli Albani",
+        "Don Bosco", "Furio Camillo", "Quadraro", "Re di Roma", "San Giovanni", "Tor Fiscale",
+        "Torre Spaccata", "Tuscolano",
+    ]),
+    ("Municipio VIII · Garbatella, Ostiense", [
+        "Appia Antica", "Ardeatino", "Garbatella", "Grottaperfetta", "Montagnola", "Navigatori",
+        "Ostiense", "San Paolo", "Tor Marancia",
+    ]),
+    ("Municipio IX · EUR", [
+        "Cecchignola", "Decima", "EUR", "Fonte Meravigliosa", "Giuliano-Dalmata", "Laurentino",
+        "Mostacciano", "Spinaceto", "Tor de' Cenci", "Torrino", "Tre Fontane",
+    ]),
+    ("Municipio X · Ostia e litorale", [
+        "Acilia", "Axa", "Casal Palocco", "Castel Fusano", "Dragona", "Infernetto", "Malafede",
+        "Ostia Antica", "Ostia Lido", "Vitinia",
+    ]),
+    ("Municipio XI · Portuense, Marconi", [
+        "Casetta Mattei", "Corviale", "Magliana", "Marconi", "Muratella", "Ponte Galeria",
+        "Poggio Verde", "Portuense", "Trullo",
+    ]),
+    ("Municipio XII · Monteverde", [
+        "Bravetta", "Colli Portuensi", "Gianicolense", "Gianicolo", "Monteverde", "Pisana",
+        "Villa Pamphilj",
+    ]),
+    ("Municipio XIII · Aurelio", [
+        "Aurelio", "Boccea", "Casalotti", "Cornelia", "Monte Spaccato", "Primavalle",
+        "Selva Candida", "Torrevecchia", "Valle Aurelia",
+    ]),
+    ("Municipio XIV · Monte Mario, Trionfale", [
+        "Balduina", "Camilluccia", "Cipro", "Giustiniana", "Medaglie d'Oro", "Monte Mario", "Ottavia",
+        "Pineta Sacchetti", "Santa Maria della Pietà", "Trionfale",
+    ]),
+    ("Municipio XV · Cassia, Flaminia", [
+        "Cassia", "Cesano", "Due Ponti", "Grottarossa", "Isola Farnese", "La Storta", "Labaro",
+        "Olgiata", "Ponte Milvio", "Prima Porta", "Saxa Rubra", "Tor di Quinto", "Vigna Clara",
+    ]),
+    ("Fuori Roma · dintorni", [
+        "Albano Laziale", "Anzio", "Bracciano", "Castelli Romani", "Ciampino", "Fiumicino", "Frascati",
+        "Fregene", "Genzano di Roma", "Grottaferrata", "Guidonia Montecelio", "Maccarese", "Marino",
+        "Monterotondo", "Nettuno", "Pomezia", "Tivoli", "Altra zona di Roma e dintorni",
+    ]),
 ]
+ZONES = [z for _, gruppo in ZONE_GROUPS for z in gruppo]
 
 CATEGORIES = [
     "Ristorante", "Bar & Caffè", "Pizzeria", "Gelateria",
@@ -1030,7 +1093,7 @@ async def reset_password(payload: ResetIn):
 # ---------- Meta ----------
 @api.get("/zones")
 async def zones():
-    return {"zones": ZONES}
+    return {"zones": ZONES, "groups": [{"name": n, "zones": z} for n, z in ZONE_GROUPS]}
 
 
 @api.get("/categories")

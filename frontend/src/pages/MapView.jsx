@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, ArrowRight, LocateFixed } from "lucide-react";
 import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
+import ZoneOptions from "@/components/ZoneOptions";
 
 const ROME_CENTER = [41.8955, 12.4823];
 
@@ -60,6 +61,7 @@ const buildIcon = (percent) => L.divIcon({
 export default function MapView() {
   const [discounts, setDiscounts] = useState([]);
   const [zones, setZones] = useState([]);
+  const [zoneGroups, setZoneGroups] = useState([]);
   const [categories, setCategories] = useState([]);
   const [zone, setZone] = useState("");
   const [category, setCategory] = useState("");
@@ -85,7 +87,7 @@ export default function MapView() {
   };
 
   useEffect(() => {
-    api.get("/zones").then((r) => setZones(r.data.zones || []));
+    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneGroups(r.data.groups || []); });
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
   }, []);
 
@@ -187,7 +189,7 @@ export default function MapView() {
           className="rounded-md border border-white/10 bg-white/5 text-white px-3 py-2 text-sm md:w-56"
         >
           <option value="">Tutte le zone</option>
-          {zones.map((z) => <option key={z} value={z} className="bg-[#0A0A0A]">{z}</option>)}
+          <ZoneOptions groups={zoneGroups} zones={zones} optionClassName="bg-[#0A0A0A]" />
         </select>
         <select
           data-testid="map-category"

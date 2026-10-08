@@ -69,7 +69,7 @@ export default function Landing() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-6">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
                   <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
-                  <div className="text-sm text-white/70">Dal centro al mare, fino ai Castelli Romani</div>
+                  <div className="text-sm text-white/70">Dal centro alla periferia</div>
                 </div>
               </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
@@ -105,26 +105,18 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <div className="text-xs uppercase tracking-[0.2em] text-neon">Dove siamo</div>
-            <h2 className="mt-2 font-serif text-5xl">In tutta <span className="text-grad">Roma e dintorni</span></h2>
+            <h2 className="mt-2 font-serif text-5xl">Il tuo <span className="text-grad">quartiere</span>, ovunque a Roma</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { name: "I quartieri di Roma", grad: "grad-fucsia-viola", c: "text-fucsia" },
-              { name: "Ostia e Fiumicino", grad: "grad-ciano-fucsia", c: "text-ciano" },
-              { name: "Castelli Romani", grad: "grad-neon", c: "text-neon" },
-            ].map((q) => (
-              <Link key={q.name} to="/discounts" className="group relative aspect-[5/3] md:aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-[#141414]">
-                <div className={`absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 ${q.grad}`} />
-                <div className="absolute inset-x-0 bottom-0 p-6">
-                  <div className={`text-xs uppercase tracking-widest ${q.c}`}>Zona</div>
-                  <div className="font-serif text-4xl text-white">{q.name}</div>
-                  <div className="mt-2 flex items-center gap-1 text-xs text-white/60">
-                    <MapPin size={12} /> Roma e dintorni
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Link to="/discounts" className="group relative block overflow-hidden rounded-3xl border border-white/10 bg-[#141414] p-8 md:p-12">
+            <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 grad-fucsia-viola" />
+            <div className="relative">
+              <div className="text-xs uppercase tracking-widest text-fucsia">Roma e dintorni</div>
+              <div className="mt-2 font-serif text-4xl text-white md:text-5xl">Dal centro alla periferia</div>
+              <div className="mt-3 flex items-center gap-1 text-sm text-white/70">
+                <MapPin size={14} /> Scopri le offerte vicino a te
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
 
@@ -177,7 +169,7 @@ export default function Landing() {
             { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e usi scorretti: il codice è unico e vale solo per pochi secondi, così il commerciante sa che lo sconto è davvero tuo." },
             { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
             { q: "Le offerte cambiano?", a: "Sì: ogni mese i commercianti possono pubblicare un'offerta nuova. Prima di comparire, ogni offerta viene controllata da noi." },
-            { q: "In quali zone funziona?", a: "A Roma e nei dintorni: nei quartieri, a Ostia e Fiumicino e nei Castelli Romani. Le prime attività sono a Garbatella, San Paolo e Marconi; se nella tua zona ci sono ancora poche offerte, ricontrolla più avanti: i commercianti ne pubblicano di nuove ogni mese." },
+            { q: "In quali zone funziona?", a: "In tutta Roma, dal centro alla periferia, e nelle zone appena fuori città. Se nella tua zona ci sono ancora poche offerte, ricontrolla più avanti: i commercianti ne pubblicano di nuove ogni mese." },
             { q: "Come accedo all'app?", a: "Con email e password: il telefono può ricordarle per te. Se vuoi, attiva il Face ID dalla sezione «Sicurezza» del tuo account ed entri con un tocco. Dopo 5 tentativi sbagliati l'accesso si blocca per 15 minuti; se hai dimenticato la password usa «Password dimenticata?»." },
             { q: "Come cancello il mio account?", a: "Dalla pagina del tuo account, con il pulsante «Elimina il mio account». Per qualsiasi problema scrivici dalla pagina Assistenza, in fondo a ogni pagina." },
           ]},

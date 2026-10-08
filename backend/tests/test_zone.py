@@ -20,7 +20,10 @@ def test_zone_di_roma_e_dintorni():
     r = asyncio.run(main())
     assert r.status_code == 200
     zone = r.json()["zones"]
-    for z in ("Garbatella", "San Paolo", "Marconi", "Ostia", "Fiumicino", "Castelli Romani", "Trastevere"):
+    for z in ("Garbatella", "San Paolo", "Marconi", "Ostia Lido", "Fiumicino", "Castelli Romani", "Trastevere"):
         assert z in zone
     assert len(zone) == len(set(zone))
     assert zone[-1].startswith("Altra zona")
+    gruppi = r.json()["groups"]
+    assert len(gruppi) == 16 and gruppi[0]["name"].startswith("Municipio I ")
+    assert sum(len(g["zones"]) for g in gruppi) == len(zone)

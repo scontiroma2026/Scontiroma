@@ -68,11 +68,11 @@ test('"Migliora foto" senza essere commerciante: rifiutato', async ({ request })
   expect(r.status).toBe(403);
 });
 
-test('filtro zone degli sconti: tutta Roma, Ostia, Fiumicino e Castelli Romani', async ({ page }) => {
+test('filtro zone degli sconti: tutta Roma, per municipio, e i dintorni', async ({ page }) => {
   await page.goto('/discounts');
   const opzioni = page.getByTestId('filter-zone').locator('option');
   await expect(opzioni.first()).toHaveText('Tutte le zone');
-  for (const z of ['Garbatella', 'San Paolo', 'Marconi', 'Trastevere', 'Ostia', 'Fiumicino', 'Castelli Romani']) {
+  for (const z of ['Garbatella', 'San Paolo', 'Marconi', 'Trastevere', 'Primavalle', 'Ostia Lido', 'Fiumicino', 'Castelli Romani']) {
     await expect(opzioni.filter({ hasText: new RegExp(`^${z}$`) })).toHaveCount(1);
   }
 });
