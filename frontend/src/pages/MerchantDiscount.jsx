@@ -360,7 +360,7 @@ export default function MerchantDiscount() {
               <div>
                 <div className={ETICHETTA}>Foto dell'offerta <span className="text-xs font-semibold text-ac-mute">(fino a 8, la 1ª è la copertina)</span></div>
                 <p className={`${AIUTO} mb-3`}>
-                  Carica le tue foto (verranno ottimizzate) oppure scegli dalla libreria di 100 immagini pronte. Trascina l'ordine o rimuovi con la X.
+                  Carica le tue foto (verranno ottimizzate) oppure scegli dalla libreria di immagini di esempio già pronte. Trascina l'ordine o rimuovi con la X.
                 </p>
                 <PhotoGallery
                   value={form.image_urls}

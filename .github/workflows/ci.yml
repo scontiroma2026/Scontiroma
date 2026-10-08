@@ -34,7 +34,7 @@ jobs:
           MONGO_URL: mongodb://localhost:27017
           DB_NAME: ci
           JWT_SECRET: ci-only-secret
-        run: python -m pytest tests/test_webauthn_config.py tests/test_dati_riservati.py tests/test_origini_csrf.py tests/test_zone.py tests/test_prezzi_offerta.py -o addopts="" -q -p no:cacheprovider
+        run: python -m pytest tests/test_webauthn_config.py tests/test_dati_riservati.py tests/test_origini_csrf.py tests/test_zone.py tests/test_prezzi_offerta.py tests/test_libreria_immagini.py -o addopts="" -q -p no:cacheprovider
 
   frontend:
     name: Sito (React)
