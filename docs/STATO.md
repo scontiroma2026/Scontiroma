@@ -64,6 +64,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #67 | Mappe: sfondo Protomaps con `roma.pmtiles` (ripiego su OpenStreetMap finché il file non c'è) e indirizzi con LocationIQ se c'è `LOCATIONIQ_API_KEY` (limite 2 richieste/s, cache; senza chiave resta Nominatim). Guida `docs/guide/MAPPE.md`, script `scripts/estrai_mappa_roma.sh` | **Bloccato:** il file `roma.pmtiles` va estratto da una rete che raggiunga `build.protomaps.com`; serve la chiave LocationIQ su Render |
+| (nuova) | Zona senza offerte: scheda «Stiamo arrivando nella tua zona» con «Vedi le offerte nelle altre zone» e «Fammi sapere quando arrivate» (contatore anonimo per zona nella collezione `interesse_zona`, un voto per zona e per browser, limite di 10 richieste/ora per IP, nessun dato personale); tabella «Interesse per zona» nel tab «Fase di lancio» dell'admin. Ramo `claude/stiamo-arrivando` | Controllo da iPhone; nessun testo legale nuovo |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.

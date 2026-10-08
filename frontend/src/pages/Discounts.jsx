@@ -7,6 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import VistaPreferiti from "@/components/VistaPreferiti";
 import { usePreferiti } from "@/context/PreferitiContext";
 import ZoneOptions from "@/components/ZoneOptions";
+import SchedaZonaVuota from "@/components/SchedaZonaVuota";
 
 function haversineKm(a, b) {
   if (!a || !b) return Infinity;
@@ -193,7 +194,10 @@ export default function Discounts() {
         </div>
       )}
 
-      {!loading && count === 0 && (
+      {!loading && count === 0 && zone && !category && !q && (
+        <SchedaZonaVuota key={zone} zona={zone} onAltreZone={() => setZone("")} />
+      )}
+      {!loading && count === 0 && !(zone && !category && !q) && (
         <div className="rounded-xl border border-warm bg-muted p-10 text-center text-muted-foreground">
           Nessuno sconto per i filtri selezionati.
         </div>

@@ -1091,6 +1091,56 @@ async def zones():
     return {"zones": ZONES, "areas": [{"value": v, "label": l} for v, l, _ in ZONE_AREE]}
 
 
+# ---------- Interesse per zona (scheda «Stiamo arrivando nella tua zona») ----------
+# Si conta solo un NUMERO per zona (collezione `interesse_zona`: {zona, voti}). Nessuna email, nessun
+# identificativo, nessun IP salvato. Limite per IP: l'IP resta solo in memoria, per un'ora, e serve
+# a rifiutare le raffiche; non finisce mai nel database. Un solo voto per zona e per browser lo garantisce il sito.
+INTERESSE_MAX_PER_ORA = 10
+INTERESSE_FINESTRA_SEC = 3600
+_interesse_richieste: dict = {}
+
+
+def _ip_richiesta(request: Request) -> str:
+    inoltrato = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+    return inoltrato or (request.client.host if request.client else "sconosciuto")
+
+
+def _interesse_consentito(ip: str) -> bool:
+    adesso = time.monotonic()
+    recenti = [t for t in _interesse_richieste.get(ip, []) if adesso - t < INTERESSE_FINESTRA_SEC]
+    if len(recenti) >= INTERESSE_MAX_PER_ORA:
+        _interesse_richieste[ip] = recenti
+        return False
+    recenti.append(adesso)
+    _interesse_richieste[ip] = recenti
+    if len(_interesse_richieste) > 5000:
+        for k in [k for k, v in _interesse_richieste.items() if not v or adesso - v[-1] >= INTERESSE_FINESTRA_SEC]:
+            _interesse_richieste.pop(k, None)
+    return True
+
+
+class InteresseZonaIn(BaseModel):
+    zona: str
+
+
+@api.post("/interesse-zona")
+async def interesse_zona(payload: InteresseZonaIn, request: Request):
+    """Endpoint pubblico: +1 all'interesse per una zona. Accetta solo i nomi delle 16 aree."""
+    zona = (payload.zona or "").strip()
+    if zona not in ZONES:
+        raise HTTPException(400, "Zona non valida")
+    if not _interesse_consentito(_ip_richiesta(request)):
+        raise HTTPException(429, "Troppe richieste, riprova più tardi")
+    await db.interesse_zona.update_one({"zona": zona}, {"$inc": {"voti": 1}}, upsert=True)
+    return {"ok": True}
+
+
+async def _interesse_per_zona() -> list:
+    docs = await db.interesse_zona.find({}, {"_id": 0, "zona": 1, "voti": 1}).to_list(None)
+    return sorted(({"zona": d["zona"], "voti": int(d.get("voti") or 0)} for d in docs),
+                  key=lambda x: (-x["voti"], x["zona"]))
+
+
 @api.get("/categories")
 async def categories():
     return {"categories": CATEGORIES}
@@ -3549,6 +3599,7 @@ async def admin_launch_summary(user: dict = Depends(require_admin_master)):
         "negozi_senza_offerta": sorted(senza_offerta),
         "utilizzi_mese": await db.redemptions.count_documents({"status": "redeemed", "month_key": mese}),
         "mese": month_label_it(mese),
+        "interesse_zone": await _interesse_per_zona(),
     }
 
 
