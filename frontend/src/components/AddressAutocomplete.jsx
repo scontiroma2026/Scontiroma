@@ -157,7 +157,7 @@ export default function AddressAutocomplete({
                   type="button"
                   data-testid={`${testId}-item-${i}`}
                   onClick={() => pick(s)}
-                  className="w-full text-left px-3 py-2 hover:bg-fucsia/10 transition border-b border-border last:border-b-0"
+                  className="w-full text-left px-3 py-2 hover:bg-muted transition border-b border-border last:border-b-0"
                 >
                   <div className="flex items-start gap-2">
                     <MapPin size={12} className={`mt-1 shrink-0 ${s.has_house_number ? "text-fucsia" : "text-amber-800"}`} />

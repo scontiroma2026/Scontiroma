@@ -79,7 +79,7 @@ export default function AdminGate({ onVerified }) {
     <main className="mx-auto max-w-md px-6 py-20">
       <Card className="border-border bg-muted p-8">
         <div className="flex items-center gap-3 text-fucsia">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-fucsia/20 glow-fucsia">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted glow-fucsia">
             <ShieldAlert size={22} />
           </div>
           <div>

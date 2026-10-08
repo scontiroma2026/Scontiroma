@@ -82,7 +82,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span
                     data-testid={`pending-uses-${d.id}`}
-                    className="inline-flex items-center gap-1 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold"
+                    className="inline-flex items-center gap-1 rounded-full border border-fucsia/40 bg-muted px-2.5 py-0.5 text-xs text-fucsia font-semibold"
                     title="Quante volte al mese ogni cliente può usare lo sconto"
                   >
                     🔁 {d.max_uses_per_month || 1}× al mese per cliente

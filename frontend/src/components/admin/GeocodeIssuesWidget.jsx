@@ -226,7 +226,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                           onClick={() => { startEdit(row); setConfirmingId(null); }}
                           variant="outline"
                           size="sm"
-                          className="h-9 w-full border-fucsia/30 bg-fucsia/10 text-fucsia hover:bg-fucsia/20"
+                          className="h-9 w-full border-fucsia/30 bg-muted text-fucsia hover:bg-muted"
                         >
                           <Pencil size={12} className="mr-1" /> Correggi
                         </Button>

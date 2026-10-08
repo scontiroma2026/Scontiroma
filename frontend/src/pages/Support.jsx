@@ -45,9 +45,9 @@ export default function Support() {
       <a
         data-testid="support-mail-cta"
         href={openMail}
-        className="mt-8 group flex items-center gap-4 rounded-2xl border border-fucsia/30 bg-gradient-to-br from-fucsia/15 to-viola/10 p-6 hover:border-fucsia/60 transition"
+        className="mt-8 group flex items-center gap-4 rounded-2xl border border-fucsia/30 bg-gradient-to-br from-muted to-viola/10 p-6 hover:border-fucsia/60 transition"
       >
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fucsia/10 text-fucsia">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-fucsia">
           <Mail size={26} />
         </div>
         <div className="flex-1">
@@ -166,7 +166,7 @@ export default function Support() {
 
 function ContactRow({ testid, icon, color, title, email, note }) {
   const colorMap = {
-    fucsia: "text-fucsia border-fucsia/30 bg-fucsia/10",
+    fucsia: "text-fucsia border-fucsia/30 bg-muted",
     ciano: "text-ciano border-ciano/30 bg-ciano/10",
     neon: "text-neon border-neon/30 bg-neon/10",
   };

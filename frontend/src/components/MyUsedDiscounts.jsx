@@ -84,7 +84,7 @@ export default function MyUsedDiscounts() {
         return (
           <Card key={r.id} data-testid={`used-${r.id}`} className="border-border bg-muted p-4">
             <div className="flex items-start gap-4 flex-wrap">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-fucsia/10 text-fucsia shrink-0">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-fucsia shrink-0">
                 <TicketCheck size={18}/>
               </div>
               <div className="flex-1 min-w-0">

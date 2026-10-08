@@ -120,6 +120,8 @@ test('descrizione del negozio: il testo scritto resta cambiando pagina', async (
   const m = await registra(request, 'merchant');
   await loginNelBrowser(page, m.email, m.password);
   await page.goto('/merchant/dashboard');
+  // La bozza si salva solo a dati del server arrivati: aspetto che la dashboard sia pronta prima di scrivere
+  await expect(page.getByTestId('da-fare')).toBeVisible();
   await page.getByTestId('shop-description-input').fill('La nostra storia dal 1987.');
   await expect.poll(() => bozzeSalvate(page)).toHaveLength(1);
   await page.goto('/merchant/discount');

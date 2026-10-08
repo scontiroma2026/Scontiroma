@@ -129,7 +129,7 @@ export default function Discounts() {
       </div>
 
       {topDiscounts.length > 0 && (
-        <div data-testid="top-shops-section" className="mb-10 rounded-2xl border border-fucsia/20 bg-gradient-to-br from-fucsia/5 to-transparent p-5">
+        <div data-testid="top-shops-section" className="mb-10 rounded-2xl border border-fucsia/20 bg-gradient-to-br from-muted to-transparent p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="flex items-center gap-2">

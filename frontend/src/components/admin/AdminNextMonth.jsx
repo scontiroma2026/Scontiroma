@@ -14,7 +14,7 @@ import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import { renderBold } from "@/lib/renderBold";
 
 const STATUS_BADGE = {
-  approved: ["Approvata ✓", "bg-fucsia/15 border-fucsia/40 text-fucsia"],
+  approved: ["Approvata ✓", "bg-muted border-fucsia/40 text-fucsia"],
   pending: ["In revisione", "bg-neon/15 border-neon/40 text-neon"],
   rejected: ["Rifiutata", "bg-destructive/15 border-destructive/40 text-destructive"],
   missing: ["Non caricata", "bg-muted border-border text-muted-foreground"],
@@ -129,7 +129,7 @@ export default function AdminNextMonth({ hdrs }) {
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
         <span data-testid="next-summary-total" className="rounded-full border border-border bg-muted px-3 py-1">Negozi: <strong>{summary.total}</strong></span>
         <span className="rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-neon">In revisione: <strong>{summary.pending}</strong></span>
-        <span className="rounded-full border border-fucsia/40 bg-fucsia/10 px-3 py-1 text-fucsia">Approvate: <strong>{summary.approved}</strong></span>
+        <span className="rounded-full border border-fucsia/40 bg-muted px-3 py-1 text-fucsia">Approvate: <strong>{summary.approved}</strong></span>
         <span className="rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1 text-destructive">Rifiutate: <strong>{summary.rejected}</strong></span>
         <span className="rounded-full border border-border bg-muted px-3 py-1 text-muted-foreground">Non caricate: <strong>{summary.missing}</strong></span>
         <div className="ml-auto">
@@ -260,7 +260,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
           <span className="text-fucsia font-bold text-xl">€{nd.discounted_price?.toFixed(2)}</span>
           <span className="text-muted-foreground line-through">€{nd.original_price?.toFixed(2)}</span>
           <span className="text-neon text-sm">−{nd.percent_off}%</span>
-          <span className="ml-3 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold">🔁 {nd.max_uses_per_month || 1}× al mese per cliente</span>
+          <span className="ml-3 rounded-full border border-fucsia/40 bg-muted px-2.5 py-0.5 text-xs text-fucsia font-semibold">🔁 {nd.max_uses_per_month || 1}× al mese per cliente</span>
           <span className={`rounded-full px-2.5 py-0.5 text-xs ${nd.active ? "bg-ciano/15 text-ciano border border-ciano/40" : "bg-muted text-muted-foreground border border-border"}`}>
             {nd.active ? "● attiva nel catalogo" : "○ non attiva"}
           </span>
@@ -395,7 +395,7 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
                   type="button"
                   onClick={() => setF({ ...f, max_uses_per_month: n })}
                   className={`rounded-lg border py-2 text-xs font-semibold transition ${
-                    f.max_uses_per_month === n ? "border-fucsia bg-fucsia/10 text-fucsia" : "border-border bg-muted text-muted-foreground hover:border-input"
+                    f.max_uses_per_month === n ? "border-fucsia bg-muted text-fucsia" : "border-border bg-muted text-muted-foreground hover:border-input"
                   }`}
                 >{n}×</button>
               ))}

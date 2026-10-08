@@ -50,7 +50,7 @@ export default function ForgotPassword() {
           </form>
         ) : (
           <div className="mt-6 space-y-4">
-            <div className="rounded-xl border border-fucsia/30 bg-fucsia/5 p-4 text-sm text-foreground/80">
+            <div className="rounded-xl border border-fucsia/30 bg-muted p-4 text-sm text-foreground/80">
               {result.message}
             </div>
             <div className="rounded-xl border border-border bg-muted p-4 text-xs text-muted-foreground">
