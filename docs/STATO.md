@@ -58,12 +58,13 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #59 | Admin: vede e rigenera il codice a 4 cifre di ogni negozio (tab «Negozi», solo con master password, mai in liste né log); OK del titolare 08/10 | 08/10 |
 | #61 | Libreria foto di esempio da 100 a 422, **copiate sul nostro sito** (`frontend/public/esempi`, circa 26 MB, licenza Unsplash in `LICENZA.txt`), miniature 400×225 nel catalogo «Esempi»; gli sconti già salvati con indirizzi Unsplash continuano a funzionare | 08/10 |
 | #65 | Pulizie tecniche: tolti Archivo Black e il plugin `health-check`, STATO riordinato | 08/10 |
+| #67 | Mappe Protomaps (ripiego OpenStreetMap finché manca `roma.pmtiles`) e indirizzi con LocationIQ (se c'è `LOCATIONIQ_API_KEY`); guida `docs/guide/MAPPE.md` | 08/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
-| #67 | Mappe: sfondo Protomaps con `roma.pmtiles` (ripiego su OpenStreetMap finché il file non c'è) e indirizzi con LocationIQ se c'è `LOCATIONIQ_API_KEY` (limite 2 richieste/s, cache; senza chiave resta Nominatim). Guida `docs/guide/MAPPE.md`, script `scripts/estrai_mappa_roma.sh` | **Bloccato:** il file `roma.pmtiles` va estratto da una rete che raggiunga `build.protomaps.com`; serve la chiave LocationIQ su Render |
+| #66 | Pagina pubblica «Per i commercianti» (`/per-i-commercianti`, link in menu e footer, riquadro video con segnaposto per `/video/commercianti.mp4`) e copione della telefonata (`docs/comunicazione/COPIONE_TELEFONATA.md`) | Controlli in CI; il video v13 è ancora in lavorazione |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
