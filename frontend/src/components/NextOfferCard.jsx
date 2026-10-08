@@ -1,18 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarPlus, Clock, CheckCircle2, XCircle, CalendarClock } from "lucide-react";
+import { CalendarPlus, CheckCircle2, XCircle, Clock, CalendarClock } from "lucide-react";
+import { Scheda, Pillola, CLASSE_BASE_SECONDARIO, CLASSE_BORDO, CLASSE_PRIMARIO } from "@/components/AreaUI";
 
-/** Card "Offerta mese prossimo" per la MerchantDashboard. */
-export const NextOfferCard = () => {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    api.get("/merchants/me/next-discount").then((r) => setData(r.data)).catch(() => {});
-  }, []);
-
+/** Card "Offerta mese prossimo" per la MerchantDashboard. `data` è la risposta di /merchants/me/next-discount (la carica la dashboard, che la usa anche per «Da fare»). */
+export const NextOfferCard = ({ data }) => {
   if (!data) return null;
   const { next_discount: nd, window: win } = data;
   const label = win?.next_month_label || "il mese prossimo";
@@ -20,46 +11,44 @@ export const NextOfferCard = () => {
   const statusBadge = () => {
     if (!nd) return null;
     if (nd.approval_status === "approved")
-      return <span className="inline-flex items-center gap-1 rounded-full bg-fucsia/15 border border-fucsia/40 px-3 py-1 text-xs font-semibold text-fucsia"><CheckCircle2 size={12} /> Approvata — attiva dal 1°</span>;
+      return <Pillola tono="verde"><CheckCircle2 size={14} aria-hidden="true" /> Approvata — attiva dal 1°</Pillola>;
     if (nd.approval_status === "rejected")
-      return <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/40 px-3 py-1 text-xs font-semibold text-destructive"><XCircle size={12} /> Rifiutata — da modificare</span>;
-    return <span className="inline-flex items-center gap-1 rounded-full bg-neon/15 border border-neon/40 px-3 py-1 text-xs font-semibold text-neon"><Clock size={12} /> In revisione</span>;
+      return <Pillola tono="rosso"><XCircle size={14} aria-hidden="true" /> Rifiutata — da modificare</Pillola>;
+    return <Pillola tono="ambra"><Clock size={14} aria-hidden="true" /> In revisione</Pillola>;
   };
 
+  const primario = !nd && win?.open;
+
   return (
-    <Card data-testid="next-offer-card" className="border-ciano/30 bg-[#101418] border p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <Scheda
+      data-testid="next-offer-card"
+      titolo={`Offerta mese prossimo · ${label}`}
+      tono="teal"
+      icona={<CalendarPlus size={15} />}
+    >
+      {nd ? (
         <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-ciano">
-            <CalendarPlus size={14} /> Offerta mese prossimo · {label}
-          </div>
-          {nd ? (
-            <div className="mt-2">
-              <div className="font-serif text-xl text-white">{nd.title}</div>
-              <div className="mt-2">{statusBadge()}</div>
-            </div>
-          ) : win?.open ? (
-            <p className="mt-2 text-sm text-white/70">
-              La finestra è <strong className="text-ciano">aperta</strong>: carica ora l'offerta di {label}. Se non la carichi, dal 1° il negozio resterà senza offerta attiva.
-            </p>
-          ) : (
-            <p className="mt-2 flex items-center gap-2 text-sm text-white/60">
-              <CalendarClock size={14} className="text-gold" />
-              La finestra di caricamento apre il <strong className="text-gold">{win?.opens_on}</strong> (ultimi 7 giorni del mese).
-            </p>
-          )}
+          <div className="font-serif text-xl leading-tight">{nd.title}</div>
+          <div className="mt-2">{statusBadge()}</div>
         </div>
-        <Link to="/merchant/discount?tab=next">
-          <Button
-            data-testid="next-offer-cta"
-            className={nd || !win?.open ? "rounded-full border-white/20" : "rounded-full bg-ciano text-black hover:bg-ciano/90"}
-            variant={nd || !win?.open ? "outline" : "default"}
-          >
-            {nd ? "Modifica offerta" : win?.open ? `Carica offerta di ${label}` : "Vedi dettagli"}
-          </Button>
-        </Link>
-      </div>
-    </Card>
+      ) : win?.open ? (
+        <p className="text-sm leading-relaxed text-ac-soft">
+          La finestra è <strong className="text-ac-teal">aperta</strong>: carica ora l'offerta di {label}. Se non la carichi, dal 1° il negozio resterà senza offerta attiva.
+        </p>
+      ) : (
+        <p className="flex items-start gap-2 text-sm leading-relaxed text-ac-soft">
+          <CalendarClock size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-ac-teal" />
+          <span>La finestra di caricamento apre il <strong className="text-ac-ink">{win?.opens_on}</strong> (ultimi 7 giorni del mese).</span>
+        </p>
+      )}
+      <Link
+        to="/merchant/discount?tab=next"
+        data-testid="next-offer-cta"
+        className={`mt-4 w-full ${primario ? CLASSE_PRIMARIO : `${CLASSE_BASE_SECONDARIO} ${CLASSE_BORDO.teal} min-h-[46px]`}`}
+      >
+        {nd ? "Modifica offerta" : win?.open ? `Carica offerta di ${label}` : "Vedi dettagli"}
+      </Link>
+    </Scheda>
   );
 };
 

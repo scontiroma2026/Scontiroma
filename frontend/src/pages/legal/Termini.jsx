@@ -21,8 +21,8 @@ export default function Termini() {
         <p>
           Sconti Roma è una piattaforma digitale che mette in contatto{" "}
           <strong>utenti registrati</strong> ("Clienti") con{" "}
-          <strong>esercenti locali</strong> ("Commercianti") dei quartieri
-          Garbatella, San Paolo e Marconi a Roma, permettendo ai primi di accedere a sconti esclusivi presso i
+          <strong>esercenti locali</strong> ("Commercianti") di Roma
+          e dintorni, permettendo ai primi di accedere a sconti esclusivi presso i
           punti vendita dei secondi mediante l'esposizione di codici QR
           dinamici.
         </p>

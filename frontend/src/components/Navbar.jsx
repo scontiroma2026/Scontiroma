@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Menu, ShoppingBag, Store, User } from "lucide-react";
 import { useState } from "react";
 import BrandMark from "@/components/BrandMark";
+import NavbarCommerciante from "@/components/NavbarCommerciante";
+import { useInAreaCommerciante } from "@/components/AreaCommercianteClasse";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
+  const inAreaCommerciante = useInAreaCommerciante();
   const isMerchant = user && user.role === "merchant";
 
   const handleLogout = async () => {
@@ -34,6 +37,11 @@ export default function Navbar() {
         { to: "/discounts", label: "Esplora sconti" },
         { to: "/map", label: "Mappa" },
       ];
+
+  // Nell'area commerciante la barra è chiara (variante «Bianco vivo»); altrove resta quella scura.
+  if (isMerchant && inAreaCommerciante) {
+    return <NavbarCommerciante user={user} navLinks={navLinks} open={open} setOpen={setOpen} onLogout={handleLogout} />;
+  }
 
   return (
     <header data-testid="navbar" className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/70 backdrop-blur-md">

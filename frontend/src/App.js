@@ -4,6 +4,7 @@ import { ConfigProvider } from "@/context/ConfigContext";
 import { PreferitiProvider } from "@/context/PreferitiContext";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/Navbar";
+import AreaCommercianteClasse from "@/components/AreaCommercianteClasse";
 import LegalFooter from "@/components/LegalFooter";
 import CookieBanner from "@/components/CookieBanner";
 import NegozioQR from "@/pages/NegozioQR";
@@ -43,6 +44,7 @@ function App() {
     <div className="App bg-cream min-h-screen">
       <BrowserRouter>
         <AnalyticsTracker />
+        <AreaCommercianteClasse />
         <ConfigProvider>
         <AuthProvider>
         <PreferitiProvider>
