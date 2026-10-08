@@ -3,7 +3,6 @@ import api, { formatApiError } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
 import { Store, Save } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
 import { Scheda, CLASSE_PRIMARIO } from "@/components/AreaUI";
 
 const MAX_LEN = 1500;
@@ -13,7 +12,6 @@ const MAX_LEN = 1500;
  * (stile Groupon "Il negozio"). Il testo appare nella pagina pubblica dello sconto.
  */
 export default function ShopDescriptionCard() {
-  const { refresh } = useAuth();
   const [text, setText] = useState("");
   const [saved, setSaved] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,7 +31,6 @@ export default function ShopDescriptionCard() {
     try {
       await api.put("/merchants/me/profile", { shop_description: text.trim() });
       setSaved(text.trim());
-      refresh(); // aggiorna «Da fare»
       toast.success("Descrizione del negozio salvata! Sarà visibile sulla pagina della tua offerta.");
     } catch (err) {
       toast.error(formatApiError(err));

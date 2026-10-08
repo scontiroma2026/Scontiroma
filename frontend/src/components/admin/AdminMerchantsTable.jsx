@@ -152,11 +152,11 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   };
 
   return (
-    <Card className="border-white/10 bg-white/5 p-6">
+    <Card className="border-border bg-muted p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-serif text-2xl">Gestione commercianti & offerte</h3>
-          <p className="text-xs text-white/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Ogni azione chiede conferma e spiega cosa succede. «Sospendi» ferma il negozio senza cancellarlo.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
       </div>
 
       <div className="mt-4 space-y-3">
-        {filteredMerchants.length === 0 && <p className="text-sm text-white/50">Nessun negozio.</p>}
+        {filteredMerchants.length === 0 && <p className="text-sm text-muted-foreground">Nessun negozio.</p>}
         {filteredMerchants.map((m) => (
           <MerchantRow
             key={m.id}
@@ -202,23 +202,23 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
 }
 
 const STATO_OFFERTA = {
-  pending: { testo: "In attesa di approvazione", cls: "bg-amber-400/15 text-amber-300 border-amber-400/40" },
-  approved: { testo: "Approvata", cls: "bg-emerald-400/15 text-emerald-300 border-emerald-400/40" },
-  rejected: { testo: "Rifiutata", cls: "bg-red-500/15 text-red-300 border-red-500/40" },
-  expired: { testo: "Scaduta", cls: "bg-white/10 text-white/60 border-white/20" },
+  pending: { testo: "In attesa di approvazione", cls: "bg-amber-400/15 text-amber-800 border-amber-400/40" },
+  approved: { testo: "Approvata", cls: "bg-emerald-400/15 text-emerald-700 border-emerald-400/40" },
+  rejected: { testo: "Rifiutata", cls: "bg-red-500/15 text-red-700 border-red-500/40" },
+  expired: { testo: "Scaduta", cls: "bg-muted text-muted-foreground border-border" },
 };
 
 // Pulsante con icona e scritta: si capisce cosa fa anche da telefono (niente solo-icone).
 function Azione({ testid, onClick, icon: Icon, children, tono = "neutro", disabled }) {
   const toni = {
-    verde: "bg-emerald-500/20 text-emerald-200 border-emerald-400/40 hover:bg-emerald-500/30",
-    rosso: "bg-red-500/15 text-red-200 border-red-500/40 hover:bg-red-500/25",
-    giallo: "bg-amber-400/15 text-amber-200 border-amber-400/40 hover:bg-amber-400/25",
-    neutro: "bg-white/5 text-white border-white/15 hover:bg-white/10",
+    verde: "bg-emerald-500/20 text-emerald-800 border-emerald-400/40 hover:bg-emerald-500/30",
+    rosso: "bg-red-500/15 text-red-800 border-red-500/40 hover:bg-red-500/25",
+    giallo: "bg-amber-400/15 text-amber-800 border-amber-400/40 hover:bg-amber-400/25",
+    neutro: "bg-muted text-foreground border-border hover:bg-muted",
   };
   return (
     <button type="button" data-testid={testid} onClick={onClick} disabled={disabled}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${toni[tono]}`}>
+      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${toni[tono]}`}>
       {Icon && <Icon size={14} />} {children}
     </button>
   );
@@ -237,51 +237,51 @@ function MerchantRow({
 }) {
   const stato = STATO_OFFERTA[m.discount_approval] || STATO_OFFERTA.approved;
   return (
-    <div data-testid={`admin-merchant-${m.id}`} className={`rounded-2xl border p-4 ${m.approved ? "border-white/10 bg-black/20" : "border-red-500/40 bg-red-500/5"}`}>
+    <div data-testid={`admin-merchant-${m.id}`} className={`rounded-2xl border p-4 ${m.approved ? "border-border bg-muted" : "border-red-500/40 bg-red-500/5"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {editing ? (
             <div className="space-y-2">
-              <Input value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} placeholder="Nome negozio" className="bg-black/40 border-white/10 text-white h-9 text-sm" />
-              <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Indirizzo" className="bg-black/40 border-white/10 text-white h-9 text-xs" />
+              <Input value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} placeholder="Nome negozio" className="bg-muted border-border text-foreground h-9 text-sm" />
+              <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Indirizzo" className="bg-muted border-border text-foreground h-9 text-xs" />
               <div className="grid grid-cols-2 gap-2">
-                <Input value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })} placeholder="Zona" className="bg-black/40 border-white/10 text-white h-9 text-xs" />
-                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Categoria" className="bg-black/40 border-white/10 text-white h-9 text-xs" />
+                <Input value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })} placeholder="Zona" className="bg-muted border-border text-foreground h-9 text-xs" />
+                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Categoria" className="bg-muted border-border text-foreground h-9 text-xs" />
               </div>
             </div>
           ) : (
             <>
-              <div className="text-lg font-semibold text-white break-words">{m.shop_name}</div>
-              <div className="text-xs text-white/60 break-all">{m.email}</div>
-              <div className="mt-1 text-xs text-white/60">{m.zone} · {m.category} · <span className="text-fucsia font-semibold">{m.redemptions_count}</span> sconti usati</div>
+              <div className="text-lg font-semibold text-foreground break-words">{m.shop_name}</div>
+              <div className="text-xs text-muted-foreground break-all">{m.email}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{m.zone} · {m.category} · <span className="text-fucsia font-semibold">{m.redemptions_count}</span> sconti usati</div>
               {m.phone && (
                 <div className="mt-1 flex items-center gap-1.5 text-xs">
-                  <span className="text-white/70 font-mono">{m.phone}</span>
+                  <span className="text-muted-foreground font-mono">{m.phone}</span>
                   <a
                     data-testid={`wa-link-${m.id}`}
                     href={`https://wa.me/${(m.phone || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Ciao ${m.name || m.shop_name}, ti scrivo da Sconti Roma...`)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full bg-green-500 hover:bg-green-400 px-2 py-0.5 text-[10px] font-medium text-white"
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-700 hover:bg-emerald-800 px-2 py-0.5 text-[10px] font-medium text-white"
                   >WhatsApp</a>
                 </div>
               )}
             </>
           )}
         </div>
-        <span data-testid={`admin-merchant-stato-${m.id}`} className={`rounded-full border px-3 py-1 text-xs font-semibold ${m.approved ? "border-emerald-400/40 text-emerald-300" : "border-red-500/40 text-red-300"}`}>
+        <span data-testid={`admin-merchant-stato-${m.id}`} className={`rounded-full border px-3 py-1 text-xs font-semibold ${m.approved ? "border-emerald-400/40 text-emerald-700" : "border-red-500/40 text-red-700"}`}>
           {m.approved ? "Negozio attivo" : "Negozio sospeso"}
         </span>
       </div>
 
       {/* Offerta */}
-      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3">
+      <div className="mt-3 rounded-xl border border-border bg-muted p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="text-[10px] uppercase tracking-wider text-white/50">Offerta</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Offerta</div>
           {m.has_discount && (
             <div className="flex flex-wrap gap-1.5">
               <span data-testid={`admin-offerta-stato-${m.id}`} className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${stato.cls}`}>{stato.testo}</span>
-              <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${m.discount_active ? "border-ciano/40 text-ciano" : "border-white/20 text-white/50"}`}>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${m.discount_active ? "border-ciano/40 text-ciano" : "border-border text-muted-foreground"}`}>
                 {m.discount_active ? "Visibile" : "Nascosta"}
               </span>
             </div>
@@ -289,7 +289,7 @@ function MerchantRow({
         </div>
         {m.has_discount ? (
           <>
-            <div className="mt-1 font-serif text-base text-white break-words">{m.discount_title || "(senza titolo)"}</div>
+            <div className="mt-1 font-serif text-base text-foreground break-words">{m.discount_title || "(senza titolo)"}</div>
             <div className="mt-3 flex flex-wrap gap-2">
               {m.discount_approval === "pending" && (
                 <>
@@ -306,9 +306,9 @@ function MerchantRow({
             </div>
           </>
         ) : (
-          <p className="mt-1 text-xs text-white/50">Nessuna offerta caricata.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Nessuna offerta caricata.</p>
         )}
-        <button type="button" data-testid={`view-discounts-${m.id}`} onClick={onViewDiscounts} className="mt-2 text-xs text-ciano hover:underline">
+        <button type="button" data-testid={`view-discounts-${m.id}`} onClick={onViewDiscounts} className="mt-2 inline-flex min-h-11 items-center text-xs text-ciano underline-offset-2 hover:underline">
           Storico offerte →
         </button>
       </div>
@@ -344,47 +344,47 @@ function DiscountEditModal({ discEdit, setDiscEdit, onSave, busy }) {
       onClick={() => setDiscEdit(null)}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#141414] p-6 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="text-xs uppercase text-ciano tracking-wider">Modifica sconto</div>
-            <h3 className="font-serif text-2xl text-white">{discEdit.shop_name}</h3>
+            <h3 className="font-serif text-2xl text-foreground">{discEdit.shop_name}</h3>
           </div>
-          <button onClick={() => setDiscEdit(null)} className="rounded-md bg-white/10 p-2 text-white">
+          <button onClick={() => setDiscEdit(null)} className="rounded-md bg-muted p-2 text-foreground">
             <X size={16} />
           </button>
         </div>
         <div className="space-y-3">
           <div>
-            <Label className="text-white/70 text-xs">Titolo</Label>
-            <Input data-testid="admin-disc-title" value={discEdit.title} onChange={(e) => setDiscEdit({ ...discEdit, title: e.target.value })} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Titolo</Label>
+            <Input data-testid="admin-disc-title" value={discEdit.title} onChange={(e) => setDiscEdit({ ...discEdit, title: e.target.value })} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Descrizione</Label>
-            <Input value={discEdit.description} onChange={(e) => setDiscEdit({ ...discEdit, description: e.target.value })} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Descrizione</Label>
+            <Input value={discEdit.description} onChange={(e) => setDiscEdit({ ...discEdit, description: e.target.value })} className="bg-muted border-border text-foreground" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-white/70 text-xs">Prezzo originale (€)</Label>
-              <Input data-testid="admin-disc-original" type="number" step="0.01" value={discEdit.original_price} onChange={(e) => setDiscEdit({ ...discEdit, original_price: e.target.value })} className="bg-black/40 border-white/10 text-white" />
+              <Label className="text-muted-foreground text-xs">Prezzo originale (€)</Label>
+              <Input data-testid="admin-disc-original" type="number" step="0.01" value={discEdit.original_price} onChange={(e) => setDiscEdit({ ...discEdit, original_price: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
             <div>
-              <Label className="text-white/70 text-xs">Prezzo scontato (€)</Label>
-              <Input data-testid="admin-disc-discounted" type="number" step="0.01" value={discEdit.discounted_price} onChange={(e) => setDiscEdit({ ...discEdit, discounted_price: e.target.value })} className="bg-black/40 border-white/10 text-white" />
+              <Label className="text-muted-foreground text-xs">Prezzo scontato (€)</Label>
+              <Input data-testid="admin-disc-discounted" type="number" step="0.01" value={discEdit.discounted_price} onChange={(e) => setDiscEdit({ ...discEdit, discounted_price: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Termini</Label>
-            <Input value={discEdit.terms} onChange={(e) => setDiscEdit({ ...discEdit, terms: e.target.value })} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Termini</Label>
+            <Input value={discEdit.terms} onChange={(e) => setDiscEdit({ ...discEdit, terms: e.target.value })} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Immagine (URL)</Label>
-            <Input value={discEdit.image_url} onChange={(e) => setDiscEdit({ ...discEdit, image_url: e.target.value })} placeholder="https://... o dataURL" className="bg-black/40 border-white/10 text-white text-xs" />
+            <Label className="text-muted-foreground text-xs">Immagine (URL)</Label>
+            <Input value={discEdit.image_url} onChange={(e) => setDiscEdit({ ...discEdit, image_url: e.target.value })} placeholder="https://... o dataURL" className="bg-muted border-border text-foreground text-xs" />
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/40 p-3">
-            <span className="text-sm text-white">Sconto attivo</span>
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted p-3">
+            <span className="text-sm text-foreground">Sconto attivo</span>
             <input type="checkbox" checked={discEdit.active} onChange={(e) => setDiscEdit({ ...discEdit, active: e.target.checked })} className="h-5 w-5 accent-fucsia" />
           </div>
           <Button data-testid="admin-disc-save" onClick={onSave} disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full">

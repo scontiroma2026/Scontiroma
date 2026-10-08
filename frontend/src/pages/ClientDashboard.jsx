@@ -40,7 +40,7 @@ export default function ClientDashboard() {
           <h1 className="mt-2 font-serif text-5xl">Il tuo account</h1>
         </div>
         <Link to="/setup-security?da=account">
-          <Button data-testid="security-link" variant="outline" className="rounded-full border-white/20 text-white hover:bg-white/10">
+          <Button data-testid="security-link" variant="outline" className="rounded-full border-border text-foreground hover:bg-muted">
             <ShieldCheck size={16} className="mr-2" /> Sicurezza: Face ID
           </Button>
         </Link>
@@ -52,14 +52,14 @@ export default function ClientDashboard() {
       )}
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="border-warm bg-[#141414] border border-white/10 p-6 md:col-span-2">
+        <Card className="border-warm bg-card border border-border p-6 md:col-span-2">
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
             <Sparkles size={12} /> Abbonamento
           </div>
           {!required ? (
             <>
               <div data-testid="launch-free" className="mt-3 font-serif text-3xl text-terracotta">Gratis durante la fase di lancio</div>
-              <p className="mt-1 text-sm text-white/70">Per usare gli sconti non serve nessun abbonamento.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Per usare gli sconti non serve nessun abbonamento.</p>
               <div className="mt-4 flex gap-2">
                 <Link to="/discounts"><Button className="grad-fucsia-viola text-white hover:scale-105 transition">Sfoglia sconti</Button></Link>
                 {isActive && <Link to="/subscribe"><Button variant="outline">Gestisci abbonamento</Button></Link>}
@@ -68,7 +68,7 @@ export default function ClientDashboard() {
           ) : isActive ? (
             <>
               <div className="mt-3 font-serif text-3xl text-terracotta">Attivo</div>
-              <div className="mt-1 text-sm text-white/70">
+              <div className="mt-1 text-sm text-muted-foreground">
                 Rinnovo automatico il {new Date(sub.end_date).toLocaleDateString("it-IT")} · €{sub.price_eur}/mese
               </div>
               <div className="mt-4 flex gap-2">
@@ -78,20 +78,20 @@ export default function ClientDashboard() {
             </>
           ) : pastDue ? (
             <>
-              <div className="mt-3 font-serif text-3xl text-red-400">Sospeso</div>
-              <p className="mt-1 text-sm text-white/70">
+              <div className="mt-3 font-serif text-3xl text-red-700">Sospeso</div>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Aggiorna il metodo di pagamento per riattivarlo subito.
               </p>
               <Link to="/subscribe">
-                <Button data-testid="resume-payment-btn" className="mt-4 bg-red-500 hover:bg-red-600 text-white">
+                <Button data-testid="resume-payment-btn" className="mt-4 bg-red-700 hover:bg-red-800 text-white">
                   <CreditCard size={16} className="mr-2" /> Aggiorna pagamento
                 </Button>
               </Link>
             </>
           ) : (
             <>
-              <div className="mt-3 font-serif text-3xl text-white">Non attivo</div>
-              <p className="mt-1 text-sm text-white/70">Attiva l'abbonamento per accedere agli sconti.</p>
+              <div className="mt-3 font-serif text-3xl text-foreground">Non attivo</div>
+              <p className="mt-1 text-sm text-muted-foreground">Attiva l'abbonamento per accedere agli sconti.</p>
               <Link to="/subscribe">
                 <Button data-testid="activate-btn" className="mt-4 grad-fucsia-viola text-white hover:scale-105 transition">
                   Attiva a €2,99/mese
@@ -101,13 +101,13 @@ export default function ClientDashboard() {
           )}
         </Card>
 
-        <Card className="border-warm bg-espresso p-6 text-white">
+        <Card className="border-warm bg-card border border-border p-6 text-foreground">
           <div className="text-xs uppercase tracking-wider text-gold">Statistiche</div>
           <div className="mt-3 font-serif text-5xl">{redemptions.filter(r => r.status === "redeemed").length}</div>
-          <div className="text-sm text-white/60">sconti utilizzati</div>
-          <div className="mt-4 border-t border-white/10 pt-4">
+          <div className="text-sm text-muted-foreground">sconti utilizzati</div>
+          <div className="mt-4 border-t border-border pt-4">
             <div className="font-serif text-3xl">{redemptions.length}</div>
-            <div className="text-sm text-white/60">codici generati</div>
+            <div className="text-sm text-muted-foreground">codici generati</div>
           </div>
         </Card>
       </div>
@@ -115,30 +115,30 @@ export default function ClientDashboard() {
       <div className="mt-10">
         <h2 className="mb-4 font-serif text-3xl">I tuoi codici</h2>
         {redemptions.length === 0 ? (
-          <Card className="border-warm bg-white/5 p-10 text-center text-white/60">
+          <Card className="border-warm bg-muted p-10 text-center text-muted-foreground">
             Non hai ancora riscattato nessuno sconto.
           </Card>
         ) : (
           <div className="space-y-3">
             {redemptions.map((r) => (
-              <Card key={r.id} data-testid={`redemption-${r.id}`} className="flex items-center justify-between border-warm bg-[#141414] border border-white/10 p-4">
+              <Card key={r.id} data-testid={`redemption-${r.id}`} className="flex items-center justify-between border-warm bg-card border border-border p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-terracotta">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-terracotta">
                     <TicketCheck size={20} />
                   </div>
                   <div>
                     <div className="font-serif text-lg">{r.discount_title}</div>
-                    <div className="text-xs text-white/60">{r.shop_name}</div>
+                    <div className="text-xs text-muted-foreground">{r.shop_name}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="font-mono text-lg tracking-wider text-white">{r.code}</div>
-                    <div className="flex items-center gap-1 text-xs text-white/50">
+                    <div className="font-mono text-lg tracking-wider text-foreground">{r.code}</div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <CalendarDays size={11} /> {new Date(r.created_at).toLocaleDateString("it-IT")}
                     </div>
                   </div>
-                  <Badge variant={r.status === "redeemed" ? "secondary" : "default"} className={r.status === "redeemed" ? "bg-white/5 text-white" : "bg-terracotta text-white"}>
+                  <Badge variant={r.status === "redeemed" ? "secondary" : "default"} className={r.status === "redeemed" ? "bg-muted text-foreground" : "bg-terracotta text-white"}>
                     {r.status === "redeemed" ? "Utilizzato" : "Attivo"}
                   </Badge>
                 </div>
@@ -149,8 +149,8 @@ export default function ClientDashboard() {
       </div>
 
       <div className="mt-12">
-        <h2 className="mb-2 font-serif text-3xl flex items-center gap-2"><Star size={22} className="text-yellow-400"/> I miei sconti usati</h2>
-        <p className="text-sm text-white/60 mb-4">Lascia una recensione: 5 stelle sull'app, un commento privato solo per l'amministratore.</p>
+        <h2 className="mb-2 font-serif text-3xl flex items-center gap-2"><Star size={22} className="text-amber-800"/> I miei sconti usati</h2>
+        <p className="text-sm text-muted-foreground mb-4">Lascia una recensione: 5 stelle sull'app, un commento privato solo per l'amministratore.</p>
         <MyUsedDiscounts />
       </div>
 
@@ -197,7 +197,7 @@ function SuspendedBanner({ graceExpiresAt }) {
   return (
     <div
       data-testid="suspended-banner"
-      className="mb-6 overflow-hidden rounded-2xl border-2 border-red-500/60 bg-gradient-to-r from-red-950/80 via-red-900/60 to-red-950/80 shadow-2xl shadow-red-500/20"
+      className="mb-6 overflow-hidden rounded-2xl border-2 border-red-500/60 bg-gradient-to-r from-red-50 via-red-100 to-red-50 shadow-lg shadow-red-500/20"
       style={{ animation: "fadeInUp 0.5s ease-out" }}
     >
       <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -206,13 +206,13 @@ function SuspendedBanner({ graceExpiresAt }) {
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-500/20 border border-red-500/60"
             style={{ animation: "pulse 2s ease-in-out infinite" }}
           >
-            <AlertTriangle size={22} className="text-red-400" />
+            <AlertTriangle size={22} className="text-red-700" />
           </div>
           <div>
-            <div className="font-serif text-xl text-red-100 leading-tight">
+            <div className="font-serif text-xl text-red-800 leading-tight">
               Abbonamento sospeso
             </div>
-            <div className="mt-1 text-sm text-red-200/80">
+            <div className="mt-1 text-sm text-red-800">
               Il pagamento al rinnovo non è andato a buon fine. Non puoi
               utilizzare gli sconti finché non aggiorni il metodo di pagamento.
             </div>
@@ -220,9 +220,9 @@ function SuspendedBanner({ graceExpiresAt }) {
               data-testid="suspended-countdown"
               className={`mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
                 expired
-                  ? "bg-red-500 text-white"
+                  ? "bg-red-700 text-white"
                   : days <= 1
-                  ? "bg-red-500/90 text-white animate-pulse"
+                  ? "bg-red-700 text-white animate-pulse"
                   : "bg-red-500/20 text-red-100 border border-red-500/40"
               }`}
             >
@@ -235,7 +235,7 @@ function SuspendedBanner({ graceExpiresAt }) {
             <Button
               data-testid="suspended-pay-btn"
               size="lg"
-              className="w-full sm:w-auto bg-red-500 text-white font-bold hover:bg-red-600 hover:scale-105 transition shadow-lg shadow-red-500/40"
+              className="w-full sm:w-auto bg-red-700 text-white font-bold hover:bg-red-800 hover:scale-105 transition shadow-lg shadow-red-500/40"
             >
               <CreditCard size={18} className="mr-2" />
               Aggiorna pagamento

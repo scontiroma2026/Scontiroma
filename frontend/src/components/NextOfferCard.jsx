@@ -1,9 +1,17 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import api from "@/lib/api";
 import { CalendarPlus, CheckCircle2, XCircle, Clock, CalendarClock } from "lucide-react";
 import { Scheda, Pillola, CLASSE_BASE_SECONDARIO, CLASSE_BORDO, CLASSE_PRIMARIO } from "@/components/AreaUI";
 
-/** Card "Offerta mese prossimo" per la MerchantDashboard. `data` è la risposta di /merchants/me/next-discount (la carica la dashboard, che la usa anche per «Da fare»). */
-export const NextOfferCard = ({ data }) => {
+/** Card "Offerta mese prossimo" per la MerchantDashboard. */
+export const NextOfferCard = () => {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    api.get("/merchants/me/next-discount").then((r) => setData(r.data)).catch(() => {});
+  }, []);
+
   if (!data) return null;
   const { next_discount: nd, window: win } = data;
   const label = win?.next_month_label || "il mese prossimo";

@@ -30,7 +30,7 @@ export default function HealthWidget() {
 
   if (loading || !health) {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex items-center gap-2 text-xs text-white/60">
+      <div className="rounded-xl border border-border bg-muted p-3 flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="animate-spin" size={14} />
         Health check…
       </div>
@@ -51,8 +51,8 @@ export default function HealthWidget() {
       data-testid="health-widget"
       className={`rounded-xl border p-3 flex items-center gap-3 flex-wrap ${allOk ? "border-green-500/40 bg-green-500/5" : "border-yellow-500/40 bg-yellow-500/5"}`}
     >
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/60">
-        <Activity size={14} className={allOk ? "text-green-400" : "text-yellow-400"} />
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+        <Activity size={14} className={allOk ? "text-emerald-700" : "text-amber-800"} />
         Server Health
       </div>
       <div className="flex flex-wrap gap-3">
@@ -63,9 +63,9 @@ export default function HealthWidget() {
           return (
             <div key={s.key} data-testid={`health-${s.key}`} className="flex items-center gap-2 text-xs">
               <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
-              <span className="text-white/80">{s.label}</span>
-              {st.ok && st.ms != null && <span className="text-white/40">{st.ms}ms</span>}
-              {!st.ok && <span className="text-red-300/80">{st.error || "offline"}</span>}
+              <span className="text-foreground/80">{s.label}</span>
+              {st.ok && st.ms != null && <span className="text-muted-foreground">{st.ms}ms</span>}
+              {!st.ok && <span className="text-red-700">{st.error || "offline"}</span>}
             </div>
           );
         })}

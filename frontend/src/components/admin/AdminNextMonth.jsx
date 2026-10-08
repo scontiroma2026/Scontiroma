@@ -17,7 +17,7 @@ const STATUS_BADGE = {
   approved: ["Approvata ✓", "bg-fucsia/15 border-fucsia/40 text-fucsia"],
   pending: ["In revisione", "bg-neon/15 border-neon/40 text-neon"],
   rejected: ["Rifiutata", "bg-destructive/15 border-destructive/40 text-destructive"],
-  missing: ["Non caricata", "bg-white/5 border-white/15 text-white/50"],
+  missing: ["Non caricata", "bg-muted border-border text-muted-foreground"],
 };
 
 /** Tab admin "Prossimo Mese": stato caricamento offerte di tutti i negozi + revisione completa. */
@@ -88,7 +88,7 @@ export default function AdminNextMonth({ hdrs }) {
     } catch (err) { toast.error(formatApiError(err)); }
   };
 
-  if (!data) return <div className="py-10 text-white/60">Caricamento…</div>;
+  if (!data) return <div className="py-10 text-muted-foreground">Caricamento…</div>;
   const { window: win, rows, summary } = data;
 
   const needle = q.trim().toLowerCase();
@@ -99,22 +99,22 @@ export default function AdminNextMonth({ hdrs }) {
     : rows;
 
   return (
-    <Card className="border-white/10 bg-white/5 p-6">
+    <Card className="border-border bg-muted p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h3 className="font-serif text-2xl">Offerte di {win.next_month_label}</h3>
-          <p className="text-xs text-white/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Tutti i negozi dell'app: chi ha caricato l'offerta del mese prossimo e chi deve ancora farlo.
             Apri "Rivedi offerta" per vedere tutti i dettagli e i dati del commerciante prima di approvare.
           </p>
-          <div data-testid="next-window-status" className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs">
+          <div data-testid="next-window-status" className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs">
             <CalendarClock size={13} className={win.open ? "text-neon" : "text-gold"} />
             Finestra caricamento: {win.open ? <strong className="text-neon">APERTA</strong> : <strong className="text-gold">CHIUSA (apre il {win.opens_on})</strong>}
             {win.overridden && <span className="text-ciano">· override manuale</span>}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button data-testid="next-run-reminders-btn" size="sm" variant="outline" disabled={busy} onClick={runReminders} className="rounded-full border-white/20 text-white hover:bg-white/10">
+          <Button data-testid="next-run-reminders-btn" size="sm" variant="outline" disabled={busy} onClick={runReminders} className="rounded-full border-border text-foreground hover:bg-muted">
             <Mail size={13} className="mr-1.5" /> Invia promemoria ora
           </Button>
           <Button data-testid="next-window-override-btn" size="sm" variant="outline" disabled={busy} onClick={toggleWindow} className="rounded-full border-ciano/40 text-ciano hover:bg-ciano/10">
@@ -127,11 +127,11 @@ export default function AdminNextMonth({ hdrs }) {
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-        <span data-testid="next-summary-total" className="rounded-full border border-white/15 bg-black/40 px-3 py-1">Negozi: <strong>{summary.total}</strong></span>
+        <span data-testid="next-summary-total" className="rounded-full border border-border bg-muted px-3 py-1">Negozi: <strong>{summary.total}</strong></span>
         <span className="rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-neon">In revisione: <strong>{summary.pending}</strong></span>
         <span className="rounded-full border border-fucsia/40 bg-fucsia/10 px-3 py-1 text-fucsia">Approvate: <strong>{summary.approved}</strong></span>
         <span className="rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1 text-destructive">Rifiutate: <strong>{summary.rejected}</strong></span>
-        <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-white/60">Non caricate: <strong>{summary.missing}</strong></span>
+        <span className="rounded-full border border-border bg-muted px-3 py-1 text-muted-foreground">Non caricate: <strong>{summary.missing}</strong></span>
         <div className="ml-auto">
           <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio, zona, offerta…" testId="next-search" />
         </div>
@@ -139,27 +139,27 @@ export default function AdminNextMonth({ hdrs }) {
 
       <div className="mt-5 space-y-3">
         {filtered.length === 0 && (
-          <div className="rounded-xl border border-white/10 bg-black/30 p-8 text-center text-white/50">Nessun negozio trovato per "{q}".</div>
+          <div className="rounded-xl border border-border bg-muted p-8 text-center text-muted-foreground">Nessun negozio trovato per "{q}".</div>
         )}
         {filtered.map((r) => {
           const [label, cls] = STATUS_BADGE[r.next_status] || STATUS_BADGE.missing;
           const nd = r.next_offer;
           const isOpen = !!expanded[r.merchant_id];
           return (
-            <div key={r.merchant_id} data-testid={`nextoffer-row-${r.merchant_id}`} className="rounded-xl border border-white/10 bg-black/30 p-4">
+            <div key={r.merchant_id} data-testid={`nextoffer-row-${r.merchant_id}`} className="rounded-xl border border-border bg-muted p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-serif text-lg text-white">{r.shop_name}</span>
-                    <span className="text-xs text-white/40">{r.zone} · {r.category}</span>
+                    <span className="font-serif text-lg text-foreground">{r.shop_name}</span>
+                    <span className="text-xs text-muted-foreground">{r.zone} · {r.category}</span>
                     <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>{label}</span>
                     {r.reminder_sent && <span className="text-xs text-ciano" title="Email promemoria inviata">📧 promemoria inviato</span>}
                   </div>
-                  <div className="mt-1 text-xs text-white/50">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     Offerta corrente: {r.current_offer
-                      ? <span className="text-white/80">{r.current_offer.title} {r.current_offer.approval_status === "expired" ? "(scaduta)" : r.current_offer.active ? "" : "(disattivata)"}</span>
-                      : <span className="text-white/40">nessuna</span>}
-                    {nd && <span className="ml-3 text-white/70">→ Nuova: <span className="text-ciano">{nd.title}</span></span>}
+                      ? <span className="text-foreground/80">{r.current_offer.title} {r.current_offer.approval_status === "expired" ? "(scaduta)" : r.current_offer.active ? "" : "(disattivata)"}</span>
+                      : <span className="text-muted-foreground">nessuna</span>}
+                    {nd && <span className="ml-3 text-muted-foreground">→ Nuova: <span className="text-ciano">{nd.title}</span></span>}
                   </div>
                 </div>
                 {nd && (
@@ -210,39 +210,39 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
   const InfoBlock = ({ title, text }) => text ? (
     <div>
       <div className="text-xs uppercase tracking-wider text-gold">{title}</div>
-      <p className="mt-1 text-sm text-white/80 whitespace-pre-line">{renderBold(text)}</p>
+      <p className="mt-1 text-sm text-foreground/80 whitespace-pre-line">{renderBold(text)}</p>
     </div>
   ) : null;
 
   return (
-    <div data-testid={`nextoffer-detail-${row.merchant_id}`} className="mt-4 space-y-4 rounded-xl border border-ciano/20 bg-black/40 p-5">
+    <div data-testid={`nextoffer-detail-${row.merchant_id}`} className="mt-4 space-y-4 rounded-xl border border-ciano/20 bg-muted p-5">
       {/* 1 — Dati del commerciante */}
       <div>
         <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-ciano">
           <Store size={13} /> Dati del commerciante
         </div>
         <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-          <div><div className="text-xs text-white/40">Referente</div><div className="text-white">{m.name || "—"}</div></div>
-          <div><div className="text-xs text-white/40">Email</div><a href={`mailto:${m.email}`} className="text-fucsia hover:underline break-all">{m.email || "—"}</a></div>
+          <div><div className="text-xs text-muted-foreground">Referente</div><div className="text-foreground">{m.name || "—"}</div></div>
+          <div><div className="text-xs text-muted-foreground">Email</div><a href={`mailto:${m.email}`} className="text-fucsia hover:underline break-all">{m.email || "—"}</a></div>
           <div>
-            <div className="text-xs text-white/40">Telefono</div>
+            <div className="text-xs text-muted-foreground">Telefono</div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-white font-mono">{m.phone || <span className="text-white/40">non fornito</span>}</span>
+              <span className="text-foreground font-mono">{m.phone || <span className="text-muted-foreground">non fornito</span>}</span>
               {m.phone && (
                 <a
                   href={`https://wa.me/${(m.phone || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Ciao ${m.name || "commerciante"}, ti scrivo da Sconti Roma per la tua offerta di ${monthLabel}...`)}`}
                   target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-full bg-green-500 hover:bg-green-400 px-2 py-0.5 text-[10px] font-medium text-white"
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-700 hover:bg-emerald-800 px-2 py-0.5 text-[10px] font-medium text-white"
                 ><Phone size={9} /> WhatsApp</a>
               )}
             </div>
           </div>
-          <div className="sm:col-span-2"><div className="text-xs text-white/40 flex items-center gap-1"><MapPin size={10} /> Indirizzo</div><div className="text-white/90">{m.address || <span className="text-white/40">non impostato</span>}</div></div>
-          <div><div className="text-xs text-white/40">P.IVA</div><div className="text-white/90 font-mono">{m.piva || <span className="text-white/40">non fornita</span>}</div></div>
+          <div className="sm:col-span-2"><div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin size={10} /> Indirizzo</div><div className="text-foreground">{m.address || <span className="text-muted-foreground">non impostato</span>}</div></div>
+          <div><div className="text-xs text-muted-foreground">P.IVA</div><div className="text-foreground font-mono">{m.piva || <span className="text-muted-foreground">non fornita</span>}</div></div>
         </div>
       </div>
 
-      <div className="border-t border-white/10" />
+      <div className="border-t border-border" />
 
       {/* 2 — Offerta completa */}
       <div>
@@ -250,18 +250,18 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
         {images.length > 0 && (
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {images.map((url, i) => (
-              <img key={`${url.slice(0, 40)}-${i}`} src={url} alt="" className="h-24 w-36 shrink-0 rounded-lg object-cover border border-white/10" />
+              <img key={`${url.slice(0, 40)}-${i}`} src={url} alt="" className="h-24 w-36 shrink-0 rounded-lg object-cover border border-border" />
             ))}
           </div>
         )}
-        <div className="mt-3 font-serif text-2xl text-white">{nd.title}</div>
-        <p className="mt-1 text-sm text-white/80 whitespace-pre-line">{renderBold(nd.description)}</p>
+        <div className="mt-3 font-serif text-2xl text-foreground">{nd.title}</div>
+        <p className="mt-1 text-sm text-foreground/80 whitespace-pre-line">{renderBold(nd.description)}</p>
         <div className="mt-3 flex flex-wrap items-baseline gap-2">
           <span className="text-fucsia font-bold text-xl">€{nd.discounted_price?.toFixed(2)}</span>
-          <span className="text-white/40 line-through">€{nd.original_price?.toFixed(2)}</span>
+          <span className="text-muted-foreground line-through">€{nd.original_price?.toFixed(2)}</span>
           <span className="text-neon text-sm">−{nd.percent_off}%</span>
           <span className="ml-3 rounded-full border border-fucsia/40 bg-fucsia/10 px-2.5 py-0.5 text-xs text-fucsia font-semibold">🔁 {nd.max_uses_per_month || 1}× al mese per cliente</span>
-          <span className={`rounded-full px-2.5 py-0.5 text-xs ${nd.active ? "bg-ciano/15 text-ciano border border-ciano/40" : "bg-white/5 text-white/40 border border-white/15"}`}>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs ${nd.active ? "bg-ciano/15 text-ciano border border-ciano/40" : "bg-muted text-muted-foreground border border-border"}`}>
             {nd.active ? "● attiva nel catalogo" : "○ non attiva"}
           </span>
         </div>
@@ -274,7 +274,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
         {nd.approval_note && <div className="mt-3 text-xs text-destructive">Motivo ultimo rifiuto: {nd.approval_note}</div>}
       </div>
 
-      <div className="border-t border-white/10" />
+      <div className="border-t border-border" />
 
       {/* 3 — Azioni di revisione (dopo aver letto tutto) */}
       <div className="flex flex-wrap justify-end gap-2">
@@ -338,56 +338,56 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#141414] p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="text-xs uppercase text-ciano tracking-wider">Modifica offerta mese prossimo</div>
-            <h3 className="font-serif text-2xl text-white">{row.shop_name}</h3>
+            <h3 className="font-serif text-2xl text-foreground">{row.shop_name}</h3>
             <p className="text-xs text-neon mt-1">⚠ Salvando, l'offerta torna in revisione e va ri-approvata.</p>
           </div>
-          <button onClick={onClose} className="rounded-md bg-white/10 p-2 text-white"><X size={16} /></button>
+          <button onClick={onClose} className="rounded-md bg-muted p-2 text-foreground"><X size={16} /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <Label className="text-white/70 text-xs">Titolo</Label>
-            <Input data-testid="admin-next-title" value={f.title} onChange={upd("title")} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Titolo</Label>
+            <Input data-testid="admin-next-title" value={f.title} onChange={upd("title")} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Descrizione</Label>
-            <Textarea data-testid="admin-next-description" value={f.description} onChange={upd("description")} rows={3} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Descrizione</Label>
+            <Textarea data-testid="admin-next-description" value={f.description} onChange={upd("description")} rows={3} className="bg-muted border-border text-foreground" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-white/70 text-xs">Prezzo originale (€)</Label>
-              <Input data-testid="admin-next-original" type="number" step="0.01" value={f.original_price} onChange={upd("original_price")} className="bg-black/40 border-white/10 text-white" />
+              <Label className="text-muted-foreground text-xs">Prezzo originale (€)</Label>
+              <Input data-testid="admin-next-original" type="number" step="0.01" value={f.original_price} onChange={upd("original_price")} className="bg-muted border-border text-foreground" />
             </div>
             <div>
-              <Label className="text-white/70 text-xs">Prezzo scontato (€)</Label>
-              <Input data-testid="admin-next-discounted" type="number" step="0.01" value={f.discounted_price} onChange={upd("discounted_price")} className="bg-black/40 border-white/10 text-white" />
+              <Label className="text-muted-foreground text-xs">Prezzo scontato (€)</Label>
+              <Input data-testid="admin-next-discounted" type="number" step="0.01" value={f.discounted_price} onChange={upd("discounted_price")} className="bg-muted border-border text-foreground" />
             </div>
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Termini e condizioni</Label>
-            <Textarea value={f.terms} onChange={upd("terms")} rows={2} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Termini e condizioni</Label>
+            <Textarea value={f.terms} onChange={upd("terms")} rows={2} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Pianifica in anticipo</Label>
-            <Textarea value={f.plan_ahead} onChange={upd("plan_ahead")} rows={2} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Pianifica in anticipo</Label>
+            <Textarea value={f.plan_ahead} onChange={upd("plan_ahead")} rows={2} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Inclusioni ed esclusioni</Label>
-            <Textarea value={f.validity_info} onChange={upd("validity_info")} rows={2} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Inclusioni ed esclusioni</Label>
+            <Textarea value={f.validity_info} onChange={upd("validity_info")} rows={2} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Informazioni aggiuntive</Label>
-            <Textarea value={f.additional_info} onChange={upd("additional_info")} rows={2} className="bg-black/40 border-white/10 text-white" />
+            <Label className="text-muted-foreground text-xs">Informazioni aggiuntive</Label>
+            <Textarea value={f.additional_info} onChange={upd("additional_info")} rows={2} className="bg-muted border-border text-foreground" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Immagine copertina (URL)</Label>
-            <Input value={f.image_url} onChange={upd("image_url")} placeholder="https://… o dataURL" className="bg-black/40 border-white/10 text-white text-xs" />
+            <Label className="text-muted-foreground text-xs">Immagine copertina (URL)</Label>
+            <Input value={f.image_url} onChange={upd("image_url")} placeholder="https://… o dataURL" className="bg-muted border-border text-foreground text-xs" />
           </div>
           <div>
-            <Label className="text-white/70 text-xs">Utilizzi al mese per cliente</Label>
+            <Label className="text-muted-foreground text-xs">Utilizzi al mese per cliente</Label>
             <div className="mt-1 grid grid-cols-5 gap-2">
               {[1, 2, 3, 5, 10].map((n) => (
                 <button
@@ -395,14 +395,14 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
                   type="button"
                   onClick={() => setF({ ...f, max_uses_per_month: n })}
                   className={`rounded-lg border py-2 text-xs font-semibold transition ${
-                    f.max_uses_per_month === n ? "border-fucsia bg-fucsia/15 text-fucsia" : "border-white/10 bg-black/40 text-white/70 hover:border-white/30"
+                    f.max_uses_per_month === n ? "border-fucsia bg-fucsia/10 text-fucsia" : "border-border bg-muted text-muted-foreground hover:border-input"
                   }`}
                 >{n}×</button>
               ))}
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/40 p-3">
-            <span className="text-sm text-white">Offerta attiva</span>
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted p-3">
+            <span className="text-sm text-foreground">Offerta attiva</span>
             <input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} className="h-5 w-5 accent-fucsia" />
           </div>
           <Button data-testid="admin-next-save" onClick={save} disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full">

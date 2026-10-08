@@ -78,14 +78,14 @@ function SRIcon({ className = "" }) {
            L 33.2 8.3
            L 30.5 7
            L 33.2 5.7 Z"
-        fill="#00E5FF"
+        fill="#00798C"
         opacity="0.95"
       />
 
       {/* Base orizzontale (suolo romano) */}
       <line
         x1="2.5" y1="27" x2="31.5" y2="27"
-        stroke="#FF2E93"
+        stroke="#D81B72"
         strokeWidth="2"
         strokeLinecap="round"
       />
@@ -117,7 +117,7 @@ function SRIcon({ className = "" }) {
       {/* Arco 2 CENTRALE — pieno fucsia */}
       <path
         d="M 13 26.5 L 13 19.5 Q 13 16 16.5 16 Q 20 16 20 19.5 L 20 26.5 Z"
-        fill="#FF2E93"
+        fill="#D81B72"
       />
       {/* Arco 3 — outline */}
       <path

@@ -103,20 +103,20 @@ export default function Login() {
 
   return (
     <main data-testid="login-page" className="mx-auto max-w-md px-6 py-16">
-      <Card className="border-white/10 bg-white/5 backdrop-blur p-8">
+      <Card className="border-border bg-muted backdrop-blur p-8">
         {step === "email" && (
           <>
             <div className="text-xs uppercase tracking-[0.2em] text-ciano">Bentornato</div>
-            <h1 className="mt-2 font-serif text-4xl text-white inline-flex items-center gap-3 flex-wrap justify-center">
+            <h1 className="mt-2 font-serif text-4xl text-foreground inline-flex items-center gap-3 flex-wrap justify-center">
               Entra in <BrandMark inline className="text-4xl" />
             </h1>
-            <p className="mt-2 text-sm text-white/60">Con Face ID entri con un tocco, oppure con email e password.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Con Face ID entri con un tocco, oppure con email e password.</p>
 
             <div className="mt-8 space-y-4">
               <div>
-                <Label htmlFor="email" className="text-white/80">Email</Label>
+                <Label htmlFor="email" className="text-foreground/80">Email</Label>
                 <div className="relative mt-1">
-                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="email"
                     data-testid="login-email"
@@ -124,7 +124,7 @@ export default function Login() {
                     required
                     value={email}
                     onChange={(e) => changeEmail(e.target.value)}
-                    className="pl-9 bg-black/40 border-white/10 text-white"
+                    className="pl-9 bg-muted border-border text-foreground"
                     autoComplete="username"
                   />
                 </div>
@@ -134,7 +134,7 @@ export default function Login() {
                 data-testid="face-id-btn"
                 onClick={goBiometric}
                 disabled={!email || busy}
-                className="group relative w-full overflow-hidden rounded-3xl border-2 border-fucsia bg-gradient-to-br from-fucsia/20 to-transparent p-6 text-white transition hover:scale-[1.01] hover:glow-fucsia disabled:opacity-50"
+                className="group relative w-full overflow-hidden rounded-3xl border-2 border-fucsia bg-gradient-to-br from-fucsia/10 to-transparent p-6 text-foreground transition hover:scale-[1.01] hover:glow-fucsia disabled:opacity-50"
               >
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl grad-fucsia-viola glow-fucsia">
@@ -142,7 +142,7 @@ export default function Login() {
                   </div>
                   <div className="text-left">
                     <div className="font-serif text-2xl">Accedi con Face ID</div>
-                    <div className="text-xs text-white/60">Impronta o riconoscimento facciale</div>
+                    <div className="text-xs text-muted-foreground">Impronta o riconoscimento facciale</div>
                   </div>
                 </div>
               </button>
@@ -150,14 +150,14 @@ export default function Login() {
               <button
                 data-testid="use-pw-btn"
                 onClick={() => setStep("password")}
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-white/20 py-3 text-sm text-white hover:bg-white/5 transition"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-border py-3 text-sm text-foreground hover:bg-muted transition"
               >
                 <KeyRound size={14} /> Accedi con email e password
               </button>
 
               {email && (
                 <div className="pt-1 text-center text-xs">
-                  <button type="button" data-testid="switch-account" onClick={switchAccount} className="text-white/50 hover:text-white hover:underline">
+                  <button type="button" data-testid="switch-account" onClick={switchAccount} className="text-muted-foreground hover:text-foreground hover:underline">
                     Non sei tu? Usa un altro account
                   </button>
                 </div>
@@ -168,20 +168,20 @@ export default function Login() {
 
         {step === "password" && (
           <>
-            <button onClick={() => setStep("email")} className="mb-4 flex items-center gap-1 text-xs text-white/60 hover:text-white">
+            <button onClick={() => setStep("email")} className="mb-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
               <ArrowLeft size={12} /> indietro
             </button>
-            <h1 className="font-serif text-4xl text-white">Email e password</h1>
+            <h1 className="font-serif text-4xl text-foreground">Email e password</h1>
             {locked && (
-              <div data-testid="login-locked" role="alert" className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
-                <strong className="block text-red-100">Accesso bloccato per sicurezza</strong>
+              <div data-testid="login-locked" role="alert" className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-800">
+                <strong className="block text-red-800">Accesso bloccato per sicurezza</strong>
                 Troppi tentativi sbagliati. Riprova tra {lockMinutes} {lockMinutes === 1 ? "minuto" : "minuti"},
                 oppure usa "Password dimenticata?" per crearne una nuova.
               </div>
             )}
             <form onSubmit={submitPassword} className="mt-6 space-y-4" autoComplete="on">
               <div>
-                <Label className="text-white/80">Email</Label>
+                <Label className="text-foreground/80">Email</Label>
                 <Input
                   data-testid="login-email-pw"
                   type="email"
@@ -190,18 +190,18 @@ export default function Login() {
                   inputMode="email"
                   value={email}
                   onChange={(e) => changeEmail(e.target.value)}
-                  className="mt-1 bg-black/40 border-white/10 text-white"
+                  className="mt-1 bg-muted border-border text-foreground"
                 />
               </div>
               <div>
-                <Label className="text-white/80">Password</Label>
+                <Label className="text-foreground/80">Password</Label>
                 <PasswordInput
                   data-testid="login-password"
                   required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 bg-black/40 border-white/10 text-white"
+                  className="mt-1 bg-muted border-border text-foreground"
                 />
               </div>
               <Button data-testid="login-submit" type="submit" disabled={busy || locked} className="w-full grad-fucsia-viola text-white rounded-full py-6">
@@ -214,7 +214,7 @@ export default function Login() {
           </>
         )}
 
-        <p className="mt-6 text-center text-sm text-white/60">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Non hai un account? <Link to="/register" className="text-fucsia hover:underline">Registrati</Link>
         </p>
       </Card>

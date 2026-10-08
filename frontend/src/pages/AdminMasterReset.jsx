@@ -35,37 +35,37 @@ export default function AdminMasterReset() {
 
   return (
     <main className="mx-auto max-w-md px-6 py-20">
-      <Card className="border-white/10 bg-white/5 p-8">
+      <Card className="border-border bg-muted p-8">
         <div className="flex items-center gap-3 text-ciano">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ciano/20">
             <ShieldCheck size={22} />
           </div>
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-fucsia">Area riservata</div>
-            <h1 className="font-serif text-3xl text-white">Nuova Master Password</h1>
+            <h1 className="font-serif text-3xl text-foreground">Nuova Master Password</h1>
           </div>
         </div>
         {!token ? (
-          <p data-testid="master-reset-notoken" className="mt-6 text-sm text-red-400">
+          <p data-testid="master-reset-notoken" className="mt-6 text-sm text-red-700">
             Link non valido: token mancante. Richiedi un nuovo link dalla pagina /admin.
           </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
-            <p className="text-sm text-white/60">Minimo 10 caratteri. Verrà richiesta a ogni sblocco dell'area admin.</p>
+            <p className="text-sm text-muted-foreground">Minimo 10 caratteri. Verrà richiesta a ogni sblocco dell'area admin.</p>
             <PasswordInput
               data-testid="master-reset-pw1"
               placeholder="Nuova master password"
               value={pw1}
               onChange={(e) => setPw1(e.target.value)}
               autoFocus
-              className="bg-black/40 border-white/10 text-white"
+              className="bg-muted border-border text-foreground"
             />
             <PasswordInput
               data-testid="master-reset-pw2"
               placeholder="Conferma master password"
               value={pw2}
               onChange={(e) => setPw2(e.target.value)}
-              className="bg-black/40 border-white/10 text-white"
+              className="bg-muted border-border text-foreground"
             />
             <Button
               data-testid="master-reset-submit"

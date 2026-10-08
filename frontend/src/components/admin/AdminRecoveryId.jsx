@@ -45,20 +45,20 @@ export default function AdminRecoveryId({ hdrs }) {
         <KeyRound size={14} className="mr-2" /> Recovery ID
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-[#141419] text-white">
+        <DialogContent className="border-border bg-card text-foreground">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">Il tuo nuovo Recovery ID</DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-muted-foreground">
               Conservalo in un posto sicuro: <strong className="text-fucsia">non verrà mai più mostrato</strong>.
               Serve per recuperare la master password in caso di dimenticanza.
             </DialogDescription>
           </DialogHeader>
           <div
             data-testid="recovery-id-value"
-            className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-ciano/30 bg-black/40 px-4 py-3 font-mono text-lg tracking-widest text-ciano"
+            className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-ciano/30 bg-muted px-4 py-3 font-mono text-lg tracking-widest text-ciano"
           >
             {rid}
-            <Button data-testid="recovery-id-copy" size="sm" variant="ghost" onClick={copy} className="text-white/70 hover:text-white">
+            <Button data-testid="recovery-id-copy" size="sm" variant="ghost" onClick={copy} className="text-muted-foreground hover:text-foreground">
               <Copy size={16} />
             </Button>
           </div>

@@ -18,7 +18,7 @@ export default function Support() {
   return (
     <main
       data-testid="support-page"
-      className="mx-auto max-w-3xl px-6 py-12 text-white/85"
+      className="mx-auto max-w-3xl px-6 py-12 text-foreground"
     >
       <Link
         to="/"
@@ -28,15 +28,15 @@ export default function Support() {
         <ArrowLeft size={14} /> Torna alla home
       </Link>
 
-      <div className="mt-6 border-b border-white/10 pb-6">
+      <div className="mt-6 border-b border-border pb-6">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">
           Ti diamo una mano
         </div>
-        <h1 className="mt-2 font-serif text-4xl sm:text-5xl text-white">
+        <h1 className="mt-2 font-serif text-4xl sm:text-5xl text-foreground">
           Centro assistenza
         </h1>
-        <p className="mt-3 text-sm text-white/60">
-          Rispondiamo entro <strong className="text-white">24 ore</strong> nei
+        <p className="mt-3 text-sm text-muted-foreground">
+          Rispondiamo entro <strong className="text-foreground">24 ore</strong> nei
           giorni lavorativi.
         </p>
       </div>
@@ -47,31 +47,31 @@ export default function Support() {
         href={openMail}
         className="mt-8 group flex items-center gap-4 rounded-2xl border border-fucsia/30 bg-gradient-to-br from-fucsia/15 to-viola/10 p-6 hover:border-fucsia/60 transition"
       >
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fucsia/20 text-fucsia">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fucsia/10 text-fucsia">
           <Mail size={26} />
         </div>
         <div className="flex-1">
           <div className="text-xs uppercase tracking-wider text-fucsia">
             Scrivici — apri la tua app di posta
           </div>
-          <div className="mt-1 font-serif text-2xl text-white group-hover:text-fucsia transition">
+          <div className="mt-1 font-serif text-2xl text-foreground group-hover:text-fucsia transition">
             info@scontiroma.it
           </div>
-          <div className="mt-1 text-xs text-white/60">
+          <div className="mt-1 text-xs text-muted-foreground">
             Hai bisogno di aiuto? Scrivici a{" "}
-            <strong className="text-white">info@scontiroma.it</strong>, ti
+            <strong className="text-foreground">info@scontiroma.it</strong>, ti
             risponderemo entro 24 ore!
           </div>
         </div>
       </a>
 
-      <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white/60">
+      <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-xs text-muted-foreground">
         <Clock size={14} className="text-gold" />
         Lun-Ven 9:00-19:00 · Sab 10:00-14:00 · Chiuso domenica e festivi
       </div>
 
       {/* Info categories */}
-      <h2 className="mt-10 font-serif text-2xl text-white">
+      <h2 className="mt-10 font-serif text-2xl text-foreground">
         Chi devo scrivere?
       </h2>
 
@@ -107,7 +107,7 @@ export default function Support() {
       {/* FAQ shortcut */}
       <div
         data-testid="support-links"
-        className="mt-10 rounded-2xl border border-white/10 bg-black/40 p-6"
+        className="mt-10 rounded-2xl border border-border bg-muted p-6"
       >
         <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gold">
           <HelpCircle size={14} /> Documenti utili
@@ -117,7 +117,7 @@ export default function Support() {
             <li>
               <Link
                 to="/recesso"
-                className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+                className="text-foreground/80 hover:text-fucsia underline-offset-4 hover:underline"
               >
                 → Diritto di Recesso e chiusura dell'account
               </Link>
@@ -126,7 +126,7 @@ export default function Support() {
             <li data-testid="support-launch-free">
               <Link
                 to="/recesso"
-                className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+                className="text-foreground/80 hover:text-fucsia underline-offset-4 hover:underline"
               >
                 → <strong>Abbonamento e recesso</strong>: durante la fase di lancio Sconti Roma è
                 gratuito e non serve nessun abbonamento. Se hai un abbonamento attivo (per esempio
@@ -137,7 +137,7 @@ export default function Support() {
           <li>
             <Link
               to="/termini"
-              className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+              className="text-foreground/80 hover:text-fucsia underline-offset-4 hover:underline"
             >
               → Termini e Condizioni d'Uso
             </Link>
@@ -145,7 +145,7 @@ export default function Support() {
           <li>
             <Link
               to="/privacy"
-              className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+              className="text-foreground/80 hover:text-fucsia underline-offset-4 hover:underline"
             >
               → Privacy Policy
             </Link>
@@ -153,7 +153,7 @@ export default function Support() {
           <li>
             <Link
               to="/cookies"
-              className="text-white/80 hover:text-fucsia underline-offset-4 hover:underline"
+              className="text-foreground/80 hover:text-fucsia underline-offset-4 hover:underline"
             >
               → Cookie Policy
             </Link>
@@ -174,7 +174,7 @@ function ContactRow({ testid, icon, color, title, email, note }) {
     <a
       data-testid={testid}
       href={`mailto:${email}`}
-      className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/40 p-4 hover:border-white/25 transition"
+      className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4 hover:border-input transition"
     >
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${colorMap[color]}`}
@@ -182,11 +182,11 @@ function ContactRow({ testid, icon, color, title, email, note }) {
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-white">{title}</div>
+        <div className="text-sm font-semibold text-foreground">{title}</div>
         <div className={`mt-0.5 text-sm ${colorMap[color].split(" ")[0]} truncate`}>
           {email}
         </div>
-        <div className="mt-1 text-xs text-white/60">{note}</div>
+        <div className="mt-1 text-xs text-muted-foreground">{note}</div>
       </div>
     </a>
   );

@@ -111,7 +111,7 @@ export default function AdminDashboard() {
   };
 
   if (gated) return <AdminGate onVerified={onVerified} />;
-  if (!stats) return <div className="mx-auto max-w-7xl px-6 py-16 text-white/60">Caricamento…</div>;
+  if (!stats) return <div className="mx-auto max-w-7xl px-6 py-16 text-muted-foreground">Caricamento…</div>;
 
   const SUBSCRIPTION_TABS = ["economics", "subscribers"];
   const tabs = [
@@ -131,18 +131,18 @@ export default function AdminDashboard() {
   ].filter(([k]) => subscriptionRequired || !SUBSCRIPTION_TABS.includes(k));
 
   return (
-    <main data-testid="admin-dashboard" className="mx-auto max-w-7xl px-6 py-12 text-white">
-      <div className="mb-6 flex items-end justify-between">
+    <main data-testid="admin-dashboard" className="mx-auto max-w-7xl px-6 py-12 text-foreground">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-ciano">Admin · Cabina di regia</div>
-          <h1 className="mt-2 font-serif text-5xl text-grad">Sconti Roma Insights</h1>
+          <h1 className="mt-2 font-serif text-4xl md:text-5xl text-grad">Sconti Roma Insights</h1>
         </div>
         <div className="flex gap-2">
           <AdminRecoveryId hdrs={hdrs} />
           <Button
             variant="outline"
             onClick={lockOut}
-            className="rounded-full border-white/20 text-white hover:bg-white/10"
+            className="rounded-full border-border text-foreground hover:bg-muted"
           >
             <LogOut size={14} className="mr-2" /> Blocca
           </Button>
@@ -155,16 +155,16 @@ export default function AdminDashboard() {
 
       <GeocodeIssuesWidget hdrs={hdrs} />
 
-      <div className="mb-6 flex gap-2 border-b border-white/10 flex-wrap">
+      <div className="mb-6 flex gap-2 border-b border-border flex-wrap">
         {tabs.map(([k, l]) => (
           <button
             key={k}
             data-testid={`tab-${k}`}
             onClick={() => setTab(k)}
-            className={`px-4 py-2 text-sm border-b-2 transition ${
+            className={`min-h-11 px-4 py-2 text-sm border-b-2 transition ${
               tab === k
                 ? "border-fucsia text-fucsia"
-                : "border-transparent text-white/60 hover:text-white"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {l}

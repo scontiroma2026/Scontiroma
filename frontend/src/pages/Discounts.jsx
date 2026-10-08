@@ -76,19 +76,19 @@ export default function Discounts() {
       <div className="mb-8 max-w-2xl">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Sconti a Roma</div>
         <h1 className="mt-2 font-serif text-5xl leading-tight">Trova il tuo sconto</h1>
-        <p className="mt-3 text-white/70">Filtra per zona o categoria. Le offerte cambiano ogni mese.</p>
+        <p className="mt-3 text-muted-foreground">Filtra per zona o categoria. Le offerte cambiano ogni mese.</p>
       </div>
 
       {puoPreferiti && (
         <div role="tablist" className="mb-6 flex gap-2">
           <button type="button" role="tab" aria-selected={!vistaPreferiti} data-testid="vista-tutti"
             onClick={() => setParams({})}
-            className={`h-11 rounded-full px-5 text-sm font-semibold ${!vistaPreferiti ? "bg-fucsia text-black" : "border border-white/20 text-white/80"}`}>
+            className={`h-11 rounded-full px-5 text-sm font-semibold ${!vistaPreferiti ? "bg-fucsia text-white" : "border border-input text-foreground"}`}>
             Tutti
           </button>
           <button type="button" role="tab" aria-selected={vistaPreferiti} data-testid="vista-preferiti-tab"
             onClick={() => setParams({ vista: "preferiti" })}
-            className={`flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${vistaPreferiti ? "bg-fucsia text-black" : "border border-white/20 text-white/80"}`}>
+            className={`flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold ${vistaPreferiti ? "bg-fucsia text-white" : "border border-input text-foreground"}`}>
             <Heart size={16} fill={vistaPreferiti ? "currentColor" : "none"} /> Preferiti · {preferiti.length}
           </button>
         </div>
@@ -97,20 +97,20 @@ export default function Discounts() {
 
       <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             data-testid="search-input"
             placeholder="Cerca ristorante, offerta, quartiere…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="pl-9 bg-[#141414] border border-white/10"
+            className="pl-9 bg-card border border-border"
           />
         </div>
         <select
           data-testid="filter-zone"
           value={zone}
           onChange={(e) => setZone(e.target.value)}
-          className="w-full rounded-md border border-input bg-[#141414] border border-white/10 px-3 py-2 text-sm md:w-56"
+          className="w-full rounded-md border border-input bg-card border border-border px-3 h-11 text-sm md:w-56"
         >
           <option value="">Tutte le zone</option>
           {zones.map((z) => <option key={z} value={z}>{z}</option>)}
@@ -119,7 +119,7 @@ export default function Discounts() {
           data-testid="filter-category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-md border border-input bg-[#141414] border border-white/10 px-3 py-2 text-sm md:w-56"
+          className="w-full rounded-md border border-input bg-card border border-border px-3 h-11 text-sm md:w-56"
         >
           <option value="">Tutte le categorie</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -132,15 +132,15 @@ export default function Discounts() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🏆</span>
-                <h2 className="font-serif text-2xl text-white">I più richiesti questo mese</h2>
+                <h2 className="font-serif text-2xl text-foreground">I più richiesti questo mese</h2>
               </div>
-              <p className="text-sm text-white/60 mt-1">Le 3 offerte più utilizzate dai clienti</p>
+              <p className="text-sm text-muted-foreground mt-1">Le 3 offerte più utilizzate dai clienti</p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {topDiscounts.map((d, i) => (
               <div key={d.id} className="relative">
-                <div className={`absolute -top-3 -left-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-white font-bold shadow-lg ${i === 0 ? "bg-yellow-500" : i === 1 ? "bg-zinc-300 text-zinc-900" : "bg-orange-500"}`}>
+                <div className={`absolute -top-3 -left-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-foreground font-bold shadow-lg ${i === 0 ? "bg-yellow-500" : i === 1 ? "bg-zinc-300 text-zinc-900" : "bg-orange-500"}`}>
                   {i + 1}°
                 </div>
                 <DiscountCard discount={d} />
@@ -150,7 +150,7 @@ export default function Discounts() {
         </div>
       )}
 
-      <div className="mb-4 flex items-center justify-between text-sm text-white/60">
+      <div className="mb-4 flex items-center justify-between text-sm text-muted-foreground">
         <div>
           {loading ? "Caricamento…" : <span data-testid="results-count">{count === 1 ? "1 sconto trovato" : `${count} sconti trovati`}</span>}
           {userPos && !loading && <span className="ml-2 text-ciano">· ordinati per distanza</span>}
@@ -160,7 +160,7 @@ export default function Discounts() {
             type="button"
             data-testid="discounts-locate-btn"
             onClick={requestLocation}
-            className="inline-flex items-center gap-1.5 rounded-full border border-ciano/40 bg-ciano/10 text-ciano px-3 py-1.5 text-xs hover:bg-ciano/20 hover:text-white transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-ciano/40 bg-ciano/10 text-ciano px-3 py-1.5 text-xs hover:bg-ciano/20 hover:text-foreground transition"
           >
             <LocateFixed size={12} /> Aggiorna posizione
           </button>
@@ -171,8 +171,8 @@ export default function Discounts() {
       {geoStatus !== "granted" && (
         <div data-testid="geo-invito" className="mb-6 flex flex-col gap-3 rounded-2xl border border-ciano/30 bg-ciano/5 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-semibold text-white">Vuoi trovare gli sconti vicino a te?</p>
-            <p className="mt-1 text-xs text-white/60">
+            <p className="font-semibold text-foreground">Vuoi trovare gli sconti vicino a te?</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               {geoStatus === "denied"
                 ? "Posizione non disponibile: puoi attivarla nelle impostazioni del browser, oppure scegli la zona qui sopra."
                 : "La posizione serve solo a ordinare le offerte sul tuo telefono: non la salviamo."}
@@ -183,7 +183,7 @@ export default function Discounts() {
             data-testid="discounts-locate-btn"
             onClick={requestLocation}
             disabled={geoStatus === "requesting"}
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-ciano/50 bg-ciano/10 px-5 text-sm font-semibold text-ciano hover:bg-ciano/20 hover:text-white transition disabled:opacity-60"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-ciano/50 bg-ciano/10 px-5 text-sm font-semibold text-ciano hover:bg-ciano/20 hover:text-foreground transition disabled:opacity-60"
           >
             <LocateFixed size={16} />
             {geoStatus === "requesting" ? "Cerco la posizione…" : "Usa la mia posizione"}
@@ -192,7 +192,7 @@ export default function Discounts() {
       )}
 
       {!loading && count === 0 && (
-        <div className="rounded-xl border border-warm bg-white/5 p-10 text-center text-white/70">
+        <div className="rounded-xl border border-warm bg-muted p-10 text-center text-muted-foreground">
           Nessuno sconto per i filtri selezionati.
         </div>
       )}

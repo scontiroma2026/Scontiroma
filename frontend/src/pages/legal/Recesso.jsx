@@ -13,7 +13,7 @@ export default function Recesso() {
           i Clienti: non c'è nulla da annullare e nessun importo da rimborsare. Puoi smettere di usare il servizio quando vuoi.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">1. Come chiudere l'account</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">1. Come chiudere l'account</h2>
         <ol className="list-decimal pl-6 space-y-2">
           <li>Accedi con il tuo account.</li>
           <li>Vai su <em>"Il tuo account"</em> → sezione <em>"I miei dati"</em>.</li>
@@ -29,7 +29,7 @@ export default function Recesso() {
           giorni lavorativi.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">2. Commercianti</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">2. Commercianti</h2>
         <p>
           I Commercianti aderiscono come professionisti e non come
           consumatori. Durante la fase di lancio non pagano nulla; dopo, il
@@ -40,7 +40,7 @@ export default function Recesso() {
           termina l'ultimo giorno del mese e non riparte.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">3. Servizi a pagamento futuri</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">3. Servizi a pagamento futuri</h2>
         <p>
           Se in futuro verranno introdotti servizi a pagamento per i Clienti
           consumatori, varrà il diritto di recesso entro{" "}
@@ -51,7 +51,7 @@ export default function Recesso() {
           pagina prima dell'attivazione.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">4. Assistenza</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">4. Assistenza</h2>
         <p>
           Per qualsiasi problema scrivi a{" "}
           <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">

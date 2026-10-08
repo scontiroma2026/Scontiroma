@@ -31,12 +31,12 @@ export default function PayPalCheckout({ onSuccess }) {
     return (
       <div
         data-testid="paypal-not-configured"
-        className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100 flex gap-3"
+        className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-amber-800 flex gap-3"
       >
-        <Info size={18} className="shrink-0 mt-0.5 text-yellow-300" />
+        <Info size={18} className="shrink-0 mt-0.5 text-amber-800" />
         <div>
-          <div className="font-medium text-yellow-100">PayPal in configurazione</div>
-          <p className="text-yellow-200/80 mt-1 text-xs">
+          <div className="font-medium text-amber-800">PayPal in configurazione</div>
+          <p className="text-amber-800 mt-1 text-xs">
             Il pagamento PayPal sarà attivo appena le credenziali sandbox saranno inserite. Nel frattempo
             puoi abbonarti con carta di credito su Stripe.
           </p>
@@ -46,7 +46,7 @@ export default function PayPalCheckout({ onSuccess }) {
   }
 
   return (
-    <div data-testid="paypal-buttons-wrapper" className="bg-white/5 rounded-xl p-4 border border-white/10">
+    <div data-testid="paypal-buttons-wrapper" className="bg-muted rounded-xl p-4 border border-border">
       <PayPalScriptProvider
         options={{
           clientId: cfg.client_id,

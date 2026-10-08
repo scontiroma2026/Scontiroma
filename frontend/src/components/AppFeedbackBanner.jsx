@@ -78,18 +78,18 @@ export default function AppFeedbackBanner() {
   return (
     <div
       data-testid="app-feedback-banner"
-      className="no-print fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-white/15 bg-[#18181d]/95 p-5 shadow-2xl shadow-black/60 backdrop-blur-xl"
+      className="no-print fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-border bg-white/95 p-5 shadow-2xl shadow-ac-ink/25 backdrop-blur-xl"
     >
       <button
         data-testid="app-feedback-close"
         onClick={dismiss}
         aria-label="Chiudi"
-        className="absolute right-3 top-3 text-white/40 hover:text-white transition-colors"
+        className="absolute right-1 top-1 inline-flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
       >
         <X size={18} />
       </button>
-      <div className="text-sm font-bold text-white">Come valuti Sconti Roma?</div>
-      <p className="mt-0.5 text-xs text-white/50">Il tuo feedback ci aiuta a migliorare l'app.</p>
+      <div className="text-sm font-bold text-foreground">Come valuti Sconti Roma?</div>
+      <p className="mt-0.5 text-xs text-muted-foreground">Il tuo feedback ci aiuta a migliorare l'app.</p>
       <div className="mt-3 flex items-center gap-1.5">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -99,11 +99,11 @@ export default function AppFeedbackBanner() {
             onMouseEnter={() => setHover(n)}
             onMouseLeave={() => setHover(0)}
             aria-label={`${n} stelle`}
-            className="transition-transform hover:scale-110"
+            className="inline-flex h-11 w-11 items-center justify-center transition-transform hover:scale-110"
           >
             <Star
               size={30}
-              className={(hover || stars) >= n ? "text-gold" : "text-white/25"}
+              className={(hover || stars) >= n ? "text-gold" : "text-muted-foreground"}
               fill="currentColor"
             />
           </button>
@@ -117,7 +117,7 @@ export default function AppFeedbackBanner() {
             onChange={(e) => setComment(e.target.value.slice(0, 500))}
             rows={2}
             placeholder="Vuoi dirci qualcosa in più? (facoltativo)"
-            className="bg-black/40 border-white/10 text-white text-sm"
+            className="bg-muted border-border text-foreground text-sm"
           />
           <Button
             data-testid="app-feedback-submit"

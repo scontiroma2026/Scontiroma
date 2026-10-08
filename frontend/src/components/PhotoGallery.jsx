@@ -104,7 +104,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/25 transition flex items-center justify-center opacity-0 group-hover/img:opacity-100 pointer-events-none">
+                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-muted transition flex items-center justify-center opacity-0 group-hover/img:opacity-100 pointer-events-none">
                   <div className="rounded-full bg-black/70 backdrop-blur px-3 py-1.5 flex items-center gap-1.5 text-white text-xs font-semibold">
                     <ZoomIn size={14} /> Ingrandisci
                   </div>
@@ -112,7 +112,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
               </button>
               {/* Badge copertina */}
               {i === 0 && (
-                <div className="absolute top-1 left-1 z-20 flex items-center gap-1 rounded-full bg-white/95 text-ac-ink px-2 py-0.5 text-[11px] font-extrabold shadow pointer-events-none">
+                <div className="absolute top-1 left-1 z-20 flex items-center gap-1 rounded-full bg-muted text-ac-ink px-2 py-0.5 text-[11px] font-extrabold shadow pointer-events-none">
                   <Star size={10} fill="currentColor" /> Copertina
                 </div>
               )}
@@ -129,7 +129,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                       data-testid={`photo-move-up-${i}`}
                       onClick={() => move(i, -1)}
                       disabled={i === 0}
-                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${i === 0 ? "opacity-30 cursor-not-allowed" : "text-white hover:bg-white/20"}`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${i === 0 ? "opacity-30 cursor-not-allowed" : "text-foreground hover:bg-secondary"}`}
                       title="Sposta prima"
                     >
                       <ChevronUp size={18} />
@@ -139,7 +139,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                       data-testid={`photo-move-down-${i}`}
                       onClick={() => move(i, 1)}
                       disabled={i === photos.length - 1}
-                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${i === photos.length - 1 ? "opacity-30 cursor-not-allowed" : "text-white hover:bg-white/20"}`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${i === photos.length - 1 ? "opacity-30 cursor-not-allowed" : "text-foreground hover:bg-secondary"}`}
                       title="Sposta dopo"
                     >
                       <ChevronDown size={18} />
@@ -178,7 +178,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                     </>
                   ) : (
                     <>
-                      <Sparkles size={12} className="text-pink-300" /> Ottimizza con AI
+                      <Sparkles size={12} className="text-pink-700" /> Ottimizza con AI
                     </>
                   )}
                 </button>
@@ -302,7 +302,7 @@ function PhotoLightbox({ photos, index, onIndexChange, onClose }) {
         type="button"
         data-testid="photo-lightbox-close"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+        className="absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-muted text-foreground hover:bg-secondary transition"
         title="Chiudi (ESC)"
       >
         <X size={22} />
@@ -310,11 +310,11 @@ function PhotoLightbox({ photos, index, onIndexChange, onClose }) {
 
       {/* Contatore + copertina */}
       <div className="absolute top-4 left-4 flex items-center gap-2">
-        <div className="rounded-full bg-white/10 backdrop-blur px-3 py-1.5 text-white text-sm font-mono">
+        <div className="rounded-full bg-muted backdrop-blur px-3 py-1.5 text-foreground text-sm font-mono">
           {index + 1} / {photos.length}
         </div>
         {index === 0 && (
-          <div className="rounded-full bg-gold/90 text-black px-3 py-1.5 text-xs font-bold flex items-center gap-1">
+          <div className="rounded-full bg-gold text-white px-3 py-1.5 text-xs font-bold flex items-center gap-1">
             <Star size={12} fill="currentColor" /> Copertina
           </div>
         )}
@@ -326,7 +326,7 @@ function PhotoLightbox({ photos, index, onIndexChange, onClose }) {
           type="button"
           data-testid="photo-lightbox-prev"
           onClick={(e) => { e.stopPropagation(); onIndexChange(index - 1); }}
-          className="absolute left-4 sm:left-8 flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 transition"
+          className="absolute left-4 sm:left-8 flex h-14 w-14 items-center justify-center rounded-full bg-muted text-foreground hover:bg-secondary hover:scale-110 transition"
           title="Precedente (←)"
         >
           <ChevronLeft size={28} />
@@ -347,7 +347,7 @@ function PhotoLightbox({ photos, index, onIndexChange, onClose }) {
           type="button"
           data-testid="photo-lightbox-next"
           onClick={(e) => { e.stopPropagation(); onIndexChange(index + 1); }}
-          className="absolute right-4 sm:right-8 flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-110 transition"
+          className="absolute right-4 sm:right-8 flex h-14 w-14 items-center justify-center rounded-full bg-muted text-foreground hover:bg-secondary hover:scale-110 transition"
           title="Successiva (→)"
         >
           <ChevronRight size={28} />
@@ -357,7 +357,7 @@ function PhotoLightbox({ photos, index, onIndexChange, onClose }) {
       {/* Thumbstrip in basso su desktop */}
       {photos.length > 1 && (
         <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden sm:flex gap-1.5 rounded-full bg-white/10 backdrop-blur px-3 py-2"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 hidden sm:flex gap-1.5 rounded-full bg-muted backdrop-blur px-3 py-2"
           onClick={(e) => e.stopPropagation()}
         >
           {photos.map((_, i) => (

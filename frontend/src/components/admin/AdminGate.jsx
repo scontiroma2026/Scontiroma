@@ -77,20 +77,20 @@ export default function AdminGate({ onVerified }) {
 
   return (
     <main className="mx-auto max-w-md px-6 py-20">
-      <Card className="border-white/10 bg-white/5 p-8">
+      <Card className="border-border bg-muted p-8">
         <div className="flex items-center gap-3 text-fucsia">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-fucsia/20 glow-fucsia">
             <ShieldAlert size={22} />
           </div>
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-ciano">Area riservata</div>
-            <h1 className="font-serif text-3xl text-white">{forgotMode ? "Recupero Master" : "Master Password"}</h1>
+            <h1 className="font-serif text-3xl text-foreground">{forgotMode ? "Recupero Master" : "Master Password"}</h1>
           </div>
         </div>
 
         {!forgotMode ? (
           <>
-            <p className="mt-4 text-sm text-white/60">
+            <p className="mt-4 text-sm text-muted-foreground">
               Inserisci la master password per accedere ai dati sensibili.
             </p>
             <form onSubmit={submit} className="mt-6 space-y-4">
@@ -100,7 +100,7 @@ export default function AdminGate({ onVerified }) {
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 autoFocus
-                className="bg-black/40 border-white/10 text-white"
+                className="bg-muted border-border text-foreground"
               />
               <Button
                 data-testid="master-submit"
@@ -127,19 +127,19 @@ export default function AdminGate({ onVerified }) {
               data-testid="master-forgot-link"
               type="button"
               onClick={() => { setForgotMode(true); setSentMsg(""); }}
-              className="mt-5 block w-full text-center text-sm text-white/50 underline underline-offset-4 hover:text-fucsia transition-colors"
+              className="mt-5 block min-h-11 w-full text-center text-sm text-muted-foreground underline underline-offset-4 hover:text-fucsia transition-colors"
             >
               Master password dimenticata?
             </button>
           </>
         ) : (
           <>
-            <p className="mt-4 text-sm text-white/60">
+            <p className="mt-4 text-sm text-muted-foreground">
               Inserisci il tuo <strong className="text-ciano">Recovery ID</strong> (formato SR-XXXX-XXXX-XXXX).
               Ti invieremo un link di reset all'email amministratore.
             </p>
             {sentMsg ? (
-              <div data-testid="master-forgot-sent" className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300 flex items-start gap-2">
+              <div data-testid="master-forgot-sent" className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-700 flex items-start gap-2">
                 <MailCheck size={18} className="mt-0.5 shrink-0" /> {sentMsg}
               </div>
             ) : (
@@ -150,7 +150,7 @@ export default function AdminGate({ onVerified }) {
                   value={recoveryId}
                   onChange={(e) => setRecoveryId(e.target.value.toUpperCase())}
                   autoFocus
-                  className="bg-black/40 border-white/10 text-white tracking-widest"
+                  className="bg-muted border-border text-foreground tracking-widest"
                 />
                 <Button
                   data-testid="master-forgot-submit"
@@ -166,7 +166,7 @@ export default function AdminGate({ onVerified }) {
               data-testid="master-forgot-back"
               type="button"
               onClick={() => setForgotMode(false)}
-              className="mt-5 flex w-full items-center justify-center gap-1 text-sm text-white/50 hover:text-white transition-colors"
+              className="mt-5 flex w-full items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft size={14} /> Torna al login master
             </button>

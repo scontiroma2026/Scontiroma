@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
           196/2003 così come modificato dal D.Lgs. 101/2018.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">1. Titolare del trattamento</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">1. Titolare del trattamento</h2>
         <p>
           Titolare del trattamento è <strong>Euro Linea S.r.l.s.</strong>
           (Partita IVA 03240220644), che gestisce il servizio <strong>Sconti
@@ -31,7 +31,7 @@ export default function PrivacyPolicy() {
           trattamento dei tuoi dati.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">2. Dati che raccogliamo</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">2. Dati che raccogliamo</h2>
         <p>Trattiamo le seguenti categorie di dati personali:</p>
         <ul className="list-disc pl-6 space-y-2">
           <li>
@@ -118,57 +118,57 @@ export default function PrivacyPolicy() {
           sull'app sono invece <strong>facoltativi</strong>.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">3. Finalità e basi giuridiche</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">3. Finalità e basi giuridiche</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border border-white/10">
-            <thead className="bg-white/5">
+          <table className="w-full text-sm border border-border">
+            <thead className="bg-muted">
               <tr>
-                <th className="border border-white/10 p-2 text-left">Finalità</th>
-                <th className="border border-white/10 p-2 text-left">Base giuridica</th>
+                <th className="border border-border p-2 text-left">Finalità</th>
+                <th className="border border-border p-2 text-left">Base giuridica</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-white/10 p-2">Creazione account e autenticazione</td>
-                <td className="border border-white/10 p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
+                <td className="border border-border p-2">Creazione account e autenticazione</td>
+                <td className="border border-border p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Gestione dei pagamenti dei commercianti (solo dopo la fase di lancio e con la loro conferma)</td>
-                <td className="border border-white/10 p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
+                <td className="border border-border p-2">Gestione dei pagamenti dei commercianti (solo dopo la fase di lancio e con la loro conferma)</td>
+                <td className="border border-border p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Invio email transazionali (benvenuto, recupero password, promemoria di scadenza delle offerte)</td>
-                <td className="border border-white/10 p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
+                <td className="border border-border p-2">Invio email transazionali (benvenuto, recupero password, promemoria di scadenza delle offerte)</td>
+                <td className="border border-border p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Geolocalizzazione per ordinare sconti vicini</td>
-                <td className="border border-white/10 p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
+                <td className="border border-border p-2">Geolocalizzazione per ordinare sconti vicini</td>
+                <td className="border border-border p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Comunicazioni promozionali</td>
-                <td className="border border-white/10 p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
+                <td className="border border-border p-2">Comunicazioni promozionali</td>
+                <td className="border border-border p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Avvisi via email quando un negozio preferito pubblica l'offerta del mese (al massimo uno per negozio al mese)</td>
-                <td className="border border-white/10 p-2">Consenso (art. 6.1.a GDPR), revocabile dall'app con «Non avvisarmi più»</td>
+                <td className="border border-border p-2">Avvisi via email quando un negozio preferito pubblica l'offerta del mese (al massimo uno per negozio al mese)</td>
+                <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), revocabile dall'app con «Non avvisarmi più»</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Statistiche anonime di visita</td>
-                <td className="border border-white/10 p-2">Consenso (art. 6.1.a GDPR), tramite banner cookie</td>
+                <td className="border border-border p-2">Statistiche anonime di visita</td>
+                <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), tramite banner cookie</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Prevenzione frodi e sicurezza</td>
-                <td className="border border-white/10 p-2">Legittimo interesse (art. 6.1.f GDPR)</td>
+                <td className="border border-border p-2">Prevenzione frodi e sicurezza</td>
+                <td className="border border-border p-2">Legittimo interesse (art. 6.1.f GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-white/10 p-2">Obblighi fiscali e contabili</td>
-                <td className="border border-white/10 p-2">Obbligo di legge (art. 6.1.c GDPR)</td>
+                <td className="border border-border p-2">Obblighi fiscali e contabili</td>
+                <td className="border border-border p-2">Obbligo di legge (art. 6.1.c GDPR)</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <h2 className="font-serif text-2xl text-white mt-8">4. Fornitori esterni (Responsabili del trattamento)</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">4. Fornitori esterni (Responsabili del trattamento)</h2>
         <p>
           Per erogare il servizio ci avvaliamo di fornitori qualificati che
           agiscono come Responsabili del trattamento ai sensi dell'art. 28 GDPR:
@@ -201,7 +201,7 @@ export default function PrivacyPolicy() {
           </li>
         </ul>
 
-        <h3 className="font-serif text-xl text-white mt-6">4.1 Mappa e indirizzi</h3>
+        <h3 className="font-serif text-xl text-foreground mt-6">4.1 Mappa e indirizzi</h3>
         <p>
           Alcune funzioni caricano contenuti da servizi esterni, che ricevono
           dal tuo browser l'<strong>indirizzo IP</strong> e i dati tecnici della
@@ -230,7 +230,7 @@ export default function PrivacyPolicy() {
           riceve il tuo indirizzo IP.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">5. Trasferimenti extra-UE</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">5. Trasferimenti extra-UE</h2>
         <p>
           Alcuni fornitori (Stripe, PayPal, Resend, Render, Google, OpenStreetMap
           Foundation) possono elaborare dati
@@ -244,7 +244,7 @@ export default function PrivacyPolicy() {
           .
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">6. Periodo di conservazione</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">6. Periodo di conservazione</h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
             <strong>Dati account, codici QR, riscatti, recensioni</strong>:
@@ -256,7 +256,7 @@ export default function PrivacyPolicy() {
           <li><strong>Log di sicurezza</strong>: 12 mesi.</li>
         </ul>
 
-        <h2 className="font-serif text-2xl text-white mt-8">7. I tuoi diritti (art. 15-22 GDPR)</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">7. I tuoi diritti (art. 15-22 GDPR)</h2>
         <p>Puoi in qualsiasi momento esercitare i seguenti diritti:</p>
         <ul className="list-disc pl-6 space-y-2">
           <li><strong>Accesso</strong>: chiedere copia dei dati che trattiamo.</li>
@@ -277,7 +277,7 @@ export default function PrivacyPolicy() {
           .
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">8. Reclamo al Garante</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">8. Reclamo al Garante</h2>
         <p>
           Se ritieni che il trattamento dei tuoi dati violi il GDPR, hai il
           diritto di proporre reclamo al Garante per la Protezione dei Dati
@@ -293,7 +293,7 @@ export default function PrivacyPolicy() {
           ).
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">9. Sicurezza</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">9. Sicurezza</h2>
         <p>
           Adottiamo misure di sicurezza tecniche e organizzative adeguate:
           password cifrate con bcrypt, comunicazioni HTTPS/TLS, database
@@ -302,14 +302,14 @@ export default function PrivacyPolicy() {
           cambiano ogni 20 secondi e log di frode.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">10. Minori</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">10. Minori</h2>
         <p>
           Il servizio è riservato a maggiorenni (18+). Non raccogliamo
           consapevolmente dati di minori. Se vieni a conoscenza del contrario,
           contattaci per la cancellazione immediata.
         </p>
 
-        <h2 className="font-serif text-2xl text-white mt-8">11. Modifiche</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">11. Modifiche</h2>
         <p>
           Ci riserviamo il diritto di aggiornare questa Privacy Policy. Le
           modifiche saranno pubblicate in questa pagina con la data di ultimo

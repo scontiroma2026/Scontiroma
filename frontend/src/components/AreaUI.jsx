@@ -3,7 +3,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 /**
  * Pezzi di interfaccia dell'area commerciante (variante «Bianco vivo»).
  * Solo aspetto: nessuna logica. Le classi `ac-*` sono definite in tailwind.config.js
- * e area-commerciante.css.
+ * e tema-chiaro.css.
  */
 
 // Ogni «tono» è una famiglia di colori vivi (testo scuro abbastanza da restare leggibile su bianco).

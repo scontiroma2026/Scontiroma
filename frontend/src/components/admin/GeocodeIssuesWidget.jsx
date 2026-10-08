@@ -100,24 +100,24 @@ export default function GeocodeIssuesWidget({ hdrs }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-3 p-4 text-left hover:bg-yellow-500/10 transition"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-500/20 text-yellow-300">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-500/20 text-amber-800">
           <MapPinOff size={20} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-yellow-300 text-sm font-semibold">
+          <div className="flex items-center gap-2 text-amber-800 text-sm font-semibold">
             <AlertTriangle size={14} />
             {issues.length === 1
               ? "1 negozio ha un indirizzo non geocodificabile"
               : `${issues.length} negozi hanno indirizzi non geocodificabili`}
           </div>
-          <div className="text-xs text-white/60 mt-0.5">
+          <div className="text-xs text-muted-foreground mt-0.5">
             Questi negozi NON compaiono sulla mappa. Correggi l'indirizzo e riprova, oppure confermalo manualmente.
           </div>
         </div>
         {open ? (
-          <ChevronDown size={18} className="text-yellow-300" />
+          <ChevronDown size={18} className="text-amber-800" />
         ) : (
-          <ChevronRight size={18} className="text-yellow-300" />
+          <ChevronRight size={18} className="text-amber-800" />
         )}
       </button>
 
@@ -131,26 +131,26 @@ export default function GeocodeIssuesWidget({ hdrs }) {
               <div
                 key={row.id}
                 data-testid={`geo-issue-${row.id}`}
-                className="rounded-xl border border-white/10 bg-black/40 p-3"
+                className="rounded-xl border border-border bg-muted p-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-white font-medium truncate">{row.shop_name}</span>
+                      <span className="text-foreground font-medium truncate">{row.shop_name}</span>
                       {row.geocode_failed && (
-                        <span className="rounded-full border border-red-500/40 bg-red-500/10 text-red-300 px-1.5 py-0.5 text-[10px] uppercase">
+                        <span className="rounded-full border border-red-500/40 bg-red-500/10 text-red-700 px-1.5 py-0.5 text-[10px] uppercase">
                           Fallito
                         </span>
                       )}
                       {row.category && (
-                        <span className="rounded-full border border-white/10 bg-black/40 text-white/60 px-2 py-0.5 text-[10px]">
+                        <span className="rounded-full border border-border bg-muted text-muted-foreground px-2 py-0.5 text-[10px]">
                           {row.category}
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-white/50 mt-1">{row.email}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{row.email}</div>
                     {row.phone && (
-                      <div className="text-xs text-white/50">
+                      <div className="text-xs text-muted-foreground">
                         <a href={`tel:${row.phone}`} className="hover:text-fucsia">{row.phone}</a>
                       </div>
                     )}
@@ -158,8 +158,8 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                 </div>
 
                 {/* Indirizzo (edit inline o read-only) */}
-                <div className="mt-3 rounded-lg bg-black/30 border border-white/10 p-2">
-                  <div className="text-[10px] uppercase tracking-wider text-yellow-300 mb-1">
+                <div className="mt-3 rounded-lg bg-muted border border-border p-2">
+                  <div className="text-[10px] uppercase tracking-wider text-amber-800 mb-1">
                     Indirizzo attuale
                   </div>
                   {isEditing ? (
@@ -169,7 +169,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                         value={editAddress}
                         onChange={(e) => setEditAddress(e.target.value)}
                         placeholder="Via, numero civico, CAP e città"
-                        className="text-sm bg-black/50 border-white/10 text-white flex-1"
+                        className="text-sm bg-card border-input text-foreground flex-1"
                         autoFocus
                       />
                       <div className="flex gap-1.5">
@@ -194,7 +194,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                           disabled={isRetrying}
                           variant="outline"
                           size="sm"
-                          className="h-9 border-white/20 bg-transparent text-white hover:bg-white/5"
+                          className="h-9 border-border bg-transparent text-foreground hover:bg-muted"
                         >
                           <X size={14} />
                         </Button>
@@ -202,8 +202,8 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                     </div>
                   ) : (
                     <>
-                      <div className="text-sm text-white/80">
-                        {row.address || <span className="italic text-white/40">(vuoto)</span>}
+                      <div className="text-sm text-foreground/80">
+                        {row.address || <span className="italic text-muted-foreground">(vuoto)</span>}
                       </div>
                       {/* 3 azioni ordinate: Riprova / Correggi / Conferma */}
                       <div className="mt-2.5 grid grid-cols-3 gap-2">
@@ -235,7 +235,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                           onClick={() => { setConfirmingId(confirmingId === row.id ? null : row.id); setPickedCoords(null); cancelEdit(); }}
                           variant="outline"
                           size="sm"
-                          className="h-9 w-full border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                          className="h-9 w-full border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
                         >
                           <Check size={12} className="mr-1" /> Conferma
                         </Button>
@@ -247,17 +247,17 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                 {/* Pannello conferma manuale con mappa cliccabile */}
                 {confirmingId === row.id && (
                   <div data-testid={`geo-confirm-panel-${row.id}`} className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
-                    <div className="text-xs text-white/80">
-                      L'indirizzo verrà <strong className="text-emerald-300">accettato così com'è</strong> e sparirà dagli avvisi.
-                      <br />Facoltativo: <strong className="text-white">clicca sulla mappa</strong> il punto esatto del negozio per farlo comparire anche sulla mappa dell'app.
+                    <div className="text-xs text-foreground/80">
+                      L'indirizzo verrà <strong className="text-emerald-700">accettato così com'è</strong> e sparirà dagli avvisi.
+                      <br />Facoltativo: <strong className="text-foreground">clicca sulla mappa</strong> il punto esatto del negozio per farlo comparire anche sulla mappa dell'app.
                     </div>
                     <div className="mt-3">
                       <MapPicker value={pickedCoords} onChange={setPickedCoords} />
                     </div>
                     <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <div data-testid={`geo-confirm-coords-label-${row.id}`} className="flex-1 text-xs text-white/60">
+                      <div data-testid={`geo-confirm-coords-label-${row.id}`} className="flex-1 text-xs text-muted-foreground">
                         {pickedCoords
-                          ? <>📍 Punto scelto: <span className="font-mono text-emerald-300">{pickedCoords[0].toFixed(5)}, {pickedCoords[1].toFixed(5)}</span></>
+                          ? <>📍 Punto scelto: <span className="font-mono text-emerald-700">{pickedCoords[0].toFixed(5)}, {pickedCoords[1].toFixed(5)}</span></>
                           : "Nessun punto scelto — il negozio non comparirà sulla mappa."}
                       </div>
                       <Button
@@ -265,7 +265,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                         onClick={() => confirmAddress(row)}
                         disabled={retryingId === row.id}
                         size="sm"
-                        className="h-9 bg-emerald-600 hover:bg-emerald-500 text-white"
+                        className="h-9 bg-emerald-700 hover:bg-emerald-800 text-white"
                       >
                         {retryingId === row.id ? (
                           <Loader2 size={14} className="animate-spin" />
@@ -278,7 +278,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
                 )}
 
                 {row.geocode_failed_at && (
-                  <div className="mt-2 text-[10px] text-white/40">
+                  <div className="mt-2 text-[10px] text-muted-foreground">
                     Ultimo tentativo: {new Date(row.geocode_failed_at).toLocaleString("it-IT")}
                   </div>
                 )}
@@ -286,7 +286,7 @@ export default function GeocodeIssuesWidget({ hdrs }) {
             );
           })}
 
-          <div className="pt-2 text-[11px] text-white/50 italic">
+          <div className="pt-2 text-[11px] text-muted-foreground italic">
             💡 Suggerimento: usa il formato <strong>"Via [nome], [numero civico], [CAP] [città]"</strong> — Nominatim (OpenStreetMap) è molto sensibile al formato.
           </div>
         </div>

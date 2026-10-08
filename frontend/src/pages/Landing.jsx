@@ -18,32 +18,32 @@ export default function Landing() {
   }, [params]);
 
   return (
-    <main data-testid="landing-page" className="min-h-screen bg-[#0A0A0A] text-white overflow-hidden">
+    <main data-testid="landing-page" className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* HERO */}
       <section className="relative overflow-hidden">
         {/* Background Rome image with heavy overlay */}
         <div className="absolute inset-0">
-          <img src={ROMA_HERO} className="h-full w-full object-cover opacity-30" alt="Roma" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0A0A0A]/95 via-[#0A0A0A]/70 to-[#0A0A0A]" />
+          <img src={ROMA_HERO} className="h-full w-full object-cover opacity-40" alt="Roma" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
-        <div className="absolute -left-40 top-20 h-[500px] w-[500px] rounded-full bg-fucsia/30 blur-[120px]" />
-        <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-ciano/30 blur-[100px]" />
+        <div className="absolute -left-40 top-20 h-[500px] w-[500px] rounded-full bg-fucsia/15 blur-[120px]" />
+        <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-ciano/15 blur-[100px]" />
 
         <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-20 md:pt-28">
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
                 <Sparkles size={12} className="text-neon" /> Solo Roma
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
                 <span className="text-grad">tutta tua.</span>
               </h1>
-              <p data-testid="hero-sottotitolo" className="mt-5 max-w-xl font-serif text-3xl italic leading-tight text-white/90 md:text-4xl">
+              <p data-testid="hero-sottotitolo" className="mt-5 max-w-xl font-serif text-3xl italic leading-tight text-foreground md:text-4xl">
                 Scopri quanto puoi risparmiare nel tuo quartiere.
               </p>
-              <p className="mt-6 max-w-lg text-lg text-white/70">
+              <p className="mt-6 max-w-lg text-lg text-muted-foreground">
                 Ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
                 <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. Si parte da Garbatella, San Paolo e Marconi.
               </p>
@@ -54,7 +54,7 @@ export default function Landing() {
                   </Button>
                 </Link>
                 <Link to="/discounts">
-                  <Button data-testid="cta-browse" size="lg" variant="outline" className="rounded-full border-white/30 bg-white/5 text-white hover:bg-white/10 backdrop-blur px-8 py-6">
+                  <Button data-testid="cta-browse" size="lg" variant="outline" className="rounded-full border-input bg-muted text-foreground hover:bg-muted backdrop-blur px-8 py-6">
                     Sfoglia sconti
                   </Button>
                 </Link>
@@ -66,10 +66,10 @@ export default function Landing() {
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
                 <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Roma" />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-6">
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
                   <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
-                  <div className="text-sm text-white/70">Si parte da Garbatella, San Paolo e Marconi</div>
+                  <div className="text-sm text-muted-foreground">Si parte da Garbatella, San Paolo e Marconi</div>
                 </div>
               </div>
               <div className="absolute -top-4 right-8 text-4xl text-neon" style={{animation: 'spin-slow 8s linear infinite'}}>✦</div>
@@ -90,18 +90,18 @@ export default function Landing() {
             { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
             { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Amen.", c: "neon" },
           ].map((s) => (
-            <Card key={s.n} className="relative border-white/10 bg-white/5 backdrop-blur p-8 hover:bg-white/10 transition group overflow-hidden">
+            <Card key={s.n} className="relative border-border bg-muted backdrop-blur p-8 hover:bg-muted transition group overflow-hidden">
               <div className={`absolute -top-4 -right-4 h-24 w-24 rounded-full bg-${s.c} opacity-20 blur-2xl`} />
               <div className={`font-serif text-6xl text-${s.c}`}>{s.n}</div>
-              <div className="mt-3 font-serif text-2xl text-white">{s.t}</div>
-              <p className="mt-2 text-sm text-white/70">{s.d}</p>
+              <div className="mt-3 font-serif text-2xl text-foreground">{s.t}</div>
+              <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
             </Card>
           ))}
         </div>
       </section>
 
       {/* NEIGHBOURHOODS SHOWCASE (Rome imagery) */}
-      <section className="relative border-y border-white/10 bg-[#0F0F0F]">
+      <section className="relative border-y border-border bg-muted">
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <div className="text-xs uppercase tracking-[0.2em] text-neon">I quartieri</div>
@@ -113,12 +113,12 @@ export default function Landing() {
               { name: "San Paolo", grad: "grad-ciano-fucsia", c: "text-ciano" },
               { name: "Marconi", grad: "grad-neon", c: "text-neon" },
             ].map((q) => (
-              <Link key={q.name} to="/discounts" className="group relative aspect-[5/3] md:aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-[#141414]">
+              <Link key={q.name} to="/discounts" className="group relative aspect-[5/3] md:aspect-[4/5] overflow-hidden rounded-3xl border border-border bg-card">
                 <div className={`absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 ${q.grad}`} />
                 <div className="absolute inset-x-0 bottom-0 p-6">
                   <div className={`text-xs uppercase tracking-widest ${q.c}`}>Si parte da qui</div>
-                  <div className="font-serif text-4xl text-white">{q.name}</div>
-                  <div className="mt-2 flex items-center gap-1 text-xs text-white/60">
+                  <div className="font-serif text-4xl text-foreground">{q.name}</div>
+                  <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin size={12} /> Roma
                   </div>
                 </div>
@@ -130,19 +130,19 @@ export default function Landing() {
 
       {/* MERCHANT CTA */}
       <section className="relative mx-auto max-w-7xl px-6 pb-20">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-fucsia via-purple-700 to-ciano p-10 md:p-14">
-          <div className="absolute top-4 right-8 text-6xl opacity-30" style={{animation: 'spin-slow 10s linear infinite'}}>✦</div>
+        <div className="relative overflow-hidden rounded-3xl border border-border ac-grad p-10 md:p-14">
+          <div className="absolute top-4 right-8 text-6xl text-white opacity-30" style={{animation: 'spin-slow 10s linear infinite'}}>✦</div>
           <div className="grid gap-8 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-white/80">Per i commercianti</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-white">Per i commercianti</div>
               <h2 className="mt-3 font-serif text-5xl text-white leading-tight">
                 Un solo sconto,<br/>nuovi clienti dal quartiere.
               </h2>
-              <p className="mt-4 text-white/90 max-w-md">
+              <p className="mt-4 text-white max-w-md">
                 Hai un'attività a Garbatella, San Paolo o Marconi? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.
               </p>
               <Link to="/register?role=merchant">
-                <Button data-testid="cta-merchant" className="mt-6 rounded-full bg-black text-white hover:bg-black/80 px-8 py-6">
+                <Button data-testid="cta-merchant" className="mt-6 rounded-full bg-white text-ac-ink hover:bg-white/90 px-8 py-6">
                   Diventa partner <Heart size={16} className="ml-2 text-fucsia" />
                 </Button>
               </Link>
@@ -154,9 +154,9 @@ export default function Landing() {
                 { n: "1", l: "offerta al mese" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
-                <div key={s.l} className="rounded-2xl border border-white/20 bg-black/30 backdrop-blur p-5">
-                  <div className="font-serif text-4xl text-white">{s.n}</div>
-                  <div className="mt-1 text-xs uppercase tracking-wider text-white/70">{s.l}</div>
+                <div key={s.l} className="rounded-2xl border border-white bg-white p-5">
+                  <div className="font-serif text-4xl text-foreground">{s.n}</div>
+                  <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">{s.l}</div>
                 </div>
               ))}
             </div>
@@ -192,12 +192,12 @@ export default function Landing() {
             <h3 className="mb-3 text-xs uppercase tracking-[0.2em] text-ciano">{g.titolo}</h3>
             <div className="space-y-3">
               {g.voci.map((f) => (
-                <details key={f.q} className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
-                  <summary className="flex cursor-pointer items-center justify-between text-white font-semibold">
+                <details key={f.q} className="group rounded-2xl border border-border bg-muted backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
+                  <summary className="flex cursor-pointer items-center justify-between text-foreground font-semibold">
                     <span className="font-serif text-lg">{f.q}</span>
                     <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>
                   </summary>
-                  <p className="mt-3 text-sm text-white/70 leading-relaxed">{f.a}</p>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
                 </details>
               ))}
             </div>
@@ -205,9 +205,9 @@ export default function Landing() {
         ))}
       </section>
 
-      <footer className="border-t border-white/10 py-8 text-center text-xs text-white/50">
+      <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-2">
-          © {new Date().getFullYear()} <BrandMark inline className="text-white/70" /> — Made con amore ♡
+          © {new Date().getFullYear()} <BrandMark inline className="text-muted-foreground" /> — Made con amore ♡
         </span>
       </footer>
     </main>

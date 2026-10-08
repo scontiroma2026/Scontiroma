@@ -123,18 +123,18 @@ export default function CookieBanner() {
       data-testid="cookie-banner"
       className="fixed inset-x-0 bottom-0 z-[9999] px-3 pb-3 sm:px-6 sm:pb-6 animate-in slide-in-from-bottom duration-300"
     >
-      <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-white/15 bg-[#141419]/98 shadow-2xl backdrop-blur-xl">
+      <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-border bg-card/98 shadow-2xl backdrop-blur-xl">
         {!showPrefs ? (
           <div className="p-5 sm:p-6">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fucsia/15 text-fucsia">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fucsia/10 text-fucsia">
                 <Cookie size={20} />
               </div>
               <div className="flex-1">
-                <h2 className="font-serif text-xl text-white">
+                <h2 className="font-serif text-xl text-foreground">
                   I biscotti della casa
                 </h2>
-                <p className="mt-2 text-sm text-white/70 leading-relaxed">
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                   Usiamo cookie <strong>tecnici essenziali</strong> per farti
                   accedere in sicurezza. Se ci autorizzi, useremo anche cookie{" "}
                   <strong>funzionali</strong> per ricordare le tue preferenze
@@ -157,7 +157,7 @@ export default function CookieBanner() {
                 data-testid="cookie-reject"
                 onClick={rejectAll}
                 variant="outline"
-                className="border-white/20 bg-transparent text-white hover:bg-white/5"
+                className="border-border bg-transparent text-foreground hover:bg-muted"
               >
                 Rifiuta
               </Button>
@@ -165,7 +165,7 @@ export default function CookieBanner() {
                 data-testid="cookie-customize"
                 onClick={() => setShowPrefs(true)}
                 variant="outline"
-                className="border-white/20 bg-transparent text-white hover:bg-white/5"
+                className="border-border bg-transparent text-foreground hover:bg-muted"
               >
                 Personalizza
               </Button>
@@ -185,14 +185,14 @@ export default function CookieBanner() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ciano/15 text-ciano">
                   <Shield size={20} />
                 </div>
-                <h2 className="font-serif text-xl text-white">
+                <h2 className="font-serif text-xl text-foreground">
                   Preferenze cookie
                 </h2>
               </div>
               <button
                 data-testid="cookie-close"
                 onClick={() => setShowPrefs(false)}
-                className="text-white/50 hover:text-white transition"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground transition"
                 aria-label="Chiudi"
               >
                 <X size={18} />
@@ -243,8 +243,8 @@ function PrefRow({ testid, title, desc, checked, onChange, disabled }) {
   return (
     <label
       data-testid={testid}
-      className={`flex items-start gap-3 rounded-xl border border-white/10 bg-black/40 p-3 ${
-        disabled ? "opacity-70" : "cursor-pointer hover:bg-black/60"
+      className={`flex items-start gap-3 rounded-xl border border-border bg-muted p-3 ${
+        disabled ? "opacity-70" : "cursor-pointer hover:bg-secondary"
       }`}
     >
       <input
@@ -255,8 +255,8 @@ function PrefRow({ testid, title, desc, checked, onChange, disabled }) {
         className="mt-1 h-4 w-4 shrink-0 accent-fucsia"
       />
       <div className="flex-1">
-        <div className="text-sm font-semibold text-white">{title}</div>
-        <div className="mt-1 text-xs text-white/60 leading-relaxed">{desc}</div>
+        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <div className="mt-1 text-xs text-muted-foreground leading-relaxed">{desc}</div>
       </div>
     </label>
   );

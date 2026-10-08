@@ -14,7 +14,7 @@ export default function StarRating({ avg, count, size = 16 }) {
           const fill = Math.max(0, Math.min(1, avg - i));
           return (
             <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
-              <Star size={size} className="absolute inset-0 text-white/25" fill="currentColor" />
+              <Star size={size} className="absolute inset-0 text-muted-foreground" fill="currentColor" />
               <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
                 <Star size={size} className="text-gold" fill="currentColor" />
               </span>
@@ -22,7 +22,7 @@ export default function StarRating({ avg, count, size = 16 }) {
           );
         })}
       </div>
-      <span className="text-sm text-white/50">({count.toLocaleString("it-IT")})</span>
+      <span className="text-sm text-muted-foreground">({count.toLocaleString("it-IT")})</span>
     </div>
   );
 }

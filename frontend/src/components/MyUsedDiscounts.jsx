@@ -23,7 +23,7 @@ function Stars({ value, onChange, readOnly, size = 22 }) {
             onClick={() => !readOnly && onChange?.(i)}
             className={`${readOnly ? "cursor-default" : "cursor-pointer hover:scale-110"} transition`}
           >
-            <Star size={size} className={active ? "text-yellow-400 fill-yellow-400" : "text-white/25"} />
+            <Star size={size} className={active ? "text-amber-800 fill-yellow-400" : "text-muted-foreground"} />
           </button>
         );
       })}
@@ -67,10 +67,10 @@ export default function MyUsedDiscounts() {
     } finally { setSaving(null); }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-white/60"><Loader2 className="animate-spin" size={16}/> Caricamento…</div>;
+  if (loading) return <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="animate-spin" size={16}/> Caricamento…</div>;
 
   if (rows.length === 0) return (
-    <Card className="border-warm bg-white/5 p-8 text-center text-white/60">
+    <Card className="border-warm bg-muted p-8 text-center text-muted-foreground">
       <Sparkles className="mx-auto mb-2 text-fucsia" size={24}/>
       Non hai ancora usato nessuno sconto. Vai a <span className="text-fucsia">/discounts</span> e scoprine uno!
     </Card>
@@ -82,25 +82,25 @@ export default function MyUsedDiscounts() {
         const dt = r.redeemed_at ? new Date(r.redeemed_at) : null;
         const draft = drafts[r.id] || {};
         return (
-          <Card key={r.id} data-testid={`used-${r.id}`} className="border-white/10 bg-white/5 p-4">
+          <Card key={r.id} data-testid={`used-${r.id}`} className="border-border bg-muted p-4">
             <div className="flex items-start gap-4 flex-wrap">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-fucsia/20 text-fucsia shrink-0">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-fucsia/10 text-fucsia shrink-0">
                 <TicketCheck size={18}/>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-serif text-lg text-white">{r.discount_title}</div>
-                <div className="text-xs text-white/60">{r.shop_name} · {dt ? dt.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}) : ""}</div>
+                <div className="font-serif text-lg text-foreground">{r.discount_title}</div>
+                <div className="text-xs text-muted-foreground">{r.shop_name} · {dt ? dt.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}) : ""}</div>
 
                 {r.reviewed ? (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-white/70">
+                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                     <span>Il tuo voto:</span>
                     <Stars value={r.stars} readOnly size={16}/>
-                    <span className="text-xs text-white/50">— grazie del feedback!</span>
+                    <span className="text-xs text-muted-foreground">— grazie del feedback!</span>
                   </div>
                 ) : (
                   <div className="mt-3 space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-white/80">Come è andata?</span>
+                      <span className="text-sm text-foreground/80">Come è andata?</span>
                       <Stars value={draft.stars || 0} onChange={(v) => setDrafts((d) => ({...d, [r.id]: {...d[r.id], stars: v}}))} />
                     </div>
                     <div>
@@ -111,7 +111,7 @@ export default function MyUsedDiscounts() {
                         maxLength={1000}
                         value={draft.comment || ""}
                         onChange={(e) => setDrafts((d) => ({...d, [r.id]: {...d[r.id], comment: e.target.value}}))}
-                        className="bg-black/40 border-white/10 text-white text-sm"
+                        className="bg-muted border-border text-foreground text-sm"
                       />
                     </div>
                     <Button

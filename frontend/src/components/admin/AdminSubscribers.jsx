@@ -31,18 +31,18 @@ const fmt = (iso) => {
 const statusPill = (status) => {
   if (status === "active")
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-xs text-green-300">
+      <span className="inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-xs text-emerald-700">
         <CheckCircle2 size={10} /> Attivo
       </span>
     );
   if (status === "cancelled")
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-xs text-red-300">
+      <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-xs text-red-700">
         <XCircle size={10} /> Disdetto
       </span>
     );
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-xs text-white/60">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
       <Clock size={10} /> {status || "—"}
     </span>
   );
@@ -52,8 +52,8 @@ const providerBadge = (p) => {
   if (!p) return null;
   const colors =
     p === "stripe"
-      ? "border-indigo-400/40 bg-indigo-400/10 text-indigo-300"
-      : "border-yellow-400/40 bg-yellow-400/10 text-yellow-300";
+      ? "border-indigo-400/40 bg-indigo-400/10 text-indigo-700"
+      : "border-yellow-400/40 bg-yellow-400/10 text-amber-800";
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border ${colors} px-2 py-0.5 text-[10px] uppercase`}
@@ -96,13 +96,13 @@ export default function AdminSubscribers({ hdrs }) {
   const toggle = (id) => setExpanded((e) => ({ ...e, [id]: !e[id] }));
 
   return (
-    <Card data-testid="admin-subscribers-card" className="border-white/10 bg-white/5 p-6">
+    <Card data-testid="admin-subscribers-card" className="border-border bg-muted p-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h3 className="font-serif text-2xl flex items-center gap-2">
             <Users size={22} className="text-fucsia" /> Abbonati — LOG completo
           </h3>
-          <p className="text-xs text-white/50 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Conferme, disdette (con data/ora), rinnovi, sconti riscattati e negozi frequentati.
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function AdminSubscribers({ hdrs }) {
           onClick={load}
           variant="outline"
           size="sm"
-          className="border-white/20 bg-transparent text-white hover:bg-white/5"
+          className="border-border bg-transparent text-foreground hover:bg-muted"
         >
           <RefreshCw size={14} className="mr-2" /> Aggiorna
         </Button>
@@ -131,7 +131,7 @@ export default function AdminSubscribers({ hdrs }) {
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
               filter === f.k
                 ? "bg-fucsia text-white"
-                : "border border-white/15 bg-black/40 text-white/70 hover:border-white/30"
+                : "border border-border bg-muted text-muted-foreground hover:border-input"
             }`}
           >
             {f.label}
@@ -144,25 +144,25 @@ export default function AdminSubscribers({ hdrs }) {
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && load()}
             placeholder="Cerca email o nome…"
-            className="h-8 w-56 bg-black/40 border-white/10 text-sm"
+            className="h-8 w-56 bg-muted border-border text-sm"
           />
-          <Button size="sm" onClick={load} className="grad-fucsia-viola text-white h-8">
+          <Button size="sm" onClick={load} className="grad-fucsia-viola text-white">
             Cerca
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="mt-6 text-center text-white/50 py-8">Caricamento…</div>
+        <div className="mt-6 text-center text-muted-foreground py-8">Caricamento…</div>
       ) : list.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-10 text-center text-white/60">
+        <div className="mt-6 rounded-xl border border-border bg-muted p-10 text-center text-muted-foreground">
           Nessun abbonato trovato con i filtri correnti.
         </div>
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase text-white/50 border-b border-white/10">
+              <tr className="text-left text-xs uppercase text-muted-foreground border-b border-border">
                 <th className="py-2"></th>
                 <th className="py-2">Utente</th>
                 <th className="py-2">Provider</th>
@@ -184,33 +184,33 @@ export default function AdminSubscribers({ hdrs }) {
                     <tr
                       key={u.id}
                       data-testid={`subs-row-${u.id}`}
-                      className="border-b border-white/5 hover:bg-white/5 cursor-pointer"
+                      className="border-b border-border hover:bg-muted cursor-pointer"
                       onClick={() => toggle(u.id)}
                     >
-                      <td className="py-3 w-6 text-white/50">
+                      <td className="py-3 w-6 text-muted-foreground">
                         {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                       </td>
                       <td className="py-3">
-                        <div className="text-white font-medium truncate max-w-[180px]">{u.name || "—"}</div>
-                        <div className="text-white/50 text-xs truncate max-w-[180px]">{u.email}</div>
+                        <div className="text-foreground font-medium truncate max-w-[180px]">{u.name || "—"}</div>
+                        <div className="text-muted-foreground text-xs truncate max-w-[180px]">{u.email}</div>
                       </td>
                       <td className="py-3">{providerBadge(s.provider)}</td>
-                      <td className="py-3 text-white/70 text-xs">{fmt(s.start_date)}</td>
-                      <td className="py-3 text-white/70 text-xs">{fmt(s.end_date)}</td>
-                      <td className="py-3 text-white/70 text-xs">
+                      <td className="py-3 text-muted-foreground text-xs">{fmt(s.start_date)}</td>
+                      <td className="py-3 text-muted-foreground text-xs">{fmt(s.end_date)}</td>
+                      <td className="py-3 text-muted-foreground text-xs">
                         {s.cancelled_at ? (
-                          <span className="text-red-300">{fmt(s.cancelled_at)}</span>
+                          <span className="text-red-700">{fmt(s.cancelled_at)}</span>
                         ) : (
-                          <span className="text-white/30">—</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="py-3 text-center">
-                        <span className={row.renewals_count > 0 ? "text-ciano font-bold" : "text-white/40"}>
+                        <span className={row.renewals_count > 0 ? "text-ciano font-bold" : "text-muted-foreground"}>
                           {row.renewals_count}
                         </span>
                       </td>
                       <td className="py-3 text-center">
-                        <span className={row.total_redemptions > 0 ? "text-fucsia font-bold" : "text-white/40"}>
+                        <span className={row.total_redemptions > 0 ? "text-fucsia font-bold" : "text-muted-foreground"}>
                           {row.total_redemptions}
                         </span>
                       </td>
@@ -218,7 +218,7 @@ export default function AdminSubscribers({ hdrs }) {
                     </tr>
                     {isOpen && (
                       <tr data-testid={`subs-detail-${u.id}`}>
-                        <td colSpan={9} className="bg-black/40 border-b border-white/10 p-5">
+                        <td colSpan={9} className="bg-muted border-b border-border p-5">
                           <SubscriberDetail row={row} />
                         </td>
                       </tr>
@@ -242,35 +242,35 @@ function SubscriberDetail({ row }) {
       <div>
         <div className="text-xs uppercase tracking-wider text-gold mb-2">Anagrafica</div>
         <div className="space-y-1 text-xs">
-          <div className="flex items-center gap-2 text-white/80">
+          <div className="flex items-center gap-2 text-foreground/80">
             <Mail size={12} /> <a href={`mailto:${u.email}`} className="text-fucsia hover:underline">{u.email}</a>
           </div>
           {u.phone && (
-            <div className="flex items-center gap-2 text-white/80">
+            <div className="flex items-center gap-2 text-foreground/80">
               <Phone size={12} /> {u.phone}
             </div>
           )}
-          <div className="text-white/50 mt-2">
-            Registrato: <span className="text-white/80">{fmt(u.created_at)}</span>
+          <div className="text-muted-foreground mt-2">
+            Registrato: <span className="text-foreground/80">{fmt(u.created_at)}</span>
           </div>
-          <div className="text-white/50">
+          <div className="text-muted-foreground">
             Scadenza attuale:{" "}
-            <span className="text-white/80">{fmt(u.data_scadenza_abbonamento)}</span>
+            <span className="text-foreground/80">{fmt(u.data_scadenza_abbonamento)}</span>
           </div>
           {u.consents && (
-            <div className="mt-2 text-[10px] text-white/50">
+            <div className="mt-2 text-[10px] text-muted-foreground">
               Consenso legale:{" "}
               {u.consents.legal_accepted ? (
-                <span className="text-green-400">✓ {fmt(u.consents.legal_accepted_at)}</span>
+                <span className="text-emerald-700">✓ {fmt(u.consents.legal_accepted_at)}</span>
               ) : (
-                <span className="text-red-400">✗ non accettato</span>
+                <span className="text-red-700">✗ non accettato</span>
               )}
               <br />
               Marketing opt-in:{" "}
               {u.consents.marketing_opt_in ? (
-                <span className="text-green-400">✓</span>
+                <span className="text-emerald-700">✓</span>
               ) : (
-                <span className="text-white/50">✗</span>
+                <span className="text-muted-foreground">✗</span>
               )}
             </div>
           )}
@@ -282,24 +282,24 @@ function SubscriberDetail({ row }) {
         <div className="text-xs uppercase tracking-wider text-gold mb-2">Storico abbonamenti</div>
         <div className="space-y-2 text-xs">
           {row.subscriptions_history.map((s) => (
-            <div key={s.id} className="rounded-lg border border-white/10 bg-black/30 p-2">
+            <div key={s.id} className="rounded-lg border border-border bg-muted p-2">
               <div className="flex items-center justify-between">
                 {statusPill(s.status)}
                 {providerBadge(s.provider)}
               </div>
-              <div className="mt-1 text-white/70">
-                Attivato: <span className="text-white">{fmt(s.start_date)}</span>
+              <div className="mt-1 text-muted-foreground">
+                Attivato: <span className="text-foreground">{fmt(s.start_date)}</span>
               </div>
-              <div className="text-white/70">
-                Scadenza: <span className="text-white">{fmt(s.end_date)}</span>
+              <div className="text-muted-foreground">
+                Scadenza: <span className="text-foreground">{fmt(s.end_date)}</span>
               </div>
               {s.cancelled_at && (
                 <>
-                  <div className="text-red-300">
-                    Disdetto: <span className="text-red-200 font-mono">{fmt(s.cancelled_at)}</span>
+                  <div className="text-red-700">
+                    Disdetto: <span className="text-red-800 font-mono">{fmt(s.cancelled_at)}</span>
                   </div>
                   {s.cancelled_reason && (
-                    <div className="text-white/50 text-[10px] italic">
+                    <div className="text-muted-foreground text-[10px] italic">
                       Motivo: {s.cancelled_reason}
                       {s.cancelled_feedback && ` — "${s.cancelled_feedback}"`}
                     </div>
@@ -322,10 +322,10 @@ function SubscriberDetail({ row }) {
             </div>
             <div className="space-y-1 text-[11px] font-mono max-h-40 overflow-y-auto">
               {row.renewal_events.map((r, i) => (
-                <div key={r.provider_event_id || `${r.provider}-${r.processed_at}-${i}`} className="text-white/70 border-b border-white/5 py-1">
+                <div key={r.provider_event_id || `${r.provider}-${r.processed_at}-${i}`} className="text-muted-foreground border-b border-border py-1">
                   <span className="text-ciano">{fmt(r.processed_at)}</span> ·{" "}
                   <span className="text-fucsia">€{Number(r.amount_eur || 0).toFixed(2)}</span> ·{" "}
-                  <span className="text-white/50">{r.provider}</span>
+                  <span className="text-muted-foreground">{r.provider}</span>
                 </div>
               ))}
             </div>
@@ -339,16 +339,16 @@ function SubscriberDetail({ row }) {
           <Store size={12} /> Sconti riscattati ({row.total_redemptions})
         </div>
         {row.shops_used.length === 0 ? (
-          <div className="text-xs text-white/50 italic">Nessuno sconto usato finora</div>
+          <div className="text-xs text-muted-foreground italic">Nessuno sconto usato finora</div>
         ) : (
           <div className="space-y-2">
             {row.shops_used.map((s) => (
-              <div key={s.merchant_id} className="rounded-lg border border-white/10 bg-black/30 p-2 text-xs">
+              <div key={s.merchant_id} className="rounded-lg border border-border bg-muted p-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-white font-medium">{s.shop_name}</span>
+                  <span className="text-foreground font-medium">{s.shop_name}</span>
                   <span className="text-fucsia font-bold">{s.count}×</span>
                 </div>
-                <div className="text-white/40 text-[10px] mt-0.5">
+                <div className="text-muted-foreground text-[10px] mt-0.5">
                   {s.zone || "—"} · ultimo uso: {fmt(s.last_redeemed_at)}
                 </div>
               </div>
