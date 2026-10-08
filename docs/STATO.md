@@ -45,6 +45,7 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
 |---|---|---|
 | (questa) | Caratteri ospitati sul nostro sito: niente più richieste a Google Fonts | controlli verdi |
 | (questa) | Pulizia residui Emergent, parte 2: pacchetti inutilizzati nel server e nel sito | controlli verdi |
+| (questa, `claude/da-fare-scadenza`) | Dashboard commerciante: scadenza reale nella pillola dell'offerta («fino al 31/10») e scheda «Da fare» con collegamenti | controlli verdi |
 | (branch `claude/area-commerciante-d`) | Area commerciante nella variante «D · Bianco vivo»: dashboard, offerta, archivio, scansione; fondo chiaro, Fraunces e Manrope, aree toccabili da 44 px, stati vuoto/caricamento/errore; nuovo test `20-area-commerciante` | PR da aprire, controlli verdi, OK del titolare sull'aspetto |
 
 ## Decisioni prese

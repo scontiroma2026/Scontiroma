@@ -8,6 +8,7 @@ import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
 import MerchantHours from "@/components/MerchantHours";
 import NextOfferCard from "@/components/NextOfferCard";
+import DaFareCard, { calcolaVoci } from "@/components/DaFareCard";
 import RenewalBanner from "@/components/RenewalBanner";
 import MerchantInsights from "@/components/MerchantInsights";
 import { Scheda, Pillola, StatoVuoto, ErroreRiprova, Scheletro, CLASSE_PRIMARIO, CLASSE_BASE_SECONDARIO, CLASSE_BORDO } from "@/components/AreaUI";
@@ -19,6 +20,7 @@ export default function MerchantDashboard() {
   const [stats, setStats] = useState({ total: 0, redeemed: 0, pending: 0 });
   const [discount, setDiscount] = useState(null);
   const [redemptions, setRedemptions] = useState([]);
+  const [next, setNext] = useState(null); // offerta del mese dopo (serve a NextOfferCard e a «Da fare»)
   const [stato, setStato] = useState("carica"); // carica | ok | errore
 
   const carica = useCallback(() => {
@@ -38,6 +40,9 @@ export default function MerchantDashboard() {
   }, []);
 
   useEffect(() => { carica(); }, [carica]);
+  useEffect(() => {
+    api.get("/merchants/me/next-discount").then((r) => setNext(r.data)).catch(() => {});
+  }, []);
 
   return (
     <main data-testid="merchant-dashboard" className="pb-6 text-ac-ink">
@@ -76,6 +81,8 @@ export default function MerchantDashboard() {
 
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-4">
+            {stato === "ok" && user && <DaFareCard voci={calcolaVoci({ user, discount, next })} />}
+
             <Scheda titolo="I tuoi codici" tono="viola">
               <div className="grid grid-cols-3 gap-2">
                 <Numero label="Codici generati" value={stats.total} tono="rosa" caricamento={stato === "carica"} />
@@ -122,7 +129,7 @@ export default function MerchantDashboard() {
               )}
             </Scheda>
 
-            <NextOfferCard />
+            <NextOfferCard data={next} />
 
             <Scheda titolo="Ultimi codici" tono="verde" destra={stato === "ok" ? `${redemptions.length} recenti` : null}>
               {stato === "carica" ? (
@@ -187,12 +194,24 @@ export default function MerchantDashboard() {
   );
 }
 
+/** «2026-10-31» -> «31/10» (con l'anno se non è quello in corso). Vuoto se la data manca o non è valida. */
+export function dataBreve(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return "";
+  const [, anno, mese, giorno] = m;
+  return Number(anno) === new Date().getFullYear() ? `${giorno}/${mese}` : `${giorno}/${mese}/${anno}`;
+}
+
 /** Pillola verde/ambra/grigia sotto il nome: dice in parole semplici se l'offerta si vede ai clienti. */
 function StatoOfferta({ discount }) {
   let tono = "ambra";
   let testo = "Nessuna offerta pubblicata";
   if (discount) {
-    if (discount.approval_status === "approved" && discount.active !== false) { tono = "verde"; testo = "Offerta visibile ai clienti"; }
+    if (discount.approval_status === "approved" && discount.active !== false) {
+      tono = "verde";
+      const fino = dataBreve(discount.valid_until); // senza data (server vecchio o dato mancante) resta la frase di prima
+      testo = fino ? `Offerta visibile ai clienti fino al ${fino}` : "Offerta visibile ai clienti";
+    }
     else if (discount.approval_status === "pending") { tono = "ambra"; testo = "Offerta in revisione"; }
     else if (discount.approval_status === "rejected") { tono = "rosso"; testo = "Offerta rifiutata: da correggere"; }
     else if (discount.approval_status === "expired") { tono = "ambra"; testo = "Offerta scaduta"; }

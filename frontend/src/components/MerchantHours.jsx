@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { Clock, Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 import { Scheda, CLASSE_PRIMARIO } from "@/components/AreaUI";
 
 export const GIORNI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
@@ -14,6 +15,7 @@ const VUOTO = () => GIORNI.map((_, i) => ({ chiuso: i === 6, fasce: i === 6 ? []
  * che chiude prima di aprire finisce dopo mezzanotte (es. 19:30–01:00).
  */
 export default function MerchantHours() {
+  const { refresh } = useAuth();
   const [giorni, setGiorni] = useState(VUOTO);
   const [straordinaria, setStraordinaria] = useState(false);
   const [nota, setNota] = useState("");
@@ -45,6 +47,7 @@ export default function MerchantHours() {
       });
       setAggiornati(data.orari.aggiornati_il);
       setStato(data.stato);
+      refresh(); // aggiorna «Da fare»
       toast.success("Orari salvati: i clienti li vedono sulla tua offerta.");
     } catch (err) {
       toast.error(formatApiError(err));
