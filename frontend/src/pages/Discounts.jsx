@@ -24,7 +24,7 @@ export default function Discounts() {
   const vistaPreferiti = puoPreferiti && params.get("vista") === "preferiti";
   const [discounts, setDiscounts] = useState([]);
   const [zones, setZones] = useState([]);
-  const [zoneGroups, setZoneGroups] = useState([]);
+  const [zoneAree, setZoneAree] = useState([]);
   const [categories, setCategories] = useState([]);
   const [zone, setZone] = useState("");
   const [category, setCategory] = useState("");
@@ -44,7 +44,7 @@ export default function Discounts() {
     );
   };
   useEffect(() => {
-    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneGroups(r.data.groups || []); });
+    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneAree(r.data.areas || []); });
     api.get("/categories").then((r) => setCategories(r.data.categories || []));
     api.get("/merchants/top?limit=3")
       .then((r) => setTopDiscounts(r.data.merchants || []))
@@ -115,7 +115,7 @@ export default function Discounts() {
           className="w-full rounded-md border border-input bg-card border border-border px-3 h-11 text-sm md:w-56"
         >
           <option value="">Tutte le zone</option>
-          <ZoneOptions groups={zoneGroups} zones={zones} />
+          <ZoneOptions areas={zoneAree} zones={zones} />
         </select>
         <select
           data-testid="filter-category"

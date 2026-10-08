@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 import { browserSupportsWebAuthn } from "@simplewebauthn/browser";
@@ -34,7 +35,7 @@ export function calcolaVoci({ user, discount, next }) {
   }
 
   if ((user?.biometric_devices || 0) === 0 && browserSupportsWebAuthn()) {
-    voci.push({ id: "faceid", tono: "teal", to: "/setup-security?da=account", titolo: "Attiva Face ID", sotto: "Per entrare nell'area negozio senza digitare la password" });
+    voci.push({ id: "faceid", facoltativa: true, tono: "teal", to: "/setup-security?da=account", titolo: "Attiva Face ID", sotto: "Per entrare nell'area negozio senza digitare la password" });
   }
   return voci;
 }
@@ -52,7 +53,7 @@ function Voce({ v }) {
       <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-ac-mute" />
     </>
   );
-  const classe = "flex min-h-[60px] items-center gap-3 border-t border-ac-line px-1 text-ac-ink first:border-t-0 hover:bg-ac-tint/60";
+  const classe = "flex min-h-[60px] items-center gap-3 px-1 text-ac-ink hover:bg-ac-tint/60";
   return v.to ? (
     <Link to={v.to} data-testid={`da-fare-${v.id}`} className={classe}>{contenuto}</Link>
   ) : (
@@ -60,7 +61,28 @@ function Voce({ v }) {
   );
 }
 
-export default function DaFareCard({ voci }) {
+// «Non adesso» per le voci facoltative (Face ID): si nasconde per 30 giorni su questo telefono.
+const CHIAVE_NON_ADESSO = "sr_da_fare_non_adesso_v1";
+const GIORNI_NON_ADESSO = 30;
+
+function leggiNonAdesso() {
+  try {
+    const dati = JSON.parse(localStorage.getItem(CHIAVE_NON_ADESSO) || "{}");
+    const limite = Date.now() - GIORNI_NON_ADESSO * 86400000;
+    return Object.fromEntries(Object.entries(dati).filter(([, t]) => Number(t) > limite));
+  } catch {
+    return {};
+  }
+}
+
+export default function DaFareCard({ voci: tutte }) {
+  const [nascoste, setNascoste] = useState(leggiNonAdesso);
+  const voci = tutte.filter((v) => !(v.facoltativa && nascoste[v.id]));
+  const nonAdesso = (id) => {
+    const next = { ...nascoste, [id]: Date.now() };
+    setNascoste(next);
+    try { localStorage.setItem(CHIAVE_NON_ADESSO, JSON.stringify(next)); } catch { /* memoria piena o disattivata */ }
+  };
   if (voci.length === 0) {
     return (
       <Scheda titolo="Da fare" tono="verde" data-testid="da-fare">
@@ -74,7 +96,21 @@ export default function DaFareCard({ voci }) {
   return (
     <Scheda titolo="Da fare" tono="rosa" destra={voci.length === 1 ? "1 cosa" : `${voci.length} cose`} data-testid="da-fare">
       <ul>
-        {voci.map((v) => <li key={v.id}><Voce v={v} /></li>)}
+        {voci.map((v) => (
+          <li key={v.id} className="flex items-center border-t border-ac-line first:border-t-0">
+            <div className="min-w-0 flex-1"><Voce v={v} /></div>
+            {v.facoltativa && (
+              <button
+                type="button"
+                data-testid={`da-fare-${v.id}-non-adesso`}
+                onClick={() => nonAdesso(v.id)}
+                className="ml-2 min-h-[44px] shrink-0 rounded-full px-3 text-xs font-bold text-ac-soft hover:bg-ac-tint/60"
+              >
+                Non adesso
+              </button>
+            )}
+          </li>
+        ))}
       </ul>
     </Scheda>
   );

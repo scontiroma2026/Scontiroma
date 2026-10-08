@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store, Share2 } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
+import { FotoOfferta } from "@/components/NoPhoto";
 import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
 import OrariNegozio from "@/components/OrariNegozio";
@@ -155,18 +156,17 @@ export default function DiscountDetail() {
         {(() => {
           const gallery = (Array.isArray(discount.image_urls) && discount.image_urls.length > 0)
             ? discount.image_urls
-            : [discount.image_url || m.image_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"];
-          const current = gallery[photoIdx] || gallery[0];
+            : [discount.image_url || m.image_url].filter(Boolean);
+          const current = gallery[photoIdx] || gallery[0] || "";
           const hasMulti = gallery.length > 1;
           return (
             <div>
               <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-warm bg-gradient-to-br from-fucsia/20 to-ciano/10">
-                <img
-                  data-testid="discount-hero-image"
+                <FotoOfferta
+                  testId="discount-hero-image"
                   src={current}
                   alt={discount.title}
                   className="h-full w-full object-cover transition-opacity duration-300"
-                  onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"; }}
                 />
                 <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
                   −{discount.percent_off}%

@@ -17,7 +17,6 @@ test('commerciante crea l\'offerta, admin approva, il cliente la vede', async ({
   await page.getByTestId('disc-original').fill('40');
   await page.getByTestId('disc-discounted').fill('20');
   await page.locator('input[type=file]').first().setInputFiles(FOTO);
-  await page.getByTestId('photo-add-confirm').click();
   await expect(page.getByTestId('photo-tile-0')).toBeVisible();
 
   // 2. "Migliora foto": Gemini è simulato da server_e2e.py e restituisce un PNG fisso
@@ -25,6 +24,8 @@ test('commerciante crea l\'offerta, admin approva, il cliente la vede', async ({
   await page.getByTestId('photo-ai-enhance-0').click();
   const r = await risposta;
   expect(r.status()).toBe(200);
+  // La foto cambia solo se il commerciante sceglie «Usa la migliorata»
+  await page.getByTestId('photo-compare-use-enhanced').click();
   await expect(page.getByTestId('photo-tile-0').locator('img')).toHaveAttribute('src', /^data:image\/png;base64,/);
 
   await page.getByTestId('disc-validity-info').fill('Solo mercoledì e venerdì');
@@ -68,13 +69,15 @@ test('"Migliora foto" senza essere commerciante: rifiutato', async ({ request })
   expect(r.status).toBe(403);
 });
 
-test('filtro zone degli sconti: tutta Roma, con i quartieri raggruppati per area, e i dintorni', async ({ page }) => {
+test('filtro zone degli sconti: 16 aree di Roma e dintorni, senza i singoli quartieri', async ({ page }) => {
   await page.goto('/discounts');
   const opzioni = page.getByTestId('filter-zone').locator('option');
+  await expect(opzioni).toHaveCount(17);   // «Tutte le zone» + 16 aree
   await expect(opzioni.first()).toHaveText('Tutte le zone');
-  for (const z of ['Garbatella', 'San Paolo', 'Marconi', 'Trastevere', 'Primavalle', 'Ostia Lido', 'Fiumicino', 'Castelli Romani']) {
-    await expect(opzioni.filter({ hasText: new RegExp(`^${z}$`) })).toHaveCount(1);
-  }
+  await expect(opzioni.filter({ hasText: /^Aurelio · Boccea/ })).toHaveCount(1);
+  await expect(opzioni.filter({ hasText: /^Garbatella · / })).toHaveCount(1);
+  await expect(opzioni.filter({ hasText: /^Fuori Roma · / })).toHaveCount(1);
+  await expect(opzioni.filter({ hasText: /Municipio/ })).toHaveCount(0);
 });
 
 test('pagina offerta: "Chiama" e "WhatsApp" hanno lo stesso formato, nessun consiglio sotto', async ({ page, request }) => {
