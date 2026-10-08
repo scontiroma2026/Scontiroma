@@ -1199,14 +1199,96 @@ def _cache_put(cache: dict, key: str, value) -> None:
         cache.clear()
     cache[key] = value
 
+
+# ---------- Geocodifica con LocationIQ (facoltativa, piano gratuito senza carta) ----------
+# Si attiva solo se la variabile d'ambiente LOCATIONIQ_API_KEY è impostata (su Render).
+# Senza chiave tutto resta com'era: solo Nominatim. Piano gratuito: circa 2 richieste al
+# secondo e 5.000 al giorno -> una richiesta ogni 0,6 s per tutto il server + cache.
+# La chiave non va mai scritta nel codice, nei log o nei test.
+LOCATIONIQ_BASE_URL = "https://eu1.locationiq.com/v1"
+_LOCATIONIQ_INTERVALLO = 0.6
+_locationiq_lock = asyncio.Lock()
+_locationiq_last = 0.0
+_locationiq_stop_fino = 0.0  # dopo un rifiuto (chiave errata, limite) si salta LocationIQ per un po'
+
+
+def _locationiq_key() -> str:
+    return (os.environ.get("LOCATIONIQ_API_KEY") or "").strip()
+
+
+def _locationiq_attivo() -> bool:
+    return bool(_locationiq_key()) and time.monotonic() >= _locationiq_stop_fino
+
+
+async def _locationiq_turno(max_attesa: float) -> bool:
+    """Una richiesta ogni 0,6 s verso LocationIQ (sotto il limite di 2 al secondo)."""
+    global _locationiq_last
+    async with _locationiq_lock:
+        attesa = _locationiq_last + _LOCATIONIQ_INTERVALLO - time.monotonic()
+        if attesa > max_attesa:
+            return False
+        if attesa > 0:
+            await asyncio.sleep(attesa)
+        _locationiq_last = time.monotonic()
+        return True
+
+
+async def _locationiq_cerca(path: str, params: dict, max_attesa: float) -> Optional[list]:
+    """Chiama LocationIQ. Ritorna la lista di risultati ([] = nessun indirizzo trovato),
+    oppure None se LocationIQ non è utilizzabile adesso (senza chiave, limite raggiunto,
+    chiave rifiutata, errore di rete): in quel caso il chiamante ripiega su Nominatim."""
+    global _locationiq_stop_fino
+    key = _locationiq_key()
+    if not key or not _locationiq_attivo():
+        return None
+    if not await _locationiq_turno(max_attesa):
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            r = await client.get(
+                f"{LOCATIONIQ_BASE_URL}/{path}",
+                params={**params, "key": key, "format": "json"},
+            )
+        if r.status_code == 404:  # LocationIQ risponde 404 quando non trova nulla
+            return []
+        if r.status_code in (401, 403):
+            _locationiq_stop_fino = time.monotonic() + 600
+            logging.warning("[geocode] LocationIQ ha rifiutato la chiave: uso Nominatim per 10 minuti")
+            return None
+        if r.status_code == 429:
+            _locationiq_stop_fino = time.monotonic() + 60
+            logging.warning("[geocode] LocationIQ: limite raggiunto, uso Nominatim per 1 minuto")
+            return None
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        return data if isinstance(data, list) else None
+    except Exception as e:  # solo il tipo di errore nei log: il messaggio può contenere l'indirizzo con la chiave
+        logging.warning(f"[geocode] LocationIQ non raggiungibile ({type(e).__name__})")
+        return None
+
 async def geocode_address(address: str) -> Optional[dict]:
-    """Trasforma un indirizzo stringa in {lat, lng} via Nominatim.
+    """Trasforma un indirizzo stringa in {lat, lng}: LocationIQ se c'è la chiave,
+    altrimenti (o se non risponde) Nominatim.
     Ritorna None se non trovato o errore. Cache in-memory per evitare hit ripetuti."""
     if not address or not isinstance(address, str) or len(address.strip()) < 4:
         return None
     key = address.strip().lower()
     if key in _geocode_cache:
         return _geocode_cache[key]
+    if _locationiq_attivo():
+        trovati = await _locationiq_cerca(
+            "search",
+            {"q": address, "limit": 1, "countrycodes": "it", "addressdetails": 0},
+            max_attesa=60,
+        )
+        if trovati is not None:
+            try:
+                result = {"lat": float(trovati[0]["lat"]), "lng": float(trovati[0]["lon"])} if trovati else None
+            except (KeyError, ValueError, TypeError):
+                result = None
+            _cache_put(_geocode_cache, key, result)
+            return result
     if not await _nominatim_turno(max_attesa=60):
         return None
     try:
@@ -1240,8 +1322,50 @@ async def geocode_address(address: str) -> Optional[dict]:
 _geocode_suggest_cache: dict = {}
 
 
+def _suggerimenti_da_risultati(raw: list, limit: int) -> list:
+    """Trasforma i risultati (stesso formato per Nominatim e LocationIQ) nei suggerimenti
+    per il form: prima quelli col civico, senza doppioni."""
+    out = []
+    for item in raw:
+        addr = item.get("address") or {}
+        road = addr.get("road") or addr.get("pedestrian") or addr.get("footway") or ""
+        house = addr.get("house_number") or ""
+        postcode = addr.get("postcode") or ""
+        city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("suburb") or ""
+        street = f"{road} {house}".strip() if road else ""
+        parts = [p for p in [street, f"{postcode} {city}".strip()] if p]
+        display = ", ".join(parts) if parts else (item.get("display_name") or "")[:120]
+        out.append({
+            "display": display,
+            "full_display_name": item.get("display_name"),
+            "lat": float(item["lat"]),
+            "lng": float(item["lon"]),
+            "road": road,
+            "house_number": house,
+            "postcode": postcode,
+            "city": city,
+            "has_house_number": bool(house),
+        })
+    # Ordina: prima quelli col civico, poi gli altri (mantenendo l'ordine originale interno)
+    out.sort(key=lambda s: 0 if s["has_house_number"] else 1)
+    # Deduplica per display finale
+    seen = set()
+    deduped = []
+    for s in out:
+        key_disp = s["display"].lower()
+        if key_disp in seen:
+            continue
+        seen.add(key_disp)
+        deduped.append(s)
+    return deduped[:limit]
+
+
+# Bounding box di Roma (SW→NE) per privilegiare match locali
+_ROMA_VIEWBOX = "12.234,41.649,12.855,42.141"
+
+
 async def geocode_suggest(query: str, limit: int = 5) -> list:
-    """Autocomplete indirizzi via Nominatim, focalizzato su Roma.
+    """Autocomplete indirizzi, focalizzato su Roma: LocationIQ (se c'è la chiave) o Nominatim.
 
     Nominatim ritorna suggerimenti CON numero civico SOLO se l'utente ha già
     digitato un numero nella query (es. "Via del Corso 100"). Quando il numero
@@ -1256,6 +1380,28 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
     key = f"{q.lower()}::{limit}"
     if key in _geocode_suggest_cache:
         return _geocode_suggest_cache[key]
+    if _locationiq_attivo():
+        # Suggerimenti: se la coda è lunga si rinuncia subito (niente attese infinite)
+        trovati = await _locationiq_cerca(
+            "autocomplete",
+            {
+                "q": q,
+                "limit": max(limit * 2, 10),
+                "countrycodes": "it",
+                "addressdetails": 1,
+                "viewbox": _ROMA_VIEWBOX,
+                "bounded": 1,
+                "dedupe": 1,
+            },
+            max_attesa=2,
+        )
+        if trovati is not None:
+            try:
+                out = _suggerimenti_da_risultati(trovati, limit)
+            except (KeyError, ValueError, TypeError):
+                out = []
+            _cache_put(_geocode_suggest_cache, key, out)
+            return out
     # Suggerimenti: se la coda verso Nominatim è lunga si rinuncia subito (niente attese infinite)
     if not await _nominatim_turno(max_attesa=2):
         return []
@@ -1269,48 +1415,14 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
                     "limit": max(limit * 2, 10),  # più candidati per il riordino
                     "countrycodes": "it",
                     "addressdetails": 1,
-                    # Bounding box di Roma (SW→NE) per privilegiare match locali
-                    "viewbox": "12.234,41.649,12.855,42.141",
+                    "viewbox": _ROMA_VIEWBOX,
                     "bounded": 1,
                 },
                 headers={"User-Agent": "ScontiRoma/1.0 (info@scontiroma.it)"},
             )
         if r.status_code != 200:
             return []
-        raw = r.json() or []
-        out = []
-        for item in raw:
-            addr = item.get("address") or {}
-            road = addr.get("road") or addr.get("pedestrian") or addr.get("footway") or ""
-            house = addr.get("house_number") or ""
-            postcode = addr.get("postcode") or ""
-            city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("suburb") or ""
-            street = f"{road} {house}".strip() if road else ""
-            parts = [p for p in [street, f"{postcode} {city}".strip()] if p]
-            display = ", ".join(parts) if parts else (item.get("display_name") or "")[:120]
-            out.append({
-                "display": display,
-                "full_display_name": item.get("display_name"),
-                "lat": float(item["lat"]),
-                "lng": float(item["lon"]),
-                "road": road,
-                "house_number": house,
-                "postcode": postcode,
-                "city": city,
-                "has_house_number": bool(house),
-            })
-        # Ordina: prima quelli col civico, poi gli altri (mantenendo l'ordine originale interno)
-        out.sort(key=lambda s: 0 if s["has_house_number"] else 1)
-        # Deduplica per display finale
-        seen = set()
-        deduped = []
-        for s in out:
-            key_disp = s["display"].lower()
-            if key_disp in seen:
-                continue
-            seen.add(key_disp)
-            deduped.append(s)
-        out = deduped[:limit]
+        out = _suggerimenti_da_risultati(r.json() or [], limit)
         _cache_put(_geocode_suggest_cache, key, out)
         return out
     except Exception as e:
