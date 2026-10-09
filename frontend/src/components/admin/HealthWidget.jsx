@@ -66,6 +66,7 @@ export default function HealthWidget() {
               <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
               <span className="text-foreground/80">{s.label}</span>
               {st.ok && st.ms != null && <span className="text-muted-foreground">{st.ms}ms</span>}
+              {st.ok && st.note && <span className="text-[10px] text-muted-foreground">({st.note})</span>}
               {!st.ok && <span className="text-red-700">{st.error || "offline"}</span>}
             </div>
           );

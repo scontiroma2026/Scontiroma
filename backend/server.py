@@ -4683,6 +4683,37 @@ async def admin_reviews(user: dict = Depends(require_admin_master), limit: int =
     return {"reviews": out}
 
 
+async def _check_resend():
+    """Controllo Resend per il widget Server Health. Mai restituire né registrare la chiave.
+    Una chiave «solo invio» (restricted_api_key) riceve 401 su /domains ma l'invio funziona."""
+    import time as _t
+    import email_service as _es
+    if not _es._configured:
+        return {"ok": False, "error": "non configurato", "warning": True}
+    t0 = _t.time()
+    try:
+        async with httpx.AsyncClient(timeout=6) as c:
+            r = await c.get("https://api.resend.com/domains",
+                            headers={"Authorization": f"Bearer {_es.RESEND_API_KEY}"})
+        ms = round((_t.time() - t0) * 1000)
+        if r.status_code == 200:
+            return {"ok": True, "ms": ms}
+        if r.status_code == 401:
+            try:
+                body = r.json()
+            except Exception:
+                body = None
+            if isinstance(body, dict):
+                testo = f"{body.get('name', '')} {body.get('message', '')}".lower()
+                if "restricted_api_key" in testo or "restricted" in testo:
+                    return {"ok": True, "ms": ms, "note": "chiave solo invio"}
+        if r.status_code in (401, 403):
+            return {"ok": False, "error": "chiave rifiutata"}
+        return {"ok": False, "error": f"HTTP {r.status_code}"}
+    except Exception as e:
+        return {"ok": False, "error": type(e).__name__}
+
+
 @api.get("/admin/health")
 async def admin_health(user: dict = Depends(require_admin_master)):
     """Stato di salute dei servizi critici (DB, Stripe, PayPal, Resend, LocationIQ)."""
@@ -4710,21 +4741,7 @@ async def admin_health(user: dict = Depends(require_admin_master)):
             return {"ok": True, "ms": round((_t.time()-t0)*1000)}
         except Exception as e:
             return {"ok": False, "error": str(e)[:100]}
-    async def check_resend():
-        import email_service as _es
-        if not _es._configured:
-            return {"ok": False, "error": "non configurato", "warning": True}
-        t0 = _t.time()
-        try:
-            async with httpx.AsyncClient(timeout=6) as c:
-                r = await c.get("https://api.resend.com/domains",
-                                headers={"Authorization": f"Bearer {_es.RESEND_API_KEY}"})
-            return {"ok": r.status_code == 200, "ms": round((_t.time()-t0)*1000),
-                    **({"error": f"HTTP {r.status_code}"} if r.status_code != 200 else {})}
-        except Exception as e:
-            return {"ok": False, "error": str(e)[:100]}
-
-    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), check_resend(), _locationiq_prova())
+    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), _check_resend(), _locationiq_prova())
     return {
         "db": results[0],
         "stripe": results[1],
