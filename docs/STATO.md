@@ -118,6 +118,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
 8. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
 9. Pulizie: fatte in #65 (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
+10. **Controllo online** (UptimeRobot, gratuito): guida in `docs/guide/CONTROLLO_ONLINE.md`; da creare con l'email di Sconti Roma. Prima del lancio, server Render a «Starter».
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
 
 ## Pulizie tecniche (#65, 08/10)
