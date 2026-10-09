@@ -68,6 +68,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #69 | Zona senza offerte: scheda «Stiamo arrivando nella tua zona» con «Vedi le offerte nelle altre zone» e «Fammi sapere quando arrivate» (contatore anonimo per zona nella collezione `interesse_zona`, un voto per zona e per browser, limite di 10 richieste/ora per IP, nessun dato personale); tabella «Interesse per zona» nel tab «Fase di lancio» dell'admin. Ramo `claude/stiamo-arrivando` | Controllo da iPhone; nessun testo legale nuovo |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
+| (da numerare) | «Stato dei servizi» dell'admin: nuova riga «Indirizzi (LocationIQ)» (giallo se manca la chiave, verde se risponde, rosso se rifiutata/limite/non risponde); una sola richiesta di prova, la chiave non esce mai dal server. Ramo `claude/health-locationiq` | Controllo da iPhone; nessun testo legale |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 

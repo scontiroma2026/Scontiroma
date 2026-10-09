@@ -1260,6 +1260,7 @@ _LOCATIONIQ_INTERVALLO = 0.6
 _locationiq_lock = asyncio.Lock()
 _locationiq_last = 0.0
 _locationiq_stop_fino = 0.0  # dopo un rifiuto (chiave errata, limite) si salta LocationIQ per un po'
+_locationiq_stop_motivo = ""  # "chiave" o "limite": solo per il widget di salute dell'admin
 
 
 def _locationiq_key() -> str:
@@ -1287,7 +1288,7 @@ async def _locationiq_cerca(path: str, params: dict, max_attesa: float) -> Optio
     """Chiama LocationIQ. Ritorna la lista di risultati ([] = nessun indirizzo trovato),
     oppure None se LocationIQ non è utilizzabile adesso (senza chiave, limite raggiunto,
     chiave rifiutata, errore di rete): in quel caso il chiamante ripiega su Nominatim."""
-    global _locationiq_stop_fino
+    global _locationiq_stop_fino, _locationiq_stop_motivo
     key = _locationiq_key()
     if not key or not _locationiq_attivo():
         return None
@@ -1303,10 +1304,12 @@ async def _locationiq_cerca(path: str, params: dict, max_attesa: float) -> Optio
             return []
         if r.status_code in (401, 403):
             _locationiq_stop_fino = time.monotonic() + 600
+            _locationiq_stop_motivo = "chiave"
             logging.warning("[geocode] LocationIQ ha rifiutato la chiave: uso Nominatim per 10 minuti")
             return None
         if r.status_code == 429:
             _locationiq_stop_fino = time.monotonic() + 60
+            _locationiq_stop_motivo = "limite"
             logging.warning("[geocode] LocationIQ: limite raggiunto, uso Nominatim per 1 minuto")
             return None
         if r.status_code != 200:
@@ -1316,6 +1319,30 @@ async def _locationiq_cerca(path: str, params: dict, max_attesa: float) -> Optio
     except Exception as e:  # solo il tipo di errore nei log: il messaggio può contenere l'indirizzo con la chiave
         logging.warning(f"[geocode] LocationIQ non raggiungibile ({type(e).__name__})")
         return None
+
+async def _locationiq_prova() -> dict:
+    """Una sola richiesta di prova (per il widget di salute admin). Non restituisce mai la chiave."""
+    if not _locationiq_key():
+        return {"ok": False, "warning": True, "error": "non configurato (si usa Nominatim)"}
+    errori = {"chiave": "chiave rifiutata", "limite": "limite raggiunto"}
+
+    def motivo_pausa() -> str:
+        if time.monotonic() < _locationiq_stop_fino:
+            return errori.get(_locationiq_stop_motivo, "non risponde")
+        return "non risponde"
+
+    if not _locationiq_attivo():  # in pausa dopo un 401/403/429: niente richiesta, si rispetta la pausa
+        return {"ok": False, "error": motivo_pausa()}
+    t0 = time.monotonic()
+    trovati = await _locationiq_cerca(
+        "search",
+        {"q": "Via Ostiense 100, Roma", "limit": 1, "countrycodes": "it", "addressdetails": 0},
+        max_attesa=5,
+    )
+    if trovati is None:
+        return {"ok": False, "error": motivo_pausa()}
+    return {"ok": True, "ms": round((time.monotonic() - t0) * 1000)}
+
 
 async def geocode_address(address: str) -> Optional[dict]:
     """Trasforma un indirizzo stringa in {lat, lng}: LocationIQ se c'è la chiave,
@@ -4658,7 +4685,7 @@ async def admin_reviews(user: dict = Depends(require_admin_master), limit: int =
 
 @api.get("/admin/health")
 async def admin_health(user: dict = Depends(require_admin_master)):
-    """Stato di salute dei servizi critici (DB, Stripe, PayPal, Resend)."""
+    """Stato di salute dei servizi critici (DB, Stripe, PayPal, Resend, LocationIQ)."""
     import time as _t
     async def check_db():
         t0 = _t.time()
@@ -4697,12 +4724,13 @@ async def admin_health(user: dict = Depends(require_admin_master)):
         except Exception as e:
             return {"ok": False, "error": str(e)[:100]}
 
-    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), check_resend())
+    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), check_resend(), _locationiq_prova())
     return {
         "db": results[0],
         "stripe": results[1],
         "paypal": results[2],
         "resend": results[3],
+        "locationiq": results[4],
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }
 
