@@ -61,6 +61,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #67 | Mappe Protomaps (ripiego OpenStreetMap finché manca `roma.pmtiles`) e indirizzi con LocationIQ (se c'è `LOCATIONIQ_API_KEY`); guida `docs/guide/MAPPE.md` | 08/10 |
 | #66 | Pagina «Per i commercianti» (`/per-i-commercianti`) e copione della telefonata (`docs/comunicazione/COPIONE_TELEFONATA.md`) | 08/10 |
 | #68 | Admin: nome e cognome completi dei clienti nel Registro Frodi e in Feedback App (solo admin con master password; commercianti vedono «Nome C.») | 08/10 |
+| #70 | Admin, «Stato dei servizi»: nuova riga «Indirizzi (LocationIQ)» (giallo senza chiave, verde se risponde, rosso se rifiutata) | 09/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
