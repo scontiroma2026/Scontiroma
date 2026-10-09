@@ -107,17 +107,18 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Libreria di esempio (08/10): decisione del titolare: bastano 422 foto in 10 categorie, **copiate sul nostro sito** (non più collegate a Unsplash). Sono in `frontend/public/esempi/` (800×450) e `esempi/mini/` (400×225), nome = identificativo Unsplash, JPEG ricompressi, circa 26 MB in tutto; licenza Unsplash (uso libero) in `esempi/LICENZA.txt`. Il server manda percorsi relativi (`/esempi/<id>.jpg`); alla scelta il sito li rende assoluti col proprio indirizzo (se un giorno cambia il dominio, le offerte già salvate con quel dominio vanno aggiornate). Gli sconti già salvati con indirizzi Unsplash restano com'erano e continuano a funzionare.
 
 - Admin e nomi dei clienti (08/10): l'admin vede il nome per intero (campo unico `name`, non esiste un cognome separato) in Registro Frodi, Feedback App, Log completo, Referral QR, Abbonati, Feedback e classifica clienti; commercianti e pubblico solo «Nome C.». Nessun nome nei log del server. Da citare nell'informativa privacy (consulente).
+- Aspetto (09/10): si tiene l'aspetto attuale dell'app (tema chiaro fucsia-viola). Le bozze in stile Groupon, «gioco» e neon restano archiviate come idee; niente da realizzare per ora.
 
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
 2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): **in pausa (08/10)**. Fatto: ramo `prova` (copia di `main` dell'08/10), utente Atlas `prova` con solo `readWrite@scontiroma_prova` (tolto `readWriteAnyDatabase`), servizio `scontiroma-prova-api` creato con avvio corretto; ultimo ostacolo: password in `MONGO_URL` (errore «bad auth»). Da fare alla ripresa: sistemare la password, controllare `/api/`, creare il sito di prova (Passo 3), allineare `prova` a `main`.
 3. **Testi legali:** validazione del consulente (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`); sede legale in #40; PEC facoltativa; frasi proposte su nome visibile dopo il codice e sul contatore delle scansioni.
-4. **Nuovo aspetto** in stile Groupon: scelta fra le tre proposte e realizzazione (caratteri ospitati da noi).
-5. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
-6. **Mappe** Protomaps + LocationIQ: codice pronto (ramo `claude/mappe-protomaps`). Mancano: la chiave LocationIQ (solo su Render, guida `docs/guide/MAPPE.md`) e il file `roma.pmtiles` (`bash scripts/estrai_mappa_roma.sh` da una rete che raggiunga `build.protomaps.com`; se supera 90 MB non entra in GitHub: vedi la guida).
-7. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
-8. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
-9. Pulizie: fatte in #65 (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
+4. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
+5. **Mappe** Protomaps + LocationIQ: codice pronto (ramo `claude/mappe-protomaps`). Mancano: la chiave LocationIQ (solo su Render, guida `docs/guide/MAPPE.md`) e il file `roma.pmtiles` (`bash scripts/estrai_mappa_roma.sh` da una rete che raggiunga `build.protomaps.com`; se supera 90 MB non entra in GitHub: vedi la guida).
+6. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
+7. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
+8. Pulizie: fatte in #65 (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
+9. **Controllo online** (UptimeRobot, gratuito): guida in `docs/guide/CONTROLLO_ONLINE.md`; da creare con l'email di Sconti Roma. Prima del lancio, server Render a «Starter».
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
 
 ## Pulizie tecniche (#65, 08/10)
@@ -129,12 +130,12 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 
 ## Domande aperte
 - Per l'utente:
-  - quale delle tre proposte di aspetto (1, 2 o 3);
   - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
   - **Pagamenti commercianti, tema messo da parte (08/10):** da approfondire insieme più avanti: come funziona il lancio gratis (30 o 60 giorni), quando scatta il primo pagamento, da quando e a che ora (mezzanotte) parte il rinnovo automatico, e se i Termini devono prevedere il vincolo/impossibilità di disdire per il mese in corso (scarico di responsabilità). Qui rientra anche la domanda sui mesi di prova e `TRIAL_END_DATE`: nessuna data da impostare per ora.
   - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).
 - Per il consulente / commercialista:
   - P.IVA e dati dell'azienda (REA, capitale sociale) nei testi del sito;
+  - **Fatturazione ai negozi (per il commercialista):** chi emette le fatture elettroniche (SdI) per i 4,99 €/mese e con quale programma (Stripe e PayPal danno solo ricevute, non la fattura fiscale); come si registrano le commissioni; IVA; eventuali fatture ai privati. Da chiarire prima del primo addebito;
   - contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google;
   - Gemini su piano a pagamento;
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
