@@ -136,6 +136,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).
 - Per il consulente / commercialista:
   - P.IVA e dati dell'azienda (REA, capitale sociale) nei testi del sito;
+  - **Fatturazione ai negozi (per il commercialista):** chi emette le fatture elettroniche (SdI) per i 4,99 €/mese e con quale programma (Stripe e PayPal danno solo ricevute, non la fattura fiscale); come si registrano le commissioni; IVA; eventuali fatture ai privati. Da chiarire prima del primo addebito;
   - contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google;
   - Gemini su piano a pagamento;
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
