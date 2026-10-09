@@ -61,6 +61,8 @@ services:
         sync: false
       - key: SENDER_EMAIL
         sync: false
+      # Solo ambiente di prova (non in produzione): indirizzi o @dominio a cui si puo' scrivere.
+      # - key: EMAIL_ALLOWED_RECIPIENTS
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_NOTIFY_EMAIL

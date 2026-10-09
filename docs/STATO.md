@@ -70,6 +70,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 | #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
+| #72 | Ambiente di prova: variabile facoltativa `EMAIL_ALLOWED_RECIPIENTS` (indirizzi o `@dominio`): se impostata le email partono solo verso quelli, gli altri sono scartati con riga `[email:bloccata-prova]` (solo dominio). Non impostata = produzione invariata. Guida: sezione «Email nell'ambiente di prova». Ramo `claude/email-prova-allowlist` | 09/10 (in attesa di unione) |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 

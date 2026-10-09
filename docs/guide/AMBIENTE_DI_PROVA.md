@@ -47,7 +47,7 @@ L'ambiente di prova non deve mai usare il database di produzione né le sue chia
 | `ADMIN_MASTER_PASSWORD` | una password di prova |
 | `ADMIN_RECOVERY_ID` | un valore di prova |
 
-**Da lasciare vuote o non creare:** `RESEND_API_KEY`, `SENDER_EMAIL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`. Senza chiave le email finiscono solo nel registro del server (riga `[email:mock]`) e il pulsante «Migliora foto» risponde con un errore: è voluto.
+**Da lasciare vuote o non creare:** `RESEND_API_KEY`, `SENDER_EMAIL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`. Senza chiave le email finiscono solo nel registro del server (riga `[email:mock]`; per email vere solo a te vedi «Email nell'ambiente di prova») e il pulsante «Migliora foto» risponde con un errore: è voluto.
 
 8. **Create Web Service**. Quando risulta *Live*, apri `ADDRESS-SERVER/api/`: deve rispondere «Sconti Roma API».
 
@@ -67,6 +67,17 @@ Dimmi quando i due servizi sono pronti: creo il ramo `prova` (copia di `main`) e
 1. Apri il sito di prova e registrati con indirizzi di prova (non email vere: non partirà nulla).
 2. **Attenzione al login su iPhone:** il sito e il server di prova hanno due indirizzi diversi e Safari, di default, blocca i cookie tra siti diversi. Per la prova vai in **Impostazioni → Safari** e spegni **«Impedisci il tracciamento fra siti»**; finito il test, riaccendilo. (L'app vera non ha questo problema perché usa `scontiroma.it` e `api.scontiroma.it`.)
 3. Per entrare come admin usa i valori di prova che hai messo su Render.
+
+## Email nell'ambiente di prova
+Due opzioni. Scegli la prima se non ti serve davvero ricevere le email.
+
+**Opzione 1 — nessuna chiave (la più sicura).** Lascia vuote `RESEND_API_KEY` e `SENDER_EMAIL`. Nessuna email parte: finiscono solo nei **Logs** del server di prova (riga `[email:mock]`).
+
+**Opzione 2 — email vere, ma solo a te.**
+1. In Resend crea una chiave **dedicata alla prova** (non quella vera) con permesso **«Sending access»**.
+2. Su Render, nel servizio di prova, imposta: `RESEND_API_KEY` = la chiave di prova; `SENDER_EMAIL` = un indirizzo del dominio verificato (es. `prova@DOMINIO-VERIFICATO`); `EMAIL_ALLOWED_RECIPIENTS` = i tuoi indirizzi separati da virgole, per esempio `INDIRIZZO-TITOLARE-1@esempio.it,INDIRIZZO-TITOLARE-2@esempio.it`. Si può indicare anche un intero dominio con la `@` davanti (es. `@DOMINIO-TUO`). Maiuscole e spazi non contano.
+3. Salva: il server riparte. Con questa variabile impostata l'email parte **solo** verso gli indirizzi elencati; agli altri non parte nulla e nei Logs compare una riga `[email:bloccata-prova]` con solo il dominio (mai l'indirizzo intero) e il motivo. L'utente non vede errori. **Non impostare mai `EMAIL_ALLOWED_RECIPIENTS` in produzione** (lì assente = nessun filtro).
+4. Come provare: sul sito di prova registra un account con uno degli indirizzi elencati, poi usa «Password dimenticata» e controlla la posta. Prova anche con un indirizzo non elencato: non deve arrivare nulla e nei Logs deve comparire `[email:bloccata-prova]`.
 
 ## Promemoria
 - Il piano gratuito si addormenta dopo qualche minuto: la prima apertura può metterci circa un minuto.

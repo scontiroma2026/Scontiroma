@@ -33,20 +33,60 @@ if _configured:
     resend.api_key = RESEND_API_KEY
 
 
-async def _send(to: str, subject: str, html: str) -> Optional[str]:
+def _allowed_recipients() -> list:
+    """Elenco consentito dalla variabile facoltativa `EMAIL_ALLOWED_RECIPIENTS`
+    (ambiente di prova): indirizzi o domini con prefisso `@`, separati da virgole,
+    confronto senza maiuscole. Letta a ogni invio. Vuota/assente = nessun filtro."""
+    raw = os.environ.get("EMAIL_ALLOWED_RECIPIENTS", "")
+    return [v.strip().lower() for v in raw.split(",") if v.strip()]
+
+
+def _is_allowed(address: str, allowed: list) -> bool:
+    addr = str(address or "").strip().lower()
+    for entry in allowed:
+        if entry.startswith("@"):
+            if addr.endswith(entry) and len(addr) > len(entry):
+                return True
+        elif addr == entry:
+            return True
+    return False
+
+
+def _domain_of(address: str) -> str:
+    addr = str(address or "").strip().lower()
+    return addr.rsplit("@", 1)[1] if "@" in addr else "?"
+
+
+async def _send(to, subject: str, html: str) -> Optional[str]:
+    """`to` può essere un indirizzo o una lista. Con `EMAIL_ALLOWED_RECIPIENTS`
+    impostata (solo ambiente di prova) i destinatari non consentiti sono scartati
+    in silenzio (log con solo dominio e motivo): nessuna eccezione."""
+    recipients = [to] if isinstance(to, str) else list(to or [])
+    allowed = _allowed_recipients()
+    if allowed:
+        kept = []
+        for r in recipients:
+            if _is_allowed(r, allowed):
+                kept.append(r)
+            else:
+                log.info(f"[email:bloccata-prova] dominio={_domain_of(r)} motivo=destinatario-non-consentito")
+        recipients = kept
+        if not recipients:
+            return None
+    label = ", ".join(recipients)
     if not _configured:
-        log.info(f"[email:mock] to={to} subject={subject!r} (RESEND_API_KEY not set)")
+        log.info(f"[email:mock] to={label} subject={subject!r} (RESEND_API_KEY not set)")
         return None
     try:
-        params = {"from": SENDER_EMAIL, "to": [to], "subject": subject, "html": html}
+        params = {"from": SENDER_EMAIL, "to": recipients, "subject": subject, "html": html}
         if REPLY_TO_EMAIL:
             params["reply_to"] = [REPLY_TO_EMAIL]
         res = await asyncio.to_thread(resend.Emails.send, params)
         eid = res.get("id") if isinstance(res, dict) else getattr(res, "id", None)
-        log.info(f"[email:sent] to={to} id={eid}")
+        log.info(f"[email:sent] to={label} id={eid}")
         return eid
     except Exception as e:
-        log.error(f"[email:error] to={to} subject={subject!r} err={e}")
+        log.error(f"[email:error] to={label} subject={subject!r} err={e}")
         return None
 
 
