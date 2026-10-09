@@ -68,7 +68,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #69 | Zona senza offerte: scheda «Stiamo arrivando nella tua zona» con «Vedi le offerte nelle altre zone» e «Fammi sapere quando arrivate» (contatore anonimo per zona nella collezione `interesse_zona`, un voto per zona e per browser, limite di 10 richieste/ora per IP, nessun dato personale); tabella «Interesse per zona» nel tab «Fase di lancio» dell'admin. Ramo `claude/stiamo-arrivando` | Controllo da iPhone; nessun testo legale nuovo |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
-| (da numerare) | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
+| #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 
