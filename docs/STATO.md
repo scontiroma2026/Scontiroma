@@ -60,12 +60,13 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #65 | Pulizie tecniche: tolti Archivo Black e il plugin `health-check`, STATO riordinato | 08/10 |
 | #67 | Mappe Protomaps (ripiego OpenStreetMap finché manca `roma.pmtiles`) e indirizzi con LocationIQ (se c'è `LOCATIONIQ_API_KEY`); guida `docs/guide/MAPPE.md` | 08/10 |
 | #66 | Pagina «Per i commercianti» (`/per-i-commercianti`) e copione della telefonata (`docs/comunicazione/COPIONE_TELEFONATA.md`) | 08/10 |
+| #68 | Admin: nome e cognome completi dei clienti nel Registro Frodi e in Feedback App (solo admin con master password; commercianti vedono «Nome C.») | 08/10 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
-| #68 | Admin: nome e cognome completi dei clienti nel Registro Frodi e in Feedback App (Log completo, Referral QR, Abbonati, Feedback recensioni e classifica clienti li mostravano già). Il modello utente ha un solo campo `name`. Commercianti e pubblico invariati («Giulia E.») | Controlli verdi; il consulente deve vedere la nota privacy |
+| #69 | Zona senza offerte: scheda «Stiamo arrivando nella tua zona» con «Vedi le offerte nelle altre zone» e «Fammi sapere quando arrivate» (contatore anonimo per zona nella collezione `interesse_zona`, un voto per zona e per browser, limite di 10 richieste/ora per IP, nessun dato personale); tabella «Interesse per zona» nel tab «Fase di lancio» dell'admin. Ramo `claude/stiamo-arrivando` | Controllo da iPhone; nessun testo legale nuovo |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
