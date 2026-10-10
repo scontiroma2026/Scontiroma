@@ -5,6 +5,16 @@ Piano descritto dal titolare, con il controllo di coerenza con Termini, Recesso 
 (`CLIENT_SUBSCRIPTION_REQUIRED=false`, Stripe e PayPal spenti). Le parti legali vanno al consulente.
 Repository pubblico: nessun dato di persone reali, nessun segreto.
 
+## 0. Decisioni del titolare (aggiornate il 10/10)
+
+- **Inizio della prova:** i 60 giorni partono dal **primo giorno di pubblicazione** dell'offerta del negozio (non dall'iscrizione e non da una data uguale per tutti). Il **giorno 61** parte il primo pagamento, che copre i **30 giorni** successivi.
+- **IVA (inclusa o esclusa):** si decide dopo, a lavori finiti.
+- **Testo «60 giorni»:** va bene la formula «60 giorni dall'inizio della partecipazione», adattata a «dalla prima pubblicazione della tua offerta».
+- **Promemoria prima della fine della prova:** a **10 giorni** e a **3 giorni** (consiglio nella sezione 3-bis).
+- **Mese già pagato:** una volta pagato, **non rimborsabile**.
+- **Prezzo bloccato:** da chiarire; il titolare ne parla prima con il commercialista.
+- **Aperto:** il pagamento ogni 30 giorni dal giorno 61 non coincide con le offerte «a mese di calendario» dei Termini: vedi sezione 3-bis.
+
 ## 1. Il piano come l'ho capito
 
 1. **Campagna sui contatti che abbiamo**: messaggi (SMS, WhatsApp, Facebook, Instagram) con il video. Gli altri negozi li contatta il titolare di persona.
@@ -57,6 +67,23 @@ Legenda: ✅ coerente · ⚠️ da cambiare (testo o app) · ❓ da decidere
 **F. Prezzo bloccato.** Sostituire «finché restano iscritti» con una durata chiara (es. 12 mesi) e decidere se vale per tutti i negozi che aderiscono in lancio o solo per i primi.
 
 **G. IVA.** Decidere prima del video e dei messaggi: ogni materiale cita il prezzo.
+
+## 3-bis. Conseguenze delle nuove decisioni
+
+**Prova dalla prima pubblicazione.** È la scelta più equa: il tempo non corre se l'offerta non è ancora approvata. Richiede il campo «primo giorno di pubblicazione» per ogni negozio; la fine prova è quel giorno + 60 giorni, il primo pagamento il giorno 61. Sostituisce la «data D» comune: chi si iscrive prima può preparare l'offerta e il suo orologio parte solo alla pubblicazione.
+
+**Promemoria a 10 e 3 giorni: consiglio di tenerli, con questo contenuto.**
+1. **Il primo giorno di pubblicazione:** email con la data esatta di fine prova e l'importo.
+2. **10 giorni prima:** «aggiungi il metodo di pagamento e conferma, altrimenti dal giorno 61 l'offerta non verrà pubblicata»: dà il tempo di sistemare carta o PayPal.
+3. **3 giorni prima:** ultimo avviso con lo stesso messaggio e come disdire.
+4. **Il giorno del pagamento:** conferma con ricevuta.
+Il preavviso di 30 giorni previsto nei Termini diventa quindi 10 giorni: va riscritto per coerenza (e va riletto dal consulente).
+
+**Conflitto da sciogliere: 30 giorni di pagamento contro mese di calendario.** I Termini dicono che «ogni offerta termina l'ultimo giorno del mese» e che l'offerta non si modifica «prima del 1° del mese successivo»; anche i clienti usano lo sconto «una volta al mese» di calendario. Se il negozio paga ogni 30 giorni dal giorno 61, i periodi non coincidono. Due strade:
+- **A. Pagamento a calendario (consiglio):** il primo pagamento arriva alla prima fine mese utile dopo la prova; l'offerta vale per il mese di calendario. Nessuna modifica alle regole dei clienti e delle offerte.
+- **B. Pagamento a cicli di 30 giorni dalla pubblicazione:** l'offerta vale per il ciclo. Si adatta al piano, ma vanno cambiati i Termini (offerte e modifiche), il conteggio dei clienti «una volta al mese», le statistiche e la scheda «Prossimo mese».
+
+**Cosa non cambia:** nessun addebito senza conferma; offerta non pubblicata se non c'è il pagamento; mese pagato non rimborsabile.
 
 ## 4. Cosa andrebbe sviluppato nell'app (non adesso, i pagamenti restano spenti)
 
