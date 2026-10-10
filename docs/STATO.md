@@ -114,12 +114,12 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
 2. **Ambiente di prova su Render** (guida in `docs/guide/AMBIENTE_DI_PROVA.md`): **in pausa (08/10)**. Fatto: ramo `prova` (copia di `main` dell'08/10), utente Atlas `prova` con solo `readWrite@scontiroma_prova` (tolto `readWriteAnyDatabase`), servizio `scontiroma-prova-api` creato con avvio corretto; ultimo ostacolo: password in `MONGO_URL` (errore «bad auth»). Da fare alla ripresa: sistemare la password, controllare `/api/`, creare il sito di prova (Passo 3), allineare `prova` a `main`.
 3. **Testi legali:** validazione del consulente (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`); sede legale in #40; PEC facoltativa; frasi proposte su nome visibile dopo il codice e sul contatore delle scansioni.
-4. **Gemini:** collegare la fatturazione con limite di spesa, oppure tenere spento il miglioramento foto.
+4. **Gemini (decisione 10/10):** «Migliora foto» resta **spento fino al lancio**; dopo il lancio si collega la fatturazione con tetto di **5 € al mese** e avviso di spesa, da alzare se serve.
 5. **Mappe** Protomaps + LocationIQ: codice pronto (ramo `claude/mappe-protomaps`). Mancano: la chiave LocationIQ (solo su Render, guida `docs/guide/MAPPE.md`) e il file `roma.pmtiles` (`bash scripts/estrai_mappa_roma.sh` da una rete che raggiunga `build.protomaps.com`; se supera 90 MB non entra in GitHub: vedi la guida).
 6. **Commercianti:** lista di 232 attività (66 con almeno un canale online): chiamate e visite sui tre quartieri; conferma di 4 email trovate su Facebook; copione di telefonata; video e messaggi da rifare con «Roma e dintorni» e l'app chiara, senza «-50%».
 7. **Pagamenti commercianti:** decisioni sospese (sospensione automatica, promemoria, fatture, primo pagamento in prova, prezzo bloccato) e `TRIAL_END_DATE`.
 8. Pulizie: fatte in #65 (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
-9. **Controllo online** (UptimeRobot, gratuito): guida in `docs/guide/CONTROLLO_ONLINE.md`; da creare con l'email di Sconti Roma. Prima del lancio, server Render a «Starter».
+9. **Controllo online** (UptimeRobot, gratuito): **fatto il 10/10** (controlli su sito e server, avvisi alla email personale: da spostare su quella di Sconti Roma quando c'è; falso allarme normale nel risveglio di Render). Guida in `docs/guide/CONTROLLO_ONLINE.md`. Prima del lancio, server Render a «Starter». Lista completa di cosa manca al lancio ufficiale: `docs/LISTA_LANCIO.md`.
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
 
 ## Pulizie tecniche (#65, 08/10)

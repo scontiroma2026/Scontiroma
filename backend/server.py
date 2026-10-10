@@ -4900,8 +4900,9 @@ async def admin_subscribers(
 APP_VERSION = (os.environ.get("RENDER_GIT_COMMIT") or "dev")[:7]
 
 
-@api.get("/")
+@api.api_route("/", methods=["GET", "HEAD"])
 async def root():
+    # HEAD serve ai controlli online (UptimeRobot gratuito usa HEAD, non GET)
     return {"message": "Sconti Roma API", "status": "ok", "version": APP_VERSION}
 
 

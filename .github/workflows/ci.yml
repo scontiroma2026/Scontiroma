@@ -105,7 +105,7 @@ jobs:
         run: python -m pytest tests/test_campi_riservati_risposte.py tests/test_blocco_accesso.py tests/test_gdpr_cancellazione.py -o addopts="" -q -p no:cacheprovider
       - name: Test dell'interruttore abbonamento (server in-process, MongoDB del runner)
         working-directory: backend
-        run: python -m pytest tests/test_interruttore_abbonamento.py tests/test_ultimi_codici.py tests/test_avvisi_scadenza.py tests/test_email_step2.py tests/test_step3.py tests/test_condividi.py tests/test_orari.py tests/test_preferiti.py tests/test_archivio.py tests/test_negozio_qr.py tests/test_subscription_expiry.py tests/test_paypal_welcome_email.py tests/test_subscription_email_idempotency.py tests/test_codice_negozio_admin.py tests/test_config_ia.py -o addopts="" -q -p no:cacheprovider
+        run: python -m pytest tests/test_interruttore_abbonamento.py tests/test_ultimi_codici.py tests/test_avvisi_scadenza.py tests/test_email_step2.py tests/test_step3.py tests/test_condividi.py tests/test_orari.py tests/test_preferiti.py tests/test_archivio.py tests/test_negozio_qr.py tests/test_subscription_expiry.py tests/test_paypal_welcome_email.py tests/test_subscription_email_idempotency.py tests/test_codice_negozio_admin.py tests/test_api_head.py tests/test_config_ia.py -o addopts="" -q -p no:cacheprovider
       - name: Report Playwright (se qualcosa fallisce)
         if: failure()
         uses: actions/upload-artifact@v4
