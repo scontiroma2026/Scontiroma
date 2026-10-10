@@ -68,22 +68,28 @@ export default function Termini() {
         <h3 className="font-serif text-xl text-foreground mt-6">3.2 Per i Commercianti</h3>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Fase di lancio</strong>: la partecipazione è gratuita per
-            circa 2 mesi. La data di fine viene comunicata via email e
-            nell'area del Commerciante.
+            <strong>Prova gratuita</strong>: la partecipazione è gratuita per
+            60 giorni dalla prima pubblicazione della tua offerta. La data
+            esatta di fine prova ti viene comunicata via email e
+            nell'area del Commerciante; ti ricordiamo la scadenza 10 giorni e
+            3 giorni prima. La prova prosegue fino alla fine del mese in cui
+            scade e il primo pagamento è il 1° del mese successivo.
           </li>
           <li>
             <strong>Dopo la fase di lancio</strong>: €4,99 al mese, IVA
             inclusa.
           </li>
           <li>
-            <strong>Prezzo bloccato</strong> per i Commercianti che aderiscono
-            durante la fase di lancio, finché restano iscritti senza
-            interruzioni.
+            <strong>Preavviso di 30 giorni</strong> per qualsiasi variazione
+            di prezzo.
           </li>
           <li>
-            <strong>Preavviso di 30 giorni</strong> prima della fine della fase
-            di lancio e di qualsiasi variazione di prezzo.
+            <strong>Pagamento anticipato mensile</strong>: dopo la prova il
+            costo si paga il 1° di ogni mese, prima della pubblicazione
+            dell'offerta del mese. Se il pagamento arriva entro pochi giorni
+            dal 1° (il numero è indicato nell'area del Commerciante),
+            l'offerta viene pubblicata subito; oltre quel termine viene
+            pubblicata dal mese successivo.
           </li>
           <li>
             <strong>Nessun addebito senza la tua conferma</strong>: il
@@ -91,8 +97,11 @@ export default function Termini() {
             non paghi nulla e la tua offerta non viene più pubblicata.
           </li>
           <li>
-            <strong>Nessun vincolo</strong>: puoi smettere quando vuoi, anche
-            scegliendo «Non rinnovo» per l'offerta del mese.
+            <strong>Disdetta</strong>: puoi smettere quando vuoi scegliendo
+            «Non rinnovo». La disdetta ha effetto dalla fine del mese in corso:
+            fino all'ultimo giorno del mese l'offerta resta pubblicata e lo
+            sconto va rispettato; dal 1° del mese successivo l'offerta e il
+            pagamento cessano. Il mese già pagato non è rimborsabile.
           </li>
           <li>
             <strong>Pagamento</strong>: tramite Stripe o PayPal. Non
