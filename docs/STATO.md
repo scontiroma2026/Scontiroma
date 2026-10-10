@@ -110,6 +110,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Admin e nomi dei clienti (08/10): l'admin vede il nome per intero (campo unico `name`, non esiste un cognome separato) in Registro Frodi, Feedback App, Log completo, Referral QR, Abbonati, Feedback e classifica clienti; commercianti e pubblico solo «Nome C.». Nessun nome nei log del server. Da citare nell'informativa privacy (consulente).
 - Aspetto (09/10): si tiene l'aspetto attuale dell'app (tema chiaro fucsia-viola). Le bozze in stile Groupon, «gioco» e neon restano archiviate come idee; niente da realizzare per ora.
 
+- Novità del 10/10: UptimeRobot attivo su sito e server (il falso «Down» era dovuto a HEAD: #78); `/api/config/public` espone `ai_enhance_enabled` e «Migliora foto» si nasconde senza `GEMINI_API_KEY` (#79; chiave tolta su Render, da rimettere dopo il lancio con tetto 5 €/mese); rete dell'ambiente Claude aperta per `scontiroma.it` e `api.scontiroma.it`; lista completa di cosa manca al lancio in `docs/LISTA_LANCIO.md` (#77). Il controllo giornaliero automatico (7:54, solo lettura) è **in pausa fino al reset del limite settimanale** (riattivarlo dopo).
+
 ## Da fare, in ordine
 1. **Posta:** creare il Gmail nuovo, inoltro di `info@`, `privacy@`, `partner@` verso il Gmail (record MX su Aruba); poi `REPLY_TO_EMAIL` e `ADMIN_NOTIFY_EMAIL` su Render e prova di ricezione.
 2. **Ambiente di prova su Render: FATTO (09/10).** Server `scontiroma-prova-api` e sito `scontiroma-prova-web` (ramo `prova`, aggiornato a `main`) funzionano; il sito inoltra `/api/*` al server con regola «Rewrite» di Render (destinazione `https://…onrender.com/api/*`, con l'asterisco, non `:splat`), così i cookie restano sullo stesso indirizzo e Safari non li blocca. Entrato con un account di prova. Da fare: prove sul telefono (lista in STATO/PR), cambiare la password dell'utente Atlas `prova` perché è comparsa nei log, email di prova con chiave Resend dedicata e `EMAIL_ALLOWED_RECIPIENTS` (facoltativa), `ADMIN_RECOVERY_ID` di prova impostato.
@@ -133,7 +135,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - Per l'utente:
   - frase «nessun vincolo» nel video; clausola 5-bis dei Termini;
   - **Pagamenti commercianti, tema messo da parte (08/10):** da approfondire insieme più avanti: come funziona il lancio gratis (30 o 60 giorni), quando scatta il primo pagamento, da quando e a che ora (mezzanotte) parte il rinnovo automatico, e se i Termini devono prevedere il vincolo/impossibilità di disdire per il mese in corso (scarico di responsabilità). Qui rientra anche la domanda sui mesi di prova e `TRIAL_END_DATE`: nessuna data da impostare per ora.
-  - Render: tenere sospese le copie `scontiroma-api` e `scontiroma-web` (poi eliminarle?).
+  - Render: copie vecchie `scontiroma-api` e `scontiroma-web` (sospese): **decisione 10/10: non servono, da eliminare** (le fa l'utente da Render; i servizi veri sono quelli con suffisso `-xqib`).
 - Per il consulente / commercialista:
   - P.IVA e dati dell'azienda (REA, capitale sociale) nei testi del sito;
   - **Fatturazione ai negozi (per il commercialista):** chi emette le fatture elettroniche (SdI) per i 4,99 €/mese e con quale programma (Stripe e PayPal danno solo ricevute, non la fattura fiscale); come si registrano le commissioni; IVA; eventuali fatture ai privati. Da chiarire prima del primo addebito;
