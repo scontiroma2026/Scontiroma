@@ -13,7 +13,9 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [ ] **Consulente:** informativa privacy: l'admin vede il nome per intero dei clienti.
 - [ ] **Utente:** dati aziendali nei testi (sede legale, P.IVA, REA, capitale sociale, PEC facoltativa) → PR #40.
 - [ ] **Utente:** contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google.
-- [ ] **Claude:** dopo il consulente, confronto fra versioni e verifica di conformità (GDPR, Codice del Consumo, cookie).
+- [x] **Claude:** verifica di conformità italiana ed europea fatta il 10/10: `docs/legale/VERIFICA_CONFORMITA.md` (2 punti rossi: LocationIQ non nella Privacy, Regolamento P2B) e `docs/legale/DATI_AZIENDA_E_DPA.md` (dati azienda e tabella dei contratti con i fornitori).
+- [ ] **Claude:** dopo il consulente, confronto fra versioni.
+- [ ] **Utente:** numero REA, capitale sociale e PEC di Euro Linea S.r.l.s. (dalla visura camerale) → completano `DATI_AZIENDA_E_DPA.md`.
 
 ## 2. Affidabilità
 - [x] **Utente:** controllo online UptimeRobot su sito e server (10/10; falso allarme nel risveglio di Render, previsto).
