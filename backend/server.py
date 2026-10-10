@@ -2204,7 +2204,9 @@ def _frontend_url() -> str:
 @api.get("/config/public")
 async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
-    out = {"client_subscription_required": client_subscription_required()}
+    out = {"client_subscription_required": client_subscription_required(),
+           # «Migliora foto» compare solo se la chiave Gemini è impostata su Render
+           "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip())}
     # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
     fine = (os.environ.get("TRIAL_END_DATE") or "").strip()
     if fine:
@@ -4898,8 +4900,9 @@ async def admin_subscribers(
 APP_VERSION = (os.environ.get("RENDER_GIT_COMMIT") or "dev")[:7]
 
 
-@api.get("/")
+@api.api_route("/", methods=["GET", "HEAD"])
 async def root():
+    # HEAD serve ai controlli online (UptimeRobot gratuito usa HEAD, non GET)
     return {"message": "Sconti Roma API", "status": "ok", "version": APP_VERSION}
 
 
