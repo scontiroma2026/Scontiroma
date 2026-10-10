@@ -12,7 +12,10 @@ Repository pubblico: nessun dato di persone reali, nessun segreto.
 - **Testo «60 giorni»:** va bene la formula «60 giorni dall'inizio della partecipazione», adattata a «dalla prima pubblicazione della tua offerta».
 - **Promemoria prima della fine della prova:** a **10 giorni** e a **3 giorni** (consiglio nella sezione 3-bis).
 - **Mese già pagato:** una volta pagato, **non rimborsabile**.
-- **Prezzo bloccato:** da chiarire; il titolare ne parla prima con il commercialista.
+- **Prezzo bloccato: eliminato** da tutto (testi, email, FAQ, messaggi, video): nessuno lo tiene (PR #82 per i testi non legali, #83 per i Termini; il video va rifatto).
+- **Promemoria 10 e 3 giorni:** approvati come scritti.
+- **Strada A (mesi di calendario):** approvata. **Primo pagamento:** la prova continua fino a fine mese e si paga dal 1° del mese successivo (qualche giorno gratis in più).
+- **Blocco della pubblicazione se manca il pagamento:** da creare nell'app (dietro un interruttore spento, nessun addebito finché il titolare non conferma).
 - **Mesi di calendario (strada A della sezione 3-bis):** pagamento e offerta seguono il mese di calendario; il pagamento si addebita il 1° del mese, prima della pubblicazione.
 - **Pagamento in ritardo:** se il negozio paga **entro N giorni** dal 1° (N è un'**impostazione modificabile dall'admin**; esempi del titolare: 5, 7 o 8), l'offerta viene pubblicata **subito, nel mese corrente**. Dopo N giorni l'offerta va al **mese successivo**.
 - **Disdetta:** ha effetto **dalla fine del mese in corso**. Fino all'ultimo giorno del mese l'offerta resta pubblica e il negozio **ha l'obbligo di fare lo sconto**; dal 1° del mese dopo decadono offerta e pagamento. Esempio: disdetta il 27 → offerta valida fino al 30 o 31, nessun nuovo addebito.
