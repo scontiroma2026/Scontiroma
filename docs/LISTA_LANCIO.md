@@ -36,7 +36,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 ## 4. Contenuti
 - [ ] **Utente:** testo del video commercianti da rivedere; poi nuova voce e montaggio (PR #62).
 - [ ] **Utente:** file `roma.pmtiles` della mappa (da un computer con rete libera, guida `docs/guide/MAPPE.md`).
-- [ ] **Utente:** decisione su Gemini («Migliora foto»): fatturazione con limite di spesa oppure spento.
+- [ ] **Utente:** Gemini («Migliora foto»): deciso il 10/10, spento fino al lancio; dopo il lancio fatturazione con tetto di 5 €/mese e avviso di spesa (da alzare se serve).
 - [ ] **Utente:** almeno alcuni negozi con offerte pubblicate nelle tre zone pilota, per non lasciare le schede vuote.
 
 ## 5. Pagamenti e fatture (spenti per ora)
