@@ -175,7 +175,7 @@ export default function Landing() {
           ]},
           { titolo: "Per i commercianti", voci: [
             { q: "Come partecipo con il mio negozio?", a: "Registrati come commerciante e crea la tua offerta: la controlliamo e, dopo l'approvazione, il tuo negozio compare tra gli sconti." },
-            { q: "Quanto costa per i commercianti?", a: "Durante la fase di lancio partecipare è gratuito. Dopo, il prezzo previsto è di 4,99 € al mese IVA inclusa. Ti avviseremo 10 giorni e 3 giorni prima della fine della prova e non ti addebiteremo nulla senza la tua conferma." },
+            { q: "Quanto costa per i commercianti?", a: "Durante la fase di lancio partecipare è gratuito. Dopo, il prezzo previsto è di 4,99 € al mese IVA inclusa. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma." },
             { q: "Come funziona l'offerta del mese?", a: "Hai un'offerta al mese. Negli ultimi 7 giorni del mese puoi caricare quella del mese successivo: ti avvisiamo nella dashboard e per email. L'offerta non si rinnova da sola: se non carichi la nuova, il 1° del mese quella attuale scade. Se non vuoi continuare, scegli «Non rinnovo»." },
             { q: "Come verifico lo sconto di un cliente?", a: "Dalla tua dashboard premi «Scansiona codice» e inquadra il QR del cliente: vedi subito se lo sconto è valido. Lo stesso QR non può essere usato due volte." },
           ]},
