@@ -24,7 +24,7 @@ Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
 > Buongiorno,
 > siamo Sconti Roma (scontiroma.it), un'app che fa conoscere le attività di Garbatella, San Paolo e Marconi a chi abita vicino.
 > Ogni mese pubblicate un'offerta, la approviamo noi e i clienti la trovano nell'app. Alla cassa mostrano un QR che voi inquadrate con il telefono.
-> Nella fase di lancio è gratis. Dopo costa 4,99 € al mese IVA inclusa, con il prezzo bloccato per chi parte adesso. Nessun vincolo e nessun addebito senza la vostra conferma.
+> Nella fase di lancio è gratis. Dopo costa 4,99 € al mese IVA inclusa. Nessun vincolo e nessun addebito senza la vostra conferma.
 > Video di un minuto: [LINK]. Iscrizione: scontiroma.it
 > Un saluto,
 > Il team di Sconti Roma – info@scontiroma.it
