@@ -13,7 +13,10 @@ Repository pubblico: nessun dato di persone reali, nessun segreto.
 - **Promemoria prima della fine della prova:** a **10 giorni** e a **3 giorni** (consiglio nella sezione 3-bis).
 - **Mese già pagato:** una volta pagato, **non rimborsabile**.
 - **Prezzo bloccato:** da chiarire; il titolare ne parla prima con il commercialista.
-- **Aperto:** il pagamento ogni 30 giorni dal giorno 61 non coincide con le offerte «a mese di calendario» dei Termini: vedi sezione 3-bis.
+- **Mesi di calendario (strada A della sezione 3-bis):** pagamento e offerta seguono il mese di calendario; il pagamento si addebita il 1° del mese, prima della pubblicazione.
+- **Pagamento in ritardo:** se il negozio paga **entro N giorni** dal 1° (N è un'**impostazione modificabile dall'admin**; esempi del titolare: 5, 7 o 8), l'offerta viene pubblicata **subito, nel mese corrente**. Dopo N giorni l'offerta va al **mese successivo**.
+- **Disdetta:** ha effetto **dalla fine del mese in corso**. Fino all'ultimo giorno del mese l'offerta resta pubblica e il negozio **ha l'obbligo di fare lo sconto**; dal 1° del mese dopo decadono offerta e pagamento. Esempio: disdetta il 27 → offerta valida fino al 30 o 31, nessun nuovo addebito.
+- **Da confermare:** come si calcola il primo pagamento, visto che il giorno 61 cade a metà mese (vedi sezione 3-ter).
 
 ## 1. Il piano come l'ho capito
 
@@ -85,6 +88,16 @@ Il preavviso di 30 giorni previsto nei Termini diventa quindi 10 giorni: va risc
 
 **Cosa non cambia:** nessun addebito senza conferma; offerta non pubblicata se non c'è il pagamento; mese pagato non rimborsabile.
 
+## 3-ter. Regole risultanti (bozza da far validare)
+
+1. **Prova:** 60 giorni dalla prima pubblicazione dell'offerta.
+2. **Primo pagamento:** da definire. Due modi: (i) la prova continua fino alla fine del mese in cui cade il giorno 61 e si paga dal 1° del mese dopo (consiglio: nessun calcolo proporzionale, qualche giorno gratis in più); (ii) si paga il giorno 61 solo la parte di mese rimasta (richiede un calcolo proporzionale).
+3. **Dopo la prova:** addebito di 4,99 € il 1° di ogni mese, prima della pubblicazione dell'offerta del mese.
+4. **Pagamento in ritardo:** entro N giorni → offerta subito nel mese corrente; oltre N giorni → dal mese successivo. Se paga oltre N giorni, il pagamento vale per il **mese successivo** (nessun addebito per il mese saltato): da confermare.
+5. **Disdetta:** valida fino alle 23:59 (ora italiana) dell'ultimo giorno del mese per evitare l'addebito del 1°; l'offerta resta pubblica e lo sconto va rispettato fino a fine mese; dal 1° tutto decade.
+6. **Rimborsi:** il mese pagato non si rimborsa.
+7. **Coerenza con i testi attuali:** la disdetta «dal mese dopo» è già in linea con Termini art. 5 (offerta fino all'ultimo giorno del mese) e Recesso art. 2 («Non rinnovo»: l'offerta in corso termina l'ultimo giorno del mese e non riparte). Resta da correggere «nessun vincolo: puoi smettere quando vuoi» (Termini 3.2): la disdetta ha effetto a fine mese e il mese pagato non si rimborsa.
+
 ## 4. Cosa andrebbe sviluppato nell'app (non adesso, i pagamenti restano spenti)
 
 1. Data di fine prova **per negozio** e calcolo (D o iscrizione + 60 giorni, più allineamento al 1°).
@@ -96,7 +109,7 @@ Il preavviso di 30 giorni previsto nei Termini diventa quindi 10 giorni: va risc
 
 Ogni passaggio va in una PR a parte, con test e senza addebiti finché il titolare non conferma.
 
-## 5. Cosa serve da te
+## 5. Cosa serve da te (aggiornato)
 
 1. Data **D**.
 2. IVA **inclusa o esclusa**.
