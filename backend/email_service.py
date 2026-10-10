@@ -583,7 +583,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <li>la controlliamo e, dopo l'approvazione, compare tra gli sconti;</li>
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
-<p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese IVA inclusa</strong>, bloccato per chi parte adesso. Ti avviseremo almeno 30 giorni prima e non ti addebiteremo nulla senza la tua conferma.</p>
+<p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese IVA inclusa</strong>. Ti avviseremo 10 giorni e 3 giorni prima della fine della prova e non ti addebiteremo nulla senza la tua conferma.</p>
 <p style="{_P}"><strong>Nessun vincolo:</strong> l'offerta vale per il mese in corso e non si rinnova da sola. Se non vuoi continuare, scegli «Non rinnovo».</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
 """

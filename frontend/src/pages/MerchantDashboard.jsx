@@ -68,8 +68,8 @@ export default function MerchantDashboard() {
       <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6">
         {trialEndLabel && (
           <div data-testid="trial-banner" className="mb-4 rounded-2xl border border-ac-teal/40 bg-ac-tealBg p-4 text-sm text-ac-ink">
-            <strong className="text-ac-teal">Prova gratuita fino al {trialEndLabel}</strong>, poi 4,99 € al mese (IVA inclusa), prezzo bloccato per chi parte adesso.
-            Ti avviseremo prima e non ti addebiteremo nulla senza la tua conferma.
+            <strong className="text-ac-teal">Prova gratuita fino al {trialEndLabel}</strong>, poi 4,99 € al mese (IVA inclusa).
+            Ti avviseremo 10 giorni e 3 giorni prima e non ti addebiteremo nulla senza la tua conferma.
           </div>
         )}
         <RenewalBanner />
