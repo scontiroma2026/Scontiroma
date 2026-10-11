@@ -112,6 +112,15 @@ Il preavviso di 30 giorni previsto nei Termini diventa quindi 10 giorni: va risc
 
 Ogni passaggio va in una PR a parte, con test e senza addebiti finché il titolare non conferma.
 
+## 4-bis. Idea del titolare (11/10): scritta «Nuova offerta» per 48 ore
+
+Quando un'offerta viene pubblicata, per **48 ore** mostra una scritta «Nuova offerta» (o simile) sulla scheda. Da realizzare **dopo il reset** del limite, insieme agli altri pezzi.
+
+- **Dove:** una piccola etichetta a pillola **in un angolo della foto** nell'elenco e vicino al titolo nella pagina dell'offerta. Testo + colore, non solo colore (leggibile da tutti), poco invasiva.
+- **Quando parte il conto:** dalla **pubblicazione** (approvazione), non dall'invio della richiesta: prima l'offerta non è visibile ai clienti.
+- **Rinnovi:** anche l'offerta del mese successivo, quando viene pubblicata, riceve la scritta per 48 ore. Se non si vuole, si limita alle offerte di negozi nuovi (da decidere).
+- **Tecnica:** il server salva la data di pubblicazione e restituisce un campo «è nuova» (così non dipende dall'orologio del telefono); l'etichetta sparisce da sola dopo 48 ore. Test nel pacchetto del server e nel flusso di prova.
+
 ## 5. Cosa serve da te (aggiornato)
 
 1. Data **D**.
