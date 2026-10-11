@@ -418,6 +418,17 @@ class RegisterIn(BaseModel):
     marketing_opt_in: Optional[bool] = False
     # Tracking referral: merchant_id da cui l'iscritto proviene (QR personalizzato)
     referred_by: Optional[str] = None
+    # Da quale volantino/QR di campagna arriva (es. «volantino-garbatella»): solo lettere minuscole, numeri e trattini
+    fonte: Optional[str] = None
+
+
+_FONTE_RE = re.compile(r"^[a-z0-9-]{1,40}$")
+
+
+def _fonte_valida(valore) -> Optional[str]:
+    """Fonte di campagna (volantino, QR): accetta solo minuscole, numeri e trattini, massimo 40 caratteri."""
+    v = (valore or "").strip().lower()
+    return v if _FONTE_RE.match(v) else None
 
 
 class LoginIn(BaseModel):
@@ -720,6 +731,10 @@ async def register(payload: RegisterIn, response: Response):
     if referral_ok:
         doc["referred_by"] = payload.referred_by
         doc["referred_at"] = now_iso
+    fonte = _fonte_valida(payload.fonte) if payload.role == "client" else None
+    if fonte:
+        doc["fonte_iscrizione"] = fonte
+        doc["fonte_iscrizione_at"] = now_iso
     if payload.role == "merchant":
         phone = (payload.phone or "").strip()
         if not phone:
@@ -3875,6 +3890,27 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
         },
     }
 
+
+
+async def _iscrizioni_per_fonte() -> list:
+    """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale."""
+    da30 = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    conteggi: dict = {}
+    async for c in db.users.find({"role": "client", "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
+                                 {"_id": 0, "fonte_iscrizione": 1, "fonte_iscrizione_at": 1, "created_at": 1}):
+        f = c["fonte_iscrizione"]
+        quando = c.get("fonte_iscrizione_at") or c.get("created_at") or ""
+        r = conteggi.setdefault(f, {"fonte": f, "ultimi_30_giorni": 0, "totale": 0})
+        r["totale"] += 1
+        if quando >= da30:
+            r["ultimi_30_giorni"] += 1
+    return sorted(conteggi.values(), key=lambda r: (r["totale"], r["fonte"]), reverse=True)
+
+
+@api.get("/admin/iscrizioni-per-fonte")
+async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master)):
+    """Quante iscrizioni arrivano da ogni volantino o QR di campagna (solo numeri)."""
+    return {"fonti": await _iscrizioni_per_fonte()}
 
 
 @api.post("/admin/discounts/{discount_id}/approve")

@@ -12,6 +12,35 @@ export function salvaReferral(id) {
   } catch (_) { /* localStorage non disponibile (scheda privata) */ }
 }
 
+// Fonte della campagna (es. volantino-garbatella): stessa regola dei 30 giorni, solo lettere minuscole, numeri e trattini.
+const K_FONTE = "fonte_iscrizione";
+const K_FONTE_TS = "fonte_iscrizione_at";
+const RE_FONTE = /^[a-z0-9-]{1,40}$/;
+
+export function salvaFonte(valore) {
+  const f = (valore || "").trim().toLowerCase();
+  if (!RE_FONTE.test(f)) return;
+  try {
+    localStorage.setItem(K_FONTE, f);
+    localStorage.setItem(K_FONTE_TS, new Date().toISOString());
+  } catch (_) { /* localStorage non disponibile (scheda privata) */ }
+}
+
+export function leggiFonte() {
+  try {
+    const f = localStorage.getItem(K_FONTE);
+    if (!f || !RE_FONTE.test(f)) return null;
+    const quando = Date.parse(localStorage.getItem(K_FONTE_TS) || "");
+    if (quando && Date.now() - quando > GIORNI * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(K_FONTE); localStorage.removeItem(K_FONTE_TS);
+      return null;
+    }
+    return f;
+  } catch (_) {
+    return null;
+  }
+}
+
 export function leggiReferral() {
   try {
     const id = localStorage.getItem(K_ID);

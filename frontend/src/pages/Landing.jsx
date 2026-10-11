@@ -1,4 +1,4 @@
-import { salvaReferral } from "@/lib/referral";
+import { salvaReferral, salvaFonte } from "@/lib/referral";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ export default function Landing() {
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
     salvaReferral(params.get("ref"));
+    salvaFonte(params.get("fonte"));
   }, [params]);
 
   return (
