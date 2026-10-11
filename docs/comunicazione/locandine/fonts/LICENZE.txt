@@ -1,0 +1,11 @@
+Caratteri inclusi in questa cartella (Google Fonts), tutti con licenza libera SIL Open Font License 1.1 (OFL):
+
+- Rubik Wet Paint (RubikWet.ttf)
+- Sansita Swashed (Sansita_Swashed.ttf)
+- Bungee (Bungee.ttf)
+- Lobster Two (Lobster_Two.ttf)
+
+Testo della licenza: https://openfontlicense.org (https://scripts.sil.org/OFL)
+Schede dei caratteri e dei rispettivi autori: https://fonts.google.com
+
+Fraunces e Manrope (usati anche dall'app) sono in frontend/public/fonts, con le loro licenze.
