@@ -771,7 +771,10 @@ async def register(payload: RegisterIn, response: Response):
         if (payload.partita_iva or "").strip():
             partita_iva = _partita_iva_valida(payload.partita_iva)
             if not partita_iva:
-                raise HTTPException(422, "Partita IVA non valida: servono 11 cifre")
+                solo_cifre = re.sub(r"[\s.]", "", str(payload.partita_iva or "")).upper().removeprefix("IT")
+                if re.fullmatch(r"\d{11}", solo_cifre):
+                    raise HTTPException(422, "La Partita IVA ha 11 cifre ma non risulta corretta: controlla le cifre, soprattutto l'ultima")
+                raise HTTPException(422, "La Partita IVA deve avere 11 numeri (solo cifre)")
         doc.update({
             "shop_name": (payload.shop_name or payload.name or "").strip() or "Negozio",
             "zone": (payload.zone or "Centro storico").strip(),

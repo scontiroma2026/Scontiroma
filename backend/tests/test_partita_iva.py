@@ -19,6 +19,9 @@ def test_registrazione_commerciante():
     async def body(c):
         r = await c.post("/api/auth/register", json={**BASE, "email": "piva1@example.com", "partita_iva": "12345678900"})
         assert r.status_code == 422
+        assert "11 cifre ma non risulta corretta" in r.json()["detail"]  # 11 cifre, controllo finale sbagliato
+        r = await c.post("/api/auth/register", json={**BASE, "email": "piva3@example.com", "partita_iva": "1234"})
+        assert r.status_code == 422 and "deve avere 11 numeri" in r.json()["detail"]
         r = await c.post("/api/auth/register", json={**BASE, "email": "piva2@example.com", "partita_iva": "IT12345678903"})
         assert r.status_code == 200, r.text
 
