@@ -6,7 +6,7 @@ Regole d'uso:
 - Il primo contatto va fatto **un negozio per volta**, scrivendo al profilo Instagram/Facebook o all'email pubblica dell'attività, oppure telefonando.
 - **SMS e WhatsApp** solo a chi ha già risposto o a chi ha dato il proprio numero: i messaggi pubblicitari in serie richiedono il consenso.
 - Chi risponde STOP o NO non va più contattato (nel file Excel: Stato = «Non ricontattare»).
-- Non scrivere «gratis per sempre», «nessuna commissione» o «0 €». Il prezzo dopo la fase di lancio (4,99 € al mese IVA inclusa) si può dire.
+- Non scrivere «gratis per sempre», «nessuna commissione» o «0 €». Il prezzo dopo la fase di lancio (4,99 € al mese + IVA) si può dire.
 - Sostituire [LINK] con il link del video.
 
 ## 1. SMS o WhatsApp (solo a chi ha già risposto)
@@ -15,7 +15,7 @@ Regole d'uso:
 ## 2. Messaggio Instagram o Facebook (primo contatto)
 > Ciao! Siamo **Sconti Roma**, un'app che porta clienti ai negozi di Garbatella, San Paolo e Marconi.
 > Funziona così: pubblicate un'offerta al mese, il cliente la trova nell'app e mostra un QR alla cassa. Voi lo inquadrate e lo sconto è fatto.
-> Durante la fase di lancio è gratis, poi 4,99 € al mese IVA inclusa, senza vincoli: si disdice quando si vuole.
+> Durante la fase di lancio è gratis, poi 4,99 € al mese + IVA, senza vincoli: si disdice quando si vuole.
 > Qui c'è un video di un minuto: [LINK]. Se vi incuriosisce, vi spieghiamo tutto in 5 minuti, anche al telefono. Se non vi interessa nessun problema, non scriviamo più 🙂
 
 ## 3. Email
@@ -24,7 +24,7 @@ Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
 > Buongiorno,
 > siamo Sconti Roma (scontiroma.it), un'app che fa conoscere le attività di Garbatella, San Paolo e Marconi a chi abita vicino.
 > Ogni mese pubblicate un'offerta, la approviamo noi e i clienti la trovano nell'app. Alla cassa mostrano un QR che voi inquadrate con il telefono.
-> Nella fase di lancio è gratis. Dopo costa 4,99 € al mese IVA inclusa. Nessun vincolo e nessun addebito senza la vostra conferma.
+> Nella fase di lancio è gratis. Dopo costa 4,99 € al mese + IVA. Nessun vincolo e nessun addebito senza la vostra conferma.
 > Video di un minuto: [LINK]. Iscrizione: scontiroma.it
 > Un saluto,
 > Il team di Sconti Roma – info@scontiroma.it

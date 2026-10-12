@@ -41,7 +41,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 
 ## 5. Pagamenti e fatture (spenti per ora)
 - [ ] **Utente:** decidere durata della prova gratuita (30 o 60 giorni), primo addebito, rinnovo e orario, mese in corso. (Decisione 10/10: **niente prezzo bloccato**, prova di 60 giorni dalla prima pubblicazione, pagamento mensile il 1° con tolleranza modificabile: vedi `docs/commercianti/PIANO_LANCIO_COMMERCIANTI.md`.)
-- [ ] **Commercialista:** chi emette la fattura elettronica (SdI) per 4,99 €/mese, commissioni, IVA, PEC.
+- [ ] **Commercialista:** chi emette la fattura elettronica (SdI) per 4,99 €/mese + IVA (decisione 12/10: IVA esclusa, aliquota 22% da confermare), commissioni, PEC.
 - [ ] **Utente:** conferma esplicita prima di accendere Stripe o PayPal (`CLIENT_SUBSCRIPTION_REQUIRED` resta `false` fino ad allora).
 
 ## 6. Giorno del lancio
