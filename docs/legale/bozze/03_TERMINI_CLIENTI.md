@@ -1,5 +1,6 @@
 # 03 - Termini d'uso per i Clienti
 
+> **Rischio: 🟠 medio: ruolo di intermediario, clausola sulla disponibilità dello sconto riscritta, foro del consumatore.**
 > **[PROPOSTA] [DA VALIDARE]** - Bozza per il consulente. Non è pubblicata. `Termini.jsx` NON è stato toccato.
 > Base: testo attuale + `claude/termini-senza-prezzo-bloccato`, riordinato per separare Clienti e Commercianti (i Commercianti sono nel doc. 04).
 
@@ -7,7 +8,7 @@ Gestore: **Euro Linea S.r.l.s.**, P.IVA 03240220644, sede **Via Tasso 5/B, 83031
 Versione: **[DA COMPLETARE]** - Ultimo aggiornamento: **[DA COMPLETARE]**
 
 ## 1. Cos'è Sconti Roma
-Sconti Roma è una piattaforma che mette in contatto **Clienti** registrati con **Commercianti** locali (oggi nelle zone Garbatella, San Paolo, Marconi **[DA VALIDARE: l'app è aperta a «Roma e dintorni», allineare con la PR #40]**). Il Cliente mostra un codice QR e il Commerciante applica lo sconto.
+Sconti Roma è una piattaforma che mette in contatto **Clienti** registrati con **Commercianti** locali (area di servizio: **«Roma e dintorni»**; il testo attuale del sito elenca ancora solo Garbatella, San Paolo e Marconi: da allineare, PR #40). Il Cliente mostra un codice QR e il Commerciante applica lo sconto.
 **Sconti Roma non vende beni o servizi propri**: è un intermediario tecnologico (servizio della società dell'informazione, D.Lgs. 70/2003). Lo sconto, il prodotto e il prezzo sono responsabilità del Commerciante; il contratto di acquisto è tra Cliente e Commerciante.
 
 ## 2. Registrazione
@@ -18,7 +19,7 @@ Sconti Roma è una piattaforma che mette in contatto **Clienti** registrati con 
 5. Possiamo sospendere o chiudere un account che viola i Termini, **con una motivazione** comunicata via email (salvo urgenza o obblighi di legge). [DA VALIDARE: sostituisce il richiamo secco all'art. 1456 c.c.]
 
 ## 3. Costi
-Per i Clienti Sconti Roma è **gratuita**. Non chiediamo alcun dato di pagamento. Se in futuro introduciamo servizi a pagamento per i Clienti, lo comunichiamo con almeno 30 giorni di preavviso e si attivano **solo con la tua accettazione espressa**.
+Per i Clienti Sconti Roma è **gratuita nella fase di lancio**. Non chiediamo alcun dato di pagamento. Se in futuro introduciamo servizi a pagamento per i Clienti, lo comunichiamo con almeno 30 giorni di preavviso e si attivano **solo con la tua accettazione espressa**.
 
 ## 4. Come si usano gli sconti
 - Gli sconti sono **personali e non trasferibili**. Il QR cambia ogni 20 secondi ed è legato al tuo account.
@@ -26,7 +27,7 @@ Per i Clienti Sconti Roma è **gratuita**. Non chiediamo alcun dato di pagamento
 - Solo il titolare dell'account può usare lo sconto, non accompagnatori o familiari non registrati.
 - Vietato condividere il QR o usare sistemi automatici. Possibile sospensione o chiusura, con motivazione.
 - Lo sconto deve essere accettato dal Commerciante a schermata verde. Se la schermata è rossa si paga il prezzo pieno.
-- Non garantiamo la disponibilità dello sconto presso il singolo negozio.
+- Lo sconto è offerto dal Commerciante, non da Sconti Roma. Il Commerciante si è impegnato a rispettarlo **fino alla fine del mese di validità, anche se ha disdetto**. Se non viene rispettato, segnalacelo a info@scontiroma.it: valuteremo i provvedimenti verso il negozio. Non garantiamo la merce o la scorta presso il singolo negozio. **[PROPOSTA al posto di «non garantiamo la disponibilità»; DA VALIDARE: artt. 33-36 Cod. Consumo]**
 
 ## 5. I tuoi dati nel negozio
 Il Commerciante, o il suo personale a cui ha dato il codice del negozio, vede solo **nome e iniziale del cognome**, ora, offerta e se sei cliente nuovo o di ritorno, e può usarli **solo per verificare e applicare lo sconto**, non per scopi di marketing **[PROPOSTA; vedi Termini Commercianti, punto 6]**. Dettagli nella Privacy.
@@ -50,7 +51,7 @@ Le modifiche sostanziali sono comunicate via email e nell'app con **almeno 15 gi
 Legge italiana. Per i Clienti consumatori è competente il giudice del luogo di residenza o domicilio (art. 66-bis Codice del Consumo); per gli altri, Roma **[DA VALIDARE: foro]**. Scrivici prima a info@scontiroma.it. Puoi rivolgerti agli organismi di risoluzione alternativa delle controversie (ADR); la piattaforma europea ODR non è più attiva **[DA VALIDARE: conferma]**.
 
 ## 12. Contatti
-Assistenza: info@scontiroma.it - Privacy: privacy@scontiroma.it - Segnalazioni contenuti illeciti: **[DA COMPLETARE: indirizzo dedicato, vedi doc. 07]**
+Assistenza: info@scontiroma.it - Privacy: privacy@scontiroma.it - Segnalazioni contenuti illeciti e reclami: **info@scontiroma.it** (vedi doc. 07) **[DA VALIDARE: applicabilità DSA]**
 
 ## 13. Altre clausole standard
 Forza maggiore; nullità parziale (se una clausola è nulla le altre restano); le comunicazioni via email all'indirizzo dell'account sono valide. **[PROPOSTA]**

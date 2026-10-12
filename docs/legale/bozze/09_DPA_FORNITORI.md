@@ -1,5 +1,6 @@
 # 09 - Fornitori: nomina a responsabili (art. 28 GDPR) e trasferimenti extra-UE
 
+> **Rischio: 🟠 medio: Gmail gratuito per privacy@ senza DPA finché non c'è il secondo account Google; strumenti di trasferimento da verificare.**
 > **[PROPOSTA] [DA VALIDARE]** - Elenco di lavoro. I dettagli dei contratti (nome del documento, dove si accetta, data) vanno **verificati sul sito/pannello di ciascun fornitore**: qui non sono inventati. Nessuna chiave o credenziale in questo file.
 
 ## 1. Tabella dei fornitori
@@ -12,10 +13,10 @@
 | OpenStreetMap Foundation (tile e Nominatim) | Titolare autonomo | IP del visitatore (tile); indirizzo dal server (Nominatim) | UK | Già in Privacy | OK |
 | Protomaps | Nessun dato (file di mappa ospitato da noi) | - | - | Verificare che il file sia presente | [DA VALIDARE] |
 | Aruba | Responsabile (dominio, DNS, posta) | Posta `info@`, `privacy@`, `partner@` | UE | Verificare condizioni del dominio e della posta | [DA COMPLETARE] |
-| Gmail (inoltro posta) | La posta arriva a un account Google | Richieste degli utenti, anche privacy | USA/UE | Con Gmail gratuito non c'è DPA: valutare Google Workspace o alternativa | **[DA DECIDERE: titolare + consulente]** |
-| Google (Gemini) | Funzione **spenta** | Foto delle offerte, se acceso | USA/UE | Non riaccendere senza piano a pagamento con termini sul trattamento dei dati e aggiornamento dell'informativa | SPENTA |
-| Stripe | Titolare autonomo (pagamenti) | Dati di pagamento | UE | Pagamenti **spenti**; riverificare all'accensione | SPENTO |
-| PayPal | Titolare autonomo (pagamenti) | Dati di pagamento | UE | Come sopra | SPENTO |
+| Gmail (inoltro posta) | La posta (anche `privacy@`) arriva a un account Google | Richieste degli utenti, anche privacy | USA/UE | **Decisione del titolare:** resta Gmail gratuito (senza DPA) **finché non c'è il secondo account Google**, poi Google Workspace con DPA. Il consulente valuta il rischio nel frattempo | **[DA VALIDARE: consulente]** |
+| Google (Gemini) | Funzione **spenta oggi; da accendere solo dopo il lancio** | Foto delle offerte, se acceso | USA/UE | Non accendere senza piano a pagamento con termini sul trattamento dei dati, DPA e aggiornamento dell'informativa | SPENTA |
+| Stripe | Titolare autonomo (pagamenti con carta, addebito mensile automatico il 1°) [DA VALIDARE: ruolo] | Dati di pagamento, Partita IVA, email | UE | Pagamenti **spenti**; riverificare all'accensione (contratto, IVA addebitata) | SPENTO |
+| PayPal | Titolare autonomo (pagamenti PayPal) [DA VALIDARE: ruolo] | Dati di pagamento, email | UE | Come sopra | SPENTO |
 | UptimeRobot | Non riceve dati degli utenti | Indirizzi del sito, email di chi ha l'account | - | Usare l'email di Sconti Roma | OK |
 
 ## 2. Trasferimenti extra-UE: scheda per fornitore
@@ -26,7 +27,8 @@ Per ciascuno annotare lo **strumento** (decisione di adeguatezza / certificazion
 | MongoDB | [DA COMPLETARE] | [DA COMPLETARE] |
 | Resend | [DA COMPLETARE] | [DA COMPLETARE] |
 | LocationIQ | [DA COMPLETARE] | [DA COMPLETARE] |
-| Gmail / Google | [DA COMPLETARE] | [DA COMPLETARE] |
+| Gmail / Google (gratuito; poi Workspace) | [DA COMPLETARE] | [DA COMPLETARE] |
+| Stripe, PayPal (spenti) | [DA COMPLETARE all'accensione] | [DA COMPLETARE] |
 | OpenStreetMap Foundation (UK) | Decisione di adeguatezza UK [DA VALIDARE: validità] | [DA COMPLETARE] |
 Valutazione d'impatto del trasferimento (TIA): per i fornitori USA non certificati. **[DA VALIDARE]**
 
@@ -40,4 +42,4 @@ Valutazione d'impatto del trasferimento (TIA): per i fornitori USA non certifica
 | Altre persone | [DA COMPLETARE: nessuna oggi] | - | Incarico scritto prima di dare qualsiasi accesso |
 
 ## 5. Commercianti e Clienti: ruolo
-Il Commerciante è **titolare autonomo** dei dati che vede alla scansione (nome e iniziale del cognome) per verificare lo sconto; non c'è DPA con lui, ma obbligo contrattuale di uso limitato (Termini). **[DA VALIDARE: titolari autonomi o contitolari (art. 26)?]**
+I dati del Commerciante (anche la **Partita IVA**, obbligatoria) li trattiamo noi come titolari. Il Commerciante è **titolare autonomo** dei dati che vede alla scansione (nome e iniziale del cognome) per verificare lo sconto; non c'è DPA con lui, ma obbligo contrattuale di uso limitato (Termini). **[DA VALIDARE: titolari autonomi o contitolari (art. 26)?]**

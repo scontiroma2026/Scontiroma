@@ -1,5 +1,6 @@
 # 11 - Procedura per violazione dei dati personali (data breach, artt. 33-34 GDPR)
 
+> **Rischio: 🟢 basso: procedura interna delle 72 ore, nessun punto aperto grave.**
 > **[PROPOSTA] [DA VALIDARE]** - Documento interno. Una pagina. Il Garante va avvisato **entro 72 ore** da quando si ha conoscenza della violazione, se c'è rischio per le persone.
 
 ## 1. Cos'è una violazione
@@ -11,10 +12,10 @@ Perdita, distruzione, modifica, divulgazione o accesso non autorizzato a dati pe
 | Decide e avvisa | Titolare (Euro Linea S.r.l.s.) [DA COMPLETARE: nome] | Valuta il rischio, decide se avvisare |
 | Contenimento tecnico | Claude Code / chi gestisce il codice, su ordine del titolare | Ruota chiavi e password, chiude l'accesso, salva le prove |
 | Consulente | [DA COMPLETARE] | Parere sull'avviso al Garante |
-| Fornitori | Render, MongoDB, Resend, ecc. | Avvisano senza ritardo se la violazione è dalla loro parte (clausola nei DPA, doc. 09) |
+| Fornitori | Render, MongoDB Atlas, Resend, LocationIQ, Stripe, PayPal, Google | Avvisano senza ritardo se la violazione è dalla loro parte (clausola nei DPA, doc. 09) |
 
 ## 3. Passi (orologio: parte dal momento in cui lo veniamo a sapere)
-1. **Subito (0-2 ore): contenere.** Cambiare le chiavi coinvolte (JWT, database, Resend, ecc.) nei pannelli dei fornitori; revocare sessioni; togliere dati dal repository (e considerarli già esposti). Non cancellare le prove.
+1. **Subito (0-2 ore): contenere.** Cambiare le chiavi coinvolte (JWT, database, Resend, LocationIQ, Stripe, PayPal, ecc.) nei pannelli dei fornitori; revocare sessioni; togliere dati dal repository (e considerarli già esposti). Non cancellare le prove.
 2. **Annotare** in un registro (modello sotto): data/ora, chi l'ha scoperta, cosa è successo, dati e persone coinvolte (numero approssimativo), conseguenze, misure.
 3. **Valutare il rischio (entro 24 ore):**
    - *Nessun rischio probabile* (es. dati già cifrati, solo numeri anonimi): solo registro interno.

@@ -1,11 +1,12 @@
 # 13 - Regole per i messaggi commerciali (art. 130 Codice privacy; Direttiva ePrivacy)
 
+> **Rischio: 🟠 medio: primo contatto ai negozi (B2B), consenso e opt-out; regole social aggiunte.**
 > **[PROPOSTA] [DA VALIDARE]** - Regole interne per email, SMS e WhatsApp. Valgono per i messaggi di Sconti Roma a Clienti e Commercianti, **non** per le email di servizio (conferme, recupero password, avvisi sul proprio account).
 
 ## 1. Distinzione
 | Tipo | Esempi nel codice | Serve consenso? |
 |---|---|---|
-| Servizio (contratto) | Benvenuto, recupero password, offerta approvata/rifiutata, promemoria di scadenza/rinnovo, conferma di cancellazione | No (base: contratto). Niente promozioni dentro |
+| Servizio (contratto) | Benvenuto, recupero password, offerta approvata/rifiutata, promemoria di scadenza/rinnovo, promemoria di fine prova (10 e 3 giorni prima), conferma di disdetta, conferma di cancellazione | No (base: contratto). Niente promozioni dentro |
 | Avvisi su richiesta | «Il tuo negozio preferito ha una nuova offerta» (`send_preferito_nuova_offerta`) | **Sì**, consenso specifico (`consents.avvisi_preferiti`), revocabile con «Non avvisarmi più» |
 | Promozionali di Sconti Roma | Newsletter, novità, inviti | **Sì**, casella separata e facoltativa (`marketing_opt_in`), mai preselezionata |
 | Messaggi ai Commercianti (prospecting) | Primo contatto da lista pubblica (email, WhatsApp, telefono) | Vedi punto 3 |
@@ -24,10 +25,19 @@
 - Nel primo messaggio: chi siamo (Euro Linea S.r.l.s.), perché lo contattiamo, come opporsi, informativa breve privacy (art. 14: fonte dei dati).
 - Elenchi: registrare la fonte del contatto e la data. Liste di opposizione: rispettare il Registro Pubblico delle Opposizioni per i telefoni fissi/mobili dove applicabile **[DA VALIDARE]**.
 - Nessun messaggio ripetuto dopo un «no».
-- Contenuti: seguire `comunicazione-marchio` (niente prezzo bloccato, nessuna promessa di guadagno, prova 60 giorni, nessun addebito senza conferma).
+- Contenuti: seguire `comunicazione-marchio`: **4,99 € al mese + IVA** (mai «IVA inclusa»), niente prezzo bloccato, nessuna promessa di guadagno, **«circa due mesi di prova»** (mai «60 giorni»: va da 49 a 81 giorni), nessun addebito senza conferma esplicita.
 
 ## 4. Frasi pronte [PROPOSTA]
 - *Casella promozioni (facoltativa):* «Voglio ricevere novità e offerte di Sconti Roma via email. Posso revocare il consenso in ogni momento.»
 - *Casella avvisi preferiti:* «Avvisami via email quando i miei negozi preferiti pubblicano una nuova offerta.»
 - *Piè di ogni email promozionale:* «Ricevi questa email perché hai dato il consenso. Non vuoi più riceverla? [Annulla iscrizione]. Euro Linea S.r.l.s., [sede], privacy@scontiroma.it.»
-- *Primo messaggio a un negozio (breve):* «Buongiorno, sono [nome] di Sconti Roma (Euro Linea S.r.l.s.). Facciamo conoscere i negozi del quartiere ai clienti con uno sconto mensile. I primi 60 giorni dalla prima pubblicazione sono gratuiti, nessun addebito senza la vostra conferma. Se non volete essere ricontattati scrivete "no". Info privacy: privacy@scontiroma.it.»
+- *Primo messaggio a un negozio (breve):* «Buongiorno, sono [nome] di Sconti Roma (Euro Linea S.r.l.s.). Facciamo conoscere i negozi del quartiere ai clienti con uno sconto mensile. Circa due mesi di prova gratuita dalla prima pubblicazione, poi 4,99 € al mese + IVA; nessun addebito senza la vostra conferma. Se non volete essere ricontattati scrivete "no". Info privacy: privacy@scontiroma.it.»
+
+## 5. Social e post pubblici [PROPOSTA]
+Regole decise dal titolare, da applicare a post, storie, video e locandine:
+- Sconti Roma è **«gratuita nella fase di lancio»** per i clienti (non scrivere «gratis per sempre»).
+- Area: **«Roma e dintorni»** (non elencare solo tre quartieri).
+- Servizio per **maggiorenni (18+)**.
+- Ai negozi: «circa due mesi di prova», **4,99 € al mese + IVA**, nessun prezzo bloccato, nessun addebito senza conferma.
+- Nessuna data di lancio (resta vuota).
+- Tutto resta **[DA VALIDARE]** dal consulente prima della pubblicazione.

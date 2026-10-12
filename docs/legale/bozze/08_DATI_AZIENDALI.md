@@ -1,5 +1,6 @@
 # 08 - Dati aziendali e identificazione (art. 2250 c.c.; art. 7 D.Lgs. 70/2003)
 
+> **Rischio: 🟠 medio: mancano REA, capitale sociale, PEC, conferma del civico (serve la visura).**
 > **[PROPOSTA] [DA VALIDARE]** - Dati da mostrare nel piè di pagina del sito, in Privacy, Termini, email. Repository pubblico: solo dati dell'impresa, già pubblici nel Registro Imprese. Dove manca il dato c'è **[DA COMPLETARE]**: servono la **visura camerale** (a cura del titolare).
 
 | Dato | Valore | Stato |
@@ -13,8 +14,9 @@
 | Registro Imprese di | [DA COMPLETARE] | manca |
 | PEC | [DA COMPLETARE] | manca |
 | Socio unico / liquidazione | [DA COMPLETARE: se applicabile] | manca |
-| Email assistenza / privacy / commercianti | info@, privacy@, partner@scontiroma.it | nei testi; inoltro verso Gmail da fare |
+| Email assistenza / privacy / commercianti | info@, privacy@, partner@scontiroma.it. **info@** è anche l'indirizzo per segnalazioni (DSA) e reclami (P2B) | nei testi; `privacy@` inoltrata a Gmail gratuito finché non c'è il secondo account Google, poi Workspace (doc. 09) |
 | Rappresentante legale (solo nome per i contratti) | [DA COMPLETARE] | il nome di persona fisica va inserito solo se il titolare lo vuole pubblico |
+| Data di lancio | **Vuota: non indicarla** nei testi pubblici | deciso dal titolare |
 | Autorizzazioni / albo | Nessuna prevista **[DA VALIDARE]** | - |
 | Numero di telefono | [DA COMPLETARE: facoltativo] | - |
 

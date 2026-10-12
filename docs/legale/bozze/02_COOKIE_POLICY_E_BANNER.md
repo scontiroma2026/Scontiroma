@@ -1,7 +1,8 @@
 # 02 - Cookie Policy e testo del banner (art. 122 Codice privacy, Linee guida Garante 10/06/2021)
 
+> **Rischio: 🟠 medio: categoria «Marketing» già tolta (🟢), ma i cookie di attribuzione sono ancora da ridurre (scelta A decisa, non realizzata) e il registro del consenso non si cancella da solo.**
 > **[PROPOSTA] [DA VALIDARE]** - Bozza per il consulente. Non è pubblicata. La pagina `CookiePolicy.jsx` e il banner NON sono stati toccati.
-> Allineata al codice del 12/10/2026.
+> Allineata al codice del 12/10/2026 e alle decisioni del titolare del 10-12/10. La categoria «Marketing» è già stata tolta dal banner (PR #95); la riduzione dei cookie di attribuzione (scelta A) è decisa ma **non ancora realizzata nel codice**.
 
 Ultimo aggiornamento: **[DA COMPLETARE]**
 
@@ -21,10 +22,10 @@ Cookie e strumenti simili (memoria del browser, `localStorage` e `sessionStorage
 | `sr_da_fare_non_adesso_v1`, `app_feedback_dismissed_v1`, `pwa_install_dismissed_at`, `sr_interesse_zona` | memoria del browser | Ricordano gli avvisi che hai chiuso o la zona per cui hai già votato | Finché non cancelli i dati del browser |
 | `sr_opened` | memoria della sessione | Evita di ripetere una schermata nella stessa visita | Chiusura del browser |
 
-## 3. Strumenti che richiedono attenzione [DA VALIDARE: qualificazione tecnica o no]
+## 3. Cookie di attribuzione e tempo d'uso: da ridurre [DA VALIDARE: qualificazione]
 | Nome | Cosa fa | Durata | Proposta |
 |---|---|---|---|
-| `referral_merchant_id`, `referral_captured_at`, `fonte_iscrizione`, `fonte_iscrizione_at` | Ricordano da quale negozio (QR / link) sei arrivato, per attribuire l'iscrizione | 30 giorni | **Opzione A:** trattarli come tecnici, spiegandolo (finalità nostra, non richiesta dall'utente: rischio). **Opzione B (consigliata):** chiedere il consenso «funzionale» oppure salvarli solo fino all'iscrizione |
+| `referral_merchant_id`, `referral_captured_at`, `fonte_iscrizione`, `fonte_iscrizione_at` | Ricordano da quale negozio (QR / link) sei arrivato, per attribuire l'iscrizione | 30 giorni | **Scelta A del titolare (decisa, da realizzare):** ridurli ai soli dati **necessari all'iscrizione**, tenuti solo fino a iscrizione completata e poi cancellati; così restano strumenti tecnici. Alternativa non scelta: consenso «funzionale». Il consulente conferma che con la riduzione bastano come tecnici |
 | `app_feedback_secondi_v1` | Conta il tempo d'uso per sapere quando chiedere le stelle | Finché non cancelli i dati | Come sopra: consenso «funzionale» oppure eliminare |
 
 ## 4. Strumenti con il tuo consenso (funzionali / statistiche)
@@ -43,7 +44,7 @@ Se rifiuti, `sr_vid` viene cancellato e non conteggiamo la visita.
 
 ## 6. Il tuo consenso: come lo registriamo e come lo cambi
 - Al primo accesso vedi il banner con **tre pulsanti di pari rilievo: «Rifiuta», «Personalizza», «Accetta tutti»**. La X in alto equivale a «Rifiuta». Nessuna casella è già spuntata. Scorrere la pagina non vale consenso.
-- Salviamo la prova della tua scelta: scelta, data, indirizzo IP e tipo di browser. Base giuridica: obbligo di dimostrare il consenso (art. 7.1 GDPR). Durata: **[DA VALIDARE: 24 mesi]** (oggi non applicata dal codice) o fino alla cancellazione dell'account.
+- Salviamo la prova della tua scelta: scelta, data, indirizzo IP e tipo di browser. Base giuridica: obbligo di dimostrare il consenso (art. 7.1 GDPR). Durata: **24 mesi**, poi il registro è cancellato **[DA VALIDARE; la cancellazione automatica non è ancora nel codice]**.
 - Puoi cambiare idea sempre dal link **«Gestisci cookie»** in fondo alla pagina. Il banner torna dopo 6 mesi.
 
 ## 7. Come cancellarli dal browser
@@ -61,10 +62,11 @@ privacy@scontiroma.it - Titolare: Euro Linea S.r.l.s. (dati nel doc. 08).
 **Finestra «Personalizza»:**
 - Necessari: sempre attivi (non disattivabili).
 - Statistiche anonime (funzionali): disattivato di default.
-- ~~Marketing~~: **da togliere** finché non esiste (oggi il banner la mostra e «Accetta tutti» la mette a `true`, in contrasto con la policy).
+- ~~Marketing~~: **tolta** (PR #95). Nel banner restano solo «Necessari» e «Statistiche anonime»; «Accetta tutti» non imposta più nulla a «marketing».
 - Pulsante «Salva le mie scelte».
 
 ### Controlli tecnici da fare a vista da iPhone (checklist per Claude/titolare)
+0. In «Personalizza» non compare più «Marketing».
 1. «Rifiuta» ha lo stesso aspetto di «Accetta tutti».
 2. La X chiude e vale rifiuto.
 3. Nessun tasto è già attivo in «Personalizza».
