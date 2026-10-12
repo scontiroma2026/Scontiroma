@@ -93,3 +93,56 @@ def test_approvazione_salva_published_at():
         assert d["published_at"]
         assert (await c.get(f"/api/discounts/{did}")).json()["discount"]["is_new"] is True
     run(body)
+
+
+# ---------- «Nuovo su Sconti Roma» (prima pubblicazione del negozio, 7 giorni) ----------
+
+def test_costante_negozio_nuovo():
+    assert server.NEW_SHOP_DAYS == 7
+
+
+def test_negozio_nuovo_confini():
+    adesso = datetime.now(timezone.utc)
+    assert server._is_new_shop((adesso - timedelta(days=3)).isoformat()) is True
+    assert server._is_new_shop((adesso - timedelta(days=8)).isoformat()) is False
+    assert server._is_new_shop(None) is False
+    assert server._is_new_shop("data-sbagliata") is False
+
+
+def test_prima_pubblicazione_contro_rinnovo():
+    async def body(c):
+        adesso = datetime.now(timezone.utc)
+        # negozio alla prima pubblicazione: offerta di 1 ora fa, negozio pubblicato per la prima volta ora
+        mid1 = str(uuid.uuid4())
+        await server.db.users.insert_one({"id": mid1, "email": "n1@example.com", "role": "merchant", "name": "A",
+                                          "shop_name": "Nuovo", "zone": "Marconi",
+                                          "first_published_at": (adesso - timedelta(hours=1)).isoformat()})
+        d1 = str(uuid.uuid4())
+        await server.db.discounts.insert_one({"id": d1, "merchant_id": mid1, "title": "X", "active": True,
+                                              "approval_status": "approved", "original_price": 2, "discounted_price": 1,
+                                              "published_at": (adesso - timedelta(hours=1)).isoformat()})
+        # negozio che rinnova: offerta di 1 ora fa, ma negozio pubblicato per la prima volta 30 giorni fa
+        mid2 = str(uuid.uuid4())
+        await server.db.users.insert_one({"id": mid2, "email": "n2@example.com", "role": "merchant", "name": "B",
+                                          "shop_name": "Storico", "zone": "Marconi",
+                                          "first_published_at": (adesso - timedelta(days=30)).isoformat()})
+        d2 = str(uuid.uuid4())
+        await server.db.discounts.insert_one({"id": d2, "merchant_id": mid2, "title": "Y", "active": True,
+                                              "approval_status": "approved", "original_price": 2, "discounted_price": 1,
+                                              "published_at": (adesso - timedelta(hours=1)).isoformat()})
+        nuovo = await server.enrich_discount(await server.db.discounts.find_one({"id": d1}))
+        assert nuovo["is_new"] is True and nuovo["is_new_shop"] is True
+        rinnovo = await server.enrich_discount(await server.db.discounts.find_one({"id": d2}))
+        assert rinnovo["is_new"] is True and rinnovo["is_new_shop"] is False
+
+    run(body)
+
+
+def test_negozio_esistente_senza_campo_non_e_nuovo():
+    async def body(c):
+        # negozio già online da mesi, senza `first_published_at`: lo si ricava dalla prima offerta approvata (vecchia)
+        did = await offerta(published_at=ore_fa(1), approved_at="2026-01-02T00:00:00+00:00")
+        d = await server.enrich_discount(await server.db.discounts.find_one({"id": did}))
+        assert d["is_new"] is True and d["is_new_shop"] is False
+
+    run(body)

@@ -232,7 +232,7 @@ export default function DiscountDetail() {
             <span className="text-muted-foreground">·</span>
             <span className="flex items-center gap-1 text-muted-foreground"><MapPin size={12} /> {m.zone}</span>
           </div>
-          <BadgeNuovaOfferta isNew={discount.is_new} className="mb-2" />
+          <BadgeNuovaOfferta isNew={discount.is_new} isNewShop={discount.is_new_shop} className="mb-2" />
           <h1 className="font-serif text-4xl leading-tight text-foreground">{discount.title}</h1>
           <div className="mt-2 text-lg text-muted-foreground">{m.shop_name}</div>
           {discount.rating_count > 0 && (

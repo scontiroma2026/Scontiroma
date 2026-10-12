@@ -1290,6 +1290,9 @@ async def enrich_discount(d: dict) -> dict:
     if not isinstance(d.get("image_urls"), list) or not d.get("image_urls"):
         d["image_urls"] = [d["image_url"]] if d.get("image_url") else []
     d["is_new"] = d.get("approval_status") == "approved" and _is_new_offer(d.get("published_at"))
+    # «Nuovo su Sconti Roma»: il negozio ha pubblicato per la prima volta da meno di NEW_SHOP_DAYS giorni
+    d["is_new_shop"] = bool(d.get("approval_status") == "approved" and merchant
+                            and _is_new_shop(await _prima_pubblicazione_cache(merchant)))
     d["locked_this_month"] = (d.get("approval_status") == "approved"
                               and d.get("locked_month") == current_month_key()
                               and not d.get("force_editable", False))
@@ -1299,6 +1302,44 @@ async def enrich_discount(d: dict) -> dict:
 # Scritta «Nuova offerta»: per quante ore dalla pubblicazione (decisione provvisoria: vale per tutte
 # le offerte pubblicate, anche i rinnovi del mese dopo; per cambiarla basta questa costante).
 NEW_OFFER_HOURS = 48
+
+
+# Scritta «Nuovo su Sconti Roma»: per quanti giorni dalla PRIMA pubblicazione del negozio (decisione 12/10: 7 giorni).
+NEW_SHOP_DAYS = 7
+_prima_pub_cache: dict = {}   # id negozio -> (valore, istante): evita una ricerca per ogni offerta dell'elenco
+_PRIMA_PUB_TTL_SEC = 300
+
+
+async def _prima_pubblicazione_cache(m: dict):
+    if m.get("first_published_at"):
+        return m["first_published_at"]
+    adesso = time.monotonic()
+    hit = _prima_pub_cache.get(m["id"])
+    if hit and adesso - hit[1] < _PRIMA_PUB_TTL_SEC:
+        return hit[0]
+    v = await _prima_pubblicazione(m)
+    if len(_prima_pub_cache) > 2000:
+        _prima_pub_cache.clear()
+    _prima_pub_cache[m["id"]] = (v, adesso)
+    return v
+
+
+def _entro(data, durata: timedelta, now: Optional[datetime] = None) -> bool:
+    """Vero se `data` (ISO o datetime) è nel passato e più recente di `durata`. Data assente o illeggibile: falso."""
+    if not data:
+        return False
+    try:
+        dt = data if isinstance(data, datetime) else datetime.fromisoformat(str(data).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return False
+    now = now or datetime.now(timezone.utc)
+    return timedelta(0) <= now - dt < durata
+
+
+def _is_new_shop(first_published_at, now: Optional[datetime] = None) -> bool:
+    return _entro(first_published_at, timedelta(days=NEW_SHOP_DAYS), now)
 
 
 def _is_new_offer(published_at, now: Optional[datetime] = None) -> bool:
