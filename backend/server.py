@@ -419,6 +419,7 @@ class RegisterIn(BaseModel):
     category: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    partita_iva: Optional[str] = None
     # GDPR consents:
     legal_accepted: Optional[bool] = False
     # Solo commercianti: approvazione specifica delle clausole dei Termini (artt. 1341-1342 c.c.)
@@ -431,6 +432,24 @@ class RegisterIn(BaseModel):
 
 
 _FONTE_RE = re.compile(r"^[a-z0-9-]{1,40}$")
+
+
+def _partita_iva_valida(valore) -> Optional[str]:
+    """Partita IVA italiana: 11 cifre con cifra di controllo (algoritmo di Luhn). Ritorna le sole cifre, oppure None."""
+    cifre = re.sub(r"[\s.]", "", str(valore or "")).upper()
+    if cifre.startswith("IT"):
+        cifre = cifre[2:]
+    if not re.fullmatch(r"\d{11}", cifre):
+        return None
+    totale = 0
+    for i, c in enumerate(cifre):
+        n = int(c)
+        if i % 2 == 1:
+            n *= 2
+            if n > 9:
+                n -= 9
+        totale += n
+    return cifre if totale % 10 == 0 else None
 
 
 def _fonte_valida(valore) -> Optional[str]:
@@ -747,6 +766,11 @@ async def register(payload: RegisterIn, response: Response):
         phone = (payload.phone or "").strip()
         if not phone:
             raise HTTPException(422, "Il numero di telefono è obbligatorio per i commercianti")
+        partita_iva = None
+        if (payload.partita_iva or "").strip():
+            partita_iva = _partita_iva_valida(payload.partita_iva)
+            if not partita_iva:
+                raise HTTPException(422, "Partita IVA non valida: servono 11 cifre")
         doc.update({
             "shop_name": (payload.shop_name or payload.name or "").strip() or "Negozio",
             "zone": (payload.zone or "Centro storico").strip(),
@@ -756,6 +780,8 @@ async def register(payload: RegisterIn, response: Response):
             "image_url": "",
             "phone": phone,
         })
+        if partita_iva:
+            doc["partita_iva"] = partita_iva
     await db.users.insert_one(doc)
 
     # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)

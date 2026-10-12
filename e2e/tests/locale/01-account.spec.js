@@ -27,6 +27,7 @@ test('registrazione commerciante dal sito', async ({ page, request }) => {
   await page.getByTestId('reg-shop').fill("Osteria dell'Esempio");
   await page.getByTestId('reg-address-input').fill("Via dell'Esempio 1, Roma");
   await page.getByTestId('reg-phone').fill('+39 06 0000000');
+  await page.getByTestId('reg-partita-iva').fill('12345678903');
   await page.getByTestId('reg-zone').selectOption('Garbatella');
   await page.getByTestId('reg-category').selectOption('Ristorante');
   await page.getByTestId('legal-accept').click();

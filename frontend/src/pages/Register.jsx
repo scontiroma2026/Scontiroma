@@ -30,6 +30,7 @@ export default function Register() {
     zone: "",
     category: "",
     phone: "",
+    partita_iva: "",
     address: "",
   });
   const [zones, setZones] = useState([]);
@@ -69,7 +70,7 @@ export default function Register() {
     if (role === "client") {
       payload.name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
       delete payload.first_name; delete payload.last_name;
-      delete payload.shop_name; delete payload.zone; delete payload.category; delete payload.phone; delete payload.address;
+      delete payload.shop_name; delete payload.zone; delete payload.category; delete payload.phone; delete payload.address; delete payload.partita_iva;
       // Referral tracking (?ref=merchant_id) — priorità URL, poi localStorage
       const ref = params.get("ref") || leggiReferral();
       if (ref) payload.referred_by = ref;
@@ -196,6 +197,20 @@ export default function Register() {
                   placeholder="+39 ..."
                   value={form.phone}
                   onChange={update("phone")}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Partita IVA <span className="text-xs text-muted-foreground">(11 cifre)</span></Label>
+                <Input
+                  data-testid="reg-partita-iva"
+                  inputMode="numeric"
+                  required
+                  minLength={11}
+                  maxLength={14}
+                  placeholder="12345678903"
+                  value={form.partita_iva}
+                  onChange={update("partita_iva")}
                   className="mt-1"
                 />
               </div>
