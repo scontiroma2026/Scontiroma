@@ -2892,6 +2892,29 @@ async def merchant_pagamento_disdici(user: dict = Depends(require_merchant)):
     return {"ok": True, "disdetta_da": mese}
 
 
+async def _registra_pagamento_automatico(merchant_id: str, month_key: str, paid_at: str, cent: int, metodo: str,
+                                         riferimento: dict, nota: str) -> None:
+    """Scrive un pagamento arrivato da Stripe/PayPal nel registro: sia per la visibilità delle offerte
+    (mese e data) sia per la scheda «Pagamenti» dell'admin (data, periodo coperto, ultimo pagamento) e aggiorna
+    il piano (prossimo rinnovo = 1° del mese dopo). Lo stesso evento due volte non crea doppioni."""
+    giorno = pp.a_data_roma(paid_at)
+    y, m = month_key.split("-")
+    dal = date(int(y), int(m), 1)
+    al = pp.primo_del_mese_tra(dal, 1) - timedelta(days=1)
+    await db.merchant_payments.update_one(
+        {"merchant_id": merchant_id, "month_key": month_key},
+        {"$set": {"merchant_id": merchant_id, "month_key": month_key, "paid_at": paid_at, "importo_cent": cent,
+                  "metodo": metodo, "fonte": "automatico", "note": nota, "stato": "registrato",
+                  "data_pagamento": giorno.isoformat() if giorno else None,
+                  "periodo_coperto_dal": dal.isoformat(), "periodo_coperto_al": al.isoformat(), **riferimento},
+         "$setOnInsert": {"id": str(uuid.uuid4()), "creato_il": datetime.now(timezone.utc).isoformat()}},
+        upsert=True)
+    await db.merchant_plans.update_one(
+        {"merchant_id": merchant_id},
+        {"$set": {"merchant_id": merchant_id, "prossimo_rinnovo": pp.primo_del_mese_tra(dal, 1).isoformat()}},
+        upsert=True)
+
+
 async def _stripe_evento_negozio(event) -> Optional[dict]:
     """Eventi Stripe degli abbonamenti dei NEGOZI. Ritorna None se l'evento non è di un negozio
     (allora lo gestisce il codice dei clienti). Con i pagamenti dei negozi spenti: nessun effetto."""
@@ -2931,11 +2954,8 @@ async def _stripe_evento_negozio(event) -> Optional[dict]:
         inizio = ((righe[0].get("period") or {}).get("start") if righe else None)
         giorno = pp.a_data_roma(datetime.fromtimestamp(inizio, timezone.utc)) if inizio else pp.a_data_roma(paid_at)
         month_key = pp.chiave_mese(giorno)
-        await db.merchant_payments.update_one(
-            {"merchant_id": abb["merchant_id"], "month_key": month_key},
-            {"$set": {"merchant_id": abb["merchant_id"], "month_key": month_key, "paid_at": paid_at,
-                      "importo_cent": cent, "metodo": "stripe", "fonte": "automatico", "invoice_id": obj.get("id"),
-                      "note": "Pagamento automatico con carta"}}, upsert=True)
+        await _registra_pagamento_automatico(abb["merchant_id"], month_key, paid_at, cent, "stripe",
+                                             {"invoice_id": obj.get("id")}, "Pagamento automatico con carta")
     return {"status": "ok"}
 
 
@@ -3113,11 +3133,8 @@ async def _paypal_evento_negozio(event: dict) -> Optional[dict]:
         if pp.a_data_roma(paid_at) is None:
             paid_at = adesso
         month_key = pp.chiave_mese(pp.a_data_roma(paid_at))
-        await db.merchant_payments.update_one(
-            {"merchant_id": abb["merchant_id"], "month_key": month_key},
-            {"$set": {"merchant_id": abb["merchant_id"], "month_key": month_key, "paid_at": paid_at,
-                      "importo_cent": cent, "metodo": "paypal", "fonte": "automatico", "sale_id": res.get("id"),
-                      "note": "Pagamento automatico con PayPal"}}, upsert=True)
+        await _registra_pagamento_automatico(abb["merchant_id"], month_key, paid_at, cent, "paypal",
+                                             {"sale_id": res.get("id")}, "Pagamento automatico con PayPal")
     elif etype in ("PAYMENT.SALE.DENIED", "BILLING.SUBSCRIPTION.PAYMENT.FAILED"):
         await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"ultimo_errore_il": adesso}})
     elif etype in ("BILLING.SUBSCRIPTION.CANCELLED", "BILLING.SUBSCRIPTION.SUSPENDED", "BILLING.SUBSCRIPTION.EXPIRED"):
