@@ -194,6 +194,23 @@ async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_lab
     return await _send(to, f"La tua offerta scade tra {giorni} — carica quella di {month_label}", _shell(inner))
 
 
+async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_left: int, end_label: str) -> Optional[str]:
+    """Promemoria di fine prova gratuita (10 e 3 giorni prima). Nessun addebito parte da qui."""
+    name, shop_name, end_label = _esc(name), _esc(shop_name), _esc(end_label)
+    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La prova gratuita finisce tra {giorni}</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8">La prova gratuita di <strong>{shop_name}</strong> su Sconti Roma termina il <strong style="color:#00E5FF">{end_label}</strong>.</p>
+<p style="margin:0 0 16px;color:#d4d4d8">Per continuare, <strong>aggiungi il metodo di pagamento e conferma</strong>: così la tua offerta resta pubblicata. Senza conferma, dal giorno dopo l'offerta non verrà più pubblicata e non riceverai nessun addebito.</p>
+<p style="margin:0 0 24px;color:#d4d4d8">Se non vuoi continuare, non devi fare nulla: la disdetta ha effetto a fine mese e puoi sempre scegliere «Non rinnovo» dalla tua dashboard.</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
+</div>
+"""
+    return await _send(to, f"La tua prova gratuita finisce tra {giorni} — Sconti Roma", _shell(inner))
+
+
 async def send_offer_expired(to: str, name: str, shop_name: str, no_renew: bool = False) -> Optional[str]:
     """Il 1° del mese: l'offerta del commerciante è scaduta perché non c'era quella nuova.
     Nessun rinnovo automatico: il negozio torna visibile solo con una nuova offerta approvata."""

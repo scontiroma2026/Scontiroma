@@ -50,7 +50,7 @@ export default function AdminProvaTolleranza({ hdrs }) {
       ) : (
         <>
           <p className="text-sm text-ac-soft">
-            Se un negozio paga entro questi giorni dal 1° del mese, la sua offerta è visibile subito; oltre, dal mese dopo.
+            Se un negozio paga nei primi giorni del mese (con 5: dal 1° al 5 compreso), la sua offerta è visibile subito; dopo, dal mese dopo.
             Il blocco per mancato pagamento è{" "}
             <strong>{acceso ? "ACCESO" : "spento (nessun effetto sui clienti)"}</strong>.
           </p>
