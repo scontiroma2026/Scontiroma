@@ -30,6 +30,7 @@ import httpx
 import ipaddress
 import socket
 from urllib.parse import urlparse, urljoin
+import prova_pagamenti as pp
 from email_service import (
     send_password_reset,
     send_preferito_nuova_offerta,
@@ -85,6 +86,13 @@ REFRESH_TTL_DAYS = 7
 # promemoria di pagamento spenti. Acceso ("true") = tutto torna come prima.
 def client_subscription_required() -> bool:
     return os.environ.get("CLIENT_SUBSCRIPTION_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+# «Prima il pagamento, poi la pubblicazione» per i negozi. Spento (predefinito) = nessun effetto:
+# le offerte si vedono come sempre. Acceso ("true") = un negozio non in prova e non in regola col
+# pagamento del mese non è visibile ai clienti. Non addebita nulla: i pagamenti si segnano a mano.
+def merchant_payment_required() -> bool:
+    return os.environ.get("MERCHANT_PAYMENT_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 # Stripe
@@ -1171,7 +1179,62 @@ async def default_images():
 # ---------- Discounts ----------
 async def _merchant_sospesi() -> set:
     """Commercianti sospesi dall'admin: le loro offerte non compaiono e non si possono usare."""
-    return set(await db.users.distinct("id", {"role": "merchant", "approved": False}))
+    sospesi = set(await db.users.distinct("id", {"role": "merchant", "approved": False}))
+    if merchant_payment_required():  # con l'interruttore spento questa riga non fa nulla
+        sospesi |= await _merchant_non_in_regola()
+    return sospesi
+
+
+async def _tolleranza_giorni() -> int:
+    doc = await db.settings.find_one({"key": "giorni_tolleranza_pagamento"})
+    v = (doc or {}).get("value")
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 31 else pp.TOLLERANZA_PREDEFINITA
+
+
+async def _prima_pubblicazione(m: dict):
+    """Campo `first_published_at` del negozio; se manca (negozi esistenti) lo calcola al volo dalla
+    prima approvazione tra le sue offerte, senza scrivere nulla."""
+    if m.get("first_published_at"):
+        return m["first_published_at"]
+    date_ok = []
+    for d in await db.discounts.find({"merchant_id": m["id"], "approval_status": "approved"}).to_list(50):
+        v = d.get("approved_at") or d.get("created_at")
+        if v:
+            date_ok.append(str(v))
+    return min(date_ok) if date_ok else None
+
+
+async def _pagamenti_negozio(merchant_id: str) -> dict:
+    """{month_key: paid_at} dei pagamenti registrati a mano."""
+    docs = await db.merchant_payments.find({"merchant_id": merchant_id}).to_list(200)
+    return {d["month_key"]: d.get("paid_at") for d in docs if d.get("month_key")}
+
+
+async def offer_visible_for_payment(merchant: dict, now: Optional[datetime] = None) -> bool:
+    """Le offerte del negozio possono essere mostrate ai clienti? Vero se MERCHANT_PAYMENT_REQUIRED è
+    spento; altrimenti vedi `prova_pagamenti.offer_visible_for_payment_core`."""
+    if not merchant_payment_required():
+        return True
+    oggi = pp.a_data_roma(now or datetime.now(timezone.utc))
+    return pp.offer_visible_for_payment_core(
+        required=True, first_published_at=await _prima_pubblicazione(merchant),
+        pagamenti=await _pagamenti_negozio(merchant["id"]), oggi=oggi,
+        tolleranza=await _tolleranza_giorni(), no_renew_month=merchant.get("no_renew_month"))
+
+
+async def _merchant_non_in_regola() -> set:
+    """Id dei negozi le cui offerte non vanno mostrate per mancato pagamento (solo interruttore acceso)."""
+    out = set()
+    for m in await db.users.find({"role": "merchant"}).to_list(None):
+        if not await offer_visible_for_payment(m):
+            out.add(m["id"])
+    return out
+
+
+async def _segna_prima_pubblicazione(merchant_id: str, quando_iso: str):
+    """Imposta `first_published_at` alla prima approvazione e non lo cambia più."""
+    await db.users.update_one({"id": merchant_id, "role": "merchant", "first_published_at": {"$in": [None]}},
+                              {"$set": {"first_published_at": quando_iso}})
 
 
 async def enrich_discount(d: dict) -> dict:
@@ -3948,6 +4011,7 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
     d = await db.discounts.find_one({"id": discount_id})
+    await _segna_prima_pubblicazione(d.get("merchant_id"), now.isoformat())
     # Notifica il commerciante via email
     try:
         m = await db.users.find_one({"id": d.get("merchant_id")})
@@ -4140,6 +4204,9 @@ async def admin_run_next_reminders(user: dict = Depends(require_admin_master)):
 async def admin_list_merchants(user: dict = Depends(require_admin_master)):
     docs = await db.users.find({"role": "merchant"}).sort("created_at", -1).to_list(500)
     out = []
+    oggi = pp.a_data_roma(datetime.now(timezone.utc))
+    mese_corrente = pp.chiave_mese(oggi)
+    tol = await _tolleranza_giorni()
     for m in docs:
         m = sanitize_user(m)
         m["approved"] = m.get("approved", True)  # default True for existing
@@ -4152,6 +4219,11 @@ async def admin_list_merchants(user: dict = Depends(require_admin_master)):
             m["discount_approval"] = disc.get("approval_status") or "approved"
         red_count = await db.redemptions.count_documents({"merchant_id": m["id"]})
         m["redemptions_count"] = red_count
+        st = pp.stato_pagamento(await _prima_pubblicazione(m), await _pagamenti_negozio(m["id"]), oggi, tol)
+        m["stato_pagamento"] = {"fase": st["fase"],
+                                "prova_fino_al": st["prova_fino_al"].isoformat() if st["prova_fino_al"] else None,
+                                "primo_pagamento": st["primo_pagamento"].isoformat() if st["primo_pagamento"] else None,
+                                "mese": mese_corrente}
         out.append(m)
     return {"merchants": out}
 
@@ -4360,6 +4432,7 @@ async def _run_month_rollover(force: bool = False) -> dict:
             await db.discounts.insert_one(sets)
         await db.next_discounts.delete_one({"id": nd["id"]})
         if st == "approved":  # l'offerta del mese è online: avviso a chi ha il negozio tra i preferiti
+            await _segna_prima_pubblicazione(mid, now_iso)
             promossa = await db.discounts.find_one({"merchant_id": mid})
             if promossa and promossa.get("active", True):
                 _avvisi_in_background(promossa)
@@ -5927,6 +6000,64 @@ async def pag_esporta_csv(user: dict = Depends(require_admin_master)):
 
 
 # ---------- Include Router & CORS (LAST) ----------
+# ---------- Prova gratuita e pagamenti mensili dei negozi (registro MANUALE, nessun addebito) ----------
+class ImpostazioniPagamentiIn(BaseModel):
+    giorni_tolleranza: int = Field(ge=0, le=31)
+
+
+@api.get("/admin/impostazioni-pagamenti")
+async def get_impostazioni_pagamenti(user: dict = Depends(require_admin_master)):
+    return {"giorni_tolleranza": await _tolleranza_giorni(), "predefinito": pp.TOLLERANZA_PREDEFINITA,
+            "interruttore_acceso": merchant_payment_required()}
+
+
+@api.put("/admin/impostazioni-pagamenti")
+async def put_impostazioni_pagamenti(payload: ImpostazioniPagamentiIn, user: dict = Depends(require_admin_master)):
+    await db.settings.update_one({"key": "giorni_tolleranza_pagamento"},
+                                 {"$set": {"value": payload.giorni_tolleranza}}, upsert=True)
+    return {"giorni_tolleranza": payload.giorni_tolleranza}
+
+
+class PagatoIn(BaseModel):
+    paid_at: Optional[str] = None  # data/ora ISO; vuoto = adesso
+    note: Optional[str] = Field(default=None, max_length=300)
+
+
+def _controlla_mese(month_key: str) -> str:
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month_key or ""):
+        raise HTTPException(400, "Mese non valido: usa AAAA-MM")
+    return month_key
+
+
+@api.get("/admin/pagamenti-mensili/{merchant_id}")
+async def mp_elenco(merchant_id: str, user: dict = Depends(require_admin_master)):
+    docs = await db.merchant_payments.find({"merchant_id": merchant_id}).sort("month_key", -1).to_list(200)
+    return {"pagamenti": [{k: v for k, v in d.items() if k != "_id"} for d in docs]}
+
+
+@api.put("/admin/pagamenti-mensili/{merchant_id}/{month_key}")
+async def mp_segna_pagato(merchant_id: str, month_key: str, payload: Optional[PagatoIn] = None,
+                          user: dict = Depends(require_admin_master)):
+    month_key = _controlla_mese(month_key)
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}):
+        raise HTTPException(404, "Negozio non trovato")
+    payload = payload or PagatoIn()
+    if payload.paid_at and pp.a_data_roma(payload.paid_at) is None:
+        raise HTTPException(400, "Data non valida")
+    doc = {"merchant_id": merchant_id, "month_key": month_key,
+           "paid_at": payload.paid_at or datetime.now(timezone.utc).isoformat(), "note": payload.note or ""}
+    await db.merchant_payments.update_one({"merchant_id": merchant_id, "month_key": month_key},
+                                          {"$set": doc}, upsert=True)
+    return {"pagamento": doc}
+
+
+@api.delete("/admin/pagamenti-mensili/{merchant_id}/{month_key}")
+async def mp_togli_pagato(merchant_id: str, month_key: str, user: dict = Depends(require_admin_master)):
+    month_key = _controlla_mese(month_key)
+    await db.merchant_payments.delete_one({"merchant_id": merchant_id, "month_key": month_key})
+    return {"ok": True}
+
+
 app.include_router(api)
 
 def _parse_cors_origins(raw: str) -> list:

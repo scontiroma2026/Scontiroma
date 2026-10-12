@@ -109,6 +109,21 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
     } catch (err) { toast.error(formatApiError(err)); }
   };
 
+  const togglePagato = async (m) => {
+    const sp = m.stato_pagamento;
+    if (!sp) return;
+    const pagato = sp.fase === "pagato";
+    const msg = pagato
+      ? `Togliere «pagato» a ${m.shop_name} per ${sp.mese}?`
+      : `Segnare ${m.shop_name} come pagato per ${sp.mese}?\n\nÈ solo un'annotazione: nessun addebito.`;
+    if (!window.confirm(msg)) return;
+    try {
+      if (pagato) await api.delete(`/admin/pagamenti-mensili/${m.id}/${sp.mese}`, hdrs());
+      else await api.put(`/admin/pagamenti-mensili/${m.id}/${sp.mese}`, {}, hdrs());
+      onRefresh();
+    } catch (err) { toast.error(formatApiError(err)); }
+  };
+
   const saveEdit = async (id) => {
     setBusy(true);
     try {
@@ -178,6 +193,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             onSaveEdit={() => saveEdit(m.id)}
             onCancelEdit={cancelEdit}
             onToggleApprove={() => toggleApprove(m)}
+            onTogglePagato={() => togglePagato(m)}
             onToggleDiscountActive={() => toggleDiscountActive(m)}
             onApproveInline={() => approveInline(m.discount_id)}
             onRejectInline={() => rejectInline(m.discount_id)}
@@ -229,10 +245,19 @@ function Azione({ testid, onClick, icon: Icon, children, tono = "neutro", disabl
  * Scheda di un commerciante: dati del negozio, la sua offerta con lo stato in italiano e
  * le azioni scritte per esteso, divise tra "Offerta" e "Negozio".
  */
+const ggmm = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : "");
+function testoStatoPagamento(sp) {
+  if (!sp) return "";
+  if (sp.fase === "in_prova") return `In prova fino al ${ggmm(sp.prova_fino_al)} · primo pagamento il ${ggmm(sp.primo_pagamento)}`;
+  if (sp.fase === "pagato") return "Pagato questo mese";
+  if (sp.fase === "da_pagare") return "Da pagare";
+  return "Prova non ancora iniziata (nessuna offerta pubblicata)";
+}
+
 function MerchantRow({
   m, hdrs, editing, form, setForm, busy,
   onStartEdit, onSaveEdit, onCancelEdit,
-  onToggleApprove, onToggleDiscountActive,
+  onToggleApprove, onTogglePagato, onToggleDiscountActive,
   onApproveInline, onRejectInline, onOpenDiscountEdit,
   onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts,
 }) {
@@ -274,6 +299,18 @@ function MerchantRow({
           {m.approved ? "Negozio attivo" : "Negozio sospeso"}
         </span>
       </div>
+
+      {m.stato_pagamento && (
+        <div data-testid={`admin-merchant-pagamento-${m.id}`} className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-full border border-border px-2.5 py-0.5 font-semibold text-foreground">{testoStatoPagamento(m.stato_pagamento)}</span>
+          {(m.stato_pagamento.fase === "pagato" || m.stato_pagamento.fase === "da_pagare") && (
+            <button type="button" onClick={onTogglePagato} data-testid={`admin-toggle-pagato-${m.id}`}
+              className="min-h-9 rounded-full border border-border px-3 font-semibold text-foreground hover:bg-muted">
+              {m.stato_pagamento.fase === "pagato" ? "Togli «pagato»" : "Segna pagato"}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Offerta */}
       <div className="mt-3 rounded-xl border border-border bg-muted p-3">
