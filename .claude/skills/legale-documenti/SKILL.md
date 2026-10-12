@@ -16,7 +16,7 @@ Non sei un avvocato: ogni testo resta **bozza [DA VALIDARE]** finché il titolar
 
 ## Procedura
 1. **Fotografa la realtà del codice** (non fidarti dei testi): cosa viene salvato (DB, cookie, localStorage: `sr_vid`, `fonte_iscrizione`, referral…), quali fornitori ricevono dati (Render, MongoDB Atlas, Resend, LocationIQ, Google/Gemini se acceso, Stripe/PayPal se acceso), quali ruoli (cliente, commerciante, admin), cosa vede l'admin, quanto si conserva.
-2. **Confronta** con i testi in `frontend/src/pages/legal/` e `docs/legale/`. Elenca le incoerenze in tabella: testo / realtà / rischio (alto-medio-basso) / proposta.
+2. **Confronta** con i testi in `frontend/src/pages/legal/` e `docs/legale/`. Elenca le incoerenze in tabella: testo / realtà / rischio (🔴/🟠/🟢) / proposta.
 3. **Redigi** le proposte con tracciamento (vecchio → nuovo) in `docs/legale/`, mai sovrascrivendo le pagine del sito in una PR non marcata.
 4. **Prepara il pacchetto per il consulente**: elenco documenti, domande aperte numerate, cosa deve solo validare.
 5. Aggiorna `docs/legale/VERIFICA_CONFORMITA.md` e `docs/LISTA_LANCIO.md`.
@@ -34,4 +34,10 @@ Non sei un avvocato: ogni testo resta **bozza [DA VALIDARE]** finché il titolar
 - Accessibilità: dichiarazione solo se dovuta; altrimenti nota.
 
 ## Cosa scrivere nel report finale
-Tabella: documento / stato (da fare, bozza, in PR, validato) / rischio / prossimo passo / chi. Poi 3 righe: cosa deve decidere il titolare, cosa deve solo validare il consulente.
+Tabella: documento / stato (da fare, bozza, in PR, validato) / rischio (🔴/🟠/🟢) / prossimo passo / chi. Poi 3 righe: cosa deve decidere il titolare, cosa deve solo validare il consulente.
+
+## Pallini di rischio (sempre, in ogni documento legale)
+- 🔴 **rosso** = rischio alto, da sistemare prima del lancio;
+- 🟠 **arancione** = medio, da valutare col consulente;
+- 🟢 **verde** = basso, miglioramento o già a posto.
+Mettili in ogni tabella di rischio, nell'intestazione di ogni bozza («Rischio: 🔴/🟠/🟢 + motivo breve») e nelle domande per il consulente; in cima a ogni documento va una piccola legenda. Non usare solo parole come «alto/medio/basso».
