@@ -162,6 +162,7 @@ test('menu a tendina: iscrizione commerciante, zona e categoria si chiudono dopo
   }
   // Un ritorno a capo nella pagina (altro campo) non riapre né cambia il valore scelto
   await page.getByTestId('reg-phone').fill('+39 06 0000000');
+  await page.getByTestId('reg-partita-iva').fill('12345678903');
   await expect(page.getByTestId('reg-zone')).toHaveValue('Garbatella');
   await foto(page, 'menu-registrazione');
 });

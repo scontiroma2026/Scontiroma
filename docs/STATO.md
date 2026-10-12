@@ -143,3 +143,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google;
   - Gemini su piano a pagamento;
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
+
+- 12/10: la registrazione dei commercianti chiede la **Partita IVA** (11 cifre, cifra di controllo verificata). Il server accetta anche registrazioni senza (vecchi account e test), il modulo del sito la richiede. Privacy e Termini da aggiornare con questo dato (proposta al consulente).
