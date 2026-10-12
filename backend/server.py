@@ -4656,6 +4656,17 @@ def _stop_scheduler() -> None:
 
 
 
+CONSENT_LOG_RETENTION = timedelta(days=730)  # 24 mesi
+
+
+async def _pulisci_registro_consenso():
+    """Cancella le righe del registro del consenso più vecchie di 24 mesi (anche quelle salvate prima
+    che esistesse `expires_at`, che hanno solo `timestamp` in testo ISO). Ritorna quante ne ha cancellate."""
+    limite = datetime.now(timezone.utc) - CONSENT_LOG_RETENTION
+    res = await db.consent_logs.delete_many({"timestamp": {"$lt": limite.isoformat()}})
+    return res.deleted_count
+
+
 @app.on_event("startup")
 async def on_startup():
     if not stripe.api_key:
@@ -4671,6 +4682,13 @@ async def on_startup():
     await db.scansioni_locandina.create_index([("merchant_id", 1), ("giorno", 1)], unique=True)
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
+    await db.consent_logs.create_index("expires_at", expireAfterSeconds=0)
+    try:
+        cancellate = await _pulisci_registro_consenso()
+        if cancellate:
+            logging.info("Registro consenso: cancellate %s righe oltre i 24 mesi", cancellate)
+    except Exception as e:  # la pulizia non deve mai bloccare l'avvio
+        logging.warning("Pulizia registro consenso non riuscita: %s", e)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     # Garantisce idempotenza reale dei webhook di rinnovo (Stripe/PayPal possono
@@ -5294,6 +5312,8 @@ async def gdpr_consent_log(payload: CookieConsentIn, request: Request):
         "ip": request.client.host if request.client else None,
         "user_agent": request.headers.get("user-agent", "")[:300],
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        # Cancellazione automatica dopo 24 mesi, come dichiarato nella Cookie Policy (indice TTL all'avvio)
+        "expires_at": datetime.now(timezone.utc) + CONSENT_LOG_RETENTION,
     }
     await db.consent_logs.insert_one(doc)
     return {"ok": True, "id": doc["id"]}

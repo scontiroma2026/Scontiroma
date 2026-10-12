@@ -11,7 +11,7 @@ const CONSENT_MAX_MS = 182 * 24 * 60 * 60 * 1000; // 6 mesi
 const DEFAULT_PREFS = {
   essential: true, // always on
   functional: false,
-  marketing: false, // reserved for future
+  marketing: false, // sempre falso: non usiamo cookie di marketing (la Cookie Policy lo dice)
 };
 
 function readConsent() {
@@ -99,7 +99,7 @@ export default function CookieBanner() {
 
   const acceptAll = () => {
     saveConsent(
-      { essential: true, functional: true, marketing: true },
+      { essential: true, functional: true, marketing: false },
       "accept_all"
     );
     setVisible(false);
@@ -114,7 +114,7 @@ export default function CookieBanner() {
   };
 
   const saveCustom = () => {
-    saveConsent({ ...prefs, essential: true }, "custom");
+    saveConsent({ ...prefs, essential: true, marketing: false }, "custom");
     setVisible(false);
   };
 
@@ -213,13 +213,6 @@ export default function CookieBanner() {
                 desc="Ricordano preferenze come mappa e geolocalizzazione. Migliorano l'esperienza."
                 checked={prefs.functional}
                 onChange={(v) => setPrefs({ ...prefs, functional: v })}
-              />
-              <PrefRow
-                testid="pref-marketing"
-                title="Marketing (nessuno attivo)"
-                desc="Al momento non usiamo cookie di marketing o profilazione. Riservato a futuri usi con nuovo consenso."
-                checked={prefs.marketing}
-                onChange={(v) => setPrefs({ ...prefs, marketing: v })}
               />
             </div>
 
