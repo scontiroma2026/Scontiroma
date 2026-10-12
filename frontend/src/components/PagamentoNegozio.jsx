@@ -72,7 +72,7 @@ export default function PagamentoNegozio() {
     return (
       <Scheda titolo="Pagamento" tono="verde" className="mb-4" data-testid="pagamento-attivo">
         <p className="text-sm text-ac-ink">
-          <strong>Pagamento attivo</strong> con {st.abbonamento.metodo === "paypal" ? "PayPal" : "carta"}: {euro(st.importo_cent)} al mese,
+          <strong>Pagamento attivo</strong> con {st.abbonamento.metodo === "paypal" ? "PayPal" : "carta"}: {euro(st.importo_cent)} al mese + IVA,
           addebitati automaticamente il 1° di ogni mese.
           {st.disdetta_da && <> Hai disdetto: dal {st.disdetta_da} non si rinnova più.</>}
         </p>
@@ -96,7 +96,7 @@ export default function PagamentoNegozio() {
   return (
     <Scheda titolo="Attiva il pagamento" tono="rosa" className="mb-4" data-testid="pagamento-attiva">
       <ul className="space-y-1 text-sm text-ac-ink">
-        <li><strong>Importo:</strong> {euro(st.importo_cent)} al mese.</li>
+        <li><strong>Importo:</strong> {euro(st.importo_cent)} al mese + IVA{st.iva_percent ? ` (${st.iva_percent}%)` : ""}.</li>
         <li><strong>Primo addebito:</strong> il {dataIt(st.primo_addebito)}. Fino ad allora la prova è gratuita e non ti addebitiamo nulla.</li>
         <li><strong>Rinnovo:</strong> automatico ogni 1° del mese.</li>
         <li><strong>Disdetta:</strong> quando vuoi, ha effetto a fine mese; fino a quel giorno i clienti possono usare il tuo sconto e devi rispettarlo.</li>
