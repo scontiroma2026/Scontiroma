@@ -135,6 +135,45 @@ async def ensure_plan() -> str:
         return _cached_plan_id
 
 
+_cached_plan_negozio: dict = {}
+
+
+async def ensure_plan_negozio(cents: int) -> str:
+    """Plan PayPal mensile per i NEGOZI (importo in centesimi), creato una volta sola (idempotente per nome)."""
+    if cents in _cached_plan_negozio:
+        return _cached_plan_negozio[cents]
+    _require()
+    valore = f"{cents // 100}.{cents % 100:02d}"
+    nome = f"Sconti Roma Negozio Mensile {valore}EUR"
+    headers = await _authed_headers()
+    async with httpx.AsyncClient(timeout=20) as c:
+        try:
+            r = await c.get(f"{BASE}/v1/billing/plans?page_size=20", headers=headers)
+            if r.status_code == 200:
+                for p in r.json().get("plans", []):
+                    if p.get("name") == nome and p.get("status") == "ACTIVE":
+                        _cached_plan_negozio[cents] = p["id"]
+                        return p["id"]
+        except Exception:
+            pass
+        prod = await c.post(f"{BASE}/v1/catalogs/products", headers=headers, json={
+            "name": "Sconti Roma Abbonamento Negozio", "description": "Abbonamento mensile per i negozi",
+            "type": "SERVICE", "category": "SOFTWARE"})
+        prod.raise_for_status()
+        plan = await c.post(f"{BASE}/v1/billing/plans", headers=headers, json={
+            "product_id": prod.json()["id"], "name": nome,
+            "description": f"{valore} euro al mese, ricorrente, disdetta a fine mese.",
+            "billing_cycles": [{"frequency": {"interval_unit": "MONTH", "interval_count": 1},
+                                "tenure_type": "REGULAR", "sequence": 1, "total_cycles": 0,
+                                "pricing_scheme": {"fixed_price": {"value": valore, "currency_code": "EUR"}}}],
+            "payment_preferences": {"auto_bill_outstanding": True,
+                                    "setup_fee": {"value": "0", "currency_code": "EUR"},
+                                    "setup_fee_failure_action": "CONTINUE", "payment_failure_threshold": 3}})
+        plan.raise_for_status()
+        _cached_plan_negozio[cents] = plan.json()["id"]
+        return _cached_plan_negozio[cents]
+
+
 async def get_subscription(sub_id: str) -> dict:
     _require()
     headers = await _authed_headers()

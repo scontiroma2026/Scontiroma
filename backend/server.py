@@ -2882,6 +2882,11 @@ async def merchant_pagamento_disdici(user: dict = Depends(require_merchant)):
             stripe.Subscription.modify(abb["stripe_subscription_id"], cancel_at_period_end=True)
         except Exception as e:
             raise HTTPException(502, f"Stripe: {e}")
+    if abb and abb.get("provider") == "paypal":
+        try:
+            await paypal_service.cancel_subscription(abb["paypal_subscription_id"], "Disdetta del negozio")
+        except Exception as e:
+            raise HTTPException(502, f"PayPal: {e}")
     mese = pp.mese_dopo(pp.chiave_mese(pp.a_data_roma(datetime.now(timezone.utc))))
     await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": mese}})
     await _avvisa_disdetta(user)
@@ -3037,6 +3042,92 @@ async def paypal_config():
     }
 
 
+class PayPalNegozioIn(BaseModel):
+    subscription_id: str
+
+
+@api.get("/merchant/pagamento/paypal/config")
+async def merchant_paypal_config(user: dict = Depends(require_merchant)):
+    """Dati per il pulsante PayPal del negozio: piano mensile e data del primo addebito (un 1°, alle 06:00 di Roma)."""
+    if not merchant_payment_required():
+        raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
+    if not paypal_service.is_configured():
+        raise HTTPException(503, "Pagamento con PayPal non disponibile")
+    primo = pp.primo_addebito_stripe(await _prima_pubblicazione(user), pp.a_data_roma(datetime.now(timezone.utc)))
+    if primo is None:
+        raise HTTPException(409, "Potrai attivare il pagamento dopo la prima offerta pubblicata.")
+    if await db.merchant_subscriptions.find_one({"merchant_id": user["id"], "status": "active"}):
+        raise HTTPException(409, "Il pagamento è già attivo.")
+    try:
+        plan_id = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS)
+    except Exception as e:
+        logging.warning(f"PayPal plan negozio: {e}")
+        raise HTTPException(502, "PayPal non risponde, riprova più tardi")
+    inizio = datetime(primo.year, primo.month, primo.day, 6, 0, tzinfo=pp.ROMA).astimezone(timezone.utc)
+    return {"client_id": paypal_service.PAYPAL_CLIENT_ID, "mode": paypal_service.PAYPAL_MODE, "plan_id": plan_id,
+            "start_time": inizio.strftime("%Y-%m-%dT%H:%M:%SZ"), "custom_id": user["id"],
+            "primo_addebito": primo.isoformat()}
+
+
+@api.post("/merchant/pagamento/paypal/activate")
+async def merchant_paypal_activate(payload: PayPalNegozioIn, user: dict = Depends(require_merchant)):
+    """Dopo l'approvazione su PayPal: verifica l'abbonamento (piano giusto, intestato a questo negozio) e lo registra."""
+    if not merchant_payment_required():
+        raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
+    try:
+        sub = await paypal_service.get_subscription(payload.subscription_id)
+        plan_atteso = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS)
+    except Exception as e:
+        raise HTTPException(502, f"PayPal: {e}")
+    if sub.get("plan_id") != plan_atteso or sub.get("custom_id") != user["id"]:
+        raise HTTPException(403, "Abbonamento non valido per questo negozio")
+    if sub.get("status") not in ("ACTIVE", "APPROVED"):
+        raise HTTPException(409, "L'abbonamento PayPal non è ancora attivo")
+    if await db.merchant_subscriptions.find_one({"paypal_subscription_id": payload.subscription_id,
+                                                 "merchant_id": {"$ne": user["id"]}}):
+        raise HTTPException(409, "Abbonamento già usato")
+    await db.merchant_subscriptions.update_one(
+        {"merchant_id": user["id"]},
+        {"$set": {"merchant_id": user["id"], "provider": "paypal", "status": "active",
+                  "paypal_subscription_id": payload.subscription_id,
+                  "attivato_il": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    return {"ok": True}
+
+
+async def _paypal_evento_negozio(event: dict) -> Optional[dict]:
+    """Eventi PayPal degli abbonamenti dei NEGOZI. None se l'evento non è di un negozio."""
+    etype, res = event.get("event_type", ""), event.get("resource", {}) or {}
+    sub_id = res.get("billing_agreement_id") if etype.startswith("PAYMENT.") else res.get("id")
+    abb = await db.merchant_subscriptions.find_one({"paypal_subscription_id": sub_id}) if sub_id else None
+    if not abb:
+        return None
+    if not merchant_payment_required():
+        return {"status": "ignored", "reason": "pagamenti_negozi_spenti"}
+    adesso = datetime.now(timezone.utc).isoformat()
+    if etype == "PAYMENT.SALE.COMPLETED":
+        amount = res.get("amount") or {}
+        try:
+            cent = int(round(float(amount.get("total") or amount.get("value") or 0) * 100))
+        except (TypeError, ValueError):
+            cent = 0
+        if cent <= 0:
+            return {"status": "ok", "skipped": "importo_zero"}
+        paid_at = res.get("create_time") or adesso
+        if pp.a_data_roma(paid_at) is None:
+            paid_at = adesso
+        month_key = pp.chiave_mese(pp.a_data_roma(paid_at))
+        await db.merchant_payments.update_one(
+            {"merchant_id": abb["merchant_id"], "month_key": month_key},
+            {"$set": {"merchant_id": abb["merchant_id"], "month_key": month_key, "paid_at": paid_at,
+                      "importo_cent": cent, "metodo": "paypal", "fonte": "automatico", "sale_id": res.get("id"),
+                      "note": "Pagamento automatico con PayPal"}}, upsert=True)
+    elif etype in ("PAYMENT.SALE.DENIED", "BILLING.SUBSCRIPTION.PAYMENT.FAILED"):
+        await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"ultimo_errore_il": adesso}})
+    elif etype in ("BILLING.SUBSCRIPTION.CANCELLED", "BILLING.SUBSCRIPTION.SUSPENDED", "BILLING.SUBSCRIPTION.EXPIRED"):
+        await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"status": "cancelled", "chiuso_il": adesso}})
+    return {"status": "ok"}
+
+
 @api.post("/paypal/activate")
 async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(require_client)):
     """Chiamato dal frontend dopo `onApprove` di PayPal Buttons. Verifica lo stato reale
@@ -3100,6 +3191,9 @@ async def paypal_webhook(request: Request):
             raise HTTPException(400, "Firma webhook non valida")
     except paypal_service.PayPalNotConfigured:
         raise HTTPException(400, "PayPal non configurato")
+    esito_negozio = await _paypal_evento_negozio(event)
+    if esito_negozio is not None:
+        return esito_negozio
     if not client_subscription_required():
         # Fase di lancio: evento autentico ma senza effetti (nessun abbonamento da gestire).
         return {"status": "ignored", "reason": "subscription_not_required"}
