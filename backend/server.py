@@ -2792,6 +2792,134 @@ async def payment_status(session_id: str):
     }
 
 
+# ---------- Abbonamento dei negozi (Stripe) — SPENTO finché MERCHANT_PAYMENT_REQUIRED è spento ----------
+MERCHANT_PRICE_CENTS = int(os.environ.get("MERCHANT_PRICE_CENTS") or 499)  # 4,99 € al mese (IVA da decidere)
+STRIPE_MERCHANT_LOOKUP = f"sconti_roma_negozio_mensile_{MERCHANT_PRICE_CENTS}"
+PAYMENTS_MERCHANT_OFF_MSG = "I pagamenti dei negozi non sono ancora attivi."
+
+
+def _stripe_negozio_fuso(d: date) -> int:
+    """Timestamp Unix del 1° `d` alle 06:00 di Roma (l'addebito parte in mattinata)."""
+    return int(datetime(d.year, d.month, d.day, 6, 0, tzinfo=pp.ROMA).timestamp())
+
+
+@api.get("/merchant/pagamento")
+async def merchant_pagamento_stato(user: dict = Depends(require_merchant)):
+    """Stato del pagamento del negozio: serve alla schermata «Attiva il pagamento»."""
+    prima = await _prima_pubblicazione(user)
+    oggi = pp.a_data_roma(datetime.now(timezone.utc))
+    st = pp.stato_pagamento(prima, await _pagamenti_negozio(user["id"]), oggi, await _tolleranza_giorni())
+    abb = await db.merchant_subscriptions.find_one({"merchant_id": user["id"]}, {"_id": 0})
+    primo = pp.primo_addebito_stripe(prima, oggi)
+    return {
+        "attivo": merchant_payment_required(),
+        "fase": st["fase"],
+        "prova_fino_al": st["prova_fino_al"].isoformat() if st.get("prova_fino_al") else None,
+        "primo_addebito": primo.isoformat() if primo else None,
+        "importo_cent": MERCHANT_PRICE_CENTS,
+        "abbonamento": ({"metodo": abb.get("provider"), "stato": abb.get("status")} if abb else None),
+        "disdetta_da": user.get("no_renew_month"),
+    }
+
+
+@api.post("/merchant/pagamento/stripe/checkout")
+async def merchant_stripe_checkout(user: dict = Depends(require_merchant)):
+    """Apre il pagamento con carta: prova gratuita fino al primo addebito (sempre un 1°), poi 4,99 € al mese.
+    Nessun addebito parte adesso."""
+    if not merchant_payment_required():
+        raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
+    if not stripe.api_key:
+        raise HTTPException(503, "Pagamento con carta non disponibile")
+    site = _frontend_url()
+    if not site:
+        raise HTTPException(500, "FRONTEND_URL non configurato")
+    oggi = pp.a_data_roma(datetime.now(timezone.utc))
+    primo = pp.primo_addebito_stripe(await _prima_pubblicazione(user), oggi)
+    if primo is None:
+        raise HTTPException(409, "Potrai attivare il pagamento dopo la prima offerta pubblicata.")
+    if await db.merchant_subscriptions.find_one({"merchant_id": user["id"], "status": "active"}):
+        raise HTTPException(409, "Il pagamento è già attivo.")
+    prices = stripe.Price.list(lookup_keys=[STRIPE_MERCHANT_LOOKUP], active=True, limit=1).data
+    price = prices[0] if prices else stripe.Price.create(
+        unit_amount=MERCHANT_PRICE_CENTS, currency="eur", recurring={"interval": "month"},
+        lookup_key=STRIPE_MERCHANT_LOOKUP, product_data={"name": "Sconti Roma — abbonamento negozio"})
+    customer_id = await get_or_create_stripe_customer(user)
+    meta = {"tipo": "negozio", "merchant_id": user["id"]}
+    try:
+        session = stripe.checkout.Session.create(
+            line_items=[{"price": price.id, "quantity": 1}], mode="subscription",
+            success_url=f"{site}/merchant/dashboard?pagamento=ok", cancel_url=f"{site}/merchant/dashboard?pagamento=annullato",
+            customer=customer_id, payment_method_types=["card"], metadata=meta,
+            subscription_data={"trial_end": _stripe_negozio_fuso(primo), "metadata": meta},
+        )
+    except stripe.error.InvalidRequestError as e:
+        raise HTTPException(500, f"Stripe error: {e}")
+    return {"checkout_url": session.url, "primo_addebito": primo.isoformat()}
+
+
+@api.post("/merchant/pagamento/disdici")
+async def merchant_pagamento_disdici(user: dict = Depends(require_merchant)):
+    """Disdetta: l'abbonamento non si rinnova e l'offerta resta pubblica fino a fine mese."""
+    if not merchant_payment_required():
+        raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
+    abb = await db.merchant_subscriptions.find_one({"merchant_id": user["id"], "status": "active"})
+    if abb and abb.get("provider") == "stripe" and stripe.api_key:
+        try:
+            stripe.Subscription.modify(abb["stripe_subscription_id"], cancel_at_period_end=True)
+        except Exception as e:
+            raise HTTPException(502, f"Stripe: {e}")
+    mese = pp.mese_dopo(pp.chiave_mese(pp.a_data_roma(datetime.now(timezone.utc))))
+    await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": mese}})
+    return {"ok": True, "disdetta_da": mese}
+
+
+async def _stripe_evento_negozio(event) -> Optional[dict]:
+    """Eventi Stripe degli abbonamenti dei NEGOZI. Ritorna None se l'evento non è di un negozio
+    (allora lo gestisce il codice dei clienti). Con i pagamenti dei negozi spenti: nessun effetto."""
+    t, obj = event["type"], event["data"]["object"]
+    if t == "checkout.session.completed":
+        md = obj.get("metadata") or {}
+        if md.get("tipo") != "negozio":
+            return None
+        if not merchant_payment_required():
+            return {"received": True, "ignored": "pagamenti_negozi_spenti"}
+        await db.merchant_subscriptions.update_one(
+            {"merchant_id": md.get("merchant_id")},
+            {"$set": {"merchant_id": md.get("merchant_id"), "provider": "stripe", "status": "active",
+                      "stripe_subscription_id": obj.get("subscription"), "stripe_customer_id": obj.get("customer"),
+                      "attivato_il": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+        return {"status": "ok"}
+    if t not in ("invoice.payment_succeeded", "invoice.payment_failed", "customer.subscription.deleted"):
+        return None
+    sub_id = obj.get("id") if t == "customer.subscription.deleted" else obj.get("subscription")
+    abb = await db.merchant_subscriptions.find_one({"stripe_subscription_id": sub_id}) if sub_id else None
+    if not abb:
+        return None
+    if not merchant_payment_required():
+        return {"received": True, "ignored": "pagamenti_negozi_spenti"}
+    adesso = datetime.now(timezone.utc).isoformat()
+    if t == "customer.subscription.deleted":
+        await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"status": "cancelled", "chiuso_il": adesso}})
+    elif t == "invoice.payment_failed":
+        await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"ultimo_errore_il": adesso}})
+    else:
+        cent = int(obj.get("amount_paid") or 0)
+        if cent <= 0:
+            return {"status": "ok", "skipped": "fattura_a_zero"}
+        pagato = (obj.get("status_transitions") or {}).get("paid_at")
+        paid_at = datetime.fromtimestamp(pagato, timezone.utc).isoformat() if pagato else adesso
+        righe = ((obj.get("lines") or {}).get("data") or [])
+        inizio = ((righe[0].get("period") or {}).get("start") if righe else None)
+        giorno = pp.a_data_roma(datetime.fromtimestamp(inizio, timezone.utc)) if inizio else pp.a_data_roma(paid_at)
+        month_key = pp.chiave_mese(giorno)
+        await db.merchant_payments.update_one(
+            {"merchant_id": abb["merchant_id"], "month_key": month_key},
+            {"$set": {"merchant_id": abb["merchant_id"], "month_key": month_key, "paid_at": paid_at,
+                      "importo_cent": cent, "metodo": "stripe", "fonte": "automatico", "invoice_id": obj.get("id"),
+                      "note": "Pagamento automatico con carta"}}, upsert=True)
+    return {"status": "ok"}
+
+
 @api.post("/stripe/webhook")
 async def stripe_webhook(request: Request):
     payload = await request.body()
@@ -2800,6 +2928,9 @@ async def stripe_webhook(request: Request):
         event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
     except Exception:
         raise HTTPException(400, "Invalid signature")
+    esito_negozio = await _stripe_evento_negozio(event)
+    if esito_negozio is not None:
+        return esito_negozio
     if not client_subscription_required():
         # Fase di lancio: evento autentico ma senza effetti (nessun abbonamento da gestire).
         return {"received": True, "ignored": "subscription_not_required"}
