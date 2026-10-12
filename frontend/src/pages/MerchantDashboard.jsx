@@ -11,6 +11,7 @@ import MerchantHours from "@/components/MerchantHours";
 import NextOfferCard from "@/components/NextOfferCard";
 import DaFareCard, { calcolaVoci } from "@/components/DaFareCard";
 import RenewalBanner from "@/components/RenewalBanner";
+import PagamentoNegozio from "@/components/PagamentoNegozio";
 import MerchantInsights from "@/components/MerchantInsights";
 import { Scheda, Pillola, StatoVuoto, ErroreRiprova, Scheletro, CLASSE_PRIMARIO, CLASSE_BASE_SECONDARIO, CLASSE_BORDO } from "@/components/AreaUI";
 import { useAppConfig } from "@/context/ConfigContext";
@@ -73,6 +74,7 @@ export default function MerchantDashboard() {
           </div>
         )}
         <RenewalBanner />
+        <PagamentoNegozio />
 
         {stato === "errore" && (
           <div className="mb-4">
