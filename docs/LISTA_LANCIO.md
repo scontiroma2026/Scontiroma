@@ -40,9 +40,15 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [ ] **Utente:** almeno alcuni negozi con offerte pubblicate nelle tre zone pilota, per non lasciare le schede vuote.
 
 ## 5. Pagamenti e fatture (spenti per ora)
-- [ ] **Utente:** decidere durata della prova gratuita (30 o 60 giorni), primo addebito, rinnovo e orario, mese in corso. (Decisione 10/10: **niente prezzo bloccato**, prova di 60 giorni dalla prima pubblicazione, pagamento mensile il 1° con tolleranza modificabile: vedi `docs/commercianti/PIANO_LANCIO_COMMERCIANTI.md`.)
-- [ ] **Commercialista:** chi emette la fattura elettronica (SdI) per 4,99 €/mese + IVA (decisione 12/10: IVA esclusa, aliquota 22% da confermare), commissioni, PEC.
-- [ ] **Utente:** conferma esplicita prima di accendere Stripe o PayPal (`CLIENT_SUBSCRIPTION_REQUIRED` resta `false` fino ad allora).
+Decisioni del titolare (10-12/10): niente prezzo bloccato; **4,99 € al mese + IVA**; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5 del mese; approvazione dell'offerta solo con pagamento in regola e **sempre manuale**; addebito automatico con Stripe e PayPal dopo **una sola conferma** del commerciante (carta o PayPal chiesti circa 10 giorni prima della fine prova); disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile.
+- [x] **Utente:** decisioni su prova, primo addebito, tolleranza, rinnovo, prezzo e IVA esclusa.
+- [x] **Claude:** prova dei negozi e registro dei pagamenti (#88), pannello pre-lancio «Approva tutte» e promemoria a 10 e 3 giorni (#96), Stripe (#97) e PayPal (#98) per i negozi, prezzo + IVA (#105), tutto spento con `MERCHANT_PAYMENT_REQUIRED`.
+- [ ] **Claude:** schermata «Attiva il pagamento» (#104 unita), pagamenti automatici nella scheda Pagamenti dell'admin (#107), avviso e email di disdetta (#100), eliminazione account dal 1° del mese dopo (#102): in attesa di controlli, OK dell'utente e consulente.
+- [ ] **Utente:** chiavi sandbox di Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; **prova con soldi finti** insieme a Claude (carta, PayPal, mancato pagamento, disdetta).
+- [ ] **Utente:** conti Stripe e PayPal Business dell'azienda; chiavi vere sul server vero solo il giorno dell'accensione.
+- [ ] **Commercialista:** conferma IVA al 22%, chi emette la fattura elettronica (SdI), commissioni, PEC.
+- [ ] **Consulente:** testi della schermata di pagamento, dei Termini (prova, pagamento, disdetta, «+ IVA») e della Privacy (Stripe e PayPal come fornitori).
+- [ ] **Utente:** conferma esplicita prima di accendere i pagamenti veri (`MERCHANT_PAYMENT_REQUIRED` e le chiavi reali); i pagamenti dei clienti restano spenti (`CLIENT_SUBSCRIPTION_REQUIRED=false`).
 
 ## 6. Giorno del lancio
 - [ ] Controlli verdi su `main`, nessuna PR aperta con testi legali.
