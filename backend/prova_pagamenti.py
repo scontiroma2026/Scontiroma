@@ -108,3 +108,16 @@ def offer_visible_for_payment_core(*, required: bool, first_published_at, pagame
         if no_renew_month <= mk:
             return False  # disdetta già in vigore: offerta e pagamento decaduti
     return stato_pagamento(first_published_at, pagamenti, oggi, tolleranza)["visibile"]
+
+
+def primo_addebito_stripe(first_published_at, oggi: date, giorni_minimi: int = 3) -> Optional[date]:
+    """Data del primo addebito di un abbonamento attivato `oggi`: sempre un 1°. È la fine della prova;
+    se è troppo vicina (Stripe vuole almeno 48 ore) o già passata, è il primo 1° utile dopo `giorni_minimi`.
+    Senza prima pubblicazione (prova non ancora partita) -> None."""
+    base = billing_start_date(first_published_at)
+    if base is None:
+        return None
+    limite = oggi + timedelta(days=giorni_minimi)
+    while base < limite:
+        base = primo_del_mese_tra(base, 1)
+    return base
