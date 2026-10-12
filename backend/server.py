@@ -42,6 +42,7 @@ from email_service import (
     send_grace_period_reminder,
     send_subscription_cancelled,
     send_master_reset,
+    send_merchant_trial_reminder,
     send_next_offer_reminder,
     send_offer_expired,
     send_admin_month_summary,
@@ -3929,7 +3930,9 @@ async def admin_list_pending(user: dict = Depends(require_admin_master)):
     docs = await db.discounts.find({"approval_status": "pending"}).sort("updated_at", -1).to_list(200)
     out = []
     for d in docs:
-        out.append(await enrich_discount(d))
+        e = await enrich_discount(d)
+        e["pagamento"] = await _approvazione_consentita(await db.users.find_one({"id": d.get("merchant_id")}))
+        out.append(e)
     return {"discounts": out}
 
 
@@ -4064,8 +4067,30 @@ async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master))
     return {"fonti": await _iscrizioni_per_fonte()}
 
 
-@api.post("/admin/discounts/{discount_id}/approve")
-async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool = False) -> dict:
+    """Si può approvare l'offerta di questo negozio? Con i pagamenti dei negozi accesi, dopo la prova
+    l'approvazione è consentita solo se il pagamento del mese è arrivato nei giorni stabiliti
+    (1° + tolleranza). Interruttore spento o negozio ancora in prova / alla prima offerta -> sempre sì.
+    `per_mese_dopo`: offerta del mese prossimo, valutata al 1° del mese prossimo.
+    Ritorna {"ok": bool, "fase": str, "motivo": str}."""
+    if not merchant_payment_required() or not merchant:
+        return {"ok": True, "fase": "non_richiesto", "motivo": ""}
+    oggi = pp.a_data_roma(datetime.now(timezone.utc))
+    if per_mese_dopo:
+        oggi = pp.primo_del_mese_dopo(oggi)
+    st = pp.stato_pagamento(await _prima_pubblicazione(merchant), await _pagamenti_negozio(merchant["id"]),
+                            oggi, await _tolleranza_giorni())
+    if merchant.get("no_renew_month") and merchant["no_renew_month"] <= pp.chiave_mese(oggi):
+        return {"ok": False, "fase": "disdetta", "motivo": "Il negozio ha disdetto: l'offerta non si approva."}
+    if st["fase"] == "da_pagare":
+        return {"ok": False, "fase": "da_pagare",
+                "motivo": "Pagamento del mese non ricevuto nei giorni stabiliti: approva dopo il pagamento."}
+    return {"ok": True, "fase": st["fase"], "motivo": ""}
+
+
+async def _approva_offerta(discount_id: str) -> Optional[dict]:
+    """Approva un'offerta: pubblica, segna la prima pubblicazione del negozio, avvisa il commerciante
+    e i clienti interessati. Ritorna l'offerta aggiornata, o None se non esiste."""
     now = datetime.now(timezone.utc)
     result = await db.discounts.update_one({"id": discount_id}, {"$set": {
         "approval_status": "approved",
@@ -4076,7 +4101,7 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
         "force_editable": False,
     }})
     if result.matched_count == 0:
-        raise HTTPException(404, "Sconto non trovato")
+        return None
     d = await db.discounts.find_one({"id": discount_id})
     await _segna_prima_pubblicazione(d.get("merchant_id"), now.isoformat())
     # Notifica il commerciante via email
@@ -4088,7 +4113,43 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
         logging.warning(f"approve email failed: {e}")
     if d.get("active", True):
         _avvisi_in_background(d)
+    return d
+
+
+@api.post("/admin/discounts/{discount_id}/approve")
+async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+    d0 = await db.discounts.find_one({"id": discount_id})
+    if d0:
+        via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
+        if not via["ok"]:
+            raise HTTPException(409, via["motivo"])
+    d = await _approva_offerta(discount_id)
+    if d is None:
+        raise HTTPException(404, "Sconto non trovato")
     return {"discount": await enrich_discount(d)}
+
+
+class ApprovaTutteIn(BaseModel):
+    conferma: Optional[str] = ""
+
+
+@api.post("/admin/discounts/approve-all-pending")
+async def admin_approve_all_pending(payload: ApprovaTutteIn, user: dict = Depends(require_admin_master)):
+    """Pre-lancio: approva in un colpo solo tutte le offerte in attesa (il giorno del lancio).
+    Per i negozi alla prima pubblicazione la prova (circa due mesi) parte da questo momento.
+    Serve la parola di conferma «LANCIA» per evitare tocchi per errore."""
+    if (payload.conferma or "").strip().upper() != "LANCIA":
+        raise HTTPException(400, "Scrivi LANCIA per confermare")
+    pendenti = await db.discounts.find({"approval_status": "pending"}, {"id": 1, "merchant_id": 1, "_id": 0}).to_list(None)
+    approvate = saltate = 0
+    for p in pendenti:
+        via = await _approvazione_consentita(await db.users.find_one({"id": p.get("merchant_id")}))
+        if not via["ok"]:
+            saltate += 1
+            continue
+        if await _approva_offerta(p["id"]):
+            approvate += 1
+    return {"approvate": approvate, "saltate_per_pagamento": saltate}
 
 
 @api.post("/admin/discounts/{discount_id}/reject")
@@ -4176,6 +4237,11 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
 
 @api.post("/admin/next-offers/{next_id}/approve")
 async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_admin_master)):
+    nd0 = await db.next_discounts.find_one({"id": next_id})
+    if nd0:
+        via = await _approvazione_consentita(await db.users.find_one({"id": nd0.get("merchant_id")}), per_mese_dopo=True)
+        if not via["ok"]:
+            raise HTTPException(409, via["motivo"])
     now_iso = datetime.now(timezone.utc).isoformat()
     result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
         "approval_status": "approved", "approved_at": now_iso, "approval_note": ""}})
@@ -4397,6 +4463,46 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler  # noqa: E402
 from apscheduler.triggers.cron import CronTrigger  # noqa: E402
 
 _scheduler: Optional[AsyncIOScheduler] = None
+
+
+async def _run_trial_reminders(oggi=None) -> dict:
+    """Promemoria di fine prova ai negozi: uno a 10 giorni e uno a 3 giorni prima (idempotente: ogni
+    promemoria parte una volta sola per negozio). Attivo solo con MERCHANT_PAYMENT_REQUIRED acceso;
+    la data di fine prova viene da `trial_end_date` (stessa regola dei pagamenti)."""
+    if not merchant_payment_required():
+        return {"checked": 0, "sent": 0, "skipped": "pagamenti_negozi_spenti"}
+    oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
+    now_iso = datetime.now(timezone.utc).isoformat()
+    negozi = await db.users.find({"role": "merchant"}).to_list(None)
+    sent = 0
+    for m in negozi:
+        if not m.get("email") or m.get("no_renew_month"):
+            continue
+        fine = pp.trial_end_date(await _prima_pubblicazione(m))
+        if not fine:
+            continue
+        giorni = (fine - oggi).days
+        if 3 < giorni <= 10:
+            flag = "trial_reminder_10_sent_at"
+        elif 0 <= giorni <= 3:
+            flag = "trial_reminder_3_sent_at"
+        else:
+            continue
+        if m.get(flag):
+            continue
+        # Un promemoria a 3 giorni non va mai accompagnato da uno a 10 arrivato in ritardo
+        if flag == "trial_reminder_3_sent_at":
+            await db.users.update_one({"id": m["id"], "trial_reminder_10_sent_at": {"$in": [None]}},
+                                      {"$set": {"trial_reminder_10_sent_at": "saltato"}})
+        try:
+            await send_merchant_trial_reminder(
+                m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                max(giorni, 1), f"{fine.day} {MESI_IT[fine.month - 1]} {fine.year}")
+            await db.users.update_one({"id": m["id"]}, {"$set": {flag: now_iso}})
+            sent += 1
+        except Exception as e:
+            logging.error(f"[trial-reminder] invio non riuscito per negozio={str(m.get('id'))[:8]}: {e}")
+    return {"checked": len(negozi), "sent": sent}
 
 
 async def _run_grace_reminders() -> dict:
@@ -4632,6 +4738,13 @@ def _start_scheduler() -> None:
         _run_next_offer_reminders,
         CronTrigger(hour=9, minute=30),
         id="next_offer_reminders_daily",
+        replace_existing=True,
+    )
+    # Promemoria di fine prova ai negozi (10 e 3 giorni prima) — ogni giorno 09:45, solo con pagamenti negozi accesi
+    _scheduler.add_job(
+        _run_trial_reminders,
+        CronTrigger(hour=9, minute=45),
+        id="trial_reminders_daily",
         replace_existing=True,
     )
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre

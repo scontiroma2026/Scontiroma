@@ -22,6 +22,19 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
     }
   };
 
+  const approvaTutte = async () => {
+    const parola = window.prompt(
+      `Stai per approvare TUTTE le ${pending.length} offerte in attesa e far partire la prova (circa due mesi) dei negozi alla prima pubblicazione.\n\nScrivi LANCIA per confermare:`, "");
+    if (parola === null) return;
+    try {
+      const r = await api.post("/admin/discounts/approve-all-pending", { conferma: parola }, hdrs());
+      toast.success(`Approvate ${r.data.approvate} offerte ✓` + (r.data.saltate_per_pagamento ? ` (${r.data.saltate_per_pagamento} saltate: pagamento non ricevuto)` : ""));
+      onRefresh();
+    } catch (err) {
+      toast.error(formatApiError(err));
+    }
+  };
+
   const reject = async (id) => {
     const reason = window.prompt("Motivo del rifiuto (visibile al commerciante):", "") || "";
     try {
@@ -51,6 +64,18 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
         </div>
         <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio o offerta…" testId="pending-search" />
       </div>
+      {pending.length > 0 && (
+        <div className="mt-4 rounded-xl border border-border bg-card p-4" data-testid="prelancio">
+          <h4 className="font-serif text-lg">Pre-lancio</h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tieni le offerte in attesa fino al giorno del lancio, poi approvale tutte insieme: i negozi alla prima
+            pubblicazione iniziano da quel momento la prova (circa due mesi, con pagamento il 1° del mese). Chiede di scrivere LANCIA per confermare.
+          </p>
+          <Button data-testid="approva-tutte" onClick={approvaTutte} className="mt-3 grad-fucsia-viola text-white">
+            Approva tutte le {pending.length} offerte
+          </Button>
+        </div>
+      )}
       {filtered.length === 0 ? (
         <div className="mt-6 rounded-xl border border-border bg-muted p-10 text-center text-muted-foreground">
           {q ? `Nessuna offerta trovata per "${q}".` : "🎉 Nessuna offerta in attesa. Ottimo lavoro!"}
@@ -92,6 +117,15 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                       {d.category}
                     </span>
                   )}
+                  {d.pagamento && !d.pagamento.ok && (
+                    <span
+                      data-testid={`pending-da-pagare-${d.id}`}
+                      className="rounded-full border border-destructive/40 bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive"
+                      title={d.pagamento.motivo}
+                    >
+                      Pagamento non ricevuto
+                    </span>
+                  )}
                 </div>
                 {d.terms && <div className="mt-2 text-xs text-muted-foreground">Termini: {d.terms}</div>}
               </div>
@@ -99,6 +133,8 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                 <Button
                   data-testid={`approve-${d.id}`}
                   onClick={() => approve(d.id)}
+                  disabled={!!d.pagamento && !d.pagamento.ok}
+                  title={d.pagamento && !d.pagamento.ok ? d.pagamento.motivo : undefined}
                   className="grad-fucsia-viola text-white rounded-full"
                 >
                   <Check size={14} className="mr-1" /> Approva

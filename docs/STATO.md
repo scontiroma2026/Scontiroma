@@ -145,3 +145,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
 
 - 12/10: la registrazione dei commercianti chiede la **Partita IVA** (11 cifre, cifra di controllo verificata). Il server accetta anche registrazioni senza (vecchi account e test), il modulo del sito la richiede. Privacy e Termini da aggiornare con questo dato (proposta al consulente).
+
+- 12/10: **pre-lancio** (da provare): scheda «Offerte in attesa» con il pulsante «Approva tutte» (chiede di scrivere LANCIA); promemoria di fine prova ai negozi a 10 e a 3 giorni (lavoro giornaliero alle 9:45, parte solo con `MERCHANT_PAYMENT_REQUIRED` acceso, una volta per negozio). Ramo `claude/prelancio-promemoria`.
+
+- 12/10 (decisione del titolare): **prova a limite 11**: la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese: prima offerta pubblicata entro l'11 → primo pagamento il 1° di due mesi dopo; dal 12 in poi → il 1° di tre mesi dopo. Prova da 49 a 81 giorni (media 66): nei testi pubblici scrivere «circa due mesi di prova», non «60 giorni». Tolleranza 5 giorni (si paga dal 1° al 5 incluso). Approvazione dell'offerta consentita solo se il pagamento è arrivato in tempo (interruttore acceso). Nessuna pubblicazione automatica. Da aggiornare: Termini (#83), piano (#81), video e messaggi.
