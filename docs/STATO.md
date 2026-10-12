@@ -5,6 +5,9 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
 
+## Pacchetto documenti legali (branch `claude/pacchetto-legale`, 12/10/2026)
+Solo bozze [DA VALIDARE] in `docs/legale/bozze/` (13 documenti + `INDICE_PER_CONSULENTE.md`). Nessuna pagina del sito modificata. PR da aprire a cura del coordinatore; unione solo dopo OK del titolare e del consulente.
+
 ## In produzione (unito in `main`)
 | PR | Cosa | Data |
 |---|---|---|
