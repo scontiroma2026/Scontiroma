@@ -9,7 +9,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 
 ## 1. Legale (bloccante)
 - [ ] **Consulente:** validare Termini, Privacy, Cookie e Recesso (domande in `docs/legale/PROPOSTE_TESTI_LEGALI.md`; analisi dei rischi in `docs/legale/REVISIONE_TERMINI.md`, PR #76).
-- [ ] **Consulente:** sistemare i 3 punti ad alto rischio dei Termini (prezzo bloccato senza scadenza; mese in corso, rinnovo e disdetta non definiti; limite di responsabilità durante il lancio gratuito).
+- [ ] **Consulente:** sistemare i 3 punti ad alto rischio dei Termini (mese in corso, rinnovo e disdetta non definiti; limite di responsabilità durante il lancio gratuito).
 - [ ] **Consulente:** informativa privacy: l'admin vede il nome per intero dei clienti.
 - [ ] **Utente:** dati aziendali nei testi (sede legale, P.IVA, REA, capitale sociale, PEC facoltativa) → PR #40.
 - [ ] **Utente:** contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google.
@@ -40,7 +40,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [ ] **Utente:** almeno alcuni negozi con offerte pubblicate nelle tre zone pilota, per non lasciare le schede vuote.
 
 ## 5. Pagamenti e fatture (spenti per ora)
-- [ ] **Utente:** decidere durata della prova gratuita (30 o 60 giorni), primo addebito, rinnovo e orario, mese in corso, prezzo bloccato.
+- [ ] **Utente:** decidere durata della prova gratuita (30 o 60 giorni), primo addebito, rinnovo e orario, mese in corso. (Decisione 10/10: **niente prezzo bloccato**, prova di 60 giorni dalla prima pubblicazione, pagamento mensile il 1° con tolleranza modificabile: vedi `docs/commercianti/PIANO_LANCIO_COMMERCIANTI.md`.)
 - [ ] **Commercialista:** chi emette la fattura elettronica (SdI) per 4,99 €/mese, commissioni, IVA, PEC.
 - [ ] **Utente:** conferma esplicita prima di accendere Stripe o PayPal (`CLIENT_SUBSCRIPTION_REQUIRED` resta `false` fino ad allora).
 
