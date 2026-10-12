@@ -24,7 +24,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
 
   const approvaTutte = async () => {
     const parola = window.prompt(
-      `Stai per approvare TUTTE le ${pending.length} offerte in attesa e far partire la prova di 60 giorni dei negozi alla prima pubblicazione.\n\nScrivi LANCIA per confermare:`, "");
+      `Stai per approvare TUTTE le ${pending.length} offerte in attesa e far partire la prova (circa due mesi) dei negozi alla prima pubblicazione.\n\nScrivi LANCIA per confermare:`, "");
     if (parola === null) return;
     try {
       const r = await api.post("/admin/discounts/approve-all-pending", { conferma: parola }, hdrs());
@@ -69,7 +69,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
           <h4 className="font-serif text-lg">Pre-lancio</h4>
           <p className="mt-1 text-xs text-muted-foreground">
             Tieni le offerte in attesa fino al giorno del lancio, poi approvale tutte insieme: i negozi alla prima
-            pubblicazione iniziano da quel momento i 60 giorni di prova. Chiede di scrivere LANCIA per confermare.
+            pubblicazione iniziano da quel momento la prova (circa due mesi, con pagamento il 1° del mese). Chiede di scrivere LANCIA per confermare.
           </p>
           <Button data-testid="approva-tutte" onClick={approvaTutte} className="mt-3 grad-fucsia-viola text-white">
             Approva tutte le {pending.length} offerte

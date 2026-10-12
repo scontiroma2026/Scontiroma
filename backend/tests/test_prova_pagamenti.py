@@ -17,17 +17,20 @@ def test_fine_prova_e_primo_pagamento():
     # giorno 61 a metà mese: la prova continua fino a fine mese, si paga dal 1° dopo
     assert pp.billing_start_date("2026-10-15T09:00:00+00:00") == date(2027, 1, 1)
     assert pp.trial_end_date("2026-10-15T09:00:00+00:00") == date(2026, 12, 31)
-    assert pp.billing_start_date("2026-10-02") == date(2026, 12, 1)  # 2 ott + 60 = 1 dic (è un 1°)
+    assert pp.billing_start_date("2026-10-02") == date(2026, 12, 1)  # entro l'11: 1° di due mesi dopo
     assert pp.trial_end_date("2026-10-02") == date(2026, 11, 30)
-    assert pp.billing_start_date("2026-10-01") == date(2026, 12, 1)  # 1 ott + 60 = 30 nov -> 1 dic
-    assert pp.billing_start_date("2026-12-10") == date(2027, 3, 1)   # passa l'anno e il febbraio
+    assert pp.billing_start_date("2026-10-01") == date(2026, 12, 1)
+    assert pp.billing_start_date("2026-10-11") == date(2026, 12, 1)  # ultimo giorno col limite: 51 giorni
+    assert pp.billing_start_date("2026-10-12") == date(2027, 1, 1)   # dal 12: tre mesi dopo, 81 giorni
+    assert pp.billing_start_date("2026-12-10") == date(2027, 2, 1)   # passa l'anno
+    assert pp.billing_start_date("2026-12-20") == date(2027, 3, 1)
     assert pp.billing_start_date(None) is None and pp.trial_end_date("") is None
 
 
 def test_confini_del_mese_con_fuso_di_roma():
     # 02/11 23:30 UTC = 03/11 00:30 a Roma: il giorno 1 è il 3, il giorno 61 il 2 gennaio -> 1 febbraio
-    assert pp.billing_start_date("2026-11-02T23:30:00+00:00") == date(2027, 2, 1)
-    assert pp.billing_start_date("2026-11-02T20:00:00+00:00") == date(2027, 1, 1)
+    assert pp.billing_start_date("2026-11-11T23:30:00+00:00") == date(2027, 2, 1)  # per Roma è già il 12
+    assert pp.billing_start_date("2026-11-11T20:00:00+00:00") == date(2027, 1, 1)  # per Roma è ancora l'11
 
 
 def test_tolleranza_e_stato():
@@ -217,3 +220,15 @@ def test_elenco_negozi_mostra_stato_pagamento(monkeypatch):
         assert righe[pagante]["fase"] == "pagato" and righe[da_pagare]["fase"] == "da_pagare"
         assert righe[pagante]["mese"] == mk
     run(body, required=False)
+
+
+def test_prova_tra_49_e_81_giorni_e_si_paga_sempre_il_primo():
+    from datetime import timedelta
+    d = date(2026, 10, 1)
+    giorni = []
+    while d < date(2027, 10, 1):
+        inizio = pp.billing_start_date(d.isoformat())
+        assert inizio.day == 1
+        giorni.append((inizio - d).days)
+        d += timedelta(days=1)
+    assert min(giorni) >= 49 and max(giorni) <= 81
