@@ -34,8 +34,8 @@ def test_confini_del_mese_con_fuso_di_roma():
 
 
 def test_tolleranza_e_stato():
-    assert pp.pagato_in_tempo("2026-11-06T10:00:00+00:00", "2026-11", 5)
-    assert not pp.pagato_in_tempo("2026-11-07T10:00:00+00:00", "2026-11", 5)
+    assert pp.pagato_in_tempo("2026-11-05T10:00:00+00:00", "2026-11", 5)  # fino al 5 incluso
+    assert not pp.pagato_in_tempo("2026-11-06T10:00:00+00:00", "2026-11", 5)
     assert pp.pagato_in_tempo("2026-10-28T10:00:00+00:00", "2026-11", 0)  # in anticipo
     assert pp.pagato_in_tempo("2026-11-01T10:00:00+00:00", "2026-11", 0)
     assert not pp.pagato_in_tempo("2026-11-02T10:00:00+00:00", "2026-11", 0)

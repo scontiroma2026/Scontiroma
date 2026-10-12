@@ -71,13 +71,14 @@ def trial_end_date(first_published_at) -> Optional[date]:
 
 
 def pagato_in_tempo(paid_at, month_key: str, tolleranza: int) -> bool:
-    """Vero se il pagamento del mese `month_key` è arrivato entro `tolleranza` giorni dal 1°
+    """Vero se il pagamento del mese `month_key` è arrivato nei primi `tolleranza` giorni del mese (1° compreso)
     (anche prima del 1° va bene). Data non leggibile -> prudente: non in tempo."""
     giorno = a_data_roma(paid_at)
     if giorno is None:
         return False
     y, m = month_key.split("-")
-    return giorno <= date(int(y), int(m), 1) + timedelta(days=int(tolleranza))
+    # La tolleranza conta i giorni del mese compreso il 1°: con 5 si può pagare dal 1° al 5 incluso.
+    return giorno <= date(int(y), int(m), 1) + timedelta(days=max(int(tolleranza), 1) - 1)
 
 
 def stato_pagamento(first_published_at, pagamenti: dict, oggi: date, tolleranza: int) -> dict:
