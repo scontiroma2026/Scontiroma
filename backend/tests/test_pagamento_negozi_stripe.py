@@ -100,6 +100,11 @@ def test_webhook_registra_il_pagamento_e_la_disdetta(monkeypatch):
         assert r.status_code == 200
         reg = await server.db.merchant_payments.find_one({"merchant_id": mid, "month_key": "2026-12"})
         assert reg["importo_cent"] == 499 and reg["metodo"] == "stripe"
+        # compare anche nella scheda «Pagamenti» dell'admin: data, periodo coperto, rinnovo
+        assert reg["data_pagamento"] == "2026-12-01" and reg["periodo_coperto_al"] == "2026-12-31" and reg["id"]
+        assert (await server.db.merchant_plans.find_one({"merchant_id": mid}))["prossimo_rinnovo"] == "2027-01-01"
+        righe = {r["merchant_id"]: r for r in await server._pag_righe_commercianti()}
+        assert righe[mid]["ultimo_pagamento"]["importo_cent"] == 499 and righe[mid]["ultimo_pagamento"]["metodo"] == "stripe"
         # lo stesso evento ricevuto due volte non crea doppioni
         await _webhook(c, "invoice.payment_succeeded", {
             "id": "in_1", "subscription": "sub_1", "amount_paid": 499, "status_transitions": {"paid_at": inizio},
