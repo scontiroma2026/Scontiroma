@@ -13,7 +13,8 @@ def _paypal_finto(monkeypatch, sub):
     monkeypatch.setattr(ps, "is_configured", lambda: True)
     monkeypatch.setattr(ps, "PAYPAL_CLIENT_ID", "client_finto", raising=False)
 
-    async def piano(cents):
+    async def piano(cents, iva_percent=0):
+        assert iva_percent == 22  # il piano PayPal aggiunge l'IVA
         return "P-FINTO"
 
     async def leggi(sub_id):

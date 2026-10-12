@@ -20,6 +20,8 @@ def _stripe_finto(monkeypatch, chiamate):
         chiamate.append(kw)
         return SimpleNamespace(id="cs_finto", url="https://checkout.example/finto")
     monkeypatch.setattr(server.stripe.checkout.Session, "create", crea)
+    monkeypatch.setattr(server.stripe.TaxRate, "list", lambda **kw: SimpleNamespace(data=[SimpleNamespace(
+        id="txr_iva", inclusive=False, percentage=22, display_name="IVA")]))
     monkeypatch.setattr(server.stripe.Customer, "create", lambda **kw: SimpleNamespace(id="cus_finto"))
     monkeypatch.setattr(server.stripe.Subscription, "modify", lambda sid, **kw: chiamate.append(("modify", sid, kw)))
 
@@ -67,6 +69,7 @@ def test_checkout_con_prova_fino_al_primo_addebito(monkeypatch):
         assert primo.day == 1 and (primo - pp.a_data_roma(adesso)).days >= 3
         kw = chiamate[0]
         assert kw["mode"] == "subscription" and kw["metadata"]["tipo"] == "negozio"
+        assert kw["line_items"][0]["tax_rates"] == ["txr_iva"]  # IVA aggiunta all'addebito
         assert kw["subscription_data"]["trial_end"] > time.time() + 2 * 86400
         assert kw["subscription_data"]["metadata"]["merchant_id"] == mid
 

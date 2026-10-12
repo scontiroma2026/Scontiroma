@@ -138,13 +138,15 @@ async def ensure_plan() -> str:
 _cached_plan_negozio: dict = {}
 
 
-async def ensure_plan_negozio(cents: int) -> str:
-    """Plan PayPal mensile per i NEGOZI (importo in centesimi), creato una volta sola (idempotente per nome)."""
-    if cents in _cached_plan_negozio:
-        return _cached_plan_negozio[cents]
+async def ensure_plan_negozio(cents: int, iva_percent: int = 0) -> str:
+    """Plan PayPal mensile per i NEGOZI (importo NETTO in centesimi, IVA esclusa che PayPal aggiunge),
+    creato una volta sola (idempotente per nome)."""
+    chiave = (cents, iva_percent)
+    if chiave in _cached_plan_negozio:
+        return _cached_plan_negozio[chiave]
     _require()
     valore = f"{cents // 100}.{cents % 100:02d}"
-    nome = f"Sconti Roma Negozio Mensile {valore}EUR"
+    nome = f"Sconti Roma Negozio Mensile {valore}EUR+IVA{iva_percent}"
     headers = await _authed_headers()
     async with httpx.AsyncClient(timeout=20) as c:
         try:
@@ -152,7 +154,7 @@ async def ensure_plan_negozio(cents: int) -> str:
             if r.status_code == 200:
                 for p in r.json().get("plans", []):
                     if p.get("name") == nome and p.get("status") == "ACTIVE":
-                        _cached_plan_negozio[cents] = p["id"]
+                        _cached_plan_negozio[chiave] = p["id"]
                         return p["id"]
         except Exception:
             pass
@@ -162,16 +164,17 @@ async def ensure_plan_negozio(cents: int) -> str:
         prod.raise_for_status()
         plan = await c.post(f"{BASE}/v1/billing/plans", headers=headers, json={
             "product_id": prod.json()["id"], "name": nome,
-            "description": f"{valore} euro al mese, ricorrente, disdetta a fine mese.",
+            "description": f"{valore} euro al mese + IVA, ricorrente, disdetta a fine mese.",
             "billing_cycles": [{"frequency": {"interval_unit": "MONTH", "interval_count": 1},
                                 "tenure_type": "REGULAR", "sequence": 1, "total_cycles": 0,
                                 "pricing_scheme": {"fixed_price": {"value": valore, "currency_code": "EUR"}}}],
             "payment_preferences": {"auto_bill_outstanding": True,
                                     "setup_fee": {"value": "0", "currency_code": "EUR"},
-                                    "setup_fee_failure_action": "CONTINUE", "payment_failure_threshold": 3}})
+                                    "setup_fee_failure_action": "CONTINUE", "payment_failure_threshold": 3},
+            **({"taxes": {"percentage": str(iva_percent), "inclusive": False}} if iva_percent else {})})
         plan.raise_for_status()
-        _cached_plan_negozio[cents] = plan.json()["id"]
-        return _cached_plan_negozio[cents]
+        _cached_plan_negozio[chiave] = plan.json()["id"]
+        return _cached_plan_negozio[chiave]
 
 
 async def get_subscription(sub_id: str) -> dict:
