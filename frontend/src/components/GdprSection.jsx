@@ -66,7 +66,13 @@ export default function GdprSection({ claro = false }) {
   const deleteAccount = async () => {
     setBusy(true);
     try {
-      await api.delete("/gdpr/delete-account");
+      const r = await api.delete("/gdpr/delete-account");
+      if (r.data?.programmata_per) {
+        // Negozio con offerta in corso: resta fino a fine mese, niente logout.
+        toast.success(r.data.message, { duration: 12000 });
+        setBusy(false);
+        return;
+      }
       toast.success("Account eliminato. Addio!");
       // small delay to let toast render
       setTimeout(() => {

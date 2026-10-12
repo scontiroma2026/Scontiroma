@@ -3094,6 +3094,20 @@ async def merchant_paypal_activate(payload: PayPalNegozioIn, user: dict = Depend
     return {"ok": True}
 
 
+async def _ferma_abbonamento_negozio(merchant_id: str) -> None:
+    """Ferma il rinnovo dell'abbonamento del negozio, se c'è (Stripe: a fine periodo; PayPal: annullato)."""
+    abb = await db.merchant_subscriptions.find_one({"merchant_id": merchant_id, "status": "active"})
+    if not abb:
+        return
+    try:
+        if abb.get("provider") == "stripe" and stripe.api_key:
+            stripe.Subscription.modify(abb["stripe_subscription_id"], cancel_at_period_end=True)
+        elif abb.get("provider") == "paypal":
+            await paypal_service.cancel_subscription(abb["paypal_subscription_id"], "Eliminazione account")
+    except Exception as e:
+        logging.warning(f"stop abbonamento negozio non riuscito: {e}")
+
+
 async def _paypal_evento_negozio(event: dict) -> Optional[dict]:
     """Eventi PayPal degli abbonamenti dei NEGOZI. None se l'evento non è di un negozio."""
     etype, res = event.get("event_type", ""), event.get("resource", {}) or {}
@@ -4989,6 +5003,13 @@ def _start_scheduler() -> None:
         id="trial_reminders_daily",
         replace_existing=True,
     )
+    # Eliminazioni di account programmate (negozi con offerta in corso): ogni giorno 00:20
+    _scheduler.add_job(
+        _run_eliminazioni_programmate,
+        CronTrigger(hour=0, minute=20),
+        id="eliminazioni_programmate",
+        replace_existing=True,
+    )
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
     _scheduler.add_job(
         _run_month_rollover,
@@ -5729,6 +5750,22 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
     if user.get("role") == "admin":
         raise HTTPException(400, "L'account admin non può essere cancellato via GDPR")
 
+    # Negozio con un'offerta ancora in corso: lo sconto va rispettato fino a fine mese, quindi
+    # l'eliminazione vale dal 1° del mese dopo (l'offerta resta, l'abbonamento si ferma subito).
+    if user.get("role") == "merchant" and await db.discounts.find_one(
+            {"merchant_id": uid, "approval_status": "approved", "active": {"$ne": False}}):
+        oggi = pp.a_data_roma(datetime.now(timezone.utc))
+        effetto = pp.primo_del_mese_tra(oggi, 1)
+        await _ferma_abbonamento_negozio(uid)
+        await db.users.update_one({"id": uid}, {"$set": {
+            "deletion_effective_on": effetto.isoformat(), "deletion_requested_at": datetime.now(timezone.utc).isoformat(),
+            "no_renew_month": pp.chiave_mese(effetto)}})
+        await _avvisa_disdetta(user)
+        return {"ok": True, "programmata_per": effetto.isoformat(),
+                "message": f"Eliminazione programmata per il {effetto.day} {MESI_IT[effetto.month - 1]} {effetto.year}. "
+                           f"Fino al giorno prima l'offerta resta pubblicata e lo sconto va rispettato. "
+                           f"Puoi annullare l'eliminazione fino a quel giorno."}
+
     await _erase_user_data(user)
 
     # Elimina l'utente
@@ -5742,6 +5779,29 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
         response.delete_cookie("refresh_token", path="/")
 
     return {"ok": True, "message": "Account e dati collegati eliminati definitivamente."}
+
+
+@api.post("/gdpr/delete-account/annulla")
+async def gdpr_annulla_eliminazione(user: dict = Depends(get_current_user)):
+    """Annulla un'eliminazione programmata (il negozio resta, la disdetta resta valida salvo ripensamento)."""
+    await db.users.update_one({"id": user["id"]}, {"$unset": {"deletion_effective_on": "", "deletion_requested_at": ""}})
+    return {"ok": True}
+
+
+async def _run_eliminazioni_programmate() -> dict:
+    """Cancella gli account il cui giorno di eliminazione è arrivato (negozi con offerta in corso a fine mese)."""
+    oggi = pp.a_data_roma(datetime.now(timezone.utc)).isoformat()
+    cancellati = 0
+    for u in await db.users.find({"deletion_effective_on": {"$lte": oggi}}).to_list(None):
+        try:
+            await _erase_user_data(u)
+            await db.users.delete_one({"id": u["id"]})
+            if u.get("email"):
+                _email_in_background(send_account_deleted(u["email"], u.get("name") or ""), "account-cancellato")
+            cancellati += 1
+        except Exception as e:
+            logging.error(f"[eliminazioni] non riuscita per utente={str(u.get('id'))[:8]}: {e}")
+    return {"cancellati": cancellati}
 
 
 @api.post("/gdpr/marketing-consent")
