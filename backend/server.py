@@ -42,6 +42,7 @@ from email_service import (
     send_grace_period_reminder,
     send_subscription_cancelled,
     send_master_reset,
+    send_merchant_disdetta,
     send_merchant_trial_reminder,
     send_next_offer_reminder,
     send_offer_expired,
@@ -2171,6 +2172,18 @@ async def merchant_renewal_status(user: dict = Depends(require_merchant)):
     }
 
 
+async def _avvisa_disdetta(user: dict) -> None:
+    """Email di conferma disdetta (best-effort: un errore di invio non blocca la disdetta)."""
+    try:
+        if user.get("email"):
+            adesso = _rome_now()
+            mese_dopo = MESI_IT[adesso.month % 12]
+            await send_merchant_disdetta(user["email"], user.get("name") or "", user.get("shop_name") or "il tuo negozio",
+                                         _current_offer_end_label(), mese_dopo)
+    except Exception as e:
+        logging.warning(f"email disdetta non inviata: {e}")
+
+
 @api.post("/merchants/me/no-renew")
 async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require_merchant)):
     """«Non rinnovo»: l'offerta attuale termina a fine mese e i promemoria si fermano.
@@ -2184,6 +2197,7 @@ async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require
             await _archivia(nd, "withdrawn_no_renew")
             await db.next_discounts.delete_one({"id": nd["id"]})
         await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": nm}})
+        await _avvisa_disdetta(user)
     else:
         await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
     return await merchant_renewal_status(user)
@@ -2870,7 +2884,10 @@ async def merchant_pagamento_disdici(user: dict = Depends(require_merchant)):
             raise HTTPException(502, f"Stripe: {e}")
     mese = pp.mese_dopo(pp.chiave_mese(pp.a_data_roma(datetime.now(timezone.utc))))
     await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": mese}})
-    return {"ok": True, "disdetta_da": mese}
+    await _avvisa_disdetta(user)
+    return {"ok": True, "disdetta_da": mese, "offerta_valida_fino_al": _current_offer_end_label(),
+            "messaggio": "Disdetta registrata. L'offerta resta pubblica e lo sconto va rispettato dai clienti "
+                         f"fino al {_current_offer_end_label()} (compreso); dal giorno dopo non è più valida."}
 
 
 async def _stripe_evento_negozio(event) -> Optional[dict]:

@@ -112,6 +112,7 @@ def test_webhook_registra_il_pagamento_e_la_disdetta(monkeypatch):
         # disdetta: Stripe non rinnova e il negozio ha «Non rinnovo» dal mese dopo
         r = await c.post("/api/merchant/pagamento/disdici", headers=h)
         assert r.status_code == 200
+        assert "va rispettato" in r.json()["messaggio"] and r.json()["offerta_valida_fino_al"]
         assert ("modify", "sub_1", {"cancel_at_period_end": True}) in chiamate
         assert (await server.db.users.find_one({"id": mid})).get("no_renew_month")
 
@@ -129,5 +130,27 @@ def test_evento_di_altri_o_a_pagamenti_spenti_non_toccano_i_negozi(monkeypatch):
                             "metadata": {"tipo": "negozio", "merchant_id": mid}})
         assert r.status_code == 200 and r.json().get("ignored") == "pagamenti_negozi_spenti"
         assert await server.db.merchant_subscriptions.find_one({"merchant_id": mid}) is None
+
+    run(body, False)
+
+
+def test_disdetta_manda_la_email_di_conferma(monkeypatch):
+    monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
+    monkeypatch.setenv("FRONTEND_URL", "https://sito.example")
+    chiamate, inviate = [], []
+    _stripe_finto(monkeypatch, chiamate)
+
+    async def finta(to, name, shop, ultimo_giorno, mese_dopo):
+        inviate.append((to, ultimo_giorno, mese_dopo))
+
+    monkeypatch.setattr(server, "send_merchant_disdetta", finta)
+
+    async def body(c):
+        mid, h = await _negozio("2026-01-02T09:00:00+00:00")
+        assert (await c.post("/api/merchant/pagamento/disdici", headers=h)).status_code == 200
+        assert len(inviate) == 1 and inviate[0][1] and inviate[0][2]
+        # «Non rinnovo» dalla dashboard: stessa email
+        assert (await c.post("/api/merchants/me/no-renew", headers=h, json={"no_renew": True})).status_code == 200
+        assert len(inviate) == 2
 
     run(body, False)
