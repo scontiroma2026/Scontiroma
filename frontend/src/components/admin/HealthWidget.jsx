@@ -4,7 +4,7 @@ import { Loader2, Activity } from "lucide-react";
 
 /**
  * Widget indicatore stato di salute dei servizi critici.
- * Mostra pallini verdi/rossi + latenza per DB, Stripe, PayPal, Resend.
+ * Mostra pallini verdi/rossi + latenza per DB, Stripe, PayPal, Resend, LocationIQ.
  * Si aggiorna ogni 30s.
  */
 export default function HealthWidget() {
@@ -42,6 +42,7 @@ export default function HealthWidget() {
     { key: "stripe", label: "Stripe" },
     { key: "paypal", label: "PayPal" },
     { key: "resend", label: "Email (Resend)" },
+    { key: "locationiq", label: "Indirizzi (LocationIQ)" },
   ];
 
   const allOk = services.every((s) => health[s.key]?.ok);
@@ -65,6 +66,7 @@ export default function HealthWidget() {
               <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
               <span className="text-foreground/80">{s.label}</span>
               {st.ok && st.ms != null && <span className="text-muted-foreground">{st.ms}ms</span>}
+              {st.ok && st.note && <span className="text-[10px] text-muted-foreground">({st.note})</span>}
               {!st.ok && <span className="text-red-700">{st.error || "offline"}</span>}
             </div>
           );

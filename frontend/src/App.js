@@ -17,6 +17,7 @@ import CookiePolicy from "@/pages/legal/CookiePolicy";
 import Termini from "@/pages/legal/Termini";
 import Recesso from "@/pages/legal/Recesso";
 import Support from "@/pages/Support";
+import PerICommercianti from "@/pages/PerICommercianti";
 import Locandina from "@/pages/Locandina";
 import AdminMasterReset from "@/pages/AdminMasterReset";
 import Landing from "@/pages/Landing";
@@ -78,6 +79,7 @@ function App() {
             <Route path="/termini" element={<Termini />} />
             <Route path="/recesso" element={<Recesso />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/per-i-commercianti" element={<PerICommercianti />} />
             <Route path="/locandina" element={<Locandina />} />
           </Routes>
           <LegalFooter />

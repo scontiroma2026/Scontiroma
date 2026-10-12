@@ -1,5 +1,5 @@
 // Caratteri ospitati sul nostro sito: nessuna richiesta a Google Fonts (né ad altri domini)
-// e Fraunces, Manrope e Archivo Black si caricano dai file in /fonts.
+// e Fraunces e Manrope si caricano dai file in /fonts.
 const { test, expect } = require('../fixtures');
 
 test('caratteri: serviti dal nostro sito, nessuna richiesta a domini esterni', async ({ page, baseURL }) => {
@@ -21,25 +21,22 @@ test('caratteri: serviti dal nostro sito, nessuna richiesta a domini esterni', a
   await page.goto('/');
   await expect(page.locator('h1').first()).toBeVisible();
 
-  // Forza il caricamento delle tre famiglie (il browser scarica solo ciò che usa)
+  // Forza il caricamento delle due famiglie (il browser scarica solo ciò che usa)
   const risultato = await page.evaluate(async () => {
     await Promise.all([
       document.fonts.load('700 40px Fraunces'),
       document.fonts.load('400 16px Manrope'),
-      document.fonts.load('400 16px "Archivo Black"'),
     ]);
     await document.fonts.ready;
     return {
       fraunces: document.fonts.check('700 40px Fraunces'),
       manrope: document.fonts.check('400 16px Manrope'),
-      archivo: document.fonts.check('400 16px "Archivo Black"'),
       h1: getComputedStyle(document.querySelector('h1')).fontFamily,
     };
   });
 
   expect(risultato.fraunces).toBe(true);
   expect(risultato.manrope).toBe(true);
-  expect(risultato.archivo).toBe(true);
   expect(risultato.h1).toMatch(/^"?Fraunces/);
 
   expect(fontCaricati.length).toBeGreaterThan(0);

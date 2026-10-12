@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<title>Locandina A4 Sconti Roma</title>
+<!-- Generatore unico: lo stile si sceglie con ?s=NOME (vedi README.md). Formato A4 794x1123 px. -->
+<style>
+@font-face{font-family:'Manrope';font-weight:200 800;src:url('../../../frontend/public/fonts/manrope-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Fraunces';font-weight:100 900;src:url('../../../frontend/public/fonts/fraunces-latin-opsz-normal.woff2') format('woff2')}
+@font-face{font-family:'Wet';src:url('fonts/RubikWet.ttf')}
+@font-face{font-family:'Swash';font-weight:800;src:url('fonts/Sansita_Swashed.ttf')}
+@font-face{font-family:'Bu';src:url('fonts/Bungee.ttf')}
+@font-face{font-family:'Lob';src:url('fonts/Lobster_Two.ttf')}
+:root{--ink:#1A1530;--fu:#D81B72;--vi:#6D4AFF;--te:#00798C;--ve:#127A47}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:794px;height:1123px;position:relative;overflow:hidden;font-family:'Manrope',sans-serif;background:#fff;color:var(--ink)}
+.deco{position:absolute;inset:0;z-index:0;overflow:hidden}
+.deco>*{position:absolute}
+.page{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:44px 56px 0}
+.brand{display:flex;align-items:center;gap:14px;flex:none}
+.brand img{width:54px;height:54px}
+.brand b{display:block;font-family:'Fraunces',serif;font-size:29px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.brand span{display:block;font-size:12px;letter-spacing:3px;font-weight:800;margin-top:2px}
+h1{flex:none;margin-top:26px;line-height:1.02}
+h1 .ln{display:block;white-space:nowrap}
+.sub{flex:none;font-size:23px;line-height:1.35;margin-top:16px;font-weight:600}
+ol{flex:none;list-style:none;margin-top:24px;display:flex;flex-direction:column;gap:12px}
+li{display:flex;align-items:center;gap:16px;font-size:21.5px;font-weight:700;line-height:1.2}
+li i{flex:none;width:42px;height:42px;border-radius:50%;color:#fff;font-style:normal;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800}
+li:nth-child(1) i{background:var(--n1)}li:nth-child(2) i{background:var(--n2)}li:nth-child(3) i{background:var(--n3)}
+.qr{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:92px;min-height:0}
+.qr .l{font-size:29px;font-weight:700;margin-bottom:10px;text-align:center}
+.panel{background:#fff;padding:22px;border-radius:22px}
+/* Il riquadro è 306 px = 8,1 cm a 96 dpi su A4: tenerlo almeno 8 x 8 cm. Il QR va in nero su questo fondo bianco. */
+.box{width:306px;height:306px;border:3px dashed #b9b2d6;border-radius:6px;display:flex;align-items:center;justify-content:center;text-align:center;color:#6b6488;font-weight:700;font-size:19px;line-height:1.35;background:#fff}
+.foot{position:absolute;left:0;right:0;bottom:0;z-index:2;height:62px;display:flex;align-items:center;justify-content:center;padding:0 36px;text-align:center;font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.2px}
+
+/* ===== 1. app-chiara ===== */
+.s-app-chiara{--n1:var(--fu);--n2:var(--vi);--n3:var(--te)}
+.s-app-chiara h1{font-family:'Fraunces',serif;font-weight:800;font-size:62px;letter-spacing:-1.5px;margin-top:40px}
+.s-app-chiara h1 em{font-style:normal;background:linear-gradient(90deg,var(--fu),var(--vi));-webkit-background-clip:text;background-clip:text;color:transparent}
+.s-app-chiara .brand span{color:var(--te)}
+.s-app-chiara .sub{color:#3a3358}.s-app-chiara .sub strong{color:var(--fu)}
+.s-app-chiara .l{font-family:'Fraunces',serif}
+.s-app-chiara .panel{border:2px solid #e6e1f6}
+.s-app-chiara .foot{background:linear-gradient(90deg,var(--fu),var(--vi));color:#fff}
+
+/* ===== Halloween (2-5) ===== */
+.hw{color:#fff;background:var(--bg)}
+.hw .brand span{color:var(--c2)}
+.hw h1{font-family:'Wet';text-transform:uppercase;text-align:center;margin-top:34px}
+.hw .sub{text-align:center;color:var(--tx)}
+.hw .sub strong{color:var(--c1)}
+.hw li{color:#fff}
+.hw .l{font-family:'Wet';color:var(--c1);font-size:30px;letter-spacing:1px;text-shadow:0 0 14px var(--glow)}
+.hw .panel{box-shadow:0 0 0 4px var(--c1),0 0 36px var(--glow)}
+.hw .foot{background:var(--c1);color:var(--ftx)}
+.s-halloween-app{--bg:#14102b;--c1:#ff3d9a;--c2:#00c2d9;--tx:#e9e4ff;--glow:#d81b72;--ftx:#14102b;--n1:#d81b72;--n2:#6d4aff;--n3:#00798c}
+.s-halloween-app h1{color:#ff3d9a;text-shadow:0 0 5px #ff3d9a,0 0 22px #d81b72,0 0 50px #6d4aff,4px 4px 0 #6d4aff}
+.s-halloween-arancio-blu{--bg:#0b1e5b;--c1:#ff8a1f;--c2:#ffb061;--tx:#eaf0ff;--glow:#ff6a00;--ftx:#0b1e5b;--n1:#ff8a1f;--n2:#2f6bff;--n3:#17a2d4}
+.s-halloween-arancio-blu h1{color:#ff8a1f;text-shadow:0 0 5px #ff8a1f,0 0 22px #ff6a00,5px 5px 0 #2f6bff,7px 7px 0 #17389a}
+.s-halloween-arancio-blu .hw-n i,.s-halloween-arancio-blu li i{color:#0b1e5b}
+.s-halloween-viola-giallo{--bg:#2a0f5c;--c1:#ffd400;--c2:#ffd400;--tx:#f4eaff;--glow:#ffb800;--ftx:#2a0f5c;--n1:#ffd400;--n2:#a56bff;--n3:#ff6fb0}
+.s-halloween-viola-giallo h1{color:#ffd400;text-shadow:0 0 5px #ffd400,0 0 22px #ffb800,5px 5px 0 #8a3dff,7px 7px 0 #5a1fb8}
+.s-halloween-viola-giallo li i{color:#2a0f5c}
+.s-halloween-rosso-blu-bianco{--bg:#0a1a4f;--c1:#ff3b50;--c2:#ff7a89;--tx:#fff;--glow:#e10f2a;--ftx:#fff;--n1:#e10f2a;--n2:#2b6fff;--n3:#ffffff}
+.s-halloween-rosso-blu-bianco h1{color:#fff;text-shadow:0 0 5px #fff,0 0 22px #2b6fff,5px 5px 0 #e10f2a,7px 7px 0 #a50a1f}
+.s-halloween-rosso-blu-bianco h1 .ln:nth-child(2){color:#ff3b50;text-shadow:0 0 5px #ff3b50,0 0 22px #e10f2a,5px 5px 0 #2b6fff,7px 7px 0 #1a3fb0}
+.s-halloween-rosso-blu-bianco li:nth-child(3) i{color:#0a1a4f}
+.s-halloween-rosso-blu-bianco .foot{background:#e10f2a}
+
+/* ===== 6. fabbrica-di-dolci ===== */
+.s-fabbrica-di-dolci{--n1:#ffd45a;--n2:#ff6fb0;--n3:#4fd6c4;background:#1f0b4d;color:#fff}
+.s-fabbrica-di-dolci .brand span{color:#ffd878}
+.s-fabbrica-di-dolci h1{font-family:'Swash';font-weight:800;text-align:center;margin-top:28px;line-height:.98}
+.s-fabbrica-di-dolci h1 .ln{background:linear-gradient(180deg,#fff3b0 0%,#ffd45a 28%,#d99a1c 52%,#ffe48a 70%,#b8780f 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #7a4a06) drop-shadow(0 8px 12px #00000088) drop-shadow(0 0 16px #ffb83a66)}
+.s-fabbrica-di-dolci .sub{text-align:center;color:#f5eaff}
+.s-fabbrica-di-dolci .sub strong{color:#ffd45a}
+.s-fabbrica-di-dolci li i{color:#3b1470}
+.s-fabbrica-di-dolci .l{font-family:'Swash';font-weight:800;font-size:34px;color:#ffd45a}
+.s-fabbrica-di-dolci .panel{position:relative;padding:26px;border-radius:14px;background:linear-gradient(135deg,#ffe48a,#e3a82a 55%,#ffd45a);box-shadow:0 14px 30px #0008,inset 0 0 0 4px #fff3b0}
+.s-fabbrica-di-dolci .panel:before,.s-fabbrica-di-dolci .panel:after{content:"";position:absolute;top:50%;width:40px;height:40px;border-radius:50%;background:#1f0b4d;transform:translateY(-50%)}
+.s-fabbrica-di-dolci .panel:before{left:-20px}.s-fabbrica-di-dolci .panel:after{right:-20px}
+.s-fabbrica-di-dolci .box{border-color:#c9c2e0;border-radius:4px}
+.s-fabbrica-di-dolci .foot{background:linear-gradient(90deg,#b8780f,#ffd45a,#b8780f);color:#3b1470}
+
+/* ===== 7. mattoncini ===== */
+.s-mattoncini{--n1:var(--fu);--n2:var(--vi);--n3:var(--te)}
+.s-mattoncini .deco{background:radial-gradient(circle,#d9d2f0 5px,transparent 6px) 0 0/44px 44px,linear-gradient(#fbf8ff,#f1ecff)}
+.s-mattoncini .brand span{color:var(--te)}
+.s-mattoncini h1{margin-top:34px}
+.s-mattoncini .row{display:flex;justify-content:center;gap:7px;margin-bottom:22px}
+.s-mattoncini .b{position:relative;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Bu';color:#fff;box-shadow:0 7px 0 rgba(0,0,0,.28),0 12px 16px rgba(0,0,0,.16);text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.s-mattoncini .b i{position:absolute;top:-11px;width:34%;height:14px;border-radius:50% 50% 6px 6px/70% 70% 6px 6px;background:inherit;box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),inset 0 2px 0 rgba(255,255,255,.35);color:transparent;font-size:0}
+.s-mattoncini .b i:nth-of-type(1){left:12%}.s-mattoncini .b i:nth-of-type(2){right:12%}
+.s-mattoncini .plain{font-family:'Bu';font-size:40px;text-align:center;color:var(--ink);margin-top:6px}
+.s-mattoncini .plain em{font-style:normal;color:var(--fu)}
+.s-mattoncini .sub{text-align:center;margin-top:20px;color:#3a3358}
+.s-mattoncini .sub strong{color:var(--fu)}
+.s-mattoncini .panel{border-radius:12px;box-shadow:0 9px 0 #cfc7e8,0 16px 24px #0002;border:2px solid #e6e1f6}
+.s-mattoncini .l{font-family:'Bu';font-size:30px;color:var(--vi)}
+.s-mattoncini .qr{padding-bottom:108px}.s-mattoncini .foot{height:78px;background:#00798c;background-image:radial-gradient(circle,#00a3bd 11px,transparent 12px);background-size:64px 52px;box-shadow:inset 0 7px 0 #006376;color:#fff;padding-top:6px}
+
+/* ===== 8. natale ===== */
+.s-natale{--n1:#c8102e;--n2:#0f6b3a;--n3:#c8921a;background:#0e3b2a;color:#fff}
+.s-natale .deco{background:radial-gradient(circle at 50% 0,#1d6b49 0,transparent 60%),linear-gradient(#0e3b2a,#082a1d)}
+.s-natale .brand span{color:#ffd878}
+.s-natale h1{font-family:'Lob';font-weight:700;text-align:center;margin-top:38px;line-height:1}
+.s-natale h1 .ln{color:#ffe08a;text-shadow:0 3px 0 #8a1020,0 8px 16px #0008}
+.s-natale h1 .ln:nth-child(2){color:#fff;text-shadow:0 3px 0 #c8102e,0 8px 16px #0008}
+.s-natale .sub{text-align:center;color:#f3fff8}.s-natale .sub strong{color:#ffd878}
+.s-natale li i{color:#fff}
+.s-natale li:nth-child(3) i{color:#2a1c00}
+.s-natale .l{font-family:'Lob';font-weight:700;font-size:38px;color:#ffe08a}
+.s-natale .panel{box-shadow:0 0 0 5px #c8102e,0 0 0 8px #ffd878,0 12px 30px #0008}
+.s-natale .foot{background:#c8102e;color:#fff;box-shadow:inset 0 4px 0 #ffd878}
+
+/* ===== 9. pasqua ===== */
+.s-pasqua{--n1:#e0589b;--n2:#8a6cf0;--n3:#2fa89a;background:#fffaf0}
+.s-pasqua .deco{background:linear-gradient(#fffaf0,#fff4fa 60%,#f1fbf3)}
+.s-pasqua .brand span{color:#2a8f82}
+.s-pasqua h1{font-family:'Fraunces',serif;font-weight:800;font-size:60px;letter-spacing:-1.2px;margin-top:34px;color:var(--ink)}
+.s-pasqua h1 em{font-style:normal;color:#d9488e}
+.s-pasqua .sub{color:#463d63}.s-pasqua .sub strong{color:#d9488e}
+.s-pasqua .l{font-family:'Fraunces',serif;color:#6d4aff}
+.s-pasqua .panel{border:3px solid #f6c3dc;box-shadow:0 8px 24px #d9488e22}
+.s-pasqua .foot{background:linear-gradient(90deg,#f6a6cb,#b9a6ff,#8fdcc9);color:#1A1530}
+
+/* ===== 10. estate ===== */
+.s-estate{--n1:#ff6a2b;--n2:#0aa3b5;--n3:#d81b72;background:#fff7e8}
+.s-estate .deco{background:linear-gradient(#fff3d6,#fffaf0 55%,#e7fbfb)}
+.s-estate .brand span{color:#0b8a9a}
+.s-estate h1{font-family:'Fraunces',serif;font-weight:800;font-size:62px;letter-spacing:-1.4px;margin-top:36px}
+.s-estate h1 em{font-style:normal;color:#ff6a2b}
+.s-estate .sub{color:#3d3552}.s-estate .sub strong{color:#e0501a}
+.s-estate .l{font-family:'Fraunces',serif;color:#0b8a9a}
+.s-estate .panel{border:3px solid #ffb27a;box-shadow:0 8px 24px #ff6a2b22}
+.s-estate .foot{background:#0a8a9b;color:#fff}
+</style></head>
+<body>
+<div class="deco" id="deco"></div>
+<div class="page">
+ <div class="brand"><img src="../../../frontend/public/icon-512.svg" alt=""><div><b>Sconti Roma</b><span>ROMA È TUA</span></div></div>
+ <h1 id="h1"></h1>
+ <p class="sub"><strong>[NOME NEGOZIO]</strong> ti aspetta.<br>Guarda l’offerta del mese nell’app.</p>
+ <ol>
+  <li><i>1</i>Inquadra il QR con la fotocamera del telefono</li>
+  <li><i>2</i>Guarda l’offerta del mese di [NOME NEGOZIO]</li>
+  <li><i>3</i>Quando vieni da noi, mostra il QR al banco</li>
+ </ol>
+ <div class="qr"><div class="l">Inquadra qui</div><div class="panel"><div class="box" id="qrbox">QR del negozio<br>(8 × 8 cm,<br>da inserire prima<br>di stampare)</div></div></div>
+</div>
+<div class="foot">Sconti Roma · Roma e dintorni · Gratuita per i clienti nella fase di lancio · Solo per maggiorenni (18+)</div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const STILI=['app-chiara','halloween-app','halloween-arancio-blu','halloween-viola-giallo','halloween-rosso-blu-bianco','fabbrica-di-dolci','mattoncini','natale','pasqua','estate'];
+const s=new URLSearchParams(location.search).get('s')||'app-chiara';
+document.body.className='s-'+s+(s.startsWith('halloween')?' hw':'');
+const deco=document.getElementById('deco'),h1=document.getElementById('h1');
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+const svg=(vb,inner,css)=>{const e=document.createElementNS(NS,'svg');e.setAttribute('viewBox',vb);e.style.cssText=css;e.innerHTML=inner;deco.appendChild(e);return e};
+const full='left:0;top:0;width:794px;height:1123px';
+// titolo a righe adattate alla larghezza (px) con tetto di corpo
+function righe(lines,{w=682,max=120}){h1.innerHTML=lines.map(t=>`<span class="ln">${t}</span>`).join('');
+ h1.querySelectorAll('.ln').forEach(l=>{l.style.display='inline-block';l.style.fontSize='100px';const a=l.getBoundingClientRect().width;l.style.display='block';l.style.fontSize=Math.min(max,100*w/a)+'px'})}
+const T1=['Qui trovi','un’offerta','con Sconti Roma'];
+const star=(x,y,r,fill,op=1)=>`<path transform="translate(${x} ${y}) scale(${r})" d="M0-10 2.6-2.6 10 0 2.6 2.6 0 10-2.6 2.6-10 0-2.6-2.6Z" fill="${fill}" opacity="${op}"/>`;
+const BAT='<path id="bat" d="M0 10C-20-20-60-30-90-10C-75-5-70 10-62 22C-50 12-38 12-28 22C-18 14-8 14 0 28C8 14 18 14 28 22C38 12 50 12 62 22C70 10 75-5 90-10C60-30 20-20 0 10Z"/>';
+
+const FN={
+'app-chiara'(){
+ h1.innerHTML='Qui trovi un’<em>offerta</em> con Sconti Roma';
+ const a=document.createElement('div');a.style.cssText='right:-140px;top:-140px;width:420px;height:420px;border-radius:50%;background:linear-gradient(135deg,rgba(216,27,114,.14),rgba(109,74,255,.14))';deco.appendChild(a);
+ const b=document.createElement('div');b.style.cssText='left:-160px;bottom:-60px;width:420px;height:420px;border-radius:50%;background:linear-gradient(135deg,rgba(0,121,140,.12),rgba(109,74,255,.10))';deco.appendChild(b);
+},
+halloween(c){
+ righe(T1,{max:84});
+ const moon=document.createElement('div');moon.style.cssText=`right:56px;top:36px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 35% 35%,${c.m0},${c.m1} 70%);box-shadow:0 0 60px ${c.mg}`;deco.appendChild(moon);
+ const g=document.createElement('div');g.style.cssText=`${full};background:radial-gradient(circle at 80% 8%,${c.g1},transparent 40%),radial-gradient(circle at 10% 95%,${c.g2},transparent 50%)`;deco.insertBefore(g,deco.firstChild);
+ const bats=[[520,60,.42],[715,215,.3],[100,800,.6],[690,760,.6],[80,950,.42],[715,930,.5]].map(([x,y,k])=>`<use href="#bat" transform="translate(${x} ${y}) scale(${k})"/>`).join('');
+ svg('0 0 794 1123',`<defs>${BAT}</defs><g fill="${c.bat}" opacity=".9">${bats}</g>`,full);
+},
+'fabbrica-di-dolci'(){
+ righe(T1,{max:88});
+ const g=document.createElement('div');g.style.cssText=`${full};background:radial-gradient(circle at 50% 30%,#6d4aff55,transparent 55%),radial-gradient(circle at 12% 95%,#d81b7255,transparent 50%),radial-gradient(circle at 92% 8%,#00798c55,transparent 40%),linear-gradient(#2b1066,#1a0840)`;deco.appendChild(g);
+ let st='';[[80,170,1.6],[715,150,2.2],[30,700,1.2],[735,690,1.7],[120,985,1.8],[690,1000,1.3],[430,60,.9],[560,70,1],[400,1085,0]].forEach(([x,y,r])=>st+=star(x,y,r*1.3,'#ffd878',.95));
+ for(let i=0;i<26;i++)st+=`<circle cx="${rnd()*794}" cy="${rnd()*1060}" r="${1+rnd()*1.8}" fill="#ffe9a8" opacity="${.3+rnd()*.5}"/>`;
+ svg('0 0 794 1123',st,full);
+},
+mattoncini(){
+ h1.innerHTML='';
+ const cols=['#d81b72','#6d4aff','#00798c','#f5b400','#127a47','#e8412d'];let k=0;
+ const row=(txt,w,h,fs,gap=7)=>{const r=document.createElement('div');r.className='row';r.style.gap=gap+'px';
+  for(const ch of txt){if(ch===' '){const g=document.createElement('div');g.style.width=(w*.45)+'px';r.appendChild(g);continue}
+   const b=document.createElement('div');b.className='b';const nar=ch==='’';
+   b.style.cssText=`width:${nar?w*.45:w}px;height:${h}px;font-size:${fs}px;background:${cols[k%cols.length]}`;b.innerHTML='<i></i><i></i>'+ch;r.appendChild(b);k++}
+  h1.appendChild(r)};
+ row('QUI TROVI',70,86,56);row('UN’OFFERTA',64,86,52);
+ const p=document.createElement('div');p.className='plain';p.innerHTML='con <em>Sconti Roma</em>';h1.appendChild(p);
+},
+natale(){
+ righe(T1,{max:88});
+ // neve
+ let sn='';for(let i=0;i<70;i++){sn+=`<circle cx="${rnd()*794}" cy="${rnd()*1123}" r="${1.5+rnd()*3.5}" fill="#fff" opacity="${.35+rnd()*.5}"/>`}
+ // stelle e palline appese
+ let st='';[[70,190,1.1],[724,180,1.4],[48,700,1],[748,740,1.2],[130,1000,1.3],[670,990,1]].forEach(([x,y,r])=>st+=star(x,y,r*1.4,'#ffd878',.95));
+ const ball=(x,len,r,c)=>`<line x1="${x}" y1="0" x2="${x}" y2="${len}" stroke="#ffd878" stroke-width="2"/><rect x="${x-6}" y="${len}" width="12" height="9" rx="2" fill="#ffd878"/><circle cx="${x}" cy="${len+9+r}" r="${r}" fill="${c}"/><ellipse cx="${x-r*.35}" cy="${len+9+r*.6}" rx="${r*.22}" ry="${r*.34}" fill="#fff" opacity=".45" transform="rotate(30 ${x-r*.35} ${len+9+r*.6})"/>`;
+ const b=ball(330,22,18,'#c8102e')+ball(400,48,22,'#ffd878')+ball(470,20,16,'#c8102e')+ball(560,36,16,'#e9c46a');
+ // rami di abete in basso ai lati
+ const fir=(x,y,sc,fl)=>`<g transform="translate(${x} ${y}) scale(${fl*sc} ${sc})" fill="#0f6b3a"><path d="M0 0 60-10 55 5 120-8 112 10 180-4 168 16 230 6 215 24 0 24Z"/><path d="M0 18 70 6 62 24 140 8 130 30 0 34Z" fill="#14804a"/></g>`;
+ svg('0 0 794 1123',sn+st+b+fir(0,1030,1.1,1)+fir(794,1030,1.1,-1),full);
+},
+pasqua(){
+ h1.innerHTML='Qui trovi un’<em>offerta</em> con Sconti Roma';
+ const egg=(x,y,sc,rot,base,a,b,pat)=>{const id='e'+(x|0)+(y|0);
+  const dec=pat==0?`<path d="M-60 -20 -40 -34 -20 -20 0 -34 20 -20 40 -34 60 -20 60 -4 40 -18 20 -4 0 -18 -20 -4 -40 -18 -60 -4Z" fill="${a}"/><path d="M-62 30 -42 16 -21 30 0 16 21 30 42 16 62 30 62 46 42 32 21 46 0 32 -21 46 -42 32 -62 46Z" fill="${a}"/><circle cx="-30" cy="4" r="6" fill="${b}"/><circle cx="0" cy="4" r="6" fill="${b}"/><circle cx="30" cy="4" r="6" fill="${b}"/>`
+   :pat==1?`<rect x="-70" y="-30" width="140" height="20" fill="${a}"/><rect x="-70" y="10" width="140" height="14" fill="${b}"/><rect x="-70" y="36" width="140" height="10" fill="${a}"/><circle cx="-34" cy="-20" r="5" fill="#fff"/><circle cx="0" cy="-20" r="5" fill="#fff"/><circle cx="34" cy="-20" r="5" fill="#fff"/>`
+   :`<g fill="${a}">${[[-30,-30],[20,-40],[-5,-5],[38,0],[-40,20],[10,30],[-8,52]].map(([u,v])=>`<circle cx="${u}" cy="${v}" r="9"/>`).join('')}</g><g fill="${b}">${[[-8,-50],[-45,-2],[28,-18],[-20,38],[40,34]].map(([u,v])=>`<circle cx="${u}" cy="${v}" r="6"/>`).join('')}</g>`;
+  return `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})"><clipPath id="${id}"><path d="M0-80C46-80 70-20 70 22C70 62 40 84 0 84S-70 62-70 22C-70-20-46-80 0-80Z"/></clipPath><path d="M0-80C46-80 70-20 70 22C70 62 40 84 0 84S-70 62-70 22C-70-20-46-80 0-80Z" fill="${base}"/><g clip-path="url(#${id})">${dec}</g><path d="M-48-30C-44-52-26-66-14-68" stroke="#fff" stroke-width="7" stroke-linecap="round" fill="none" opacity=".6"/></g>`};
+ const flower=(x,y,sc,p,c)=>{let petals='';for(let i=0;i<6;i++)petals+=`<ellipse cx="0" cy="-18" rx="11" ry="19" fill="${p}" transform="rotate(${i*60})"/>`;return `<g transform="translate(${x} ${y}) scale(${sc})"><path d="M0 0C-4 30-2 60 6 90" stroke="#4fa86b" stroke-width="5" fill="none"/>${petals}<circle r="11" fill="${c}"/></g>`};
+ const leaf=(x,y,r)=>`<ellipse cx="${x}" cy="${y}" rx="26" ry="9" fill="#8fd1a5" transform="rotate(${r} ${x} ${y})"/>`;
+ let s2='';
+ s2+=flower(700,60,.9,'#f6a6cb','#ffd45a')+flower(745,140,.6,'#b9a6ff','#ffd45a')+flower(640,40,.5,'#8fdcc9','#ff9ac2');
+ s2+=flower(60,640,.7,'#b9a6ff','#ffd45a')+flower(742,690,.8,'#f6a6cb','#fff1a8')+flower(110,720,.5,'#8fdcc9','#ffd45a');
+ s2+=leaf(40,990,-20)+leaf(760,985,25)+leaf(120,1010,10)+leaf(690,1015,-15);
+ s2+=egg(70,935,.62,-14,'#ffe6f1','#f6a6cb','#8a6cf0',0)+egg(148,985,.46,10,'#e4f7f0','#59c4ac','#ff9ac2',1)+egg(724,938,.62,14,'#efe9ff','#8a6cf0','#ffd45a',2)+egg(648,990,.46,-8,'#fff4c9','#f5b400','#e0589b',0);
+ for(let i=0;i<16;i++)s2+=`<circle cx="${rnd()*794}" cy="${380+rnd()*400}" r="${2+rnd()*3}" fill="${['#f6a6cb','#b9a6ff','#8fdcc9','#ffd45a'][i%4]}" opacity=".35"/>`;
+ svg('0 0 794 1123',s2,full);
+},
+estate(){
+ h1.innerHTML='Qui trovi un’<em>offerta</em> con Sconti Roma';
+ let sun='<circle cx="700" cy="70" r="150" fill="#ffd45a" opacity=".25"/><circle cx="700" cy="70" r="104" fill="#ffd45a" opacity=".4"/>';
+ for(let i=0;i<16;i++){const a=i*22.5;sun+=`<rect x="692" y="-62" width="16" height="44" rx="8" fill="#ffb347" transform="rotate(${a} 700 70)"/>`}
+ sun+='<circle cx="700" cy="70" r="62" fill="#ff9d2e"/><circle cx="700" cy="70" r="48" fill="#ffc23d"/>';
+ const wave=(y,c,amp,ph,op=1)=>{let d=`M0 ${y}`;for(let x=0;x<=794;x+=10)d+=`L${x} ${y+Math.sin(x/794*Math.PI*4+ph)*amp}`;return `<path d="${d}L794 1123L0 1123Z" fill="${c}" opacity="${op}"/>`};
+ let sea=wave(1000,'#7fdce4',9,0,.8)+wave(1020,'#27bfd0',8,1.5,.9)+wave(1045,'#0a9aae',7,3);
+ // conchiglie/gabbiani semplici
+ const gull=(x,y,k)=>`<path d="M${x-22*k} ${y}Q${x-11*k} ${y-14*k} ${x} ${y}Q${x+11*k} ${y-14*k} ${x+22*k} ${y}" stroke="#0a8a9b" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+ svg('0 0 794 1123',`<g transform="translate(40 -36)">${sun}</g>`+sea+gull(430,70,1)+gull(490,100,.7)+gull(640,520,.8)+gull(80,880,.8),full);
+}
+};
+
+function applica(){
+ const hw={
+  'halloween-app':{m0:'#fff',m1:'#b9a6ff',mg:'#6d4aff99',g1:'#4b2a9a66',g2:'#d81b7244',bat:'#f3eaff'},
+  'halloween-arancio-blu':{m0:'#ffe2b8',m1:'#ff8a1f',mg:'#ff8a1faa',g1:'#2f6bff55',g2:'#ff8a1f33',bat:'#ffd9a8'},
+  'halloween-viola-giallo':{m0:'#fff7b8',m1:'#ffd400',mg:'#ffd400aa',g1:'#ffd40033',g2:'#8a3dff55',bat:'#ffe97a'},
+  'halloween-rosso-blu-bianco':{m0:'#fff',m1:'#e8eeff',mg:'#2b6fffaa',g1:'#2b6fff55',g2:'#e10f2a44',bat:'#ffffff'}};
+ if(hw[s])FN.halloween(hw[s]);else (FN[s]||FN['app-chiara'])();
+ // titoli larghi: piccole correzioni di spazio verticale per gli stili a righe
+}
+Promise.all(['100px Wet','800 100px Swash','100px Bu','700 100px Lob','800 100px Fraunces','700 20px Manrope','800 20px Manrope'].map(f=>document.fonts.load(f,'Qui trovi un’offerta ROMA'))).catch(()=>{}).then(()=>document.fonts.ready).then(()=>{applica();document.title='pronto'});
+</script>
+</body></html>

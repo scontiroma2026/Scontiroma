@@ -338,7 +338,7 @@ export default function MerchantDiscount() {
             <form onSubmit={submit} className="space-y-5">
               <div>
                 <Label htmlFor="disc-title" className={ETICHETTA}>Titolo offerta</Label>
-                <Input id="disc-title" data-testid="disc-title" required value={form.title} onChange={upd("title")} className={CAMPO} placeholder="Es. Menu degustazione a metà prezzo" />
+                <Input id="disc-title" data-testid="disc-title" required value={form.title} onChange={upd("title")} className={CAMPO} placeholder="Es. Menu degustazione di pesce" />
               </div>
               <div>
                 <Label htmlFor="disc-description" className={ETICHETTA}>Descrizione</Label>
@@ -360,7 +360,7 @@ export default function MerchantDiscount() {
               <div>
                 <div className={ETICHETTA}>Foto dell'offerta <span className="text-xs font-semibold text-ac-mute">(fino a 8, la 1ª è la copertina)</span></div>
                 <p className={`${AIUTO} mb-3`}>
-                  Carica le tue foto (verranno ottimizzate) oppure scegli dalla libreria di 100 immagini pronte. Trascina l'ordine o rimuovi con la X.
+                  Carica le tue foto (verranno ottimizzate) oppure scegli dalla libreria di immagini di esempio già pronte. Trascina l'ordine o rimuovi con la X.
                 </p>
                 <PhotoGallery
                   value={form.image_urls}

@@ -30,6 +30,7 @@ import httpx
 import ipaddress
 import socket
 from urllib.parse import urlparse, urljoin
+import prova_pagamenti as pp
 from email_service import (
     send_password_reset,
     send_preferito_nuova_offerta,
@@ -85,6 +86,13 @@ REFRESH_TTL_DAYS = 7
 # promemoria di pagamento spenti. Acceso ("true") = tutto torna come prima.
 def client_subscription_required() -> bool:
     return os.environ.get("CLIENT_SUBSCRIPTION_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+# «Prima il pagamento, poi la pubblicazione» per i negozi. Spento (predefinito) = nessun effetto:
+# le offerte si vedono come sempre. Acceso ("true") = un negozio non in prova e non in regola col
+# pagamento del mese non è visibile ai clienti. Non addebita nulla: i pagamenti si segnano a mano.
+def merchant_payment_required() -> bool:
+    return os.environ.get("MERCHANT_PAYMENT_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 # Stripe
@@ -418,6 +426,17 @@ class RegisterIn(BaseModel):
     marketing_opt_in: Optional[bool] = False
     # Tracking referral: merchant_id da cui l'iscritto proviene (QR personalizzato)
     referred_by: Optional[str] = None
+    # Da quale volantino/QR di campagna arriva (es. «volantino-garbatella»): solo lettere minuscole, numeri e trattini
+    fonte: Optional[str] = None
+
+
+_FONTE_RE = re.compile(r"^[a-z0-9-]{1,40}$")
+
+
+def _fonte_valida(valore) -> Optional[str]:
+    """Fonte di campagna (volantino, QR): accetta solo minuscole, numeri e trattini, massimo 40 caratteri."""
+    v = (valore or "").strip().lower()
+    return v if _FONTE_RE.match(v) else None
 
 
 class LoginIn(BaseModel):
@@ -720,6 +739,10 @@ async def register(payload: RegisterIn, response: Response):
     if referral_ok:
         doc["referred_by"] = payload.referred_by
         doc["referred_at"] = now_iso
+    fonte = _fonte_valida(payload.fonte) if payload.role == "client" else None
+    if fonte:
+        doc["fonte_iscrizione"] = fonte
+        doc["fonte_iscrizione_at"] = now_iso
     if payload.role == "merchant":
         phone = (payload.phone or "").strip()
         if not phone:
@@ -1091,6 +1114,56 @@ async def zones():
     return {"zones": ZONES, "areas": [{"value": v, "label": l} for v, l, _ in ZONE_AREE]}
 
 
+# ---------- Interesse per zona (scheda «Stiamo arrivando nella tua zona») ----------
+# Si conta solo un NUMERO per zona (collezione `interesse_zona`: {zona, voti}). Nessuna email, nessun
+# identificativo, nessun IP salvato. Limite per IP: l'IP resta solo in memoria, per un'ora, e serve
+# a rifiutare le raffiche; non finisce mai nel database. Un solo voto per zona e per browser lo garantisce il sito.
+INTERESSE_MAX_PER_ORA = 10
+INTERESSE_FINESTRA_SEC = 3600
+_interesse_richieste: dict = {}
+
+
+def _ip_richiesta(request: Request) -> str:
+    inoltrato = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+    return inoltrato or (request.client.host if request.client else "sconosciuto")
+
+
+def _interesse_consentito(ip: str) -> bool:
+    adesso = time.monotonic()
+    recenti = [t for t in _interesse_richieste.get(ip, []) if adesso - t < INTERESSE_FINESTRA_SEC]
+    if len(recenti) >= INTERESSE_MAX_PER_ORA:
+        _interesse_richieste[ip] = recenti
+        return False
+    recenti.append(adesso)
+    _interesse_richieste[ip] = recenti
+    if len(_interesse_richieste) > 5000:
+        for k in [k for k, v in _interesse_richieste.items() if not v or adesso - v[-1] >= INTERESSE_FINESTRA_SEC]:
+            _interesse_richieste.pop(k, None)
+    return True
+
+
+class InteresseZonaIn(BaseModel):
+    zona: str
+
+
+@api.post("/interesse-zona")
+async def interesse_zona(payload: InteresseZonaIn, request: Request):
+    """Endpoint pubblico: +1 all'interesse per una zona. Accetta solo i nomi delle 16 aree."""
+    zona = (payload.zona or "").strip()
+    if zona not in ZONES:
+        raise HTTPException(400, "Zona non valida")
+    if not _interesse_consentito(_ip_richiesta(request)):
+        raise HTTPException(429, "Troppe richieste, riprova più tardi")
+    await db.interesse_zona.update_one({"zona": zona}, {"$inc": {"voti": 1}}, upsert=True)
+    return {"ok": True}
+
+
+async def _interesse_per_zona() -> list:
+    docs = await db.interesse_zona.find({}, {"_id": 0, "zona": 1, "voti": 1}).to_list(None)
+    return sorted(({"zona": d["zona"], "voti": int(d.get("voti") or 0)} for d in docs),
+                  key=lambda x: (-x["voti"], x["zona"]))
+
+
 @api.get("/categories")
 async def categories():
     return {"categories": CATEGORIES}
@@ -1106,7 +1179,62 @@ async def default_images():
 # ---------- Discounts ----------
 async def _merchant_sospesi() -> set:
     """Commercianti sospesi dall'admin: le loro offerte non compaiono e non si possono usare."""
-    return set(await db.users.distinct("id", {"role": "merchant", "approved": False}))
+    sospesi = set(await db.users.distinct("id", {"role": "merchant", "approved": False}))
+    if merchant_payment_required():  # con l'interruttore spento questa riga non fa nulla
+        sospesi |= await _merchant_non_in_regola()
+    return sospesi
+
+
+async def _tolleranza_giorni() -> int:
+    doc = await db.settings.find_one({"key": "giorni_tolleranza_pagamento"})
+    v = (doc or {}).get("value")
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 31 else pp.TOLLERANZA_PREDEFINITA
+
+
+async def _prima_pubblicazione(m: dict):
+    """Campo `first_published_at` del negozio; se manca (negozi esistenti) lo calcola al volo dalla
+    prima approvazione tra le sue offerte, senza scrivere nulla."""
+    if m.get("first_published_at"):
+        return m["first_published_at"]
+    date_ok = []
+    for d in await db.discounts.find({"merchant_id": m["id"], "approval_status": "approved"}).to_list(50):
+        v = d.get("approved_at") or d.get("created_at")
+        if v:
+            date_ok.append(str(v))
+    return min(date_ok) if date_ok else None
+
+
+async def _pagamenti_negozio(merchant_id: str) -> dict:
+    """{month_key: paid_at} dei pagamenti registrati a mano."""
+    docs = await db.merchant_payments.find({"merchant_id": merchant_id}).to_list(200)
+    return {d["month_key"]: d.get("paid_at") for d in docs if d.get("month_key")}
+
+
+async def offer_visible_for_payment(merchant: dict, now: Optional[datetime] = None) -> bool:
+    """Le offerte del negozio possono essere mostrate ai clienti? Vero se MERCHANT_PAYMENT_REQUIRED è
+    spento; altrimenti vedi `prova_pagamenti.offer_visible_for_payment_core`."""
+    if not merchant_payment_required():
+        return True
+    oggi = pp.a_data_roma(now or datetime.now(timezone.utc))
+    return pp.offer_visible_for_payment_core(
+        required=True, first_published_at=await _prima_pubblicazione(merchant),
+        pagamenti=await _pagamenti_negozio(merchant["id"]), oggi=oggi,
+        tolleranza=await _tolleranza_giorni(), no_renew_month=merchant.get("no_renew_month"))
+
+
+async def _merchant_non_in_regola() -> set:
+    """Id dei negozi le cui offerte non vanno mostrate per mancato pagamento (solo interruttore acceso)."""
+    out = set()
+    for m in await db.users.find({"role": "merchant"}).to_list(None):
+        if not await offer_visible_for_payment(m):
+            out.add(m["id"])
+    return out
+
+
+async def _segna_prima_pubblicazione(merchant_id: str, quando_iso: str):
+    """Imposta `first_published_at` alla prima approvazione e non lo cambia più."""
+    await db.users.update_one({"id": merchant_id, "role": "merchant", "first_published_at": {"$in": [None]}},
+                              {"$set": {"first_published_at": quando_iso}})
 
 
 async def enrich_discount(d: dict) -> dict:
@@ -1161,10 +1289,31 @@ async def enrich_discount(d: dict) -> dict:
     # Galleria foto (max 8) — se mancante, fallback al singolo image_url
     if not isinstance(d.get("image_urls"), list) or not d.get("image_urls"):
         d["image_urls"] = [d["image_url"]] if d.get("image_url") else []
+    d["is_new"] = d.get("approval_status") == "approved" and _is_new_offer(d.get("published_at"))
     d["locked_this_month"] = (d.get("approval_status") == "approved"
                               and d.get("locked_month") == current_month_key()
                               and not d.get("force_editable", False))
     return d
+
+
+# Scritta «Nuova offerta»: per quante ore dalla pubblicazione (decisione provvisoria: vale per tutte
+# le offerte pubblicate, anche i rinnovi del mese dopo; per cambiarla basta questa costante).
+NEW_OFFER_HOURS = 48
+
+
+def _is_new_offer(published_at, now: Optional[datetime] = None) -> bool:
+    """Vero se l'offerta è stata pubblicata da meno di NEW_OFFER_HOURS ore. Usa l'orologio del server.
+    Senza `published_at` (offerte già esistenti) o con data illeggibile: falso."""
+    if not published_at:
+        return False
+    try:
+        dt = published_at if isinstance(published_at, datetime) else datetime.fromisoformat(str(published_at).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return False
+    now = now or datetime.now(timezone.utc)
+    return timedelta(0) <= now - dt < timedelta(hours=NEW_OFFER_HOURS)
 
 
 def _month_start_iso() -> str:
@@ -1199,14 +1348,123 @@ def _cache_put(cache: dict, key: str, value) -> None:
         cache.clear()
     cache[key] = value
 
+
+# ---------- Geocodifica con LocationIQ (facoltativa, piano gratuito senza carta) ----------
+# Si attiva solo se la variabile d'ambiente LOCATIONIQ_API_KEY è impostata (su Render).
+# Senza chiave tutto resta com'era: solo Nominatim. Piano gratuito: circa 2 richieste al
+# secondo e 5.000 al giorno -> una richiesta ogni 0,6 s per tutto il server + cache.
+# La chiave non va mai scritta nel codice, nei log o nei test.
+LOCATIONIQ_BASE_URL = "https://eu1.locationiq.com/v1"
+_LOCATIONIQ_INTERVALLO = 0.6
+_locationiq_lock = asyncio.Lock()
+_locationiq_last = 0.0
+_locationiq_stop_fino = 0.0  # dopo un rifiuto (chiave errata, limite) si salta LocationIQ per un po'
+_locationiq_stop_motivo = ""  # "chiave" o "limite": solo per il widget di salute dell'admin
+
+
+def _locationiq_key() -> str:
+    return (os.environ.get("LOCATIONIQ_API_KEY") or "").strip()
+
+
+def _locationiq_attivo() -> bool:
+    return bool(_locationiq_key()) and time.monotonic() >= _locationiq_stop_fino
+
+
+async def _locationiq_turno(max_attesa: float) -> bool:
+    """Una richiesta ogni 0,6 s verso LocationIQ (sotto il limite di 2 al secondo)."""
+    global _locationiq_last
+    async with _locationiq_lock:
+        attesa = _locationiq_last + _LOCATIONIQ_INTERVALLO - time.monotonic()
+        if attesa > max_attesa:
+            return False
+        if attesa > 0:
+            await asyncio.sleep(attesa)
+        _locationiq_last = time.monotonic()
+        return True
+
+
+async def _locationiq_cerca(path: str, params: dict, max_attesa: float) -> Optional[list]:
+    """Chiama LocationIQ. Ritorna la lista di risultati ([] = nessun indirizzo trovato),
+    oppure None se LocationIQ non è utilizzabile adesso (senza chiave, limite raggiunto,
+    chiave rifiutata, errore di rete): in quel caso il chiamante ripiega su Nominatim."""
+    global _locationiq_stop_fino, _locationiq_stop_motivo
+    key = _locationiq_key()
+    if not key or not _locationiq_attivo():
+        return None
+    if not await _locationiq_turno(max_attesa):
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            r = await client.get(
+                f"{LOCATIONIQ_BASE_URL}/{path}",
+                params={**params, "key": key, "format": "json"},
+            )
+        if r.status_code == 404:  # LocationIQ risponde 404 quando non trova nulla
+            return []
+        if r.status_code in (401, 403):
+            _locationiq_stop_fino = time.monotonic() + 600
+            _locationiq_stop_motivo = "chiave"
+            logging.warning("[geocode] LocationIQ ha rifiutato la chiave: uso Nominatim per 10 minuti")
+            return None
+        if r.status_code == 429:
+            _locationiq_stop_fino = time.monotonic() + 60
+            _locationiq_stop_motivo = "limite"
+            logging.warning("[geocode] LocationIQ: limite raggiunto, uso Nominatim per 1 minuto")
+            return None
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        return data if isinstance(data, list) else None
+    except Exception as e:  # solo il tipo di errore nei log: il messaggio può contenere l'indirizzo con la chiave
+        logging.warning(f"[geocode] LocationIQ non raggiungibile ({type(e).__name__})")
+        return None
+
+async def _locationiq_prova() -> dict:
+    """Una sola richiesta di prova (per il widget di salute admin). Non restituisce mai la chiave."""
+    if not _locationiq_key():
+        return {"ok": False, "warning": True, "error": "non configurato (si usa Nominatim)"}
+    errori = {"chiave": "chiave rifiutata", "limite": "limite raggiunto"}
+
+    def motivo_pausa() -> str:
+        if time.monotonic() < _locationiq_stop_fino:
+            return errori.get(_locationiq_stop_motivo, "non risponde")
+        return "non risponde"
+
+    if not _locationiq_attivo():  # in pausa dopo un 401/403/429: niente richiesta, si rispetta la pausa
+        return {"ok": False, "error": motivo_pausa()}
+    t0 = time.monotonic()
+    trovati = await _locationiq_cerca(
+        "search",
+        {"q": "Via Ostiense 100, Roma", "limit": 1, "countrycodes": "it", "addressdetails": 0},
+        max_attesa=5,
+    )
+    if trovati is None:
+        return {"ok": False, "error": motivo_pausa()}
+    return {"ok": True, "ms": round((time.monotonic() - t0) * 1000)}
+
+
 async def geocode_address(address: str) -> Optional[dict]:
-    """Trasforma un indirizzo stringa in {lat, lng} via Nominatim.
+    """Trasforma un indirizzo stringa in {lat, lng}: LocationIQ se c'è la chiave,
+    altrimenti (o se non risponde) Nominatim.
     Ritorna None se non trovato o errore. Cache in-memory per evitare hit ripetuti."""
     if not address or not isinstance(address, str) or len(address.strip()) < 4:
         return None
     key = address.strip().lower()
     if key in _geocode_cache:
         return _geocode_cache[key]
+    if _locationiq_attivo():
+        trovati = await _locationiq_cerca(
+            "search",
+            {"q": address, "limit": 1, "countrycodes": "it", "addressdetails": 0},
+            max_attesa=60,
+        )
+        if trovati is not None:
+            try:
+                result = {"lat": float(trovati[0]["lat"]), "lng": float(trovati[0]["lon"])} if trovati else None
+            except (KeyError, ValueError, TypeError):
+                result = None
+            _cache_put(_geocode_cache, key, result)
+            return result
     if not await _nominatim_turno(max_attesa=60):
         return None
     try:
@@ -1240,8 +1498,50 @@ async def geocode_address(address: str) -> Optional[dict]:
 _geocode_suggest_cache: dict = {}
 
 
+def _suggerimenti_da_risultati(raw: list, limit: int) -> list:
+    """Trasforma i risultati (stesso formato per Nominatim e LocationIQ) nei suggerimenti
+    per il form: prima quelli col civico, senza doppioni."""
+    out = []
+    for item in raw:
+        addr = item.get("address") or {}
+        road = addr.get("road") or addr.get("pedestrian") or addr.get("footway") or ""
+        house = addr.get("house_number") or ""
+        postcode = addr.get("postcode") or ""
+        city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("suburb") or ""
+        street = f"{road} {house}".strip() if road else ""
+        parts = [p for p in [street, f"{postcode} {city}".strip()] if p]
+        display = ", ".join(parts) if parts else (item.get("display_name") or "")[:120]
+        out.append({
+            "display": display,
+            "full_display_name": item.get("display_name"),
+            "lat": float(item["lat"]),
+            "lng": float(item["lon"]),
+            "road": road,
+            "house_number": house,
+            "postcode": postcode,
+            "city": city,
+            "has_house_number": bool(house),
+        })
+    # Ordina: prima quelli col civico, poi gli altri (mantenendo l'ordine originale interno)
+    out.sort(key=lambda s: 0 if s["has_house_number"] else 1)
+    # Deduplica per display finale
+    seen = set()
+    deduped = []
+    for s in out:
+        key_disp = s["display"].lower()
+        if key_disp in seen:
+            continue
+        seen.add(key_disp)
+        deduped.append(s)
+    return deduped[:limit]
+
+
+# Bounding box di Roma (SW→NE) per privilegiare match locali
+_ROMA_VIEWBOX = "12.234,41.649,12.855,42.141"
+
+
 async def geocode_suggest(query: str, limit: int = 5) -> list:
-    """Autocomplete indirizzi via Nominatim, focalizzato su Roma.
+    """Autocomplete indirizzi, focalizzato su Roma: LocationIQ (se c'è la chiave) o Nominatim.
 
     Nominatim ritorna suggerimenti CON numero civico SOLO se l'utente ha già
     digitato un numero nella query (es. "Via del Corso 100"). Quando il numero
@@ -1256,6 +1556,28 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
     key = f"{q.lower()}::{limit}"
     if key in _geocode_suggest_cache:
         return _geocode_suggest_cache[key]
+    if _locationiq_attivo():
+        # Suggerimenti: se la coda è lunga si rinuncia subito (niente attese infinite)
+        trovati = await _locationiq_cerca(
+            "autocomplete",
+            {
+                "q": q,
+                "limit": max(limit * 2, 10),
+                "countrycodes": "it",
+                "addressdetails": 1,
+                "viewbox": _ROMA_VIEWBOX,
+                "bounded": 1,
+                "dedupe": 1,
+            },
+            max_attesa=2,
+        )
+        if trovati is not None:
+            try:
+                out = _suggerimenti_da_risultati(trovati, limit)
+            except (KeyError, ValueError, TypeError):
+                out = []
+            _cache_put(_geocode_suggest_cache, key, out)
+            return out
     # Suggerimenti: se la coda verso Nominatim è lunga si rinuncia subito (niente attese infinite)
     if not await _nominatim_turno(max_attesa=2):
         return []
@@ -1269,48 +1591,14 @@ async def geocode_suggest(query: str, limit: int = 5) -> list:
                     "limit": max(limit * 2, 10),  # più candidati per il riordino
                     "countrycodes": "it",
                     "addressdetails": 1,
-                    # Bounding box di Roma (SW→NE) per privilegiare match locali
-                    "viewbox": "12.234,41.649,12.855,42.141",
+                    "viewbox": _ROMA_VIEWBOX,
                     "bounded": 1,
                 },
                 headers={"User-Agent": "ScontiRoma/1.0 (info@scontiroma.it)"},
             )
         if r.status_code != 200:
             return []
-        raw = r.json() or []
-        out = []
-        for item in raw:
-            addr = item.get("address") or {}
-            road = addr.get("road") or addr.get("pedestrian") or addr.get("footway") or ""
-            house = addr.get("house_number") or ""
-            postcode = addr.get("postcode") or ""
-            city = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("suburb") or ""
-            street = f"{road} {house}".strip() if road else ""
-            parts = [p for p in [street, f"{postcode} {city}".strip()] if p]
-            display = ", ".join(parts) if parts else (item.get("display_name") or "")[:120]
-            out.append({
-                "display": display,
-                "full_display_name": item.get("display_name"),
-                "lat": float(item["lat"]),
-                "lng": float(item["lon"]),
-                "road": road,
-                "house_number": house,
-                "postcode": postcode,
-                "city": city,
-                "has_house_number": bool(house),
-            })
-        # Ordina: prima quelli col civico, poi gli altri (mantenendo l'ordine originale interno)
-        out.sort(key=lambda s: 0 if s["has_house_number"] else 1)
-        # Deduplica per display finale
-        seen = set()
-        deduped = []
-        for s in out:
-            key_disp = s["display"].lower()
-            if key_disp in seen:
-                continue
-            seen.add(key_disp)
-            deduped.append(s)
-        out = deduped[:limit]
+        out = _suggerimenti_da_risultati(r.json() or [], limit)
         _cache_put(_geocode_suggest_cache, key, out)
         return out
     except Exception as e:
@@ -2015,7 +2303,9 @@ def _frontend_url() -> str:
 @api.get("/config/public")
 async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
-    out = {"client_subscription_required": client_subscription_required()}
+    out = {"client_subscription_required": client_subscription_required(),
+           # «Migliora foto» compare solo se la chiave Gemini è impostata su Render
+           "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip())}
     # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
     fine = (os.environ.get("TRIAL_END_DATE") or "").strip()
     if fine:
@@ -2905,18 +3195,22 @@ async def merchant_shop_code(user: dict = Depends(require_merchant)):
     return await _shop_code_doc(user["id"])
 
 
-@api.post("/merchants/me/shop-code/regenerate")
-async def merchant_shop_code_regenerate(user: dict = Depends(require_merchant)):
+async def _shop_code_regenerate(merchant_id: str) -> dict:
     """Nuovo codice: il vecchio smette di valere e, con la nuova versione, anche i telefoni «ricordati»."""
-    cur = await _shop_code_doc(user["id"])
+    cur = await _shop_code_doc(merchant_id)
     now = datetime.now(timezone.utc).isoformat()
     await db.users.update_one(
-        {"id": user["id"]},
+        {"id": merchant_id},
         {"$set": {"shop_code": _new_shop_code(exclude=cur["code"]), "shop_code_changed_at": now},
          "$inc": {"shop_code_version": 1}},
     )
-    await db.shop_code_attempts.delete_one({"merchant_id": user["id"]})
-    return await _shop_code_doc(user["id"])
+    await db.shop_code_attempts.delete_one({"merchant_id": merchant_id})
+    return await _shop_code_doc(merchant_id)
+
+
+@api.post("/merchants/me/shop-code/regenerate")
+async def merchant_shop_code_regenerate(user: dict = Depends(require_merchant)):
+    return await _shop_code_regenerate(user["id"])
 
 
 def _device_token(merchant_id: str, version: int) -> str:
@@ -3433,6 +3727,7 @@ async def admin_launch_summary(user: dict = Depends(require_admin_master)):
         "negozi_senza_offerta": sorted(senza_offerta),
         "utilizzi_mese": await db.redemptions.count_documents({"status": "redeemed", "month_key": mese}),
         "mese": month_label_it(mese),
+        "interesse_zone": await _interesse_per_zona(),
     }
 
 
@@ -3681,12 +3976,34 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
 
 
 
+async def _iscrizioni_per_fonte() -> list:
+    """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale."""
+    da30 = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    conteggi: dict = {}
+    async for c in db.users.find({"role": "client", "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
+                                 {"_id": 0, "fonte_iscrizione": 1, "fonte_iscrizione_at": 1, "created_at": 1}):
+        f = c["fonte_iscrizione"]
+        quando = c.get("fonte_iscrizione_at") or c.get("created_at") or ""
+        r = conteggi.setdefault(f, {"fonte": f, "ultimi_30_giorni": 0, "totale": 0})
+        r["totale"] += 1
+        if quando >= da30:
+            r["ultimi_30_giorni"] += 1
+    return sorted(conteggi.values(), key=lambda r: (r["totale"], r["fonte"]), reverse=True)
+
+
+@api.get("/admin/iscrizioni-per-fonte")
+async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master)):
+    """Quante iscrizioni arrivano da ogni volantino o QR di campagna (solo numeri)."""
+    return {"fonti": await _iscrizioni_per_fonte()}
+
+
 @api.post("/admin/discounts/{discount_id}/approve")
 async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
     now = datetime.now(timezone.utc)
     result = await db.discounts.update_one({"id": discount_id}, {"$set": {
         "approval_status": "approved",
         "approved_at": now.isoformat(),
+        "published_at": now.isoformat(),
         "locked_month": current_month_key(),
         "approval_note": "",
         "force_editable": False,
@@ -3694,6 +4011,7 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
     d = await db.discounts.find_one({"id": discount_id})
+    await _segna_prima_pubblicazione(d.get("merchant_id"), now.isoformat())
     # Notifica il commerciante via email
     try:
         m = await db.users.find_one({"id": d.get("merchant_id")})
@@ -3886,6 +4204,9 @@ async def admin_run_next_reminders(user: dict = Depends(require_admin_master)):
 async def admin_list_merchants(user: dict = Depends(require_admin_master)):
     docs = await db.users.find({"role": "merchant"}).sort("created_at", -1).to_list(500)
     out = []
+    oggi = pp.a_data_roma(datetime.now(timezone.utc))
+    mese_corrente = pp.chiave_mese(oggi)
+    tol = await _tolleranza_giorni()
     for m in docs:
         m = sanitize_user(m)
         m["approved"] = m.get("approved", True)  # default True for existing
@@ -3898,6 +4219,11 @@ async def admin_list_merchants(user: dict = Depends(require_admin_master)):
             m["discount_approval"] = disc.get("approval_status") or "approved"
         red_count = await db.redemptions.count_documents({"merchant_id": m["id"]})
         m["redemptions_count"] = red_count
+        st = pp.stato_pagamento(await _prima_pubblicazione(m), await _pagamenti_negozio(m["id"]), oggi, tol)
+        m["stato_pagamento"] = {"fase": st["fase"],
+                                "prova_fino_al": st["prova_fino_al"].isoformat() if st["prova_fino_al"] else None,
+                                "primo_pagamento": st["primo_pagamento"].isoformat() if st["primo_pagamento"] else None,
+                                "mese": mese_corrente}
         out.append(m)
     return {"merchants": out}
 
@@ -3922,6 +4248,21 @@ async def admin_delete_merchant(merchant_id: str, user: dict = Depends(require_a
     await _erase_user_data(m)
     await db.users.delete_one({"id": merchant_id, "role": "merchant"})
     return {"ok": True}
+
+
+@api.get("/admin/merchants/{merchant_id}/shop-code")
+async def admin_merchant_shop_code(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Solo admin (con master password), un negozio alla volta: mai nelle liste, mai nei log."""
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"id": 1}):
+        raise HTTPException(404, "Commerciante non trovato")
+    return await _shop_code_doc(merchant_id)
+
+
+@api.post("/admin/merchants/{merchant_id}/shop-code/regenerate")
+async def admin_merchant_shop_code_regenerate(merchant_id: str, user: dict = Depends(require_admin_master)):
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"id": 1}):
+        raise HTTPException(404, "Commerciante non trovato")
+    return await _shop_code_regenerate(merchant_id)
 
 
 @api.put("/admin/discounts/{discount_id}")
@@ -4091,6 +4432,7 @@ async def _run_month_rollover(force: bool = False) -> dict:
             await db.discounts.insert_one(sets)
         await db.next_discounts.delete_one({"id": nd["id"]})
         if st == "approved":  # l'offerta del mese è online: avviso a chi ha il negozio tra i preferiti
+            await _segna_prima_pubblicazione(mid, now_iso)
             promossa = await db.discounts.find_one({"merchant_id": mid})
             if promossa and promossa.get("active", True):
                 _avvisi_in_background(promossa)
@@ -4390,6 +4732,9 @@ async def admin_app_feedback(user: dict = Depends(require_admin_master)):
     out = []
     async for f in db.app_feedback.find().sort("updated_at", -1).limit(500):
         f.pop("_id", None)
+        # Solo admin: nome e cognome completi (il modello utente ha un unico campo `name`).
+        u = await db.users.find_one({"id": f.get("user_id")}, {"_id": 0, "name": 1})
+        f["name"] = (u or {}).get("name") or ""
         out.append(f)
     avg = round(sum(f["stars"] for f in out) / len(out), 1) if out else None
     return {"feedback": out, "avg": avg, "count": len(out)}
@@ -4440,6 +4785,14 @@ async def admin_fraud_log(user: dict = Depends(require_admin_master), limit: int
         if not s.get("shop_name") and s.get("merchant_id"):
             m = await db.users.find_one({"id": s["merchant_id"]})
             s["shop_name"] = m.get("shop_name") if m else "-"
+        # Solo admin: nome e cognome completi del cliente (non salvati nel registro, letti al momento).
+        s["client_name"] = ""
+        s["client_email"] = ""
+        if s.get("user_id"):
+            u = await db.users.find_one({"id": s["user_id"]}, {"_id": 0, "name": 1, "email": 1})
+            if u:
+                s["client_name"] = u.get("name") or ""
+                s["client_email"] = u.get("email") or ""
         out.append(s)
     return {"scans": out}
 
@@ -4463,9 +4816,40 @@ async def admin_reviews(user: dict = Depends(require_admin_master), limit: int =
     return {"reviews": out}
 
 
+async def _check_resend():
+    """Controllo Resend per il widget Server Health. Mai restituire né registrare la chiave.
+    Una chiave «solo invio» (restricted_api_key) riceve 401 su /domains ma l'invio funziona."""
+    import time as _t
+    import email_service as _es
+    if not _es._configured:
+        return {"ok": False, "error": "non configurato", "warning": True}
+    t0 = _t.time()
+    try:
+        async with httpx.AsyncClient(timeout=6) as c:
+            r = await c.get("https://api.resend.com/domains",
+                            headers={"Authorization": f"Bearer {_es.RESEND_API_KEY}"})
+        ms = round((_t.time() - t0) * 1000)
+        if r.status_code == 200:
+            return {"ok": True, "ms": ms}
+        if r.status_code == 401:
+            try:
+                body = r.json()
+            except Exception:
+                body = None
+            if isinstance(body, dict):
+                testo = f"{body.get('name', '')} {body.get('message', '')}".lower()
+                if "restricted_api_key" in testo or "restricted" in testo:
+                    return {"ok": True, "ms": ms, "note": "chiave solo invio"}
+        if r.status_code in (401, 403):
+            return {"ok": False, "error": "chiave rifiutata"}
+        return {"ok": False, "error": f"HTTP {r.status_code}"}
+    except Exception as e:
+        return {"ok": False, "error": type(e).__name__}
+
+
 @api.get("/admin/health")
 async def admin_health(user: dict = Depends(require_admin_master)):
-    """Stato di salute dei servizi critici (DB, Stripe, PayPal, Resend)."""
+    """Stato di salute dei servizi critici (DB, Stripe, PayPal, Resend, LocationIQ)."""
     import time as _t
     async def check_db():
         t0 = _t.time()
@@ -4490,26 +4874,13 @@ async def admin_health(user: dict = Depends(require_admin_master)):
             return {"ok": True, "ms": round((_t.time()-t0)*1000)}
         except Exception as e:
             return {"ok": False, "error": str(e)[:100]}
-    async def check_resend():
-        import email_service as _es
-        if not _es._configured:
-            return {"ok": False, "error": "non configurato", "warning": True}
-        t0 = _t.time()
-        try:
-            async with httpx.AsyncClient(timeout=6) as c:
-                r = await c.get("https://api.resend.com/domains",
-                                headers={"Authorization": f"Bearer {_es.RESEND_API_KEY}"})
-            return {"ok": r.status_code == 200, "ms": round((_t.time()-t0)*1000),
-                    **({"error": f"HTTP {r.status_code}"} if r.status_code != 200 else {})}
-        except Exception as e:
-            return {"ok": False, "error": str(e)[:100]}
-
-    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), check_resend())
+    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), _check_resend(), _locationiq_prova())
     return {
         "db": results[0],
         "stripe": results[1],
         "paypal": results[2],
         "resend": results[3],
+        "locationiq": results[4],
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -4660,8 +5031,9 @@ async def admin_subscribers(
 APP_VERSION = (os.environ.get("RENDER_GIT_COMMIT") or "dev")[:7]
 
 
-@api.get("/")
+@api.api_route("/", methods=["GET", "HEAD"])
 async def root():
+    # HEAD serve ai controlli online (UptimeRobot gratuito usa HEAD, non GET)
     return {"message": "Sconti Roma API", "status": "ok", "version": APP_VERSION}
 
 
@@ -5628,6 +6000,64 @@ async def pag_esporta_csv(user: dict = Depends(require_admin_master)):
 
 
 # ---------- Include Router & CORS (LAST) ----------
+# ---------- Prova gratuita e pagamenti mensili dei negozi (registro MANUALE, nessun addebito) ----------
+class ImpostazioniPagamentiIn(BaseModel):
+    giorni_tolleranza: int = Field(ge=0, le=31)
+
+
+@api.get("/admin/impostazioni-pagamenti")
+async def get_impostazioni_pagamenti(user: dict = Depends(require_admin_master)):
+    return {"giorni_tolleranza": await _tolleranza_giorni(), "predefinito": pp.TOLLERANZA_PREDEFINITA,
+            "interruttore_acceso": merchant_payment_required()}
+
+
+@api.put("/admin/impostazioni-pagamenti")
+async def put_impostazioni_pagamenti(payload: ImpostazioniPagamentiIn, user: dict = Depends(require_admin_master)):
+    await db.settings.update_one({"key": "giorni_tolleranza_pagamento"},
+                                 {"$set": {"value": payload.giorni_tolleranza}}, upsert=True)
+    return {"giorni_tolleranza": payload.giorni_tolleranza}
+
+
+class PagatoIn(BaseModel):
+    paid_at: Optional[str] = None  # data/ora ISO; vuoto = adesso
+    note: Optional[str] = Field(default=None, max_length=300)
+
+
+def _controlla_mese(month_key: str) -> str:
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month_key or ""):
+        raise HTTPException(400, "Mese non valido: usa AAAA-MM")
+    return month_key
+
+
+@api.get("/admin/pagamenti-mensili/{merchant_id}")
+async def mp_elenco(merchant_id: str, user: dict = Depends(require_admin_master)):
+    docs = await db.merchant_payments.find({"merchant_id": merchant_id}).sort("month_key", -1).to_list(200)
+    return {"pagamenti": [{k: v for k, v in d.items() if k != "_id"} for d in docs]}
+
+
+@api.put("/admin/pagamenti-mensili/{merchant_id}/{month_key}")
+async def mp_segna_pagato(merchant_id: str, month_key: str, payload: Optional[PagatoIn] = None,
+                          user: dict = Depends(require_admin_master)):
+    month_key = _controlla_mese(month_key)
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}):
+        raise HTTPException(404, "Negozio non trovato")
+    payload = payload or PagatoIn()
+    if payload.paid_at and pp.a_data_roma(payload.paid_at) is None:
+        raise HTTPException(400, "Data non valida")
+    doc = {"merchant_id": merchant_id, "month_key": month_key,
+           "paid_at": payload.paid_at or datetime.now(timezone.utc).isoformat(), "note": payload.note or ""}
+    await db.merchant_payments.update_one({"merchant_id": merchant_id, "month_key": month_key},
+                                          {"$set": doc}, upsert=True)
+    return {"pagamento": doc}
+
+
+@api.delete("/admin/pagamenti-mensili/{merchant_id}/{month_key}")
+async def mp_togli_pagato(merchant_id: str, month_key: str, user: dict = Depends(require_admin_master)):
+    month_key = _controlla_mese(month_key)
+    await db.merchant_payments.delete_one({"merchant_id": merchant_id, "month_key": month_key})
+    return {"ok": True}
+
+
 app.include_router(api)
 
 def _parse_cors_origins(raw: str) -> list:

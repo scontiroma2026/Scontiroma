@@ -13,6 +13,7 @@ import GeocodeIssuesWidget from "@/components/admin/GeocodeIssuesWidget";
 import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import AdminGate from "@/components/admin/AdminGate";
 import AdminLaunch from "@/components/admin/AdminLaunch";
+import AdminProvaTolleranza from "@/components/admin/AdminProvaTolleranza";
 import AdminPayments from "@/components/admin/AdminPayments";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminPending from "@/components/admin/AdminPending";
@@ -175,7 +176,7 @@ export default function AdminDashboard() {
       </div>
 
       {tab === "launch" && <AdminLaunch hdrs={hdrs} />}
-      {tab === "payments" && <AdminPayments hdrs={hdrs} />}
+      {tab === "payments" && <><AdminProvaTolleranza hdrs={hdrs} /><AdminPayments hdrs={hdrs} /></>}
       {tab === "analytics" && <AdminAnalytics stats={stats} />}
       {tab === "subscribers" && subscriptionRequired && <AdminSubscribers hdrs={hdrs} />}
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}

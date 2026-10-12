@@ -5,6 +5,7 @@ import DefaultImagePicker from "@/components/DefaultImagePicker";
 import PhotoEnhancer from "@/components/PhotoEnhancer";
 import PhotoCompareDialog from "@/components/PhotoCompareDialog";
 import api, { formatApiError } from "@/lib/api";
+import { useAppConfig } from "@/context/ConfigContext";
 import { toast } from "sonner";
 
 /**
@@ -14,6 +15,7 @@ import { toast } from "sonner";
  */
 export default function PhotoGallery({ value = [], onChange, max = 8, disabled = false, category = "" }) {
   const photos = Array.isArray(value) ? value : [];
+  const { aiEnhance } = useAppConfig();
   const [enhancingIdx, setEnhancingIdx] = useState(-1);
   const [lightboxIdx, setLightboxIdx] = useState(-1); // -1 = chiuso
   const [confronto, setConfronto] = useState(null); // finestra «Originale / Migliorata»
@@ -212,8 +214,8 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                   </button>
                 </div>
               )}
-              {/* Pulsante "Ottimizza con AI" — sempre visibile in alto */}
-              {!disabled && (
+              {/* Pulsante "Migliora con IA": solo se il server ha la chiave Gemini */}
+              {!disabled && aiEnhance && (
                 <button
                   type="button"
                   data-testid={`photo-ai-enhance-${i}`}

@@ -32,6 +32,30 @@ export default function AdminLaunch({ hdrs }) {
         </div>
         {d.sospesi > 0 && <p className="mt-3 text-xs text-red-700">{d.sospesi} negozi sospesi.</p>}
       </Card>
+      <Card className="border-border bg-muted p-5" data-testid="lancio-interesse">
+        <h3 className="font-serif text-xl text-foreground">Interesse per zona</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Quante volte i clienti hanno toccato «Fammi sapere quando arrivate» in una zona senza offerte. Solo un numero per zona: nessun dato personale.</p>
+        {(d.interesse_zone || []).length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">Nessun voto ancora.</p>
+        ) : (
+          <table className="mt-3 w-full text-left text-sm text-foreground">
+            <thead>
+              <tr className="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
+                <th scope="col" className="py-2 pr-3 font-semibold">Zona</th>
+                <th scope="col" className="py-2 text-right font-semibold">Voti</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.interesse_zone.map((r) => (
+                <tr key={r.zona} data-testid="interesse-riga" className="border-b border-border/60 last:border-0">
+                  <td className="py-2.5 pr-3">{r.zona}</td>
+                  <td className="py-2.5 text-right font-semibold tabular-nums">{r.voti}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Card>
       <Card className="border-border bg-muted p-5">
         <h3 className="font-serif text-xl text-foreground">Negozi senza offerta ({d.negozi_senza_offerta.length})</h3>
         <p className="mt-1 text-xs text-muted-foreground">Iscritti che non hanno ancora caricato un'offerta: sono quelli da contattare.</p>

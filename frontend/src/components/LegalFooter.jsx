@@ -31,6 +31,13 @@ export default function LegalFooter() {
         </div>
         <nav className="flex flex-wrap items-center gap-4">
           <Link
+            data-testid="footer-commercianti"
+            to="/per-i-commercianti"
+            className="text-muted-foreground hover:text-fucsia transition underline-offset-4 hover:underline"
+          >
+            Per i commercianti
+          </Link>
+          <Link
             data-testid="footer-support"
             to="/support"
             className="text-muted-foreground hover:text-fucsia transition underline-offset-4 hover:underline"

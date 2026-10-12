@@ -102,7 +102,7 @@ test('tema chiaro: pagine pubbliche', async ({ page, request }) => {
   const m = await registra(request, 'merchant');
   const offerta = await creaOffertaApprovata(request, m.token, { title: `Tema chiaro ${Date.now()}` });
   const pagine = ['/', '/discounts', `/discounts/${offerta.id}`, '/map', '/login', '/register', '/forgot-password', '/reset-password?token=abc',
-    '/support', `/n/${m.user.id}`, '/qr/INVALIDO', '/privacy', '/cookies', '/termini', '/recesso', '/payment/success', '/payment/cancel'];
+    '/support', '/per-i-commercianti', `/n/${m.user.id}`, '/qr/INVALIDO', '/privacy', '/cookies', '/termini', '/recesso', '/payment/success', '/payment/cancel'];
   for (const url of pagine) {
     await page.goto(url);
     await expect(page.locator('main, h1').first()).toBeVisible();

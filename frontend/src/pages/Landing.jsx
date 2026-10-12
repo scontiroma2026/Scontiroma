@@ -1,4 +1,4 @@
-import { salvaReferral } from "@/lib/referral";
+import { salvaReferral, salvaFonte } from "@/lib/referral";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ export default function Landing() {
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
     salvaReferral(params.get("ref"));
+    salvaFonte(params.get("fonte"));
   }, [params]);
 
   return (
@@ -34,7 +35,7 @@ export default function Landing() {
           <div className="grid gap-12 md:grid-cols-12 md:items-center">
             <div className="md:col-span-7 fade-in-up">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-1.5 text-xs uppercase tracking-[0.2em] backdrop-blur">
-                <Sparkles size={12} className="text-neon" /> Solo Roma
+                <Sparkles size={12} className="text-neon" /> Roma e dintorni
               </div>
               <h1 className="mt-6 font-serif text-6xl leading-[0.95] md:text-8xl">
                 Roma è<br/>
@@ -142,7 +143,7 @@ export default function Landing() {
             <div className="grid grid-cols-2 gap-4">
               {[
                 { n: "Gratis", l: "fase di lancio" },
-                { n: "3", l: "quartieri pilota" },
+                { n: "16", l: "zone tra Roma e dintorni" },
                 { n: "1", l: "offerta al mese" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
@@ -175,7 +176,7 @@ export default function Landing() {
           ]},
           { titolo: "Per i commercianti", voci: [
             { q: "Come partecipo con il mio negozio?", a: "Registrati come commerciante e crea la tua offerta: la controlliamo e, dopo l'approvazione, il tuo negozio compare tra gli sconti." },
-            { q: "Quanto costa per i commercianti?", a: "Durante la fase di lancio partecipare è gratuito. Dopo, il prezzo previsto è di 4,99 € al mese IVA inclusa, bloccato per chi partecipa dall'inizio. Ti avviseremo almeno 30 giorni prima e non ti addebiteremo nulla senza la tua conferma." },
+            { q: "Quanto costa per i commercianti?", a: "Durante la fase di lancio partecipare è gratuito. Dopo, il prezzo previsto è di 4,99 € al mese IVA inclusa. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma." },
             { q: "Come funziona l'offerta del mese?", a: "Hai un'offerta al mese. Negli ultimi 7 giorni del mese puoi caricare quella del mese successivo: ti avvisiamo nella dashboard e per email. L'offerta non si rinnova da sola: se non carichi la nuova, il 1° del mese quella attuale scade. Se non vuoi continuare, scegli «Non rinnovo»." },
             { q: "Come verifico lo sconto di un cliente?", a: "Dalla tua dashboard premi «Scansiona codice» e inquadra il QR del cliente: vedi subito se lo sconto è valido. Lo stesso QR non può essere usato due volte." },
           ]},
@@ -201,6 +202,11 @@ export default function Landing() {
         <span className="inline-flex items-center gap-2">
           © {new Date().getFullYear()} <BrandMark inline className="text-muted-foreground" /> — Made con amore ♡
         </span>
+        <div className="mt-3">
+          <Link data-testid="landing-footer-commercianti" to="/per-i-commercianti" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-fucsia">
+            Per i commercianti
+          </Link>
+        </div>
       </footer>
     </main>
   );

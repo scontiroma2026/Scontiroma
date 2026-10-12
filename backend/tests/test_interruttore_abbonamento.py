@@ -116,7 +116,8 @@ def test_spento_configurazione_pubblica():
     async def body(c):
         r = await c.get("/api/config/public")
         assert r.status_code == 200
-        assert r.json() == {"client_subscription_required": False}
+        assert r.json()["client_subscription_required"] is False
+        assert "trial_end_date" not in r.json()
     run(body, required=False)
 
 
@@ -199,7 +200,9 @@ def test_spento_chi_ha_un_abbonamento_puo_annullarlo():
 
 def test_acceso_configurazione_pubblica():
     async def body(c):
-        assert (await c.get("/api/config/public")).json() == {"client_subscription_required": True}
+        d = (await c.get("/api/config/public")).json()
+        assert d["client_subscription_required"] is True
+        assert "trial_end_date" not in d
     run(body, required=True)
 
 

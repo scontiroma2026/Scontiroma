@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, CircleMarker } from "react-leaflet";
+import { MapContainer, Marker, Popup, ZoomControl, useMap, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, ArrowRight, LocateFixed } from "lucide-react";
-import { OSM_TILE_URL, OSM_ATTRIBUTION } from "@/lib/osm";
+import MappaBase from "@/components/MappaBase";
 import ZoneOptions from "@/components/ZoneOptions";
 import { FotoOfferta } from "@/components/NoPhoto";
 
@@ -205,10 +205,7 @@ export default function MapView() {
       <div className="mx-auto max-w-7xl px-6 pb-10">
         <div className="relative overflow-hidden rounded-2xl border-2 border-border" style={{ height: "70vh", minHeight: 500 }}>
           <MapContainer center={ROME_CENTER} zoom={13} zoomControl={false} className="h-full w-full" scrollWheelZoom>
-            <TileLayer
-              attribution={OSM_ATTRIBUTION}
-              url={OSM_TILE_URL}
-            />
+            <MappaBase />
             <ZoomControl position="bottomright" />
             {userPos && <Recenter position={userPos} zoom={14} />}
             {userPos && (

@@ -36,6 +36,7 @@ export default function Navbar() {
     : [
         { to: "/discounts", label: "Esplora sconti" },
         { to: "/map", label: "Mappa" },
+        { to: "/per-i-commercianti", label: "Per i commercianti" },
       ];
 
   // Nell'area commerciante la barra è chiara (variante «Bianco vivo»); altrove resta quella scura.

@@ -61,6 +61,8 @@ services:
         sync: false
       - key: SENDER_EMAIL
         sync: false
+      # Solo ambiente di prova (non in produzione): indirizzi o @dominio a cui si puo' scrivere.
+      # - key: EMAIL_ALLOWED_RECIPIENTS
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_NOTIFY_EMAIL
@@ -72,6 +74,9 @@ services:
       - key: ADMIN_RECOVERY_ID
         sync: false
       - key: GEMINI_API_KEY
+        sync: false
+      # Facoltativa: indirizzi con LocationIQ (piano gratuito). Vuota = Nominatim. Guida: docs/guide/MAPPE.md
+      - key: LOCATIONIQ_API_KEY
         sync: false
 
   # ---------- Sito React (statico, gratuito) ----------

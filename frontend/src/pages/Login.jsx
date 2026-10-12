@@ -20,6 +20,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [autoTried, setAutoTried] = useState(false);
+  // Il tentativo automatico non deve mostrare errori: il ref è sempre aggiornato (lo stato no, dentro goBiometric)
+  const autoRef = useRef(false);
   // «Usa un altro account» annulla il Face ID automatico, anche se è già partito
   const cambiato = useRef(false);
   // Accesso bloccato dal server dopo 5 tentativi sbagliati: fino a quando (ms) e minuti rimasti.
@@ -58,7 +60,7 @@ export default function Login() {
       if (cambiato.current) return;
       // Face ID non riuscito → si passa a email e password (in silenzio se era il tentativo automatico)
       const isNotAllowed = e?.name === "NotAllowedError" || e?.name === "InvalidStateError";
-      if (!autoTried && !isNotAllowed) {
+      if (!autoRef.current && !isNotAllowed) {
         const msg = formatApiError(e) || "Face ID non disponibile";
         toast.error(msg);
       }
@@ -75,8 +77,9 @@ export default function Login() {
     if (!lastEmail) return;
     if (!window.PublicKeyCredential) return; // browser senza WebAuthn
     setAutoTried(true);
+    autoRef.current = true;
     // piccolo delay per permettere al render di stabilizzarsi
-    const t = setTimeout(() => { if (!cambiato.current) goBiometric(); }, 400);
+    const t = setTimeout(() => { if (!cambiato.current) goBiometric().finally(() => { autoRef.current = false; }); }, 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-tentativo Face ID SOLO al mount: rieseguirlo su cambio deps aprirebbe prompt biometrici indesiderati
   }, []);

@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Senza indirizzo del server (ambiente di prova con inoltro /api sul sito stesso) si usa lo stesso indirizzo del sito.
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/+$/, "");
 export const API = `${BACKEND_URL}/api`;
 
 // withCredentials: invia SEMPRE i cookie httpOnly (access_token, refresh_token,

@@ -5,9 +5,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Images, Check, Loader2 } from "lucide-react";
 
 /**
- * Picker per la libreria di 100 immagini di default (10 categorie × 10).
+ * Picker per la libreria di immagini di default (10 categorie, decine di foto ciascuna).
  * Il merchant può aprire un dialog, scegliere una categoria e selezionare una foto.
+ * Le miniature sono più piccole dell'originale e si caricano solo quando entrano nella
+ * vista (lazy), così anche con molte foto per categoria il dialog resta veloce su iPhone.
  */
+
+// Le foto sono copiate sul nostro sito: /esempi/<id>.jpg (800x450) e /esempi/mini/<id>.jpg (400x225).
+// Nel catalogo si vedono le miniature; alla scelta si salva la foto grande.
+const miniatura = (url) => url.replace("/esempi/", "/esempi/mini/");
+// Alla scelta l'indirizzo diventa assoluto (con l'indirizzo del sito), così funziona anche
+// fuori dal sito: anteprime di condivisione, email, altre pagine.
+const assoluto = (url) => (url.startsWith("/") ? `${window.location.origin}${url}` : url);
 export default function DefaultImagePicker({ onSelect, selectedUrl }) {
   const [open, setOpen] = useState(false);
   const [library, setLibrary] = useState(null);
@@ -25,8 +34,12 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
       .finally(() => setLoading(false));
   }, [open, library]);
 
+  const totale = library
+    ? Object.values(library).reduce((n, urls) => n + urls.length, 0)
+    : null;
+
   const pick = (url) => {
-    onSelect(url);
+    onSelect(assoluto(url));
     setOpen(false);
   };
 
@@ -40,7 +53,7 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
         className="h-11 rounded-full border-2 border-ac-teal bg-white px-4 font-extrabold text-ac-teal hover:bg-ac-tealBg hover:text-ac-teal"
       >
         <Images size={16} className="mr-2" />
-        Scegli da libreria (100 foto)
+        Scegli da libreria di esempio
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -50,7 +63,8 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
         >
           <DialogHeader>
             <DialogTitle className="font-serif text-3xl font-bold text-ac-ink">
-              Libreria immagini <span className="text-ac-rosa">(100 foto)</span>
+              Libreria immagini{" "}
+              {totale !== null && <span className="text-ac-rosa" data-testid="default-images-total">({totale} foto)</span>}
             </DialogTitle>
             <DialogDescription className="text-sm text-ac-soft">
               Scegli una foto già ottimizzata se non vuoi caricare la tua.
@@ -88,7 +102,7 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
               <div className="flex-1 overflow-y-auto pt-4 pr-1">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {(library[activeCat] || []).map((url, i) => {
-                    const isSelected = selectedUrl === url;
+                    const isSelected = selectedUrl === assoluto(url);
                     return (
                       <button
                         key={url}
@@ -102,9 +116,12 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
                         }`}
                       >
                         <img
-                          src={url}
+                          src={miniatura(url)}
                           alt={`${activeCat} ${i + 1}`}
                           loading="lazy"
+                          decoding="async"
+                          width={400}
+                          height={225}
                           className="w-full h-full object-cover transition group-hover:scale-105"
                         />
                         {isSelected && (

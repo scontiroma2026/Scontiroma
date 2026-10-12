@@ -61,9 +61,11 @@ La Pull Request va **unita su `main`** prima della Fase 3.
 | `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET` | come su Emergent |
 | `PAYPAL_WEBHOOK_ID` | **nuovo**, lo prendi nella Fase 5 (per ora `da-impostare`) |
 | `RESEND_API_KEY`, `SENDER_EMAIL` | come su Emergent |
+| `EMAIL_ALLOWED_RECIPIENTS` | **solo ambiente di prova**: in produzione non va impostata (vedi `docs/guide/AMBIENTE_DI_PROVA.md`) |
 | `ADMIN_EMAIL`, `ADMIN_NOTIFY_EMAIL` | come su Emergent |
 | `ADMIN_PASSWORD`, `ADMIN_MASTER_PASSWORD`, `ADMIN_RECOVERY_ID` | **nuovi**, lunghi e casuali (non quelli di Emergent) |
 | `GEMINI_API_KEY` | la chiave di Google AI Studio |
+| `LOCATIONIQ_API_KEY` | facoltativa: chiave gratuita di LocationIQ per gli indirizzi (vedi `docs/guide/MAPPE.md`); vuota = si usa Nominatim |
 
 `JWT_SECRET`, `DB_NAME`, `PAYPAL_MODE` e gli altri li imposta Render da solo.
 Gli account demo non sono più nel server (esistono solo nei test locali, `e2e/seed_demo.py`).
