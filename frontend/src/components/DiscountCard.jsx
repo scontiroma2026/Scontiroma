@@ -24,7 +24,7 @@ export default function DiscountCard({ discount }) {
           <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full grad-fucsia-viola px-3 py-1.5 text-xs font-bold text-white shadow-lg glow-fucsia">
             <Zap size={12} /> −{discount.percent_off}%
           </div>
-          <BadgeNuovaOfferta isNew={discount.is_new} className="absolute bottom-3 left-3" />
+          <BadgeNuovaOfferta isNew={discount.is_new} isNewShop={discount.is_new_shop} className="absolute bottom-3 left-3" />
           <CuorePreferito merchantId={m.id} className="absolute right-3 top-3" />
           {sales > 0 && (
             <div
