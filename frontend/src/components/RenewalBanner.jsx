@@ -20,9 +20,8 @@ export default function RenewalBanner() {
 
   const setNoRenew = async (value) => {
     if (value) {
-      const msg = st.next_status
-        ? `Non vuoi rinnovare?\n\nL'offerta attuale terminerà il ${st.expires_on} e quella di ${label} che hai caricato verrà ritirata.\n\nPuoi cambiare idea fino alla fine del mese.`
-        : `Non vuoi rinnovare?\n\nL'offerta attuale terminerà il ${st.expires_on} e non riceverai altri promemoria.\n\nPuoi cambiare idea fino alla fine del mese.`;
+      const ritirata = st.next_status ? `\n\nL'offerta di ${label} che hai caricato verrà ritirata.` : "";
+      const msg = `Stai per disdire.\n\nLa disdetta vale dalla fine di questo mese: fino al ${st.expires_on} la tua offerta resta pubblicata e devi rispettare lo sconto a tutti i clienti che lo presentano. Eventuali mesi già pagati non vengono rimborsati; dal giorno dopo l'offerta non è più visibile.${ritirata}\n\nPuoi ripensarci e annullare la disdetta fino all'ultimo giorno del mese.`;
       if (!window.confirm(msg)) return;
     }
     setBusy(true);
@@ -30,7 +29,7 @@ export default function RenewalBanner() {
       const hadNext = Boolean(st.next_status);
       const r = await api.post("/merchants/me/no-renew", { no_renew: value });
       setSt(r.data);
-      toast.success(value ? "Fatto: la tua offerta non verrà rinnovata." : "Va bene: ricordati di caricare l'offerta del mese prossimo.");
+      toast.success(value ? `Fatto: la tua offerta non verrà rinnovata. Lo sconto va rispettato fino al ${st.expires_on}.` : "Va bene: ricordati di caricare l'offerta del mese prossimo.");
       if (value && hadNext) window.location.reload();
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Operazione non riuscita, riprova.");
@@ -63,7 +62,7 @@ export default function RenewalBanner() {
       <div data-testid="renewal-banner" data-state="no-renew" className={`${box} border-ac-line bg-ac-tint`}>
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <CalendarX className="mt-0.5 shrink-0 text-ac-soft" size={20} aria-hidden="true" />
-          <p className="text-sm font-semibold text-ac-ink">Hai scelto di non rinnovare: la tua offerta termina il <strong>{st.expires_on}</strong> e il 1° non riparte nulla.</p>
+          <p className="text-sm font-semibold text-ac-ink">Hai scelto di non rinnovare: la tua offerta termina il <strong>{st.expires_on}</strong> e il 1° non riparte nulla. <strong>Fino a quella data i clienti possono ancora usare lo sconto e va rispettato.</strong></p>
         </div>
         <button type="button" data-testid="renewal-undo-btn" disabled={busy} className={`${secondario} w-full sm:w-auto`} onClick={() => setNoRenew(false)}>
           Annulla, voglio rinnovare

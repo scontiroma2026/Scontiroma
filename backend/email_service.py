@@ -211,6 +211,27 @@ async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_
     return await _send(to, f"La tua prova gratuita finisce tra {giorni} — Sconti Roma", _shell(inner))
 
 
+async def send_merchant_disdetta(to: str, name: str, shop_name: str, ultimo_giorno: str, mese_dopo: str) -> Optional[str]:
+    """Conferma di disdetta («Non rinnovo»): l'offerta resta valida e lo sconto va rispettato fino all'ultimo giorno del mese.
+    Testo proposto dall'ufficio legale interno: da validare dal consulente."""
+    name, shop_name, ultimo_giorno, mese_dopo = _esc(name), _esc(shop_name), _esc(ultimo_giorno), _esc(mese_dopo)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Disdetta ricevuta</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name}, abbiamo registrato la disdetta di <strong>{shop_name}</strong>.</p>
+<ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">
+<li>Fino al <strong style="color:#00E5FF">{ultimo_giorno}</strong> l'offerta resta pubblicata.</li>
+<li>Fino a quel giorno <strong>devi rispettare lo sconto</strong> a ogni cliente che lo presenta con il QR.</li>
+<li>Dal 1° {mese_dopo} l'offerta non è più visibile.</li>
+<li>Il mese già pagato non viene rimborsato e non addebitiamo altro.</li>
+</ul>
+<p style="margin:0 0 24px;color:#d4d4d8">Puoi annullare la disdetta dalla tua area fino alla fine del mese. Per domande scrivi a partner@scontiroma.it.</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
+</div>
+"""
+    return await _send(to, f"Disdetta ricevuta: la tua offerta resta valida fino al {ultimo_giorno}", _shell(inner))
+
+
 async def send_offer_expired(to: str, name: str, shop_name: str, no_renew: bool = False) -> Optional[str]:
     """Il 1° del mese: l'offerta del commerciante è scaduta perché non c'era quella nuova.
     Nessun rinnovo automatico: il negozio torna visibile solo con una nuova offerta approvata."""

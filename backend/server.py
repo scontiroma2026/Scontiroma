@@ -42,6 +42,7 @@ from email_service import (
     send_grace_period_reminder,
     send_subscription_cancelled,
     send_master_reset,
+    send_merchant_disdetta,
     send_merchant_trial_reminder,
     send_next_offer_reminder,
     send_offer_expired,
@@ -2171,6 +2172,18 @@ async def merchant_renewal_status(user: dict = Depends(require_merchant)):
     }
 
 
+async def _avvisa_disdetta(user: dict) -> None:
+    """Email di conferma disdetta (best-effort: un errore di invio non blocca la disdetta)."""
+    try:
+        if user.get("email"):
+            adesso = _rome_now()
+            mese_dopo = MESI_IT[adesso.month % 12]
+            await send_merchant_disdetta(user["email"], user.get("name") or "", user.get("shop_name") or "il tuo negozio",
+                                         _current_offer_end_label(), mese_dopo)
+    except Exception as e:
+        logging.warning(f"email disdetta non inviata: {e}")
+
+
 @api.post("/merchants/me/no-renew")
 async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require_merchant)):
     """«Non rinnovo»: l'offerta attuale termina a fine mese e i promemoria si fermano.
@@ -2184,6 +2197,7 @@ async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require
             await _archivia(nd, "withdrawn_no_renew")
             await db.next_discounts.delete_one({"id": nd["id"]})
         await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": nm}})
+        await _avvisa_disdetta(user)
     else:
         await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
     return await merchant_renewal_status(user)
@@ -2868,9 +2882,17 @@ async def merchant_pagamento_disdici(user: dict = Depends(require_merchant)):
             stripe.Subscription.modify(abb["stripe_subscription_id"], cancel_at_period_end=True)
         except Exception as e:
             raise HTTPException(502, f"Stripe: {e}")
+    if abb and abb.get("provider") == "paypal":
+        try:
+            await paypal_service.cancel_subscription(abb["paypal_subscription_id"], "Disdetta del negozio")
+        except Exception as e:
+            raise HTTPException(502, f"PayPal: {e}")
     mese = pp.mese_dopo(pp.chiave_mese(pp.a_data_roma(datetime.now(timezone.utc))))
     await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": mese}})
-    return {"ok": True, "disdetta_da": mese}
+    await _avvisa_disdetta(user)
+    return {"ok": True, "disdetta_da": mese, "offerta_valida_fino_al": _current_offer_end_label(),
+            "messaggio": "Disdetta registrata. L'offerta resta pubblica e lo sconto va rispettato dai clienti "
+                         f"fino al {_current_offer_end_label()} (compreso); dal giorno dopo non è più valida."}
 
 
 async def _stripe_evento_negozio(event) -> Optional[dict]:
@@ -3020,6 +3042,106 @@ async def paypal_config():
     }
 
 
+class PayPalNegozioIn(BaseModel):
+    subscription_id: str
+
+
+@api.get("/merchant/pagamento/paypal/config")
+async def merchant_paypal_config(user: dict = Depends(require_merchant)):
+    """Dati per il pulsante PayPal del negozio: piano mensile e data del primo addebito (un 1°, alle 06:00 di Roma)."""
+    if not merchant_payment_required():
+        raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
+    if not paypal_service.is_configured():
+        raise HTTPException(503, "Pagamento con PayPal non disponibile")
+    primo = pp.primo_addebito_stripe(await _prima_pubblicazione(user), pp.a_data_roma(datetime.now(timezone.utc)))
+    if primo is None:
+        raise HTTPException(409, "Potrai attivare il pagamento dopo la prima offerta pubblicata.")
+    if await db.merchant_subscriptions.find_one({"merchant_id": user["id"], "status": "active"}):
+        raise HTTPException(409, "Il pagamento è già attivo.")
+    try:
+        plan_id = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS)
+    except Exception as e:
+        logging.warning(f"PayPal plan negozio: {e}")
+        raise HTTPException(502, "PayPal non risponde, riprova più tardi")
+    inizio = datetime(primo.year, primo.month, primo.day, 6, 0, tzinfo=pp.ROMA).astimezone(timezone.utc)
+    return {"client_id": paypal_service.PAYPAL_CLIENT_ID, "mode": paypal_service.PAYPAL_MODE, "plan_id": plan_id,
+            "start_time": inizio.strftime("%Y-%m-%dT%H:%M:%SZ"), "custom_id": user["id"],
+            "primo_addebito": primo.isoformat()}
+
+
+@api.post("/merchant/pagamento/paypal/activate")
+async def merchant_paypal_activate(payload: PayPalNegozioIn, user: dict = Depends(require_merchant)):
+    """Dopo l'approvazione su PayPal: verifica l'abbonamento (piano giusto, intestato a questo negozio) e lo registra."""
+    if not merchant_payment_required():
+        raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
+    try:
+        sub = await paypal_service.get_subscription(payload.subscription_id)
+        plan_atteso = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS)
+    except Exception as e:
+        raise HTTPException(502, f"PayPal: {e}")
+    if sub.get("plan_id") != plan_atteso or sub.get("custom_id") != user["id"]:
+        raise HTTPException(403, "Abbonamento non valido per questo negozio")
+    if sub.get("status") not in ("ACTIVE", "APPROVED"):
+        raise HTTPException(409, "L'abbonamento PayPal non è ancora attivo")
+    if await db.merchant_subscriptions.find_one({"paypal_subscription_id": payload.subscription_id,
+                                                 "merchant_id": {"$ne": user["id"]}}):
+        raise HTTPException(409, "Abbonamento già usato")
+    await db.merchant_subscriptions.update_one(
+        {"merchant_id": user["id"]},
+        {"$set": {"merchant_id": user["id"], "provider": "paypal", "status": "active",
+                  "paypal_subscription_id": payload.subscription_id,
+                  "attivato_il": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    return {"ok": True}
+
+
+async def _ferma_abbonamento_negozio(merchant_id: str) -> None:
+    """Ferma il rinnovo dell'abbonamento del negozio, se c'è (Stripe: a fine periodo; PayPal: annullato)."""
+    abb = await db.merchant_subscriptions.find_one({"merchant_id": merchant_id, "status": "active"})
+    if not abb:
+        return
+    try:
+        if abb.get("provider") == "stripe" and stripe.api_key:
+            stripe.Subscription.modify(abb["stripe_subscription_id"], cancel_at_period_end=True)
+        elif abb.get("provider") == "paypal":
+            await paypal_service.cancel_subscription(abb["paypal_subscription_id"], "Eliminazione account")
+    except Exception as e:
+        logging.warning(f"stop abbonamento negozio non riuscito: {e}")
+
+
+async def _paypal_evento_negozio(event: dict) -> Optional[dict]:
+    """Eventi PayPal degli abbonamenti dei NEGOZI. None se l'evento non è di un negozio."""
+    etype, res = event.get("event_type", ""), event.get("resource", {}) or {}
+    sub_id = res.get("billing_agreement_id") if etype.startswith("PAYMENT.") else res.get("id")
+    abb = await db.merchant_subscriptions.find_one({"paypal_subscription_id": sub_id}) if sub_id else None
+    if not abb:
+        return None
+    if not merchant_payment_required():
+        return {"status": "ignored", "reason": "pagamenti_negozi_spenti"}
+    adesso = datetime.now(timezone.utc).isoformat()
+    if etype == "PAYMENT.SALE.COMPLETED":
+        amount = res.get("amount") or {}
+        try:
+            cent = int(round(float(amount.get("total") or amount.get("value") or 0) * 100))
+        except (TypeError, ValueError):
+            cent = 0
+        if cent <= 0:
+            return {"status": "ok", "skipped": "importo_zero"}
+        paid_at = res.get("create_time") or adesso
+        if pp.a_data_roma(paid_at) is None:
+            paid_at = adesso
+        month_key = pp.chiave_mese(pp.a_data_roma(paid_at))
+        await db.merchant_payments.update_one(
+            {"merchant_id": abb["merchant_id"], "month_key": month_key},
+            {"$set": {"merchant_id": abb["merchant_id"], "month_key": month_key, "paid_at": paid_at,
+                      "importo_cent": cent, "metodo": "paypal", "fonte": "automatico", "sale_id": res.get("id"),
+                      "note": "Pagamento automatico con PayPal"}}, upsert=True)
+    elif etype in ("PAYMENT.SALE.DENIED", "BILLING.SUBSCRIPTION.PAYMENT.FAILED"):
+        await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"ultimo_errore_il": adesso}})
+    elif etype in ("BILLING.SUBSCRIPTION.CANCELLED", "BILLING.SUBSCRIPTION.SUSPENDED", "BILLING.SUBSCRIPTION.EXPIRED"):
+        await db.merchant_subscriptions.update_one({"_id": abb["_id"]}, {"$set": {"status": "cancelled", "chiuso_il": adesso}})
+    return {"status": "ok"}
+
+
 @api.post("/paypal/activate")
 async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(require_client)):
     """Chiamato dal frontend dopo `onApprove` di PayPal Buttons. Verifica lo stato reale
@@ -3083,6 +3205,9 @@ async def paypal_webhook(request: Request):
             raise HTTPException(400, "Firma webhook non valida")
     except paypal_service.PayPalNotConfigured:
         raise HTTPException(400, "PayPal non configurato")
+    esito_negozio = await _paypal_evento_negozio(event)
+    if esito_negozio is not None:
+        return esito_negozio
     if not client_subscription_required():
         # Fase di lancio: evento autentico ma senza effetti (nessun abbonamento da gestire).
         return {"status": "ignored", "reason": "subscription_not_required"}
@@ -4878,6 +5003,13 @@ def _start_scheduler() -> None:
         id="trial_reminders_daily",
         replace_existing=True,
     )
+    # Eliminazioni di account programmate (negozi con offerta in corso): ogni giorno 00:20
+    _scheduler.add_job(
+        _run_eliminazioni_programmate,
+        CronTrigger(hour=0, minute=20),
+        id="eliminazioni_programmate",
+        replace_existing=True,
+    )
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
     _scheduler.add_job(
         _run_month_rollover,
@@ -5618,6 +5750,22 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
     if user.get("role") == "admin":
         raise HTTPException(400, "L'account admin non può essere cancellato via GDPR")
 
+    # Negozio con un'offerta ancora in corso: lo sconto va rispettato fino a fine mese, quindi
+    # l'eliminazione vale dal 1° del mese dopo (l'offerta resta, l'abbonamento si ferma subito).
+    if user.get("role") == "merchant" and await db.discounts.find_one(
+            {"merchant_id": uid, "approval_status": "approved", "active": {"$ne": False}}):
+        oggi = pp.a_data_roma(datetime.now(timezone.utc))
+        effetto = pp.primo_del_mese_tra(oggi, 1)
+        await _ferma_abbonamento_negozio(uid)
+        await db.users.update_one({"id": uid}, {"$set": {
+            "deletion_effective_on": effetto.isoformat(), "deletion_requested_at": datetime.now(timezone.utc).isoformat(),
+            "no_renew_month": pp.chiave_mese(effetto)}})
+        await _avvisa_disdetta(user)
+        return {"ok": True, "programmata_per": effetto.isoformat(),
+                "message": f"Eliminazione programmata per il {effetto.day} {MESI_IT[effetto.month - 1]} {effetto.year}. "
+                           f"Fino al giorno prima l'offerta resta pubblicata e lo sconto va rispettato. "
+                           f"Puoi annullare l'eliminazione fino a quel giorno."}
+
     await _erase_user_data(user)
 
     # Elimina l'utente
@@ -5631,6 +5779,29 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
         response.delete_cookie("refresh_token", path="/")
 
     return {"ok": True, "message": "Account e dati collegati eliminati definitivamente."}
+
+
+@api.post("/gdpr/delete-account/annulla")
+async def gdpr_annulla_eliminazione(user: dict = Depends(get_current_user)):
+    """Annulla un'eliminazione programmata (il negozio resta, la disdetta resta valida salvo ripensamento)."""
+    await db.users.update_one({"id": user["id"]}, {"$unset": {"deletion_effective_on": "", "deletion_requested_at": ""}})
+    return {"ok": True}
+
+
+async def _run_eliminazioni_programmate() -> dict:
+    """Cancella gli account il cui giorno di eliminazione è arrivato (negozi con offerta in corso a fine mese)."""
+    oggi = pp.a_data_roma(datetime.now(timezone.utc)).isoformat()
+    cancellati = 0
+    for u in await db.users.find({"deletion_effective_on": {"$lte": oggi}}).to_list(None):
+        try:
+            await _erase_user_data(u)
+            await db.users.delete_one({"id": u["id"]})
+            if u.get("email"):
+                _email_in_background(send_account_deleted(u["email"], u.get("name") or ""), "account-cancellato")
+            cancellati += 1
+        except Exception as e:
+            logging.error(f"[eliminazioni] non riuscita per utente={str(u.get('id'))[:8]}: {e}")
+    return {"cancellati": cancellati}
 
 
 @api.post("/gdpr/marketing-consent")
