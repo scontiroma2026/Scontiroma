@@ -28,7 +28,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
     if (parola === null) return;
     try {
       const r = await api.post("/admin/discounts/approve-all-pending", { conferma: parola }, hdrs());
-      toast.success(`Approvate ${r.data.approvate} offerte ✓`);
+      toast.success(`Approvate ${r.data.approvate} offerte ✓` + (r.data.saltate_per_pagamento ? ` (${r.data.saltate_per_pagamento} saltate: pagamento non ricevuto)` : ""));
       onRefresh();
     } catch (err) {
       toast.error(formatApiError(err));
@@ -117,6 +117,15 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                       {d.category}
                     </span>
                   )}
+                  {d.pagamento && !d.pagamento.ok && (
+                    <span
+                      data-testid={`pending-da-pagare-${d.id}`}
+                      className="rounded-full border border-destructive/40 bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive"
+                      title={d.pagamento.motivo}
+                    >
+                      Pagamento non ricevuto
+                    </span>
+                  )}
                 </div>
                 {d.terms && <div className="mt-2 text-xs text-muted-foreground">Termini: {d.terms}</div>}
               </div>
@@ -124,6 +133,8 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                 <Button
                   data-testid={`approve-${d.id}`}
                   onClick={() => approve(d.id)}
+                  disabled={!!d.pagamento && !d.pagamento.ok}
+                  title={d.pagamento && !d.pagamento.ok ? d.pagamento.motivo : undefined}
                   className="grad-fucsia-viola text-white rounded-full"
                 >
                   <Check size={14} className="mr-1" /> Approva

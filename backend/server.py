@@ -3930,7 +3930,9 @@ async def admin_list_pending(user: dict = Depends(require_admin_master)):
     docs = await db.discounts.find({"approval_status": "pending"}).sort("updated_at", -1).to_list(200)
     out = []
     for d in docs:
-        out.append(await enrich_discount(d))
+        e = await enrich_discount(d)
+        e["pagamento"] = await _approvazione_consentita(await db.users.find_one({"id": d.get("merchant_id")}))
+        out.append(e)
     return {"discounts": out}
 
 
@@ -4065,6 +4067,27 @@ async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master))
     return {"fonti": await _iscrizioni_per_fonte()}
 
 
+async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool = False) -> dict:
+    """Si può approvare l'offerta di questo negozio? Con i pagamenti dei negozi accesi, dopo la prova
+    l'approvazione è consentita solo se il pagamento del mese è arrivato nei giorni stabiliti
+    (1° + tolleranza). Interruttore spento o negozio ancora in prova / alla prima offerta -> sempre sì.
+    `per_mese_dopo`: offerta del mese prossimo, valutata al 1° del mese prossimo.
+    Ritorna {"ok": bool, "fase": str, "motivo": str}."""
+    if not merchant_payment_required() or not merchant:
+        return {"ok": True, "fase": "non_richiesto", "motivo": ""}
+    oggi = pp.a_data_roma(datetime.now(timezone.utc))
+    if per_mese_dopo:
+        oggi = pp.primo_del_mese_dopo(oggi)
+    st = pp.stato_pagamento(await _prima_pubblicazione(merchant), await _pagamenti_negozio(merchant["id"]),
+                            oggi, await _tolleranza_giorni())
+    if merchant.get("no_renew_month") and merchant["no_renew_month"] <= pp.chiave_mese(oggi):
+        return {"ok": False, "fase": "disdetta", "motivo": "Il negozio ha disdetto: l'offerta non si approva."}
+    if st["fase"] == "da_pagare":
+        return {"ok": False, "fase": "da_pagare",
+                "motivo": "Pagamento del mese non ricevuto nei giorni stabiliti: approva dopo il pagamento."}
+    return {"ok": True, "fase": st["fase"], "motivo": ""}
+
+
 async def _approva_offerta(discount_id: str) -> Optional[dict]:
     """Approva un'offerta: pubblica, segna la prima pubblicazione del negozio, avvisa il commerciante
     e i clienti interessati. Ritorna l'offerta aggiornata, o None se non esiste."""
@@ -4095,6 +4118,11 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
 
 @api.post("/admin/discounts/{discount_id}/approve")
 async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+    d0 = await db.discounts.find_one({"id": discount_id})
+    if d0:
+        via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
+        if not via["ok"]:
+            raise HTTPException(409, via["motivo"])
     d = await _approva_offerta(discount_id)
     if d is None:
         raise HTTPException(404, "Sconto non trovato")
@@ -4112,12 +4140,16 @@ async def admin_approve_all_pending(payload: ApprovaTutteIn, user: dict = Depend
     Serve la parola di conferma «LANCIA» per evitare tocchi per errore."""
     if (payload.conferma or "").strip().upper() != "LANCIA":
         raise HTTPException(400, "Scrivi LANCIA per confermare")
-    ids = [d["id"] for d in await db.discounts.find({"approval_status": "pending"}, {"id": 1, "_id": 0}).to_list(None)]
-    approvate = 0
-    for i in ids:
-        if await _approva_offerta(i):
+    pendenti = await db.discounts.find({"approval_status": "pending"}, {"id": 1, "merchant_id": 1, "_id": 0}).to_list(None)
+    approvate = saltate = 0
+    for p in pendenti:
+        via = await _approvazione_consentita(await db.users.find_one({"id": p.get("merchant_id")}))
+        if not via["ok"]:
+            saltate += 1
+            continue
+        if await _approva_offerta(p["id"]):
             approvate += 1
-    return {"approvate": approvate}
+    return {"approvate": approvate, "saltate_per_pagamento": saltate}
 
 
 @api.post("/admin/discounts/{discount_id}/reject")
@@ -4205,6 +4237,11 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
 
 @api.post("/admin/next-offers/{next_id}/approve")
 async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_admin_master)):
+    nd0 = await db.next_discounts.find_one({"id": next_id})
+    if nd0:
+        via = await _approvazione_consentita(await db.users.find_one({"id": nd0.get("merchant_id")}), per_mese_dopo=True)
+        if not via["ok"]:
+            raise HTTPException(409, via["motivo"])
     now_iso = datetime.now(timezone.utc).isoformat()
     result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
         "approval_status": "approved", "approved_at": now_iso, "approval_note": ""}})

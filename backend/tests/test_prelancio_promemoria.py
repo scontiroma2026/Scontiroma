@@ -71,3 +71,33 @@ def test_approva_tutte_con_parola_giusta():
             assert (await server.db.users.find_one({"id": f"n{i}"})).get("first_published_at")
 
     run(body, False)
+
+
+def test_approvazione_solo_se_pagato_nei_giorni_stabiliti(monkeypatch):
+    import pytest
+    import server
+    from fastapi import HTTPException
+
+    async def body(c):
+        monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
+        vecchio = (datetime.now(timezone.utc) - timedelta(days=200)).isoformat()  # prova finita da tempo
+        await server.db.users.insert_one({"id": "p1", "role": "merchant", "email": "p1@example.com", "name": "P",
+                                          "shop_name": "Non paga", "first_published_at": vecchio})
+        await server.db.discounts.insert_one({"id": "d1", "merchant_id": "p1", "title": "T",
+                                              "approval_status": "pending", "active": False})
+        with pytest.raises(HTTPException) as e:
+            await server.admin_approve_discount("d1", {})
+        assert e.value.status_code == 409
+        esito = await server.admin_approve_all_pending(server.ApprovaTutteIn(conferma="LANCIA"), {})
+        assert esito["approvate"] == 0 and esito["saltate_per_pagamento"] == 1
+        # pagamento registrato in tempo: ora si può
+        oggi = pp.a_data_roma(datetime.now(timezone.utc))
+        await server.db.merchant_payments.insert_one({"merchant_id": "p1", "month_key": pp.chiave_mese(oggi),
+                                                      "paid_at": oggi.replace(day=1).isoformat(), "stato": "pagato"})
+        await server.admin_approve_discount("d1", {})
+        assert (await server.db.discounts.find_one({"id": "d1"}))["approval_status"] == "approved"
+        # interruttore spento: nessun vincolo
+        monkeypatch.delenv("MERCHANT_PAYMENT_REQUIRED", raising=False)
+        assert (await server._approvazione_consentita({"id": "p1"}))["ok"] is True
+
+    run(body, False)
