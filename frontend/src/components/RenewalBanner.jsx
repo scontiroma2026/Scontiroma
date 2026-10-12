@@ -20,9 +20,8 @@ export default function RenewalBanner() {
 
   const setNoRenew = async (value) => {
     if (value) {
-      const msg = st.next_status
-        ? `Non vuoi rinnovare?\n\nL'offerta attuale terminerà il ${st.expires_on} e quella di ${label} che hai caricato verrà ritirata.\n\nAttenzione: fino al ${st.expires_on} (compreso) i clienti possono ancora usare il tuo sconto e devi rispettarlo. L'offerta termina solo dopo quella data.\n\nPuoi cambiare idea fino alla fine del mese.`
-        : `Non vuoi rinnovare?\n\nL'offerta attuale terminerà il ${st.expires_on} e non riceverai altri promemoria.\n\nAttenzione: fino al ${st.expires_on} (compreso) i clienti possono ancora usare il tuo sconto e devi rispettarlo. L'offerta termina solo dopo quella data.\n\nPuoi cambiare idea fino alla fine del mese.`;
+      const ritirata = st.next_status ? `\n\nL'offerta di ${label} che hai caricato verrà ritirata.` : "";
+      const msg = `Stai per disdire.\n\nLa disdetta vale dalla fine di questo mese: fino al ${st.expires_on} la tua offerta resta pubblicata e devi rispettare lo sconto a tutti i clienti che lo presentano. Eventuali mesi già pagati non vengono rimborsati; dal giorno dopo l'offerta non è più visibile.${ritirata}\n\nPuoi ripensarci e annullare la disdetta fino all'ultimo giorno del mese.`;
       if (!window.confirm(msg)) return;
     }
     setBusy(true);

@@ -132,3 +132,25 @@ def test_evento_di_altri_o_a_pagamenti_spenti_non_toccano_i_negozi(monkeypatch):
         assert await server.db.merchant_subscriptions.find_one({"merchant_id": mid}) is None
 
     run(body, False)
+
+
+def test_disdetta_manda_la_email_di_conferma(monkeypatch):
+    monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
+    monkeypatch.setenv("FRONTEND_URL", "https://sito.example")
+    chiamate, inviate = [], []
+    _stripe_finto(monkeypatch, chiamate)
+
+    async def finta(to, name, shop, ultimo_giorno, mese_dopo):
+        inviate.append((to, ultimo_giorno, mese_dopo))
+
+    monkeypatch.setattr(server, "send_merchant_disdetta", finta)
+
+    async def body(c):
+        mid, h = await _negozio("2026-01-02T09:00:00+00:00")
+        assert (await c.post("/api/merchant/pagamento/disdici", headers=h)).status_code == 200
+        assert len(inviate) == 1 and inviate[0][1] and inviate[0][2]
+        # «Non rinnovo» dalla dashboard: stessa email
+        assert (await c.post("/api/merchants/me/no-renew", headers=h, json={"no_renew": True})).status_code == 200
+        assert len(inviate) == 2
+
+    run(body, False)
