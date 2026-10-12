@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import api from "@/lib/api";
-import { leggiReferral, salvaReferral } from "@/lib/referral";
+import { leggiReferral, salvaReferral, leggiFonte, salvaFonte } from "@/lib/referral";
 import PasswordInput from "@/components/PasswordInput";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
@@ -48,7 +48,7 @@ export default function Register() {
   }, []);
 
   // Il negozio da cui arriva il cliente (?ref=) si ricorda anche se prima guarda gli sconti
-  useEffect(() => { salvaReferral(params.get("ref")); }, [params]);
+  useEffect(() => { salvaReferral(params.get("ref")); salvaFonte(params.get("fonte")); }, [params]);
 
   const update = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -73,6 +73,8 @@ export default function Register() {
       // Referral tracking (?ref=merchant_id) — priorità URL, poi localStorage
       const ref = params.get("ref") || leggiReferral();
       if (ref) payload.referred_by = ref;
+      const fonte = leggiFonte();
+      if (fonte) payload.fonte = fonte;
     } else {
       // Per il merchant usiamo il campo unico `name` (referente)
       delete payload.first_name; delete payload.last_name;
