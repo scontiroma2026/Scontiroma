@@ -1289,10 +1289,31 @@ async def enrich_discount(d: dict) -> dict:
     # Galleria foto (max 8) — se mancante, fallback al singolo image_url
     if not isinstance(d.get("image_urls"), list) or not d.get("image_urls"):
         d["image_urls"] = [d["image_url"]] if d.get("image_url") else []
+    d["is_new"] = d.get("approval_status") == "approved" and _is_new_offer(d.get("published_at"))
     d["locked_this_month"] = (d.get("approval_status") == "approved"
                               and d.get("locked_month") == current_month_key()
                               and not d.get("force_editable", False))
     return d
+
+
+# Scritta «Nuova offerta»: per quante ore dalla pubblicazione (decisione provvisoria: vale per tutte
+# le offerte pubblicate, anche i rinnovi del mese dopo; per cambiarla basta questa costante).
+NEW_OFFER_HOURS = 48
+
+
+def _is_new_offer(published_at, now: Optional[datetime] = None) -> bool:
+    """Vero se l'offerta è stata pubblicata da meno di NEW_OFFER_HOURS ore. Usa l'orologio del server.
+    Senza `published_at` (offerte già esistenti) o con data illeggibile: falso."""
+    if not published_at:
+        return False
+    try:
+        dt = published_at if isinstance(published_at, datetime) else datetime.fromisoformat(str(published_at).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return False
+    now = now or datetime.now(timezone.utc)
+    return timedelta(0) <= now - dt < timedelta(hours=NEW_OFFER_HOURS)
 
 
 def _month_start_iso() -> str:
@@ -3982,6 +4003,7 @@ async def admin_approve_discount(discount_id: str, user: dict = Depends(require_
     result = await db.discounts.update_one({"id": discount_id}, {"$set": {
         "approval_status": "approved",
         "approved_at": now.isoformat(),
+        "published_at": now.isoformat(),
         "locked_month": current_month_key(),
         "approval_note": "",
         "force_editable": False,
