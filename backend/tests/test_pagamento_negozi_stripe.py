@@ -112,6 +112,7 @@ def test_webhook_registra_il_pagamento_e_la_disdetta(monkeypatch):
         # disdetta: Stripe non rinnova e il negozio ha «Non rinnovo» dal mese dopo
         r = await c.post("/api/merchant/pagamento/disdici", headers=h)
         assert r.status_code == 200
+        assert "va rispettato" in r.json()["messaggio"] and r.json()["offerta_valida_fino_al"]
         assert ("modify", "sub_1", {"cancel_at_period_end": True}) in chiamate
         assert (await server.db.users.find_one({"id": mid})).get("no_renew_month")
 

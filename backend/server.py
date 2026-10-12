@@ -2870,7 +2870,9 @@ async def merchant_pagamento_disdici(user: dict = Depends(require_merchant)):
             raise HTTPException(502, f"Stripe: {e}")
     mese = pp.mese_dopo(pp.chiave_mese(pp.a_data_roma(datetime.now(timezone.utc))))
     await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": mese}})
-    return {"ok": True, "disdetta_da": mese}
+    return {"ok": True, "disdetta_da": mese, "offerta_valida_fino_al": _current_offer_end_label(),
+            "messaggio": "Disdetta registrata. L'offerta resta pubblica e lo sconto va rispettato dai clienti "
+                         f"fino al {_current_offer_end_label()} (compreso); dal giorno dopo non è più valida."}
 
 
 async def _stripe_evento_negozio(event) -> Optional[dict]:
