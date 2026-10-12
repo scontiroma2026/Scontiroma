@@ -22,6 +22,19 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
     }
   };
 
+  const approvaTutte = async () => {
+    const parola = window.prompt(
+      `Stai per approvare TUTTE le ${pending.length} offerte in attesa e far partire la prova di 60 giorni dei negozi alla prima pubblicazione.\n\nScrivi LANCIA per confermare:`, "");
+    if (parola === null) return;
+    try {
+      const r = await api.post("/admin/discounts/approve-all-pending", { conferma: parola }, hdrs());
+      toast.success(`Approvate ${r.data.approvate} offerte ✓`);
+      onRefresh();
+    } catch (err) {
+      toast.error(formatApiError(err));
+    }
+  };
+
   const reject = async (id) => {
     const reason = window.prompt("Motivo del rifiuto (visibile al commerciante):", "") || "";
     try {
@@ -51,6 +64,18 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
         </div>
         <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio o offerta…" testId="pending-search" />
       </div>
+      {pending.length > 0 && (
+        <div className="mt-4 rounded-xl border border-border bg-card p-4" data-testid="prelancio">
+          <h4 className="font-serif text-lg">Pre-lancio</h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tieni le offerte in attesa fino al giorno del lancio, poi approvale tutte insieme: i negozi alla prima
+            pubblicazione iniziano da quel momento i 60 giorni di prova. Chiede di scrivere LANCIA per confermare.
+          </p>
+          <Button data-testid="approva-tutte" onClick={approvaTutte} className="mt-3 grad-fucsia-viola text-white">
+            Approva tutte le {pending.length} offerte
+          </Button>
+        </div>
+      )}
       {filtered.length === 0 ? (
         <div className="mt-6 rounded-xl border border-border bg-muted p-10 text-center text-muted-foreground">
           {q ? `Nessuna offerta trovata per "${q}".` : "🎉 Nessuna offerta in attesa. Ottimo lavoro!"}

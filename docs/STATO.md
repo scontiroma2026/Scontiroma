@@ -145,3 +145,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
 
 - 12/10: la registrazione dei commercianti chiede la **Partita IVA** (11 cifre, cifra di controllo verificata). Il server accetta anche registrazioni senza (vecchi account e test), il modulo del sito la richiede. Privacy e Termini da aggiornare con questo dato (proposta al consulente).
+
+- 12/10: **pre-lancio** (da provare): scheda «Offerte in attesa» con il pulsante «Approva tutte» (chiede di scrivere LANCIA); promemoria di fine prova ai negozi a 10 e a 3 giorni (lavoro giornaliero alle 9:45, parte solo con `MERCHANT_PAYMENT_REQUIRED` acceso, una volta per negozio). Ramo `claude/prelancio-promemoria`.
