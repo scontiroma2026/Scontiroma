@@ -145,3 +145,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
 
 - 12/10: la registrazione dei commercianti chiede la **Partita IVA** (11 cifre, cifra di controllo verificata). Il server accetta anche registrazioni senza (vecchi account e test), il modulo del sito la richiede. Privacy e Termini da aggiornare con questo dato (proposta al consulente).
+
+- 12/10: **controllo giornaliero** riattivato: routine «Scontiroma» (ogni giorno alle 8:00, sola lettura, repository e Resend collegati). Il `prova` è allineato a `main`. Unite #90 (scritte «Nuovo su Sconti Roma» e «Nuova offerta»), #91 (skill di progetto), #93 (Partita IVA dei commercianti). Pacchetto legale in #92 (bozze, non unire). Password Atlas `prova` già cambiata (11/10).

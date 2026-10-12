@@ -19,9 +19,9 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [x] **Utente:** controllo online UptimeRobot su sito e server (10/10; falso allarme nel risveglio di Render, previsto).
 - [ ] **Utente:** server Render su piano «Starter» (non si addormenta). Da fare subito prima del lancio.
 - [ ] **Utente:** backup automatici dei dati su MongoDB Atlas e prova di ripristino.
-- [ ] **Utente:** cambiare la password dell'utente `prova` di Atlas e la relativa stringa su Render.
+- [x] **Utente:** password dell'utente `prova` di Atlas cambiata e stringa aggiornata su Render (11/10); il sito di prova funziona.
 - [ ] **Utente:** revocare `EMERGENT_LLM_KEY` (vedi `docs/STATO.md`, «Pulizie tecniche»).
-- [ ] **Claude:** controllo giornaliero automatico in sola lettura (CI, PR, email Resend).
+- [x] **Claude:** controllo giornaliero automatico in sola lettura (CI, PR, email Resend): attivo dal 12/10 ogni giorno alle 8:00 (routine «Scontiroma»), con GitHub e Resend funzionanti.
 - [ ] **Utente:** allarme anche sul telefono (app UptimeRobot) e mittente UptimeRobot segnato come sicuro.
 
 ## 2-bis. Prova generale
