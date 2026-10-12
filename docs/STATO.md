@@ -145,3 +145,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
 
 - 12/10: la registrazione dei commercianti chiede la **Partita IVA** (11 cifre, cifra di controllo verificata). Il server accetta anche registrazioni senza (vecchi account e test), il modulo del sito la richiede. Privacy e Termini da aggiornare con questo dato (proposta al consulente).
+
+- 12/10 (da validare, non unire): banner cookie senza la categoria «Marketing» e «Accetta tutti» non la attiva più; registro del consenso con cancellazione automatica dopo 24 mesi (come dichiarato nella Cookie Policy). Ramo `claude/legale-tecnico`.
