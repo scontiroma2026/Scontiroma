@@ -11,7 +11,7 @@
 - Nessun pagamento attivo: Stripe e PayPal sono spenti.
 
 **Commercianti, dopo la fase di lancio**
-- 4,99 € al mese, IVA inclusa.
+- 4,99 € al mese + IVA.
 - Prezzo bloccato per chi aderisce durante il lancio.
 - Preavviso di 30 giorni.
 - **Nessun addebito senza la loro conferma espressa.**

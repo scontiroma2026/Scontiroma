@@ -2793,9 +2793,19 @@ async def payment_status(session_id: str):
 
 
 # ---------- Abbonamento dei negozi (Stripe) — SPENTO finché MERCHANT_PAYMENT_REQUIRED è spento ----------
-MERCHANT_PRICE_CENTS = int(os.environ.get("MERCHANT_PRICE_CENTS") or 499)  # 4,99 € al mese (IVA da decidere)
+MERCHANT_PRICE_CENTS = int(os.environ.get("MERCHANT_PRICE_CENTS") or 499)  # 4,99 € al mese, IVA ESCLUSA
+MERCHANT_VAT_PERCENT = int(os.environ.get("MERCHANT_VAT_PERCENT") or 22)  # IVA aggiunta all'addebito (da confermare col commercialista)
 STRIPE_MERCHANT_LOOKUP = f"sconti_roma_negozio_mensile_{MERCHANT_PRICE_CENTS}"
 PAYMENTS_MERCHANT_OFF_MSG = "I pagamenti dei negozi non sono ancora attivi."
+
+
+def _stripe_tax_rate_iva() -> str:
+    """Id dell'aliquota IVA (esclusa, Italia) da applicare all'abbonamento: la trova o la crea una sola volta."""
+    for t in stripe.TaxRate.list(active=True, limit=100).data:
+        if (not t.inclusive) and float(t.percentage) == float(MERCHANT_VAT_PERCENT) and t.display_name == "IVA":
+            return t.id
+    return stripe.TaxRate.create(display_name="IVA", percentage=MERCHANT_VAT_PERCENT, inclusive=False,
+                                 country="IT", jurisdiction="IT").id
 
 
 def _stripe_negozio_fuso(d: date) -> int:
@@ -2817,6 +2827,7 @@ async def merchant_pagamento_stato(user: dict = Depends(require_merchant)):
         "prova_fino_al": st["prova_fino_al"].isoformat() if st.get("prova_fino_al") else None,
         "primo_addebito": primo.isoformat() if primo else None,
         "importo_cent": MERCHANT_PRICE_CENTS,
+        "iva_percent": MERCHANT_VAT_PERCENT,
         "abbonamento": ({"metodo": abb.get("provider"), "stato": abb.get("status")} if abb else None),
         "disdetta_da": user.get("no_renew_month"),
     }
@@ -2824,7 +2835,7 @@ async def merchant_pagamento_stato(user: dict = Depends(require_merchant)):
 
 @api.post("/merchant/pagamento/stripe/checkout")
 async def merchant_stripe_checkout(user: dict = Depends(require_merchant)):
-    """Apre il pagamento con carta: prova gratuita fino al primo addebito (sempre un 1°), poi 4,99 € al mese.
+    """Apre il pagamento con carta: prova gratuita fino al primo addebito (sempre un 1°), poi 4,99 € al mese + IVA.
     Nessun addebito parte adesso."""
     if not merchant_payment_required():
         raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
@@ -2847,7 +2858,7 @@ async def merchant_stripe_checkout(user: dict = Depends(require_merchant)):
     meta = {"tipo": "negozio", "merchant_id": user["id"]}
     try:
         session = stripe.checkout.Session.create(
-            line_items=[{"price": price.id, "quantity": 1}], mode="subscription",
+            line_items=[{"price": price.id, "quantity": 1, "tax_rates": [_stripe_tax_rate_iva()]}], mode="subscription",
             success_url=f"{site}/merchant/dashboard?pagamento=ok", cancel_url=f"{site}/merchant/dashboard?pagamento=annullato",
             customer=customer_id, payment_method_types=["card"], metadata=meta,
             subscription_data={"trial_end": _stripe_negozio_fuso(primo), "metadata": meta},
@@ -3042,7 +3053,7 @@ async def merchant_paypal_config(user: dict = Depends(require_merchant)):
     if await db.merchant_subscriptions.find_one({"merchant_id": user["id"], "status": "active"}):
         raise HTTPException(409, "Il pagamento è già attivo.")
     try:
-        plan_id = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS)
+        plan_id = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS, MERCHANT_VAT_PERCENT)
     except Exception as e:
         logging.warning(f"PayPal plan negozio: {e}")
         raise HTTPException(502, "PayPal non risponde, riprova più tardi")
@@ -3059,7 +3070,7 @@ async def merchant_paypal_activate(payload: PayPalNegozioIn, user: dict = Depend
         raise HTTPException(409, PAYMENTS_MERCHANT_OFF_MSG)
     try:
         sub = await paypal_service.get_subscription(payload.subscription_id)
-        plan_atteso = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS)
+        plan_atteso = await paypal_service.ensure_plan_negozio(MERCHANT_PRICE_CENTS, MERCHANT_VAT_PERCENT)
     except Exception as e:
         raise HTTPException(502, f"PayPal: {e}")
     if sub.get("plan_id") != plan_atteso or sub.get("custom_id") != user["id"]:
