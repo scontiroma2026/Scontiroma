@@ -4233,8 +4233,20 @@ class AdminDiscountUpdate(BaseModel):
     max_uses_per_month: Optional[int] = Field(default=None, ge=1, le=10)
 
 
+MOTIVO_RIFIUTO_MIN = 10
+
+
 class RejectIn(BaseModel):
     reason: Optional[str] = ""
+
+
+def _motivo_rifiuto(payload: "RejectIn") -> str:
+    """Il motivo del rifiuto è obbligatorio (almeno 10 caratteri, spazi ai bordi esclusi): il commerciante
+    lo riceve per email e in archivio, e deve capire cosa correggere."""
+    motivo = (payload.reason or "").strip()
+    if len(motivo) < MOTIVO_RIFIUTO_MIN:
+        raise HTTPException(422, f"Scrivi il motivo del rifiuto (almeno {MOTIVO_RIFIUTO_MIN} caratteri): il commerciante lo legge per correggere l'offerta.")
+    return motivo
 
 
 @api.get("/admin/discounts/pending")
@@ -4466,9 +4478,10 @@ async def admin_approve_all_pending(payload: ApprovaTutteIn, user: dict = Depend
 
 @api.post("/admin/discounts/{discount_id}/reject")
 async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict = Depends(require_admin_master)):
+    motivo = _motivo_rifiuto(payload)
     result = await db.discounts.update_one({"id": discount_id}, {"$set": {
         "approval_status": "rejected",
-        "approval_note": payload.reason or "",
+        "approval_note": motivo,
         "approved_at": None,
         "locked_month": None,
     }})
@@ -4481,7 +4494,7 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
         d = await db.discounts.find_one({"id": discount_id})
         m = await db.users.find_one({"id": d.get("merchant_id")}) if d else None
         if m and m.get("email"):
-            await send_merchant_rejected(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", payload.reason or "")
+            await send_merchant_rejected(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", motivo)
     except Exception as e:
         logging.warning(f"reject email failed: {e}")
     return {"ok": True}
@@ -4572,8 +4585,9 @@ async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_ad
 
 @api.post("/admin/next-offers/{next_id}/reject")
 async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = Depends(require_admin_master)):
+    motivo = _motivo_rifiuto(payload)
     result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
-        "approval_status": "rejected", "approval_note": payload.reason or "", "approved_at": None}})
+        "approval_status": "rejected", "approval_note": motivo, "approved_at": None}})
     if result.matched_count == 0:
         raise HTTPException(404, "Offerta non trovata")
     nd_rif = await db.next_discounts.find_one({"id": next_id})
@@ -4585,7 +4599,7 @@ async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = 
         if m and m.get("email"):
             await send_merchant_rejected(m["email"], m.get("name") or "commerciante",
                                          m.get("shop_name") or "il tuo negozio",
-                                         nd.get("title") or "", payload.reason or "")
+                                         nd.get("title") or "", motivo)
     except Exception as e:
         logging.warning(f"next-offer reject email failed: {e}")
     return {"ok": True}
