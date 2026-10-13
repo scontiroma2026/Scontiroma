@@ -33,7 +33,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 ## WHATSAPP-1: primo messaggio (solo a chi ha risposto o ha dato il numero)
 
-> Buongiorno, siamo Sconti Roma, l'app degli sconti nei negozi di Garbatella, San Paolo e Marconi.
+> Buongiorno, siamo Sconti Roma, l'app degli sconti nei negozi di Roma e dintorni.
 > Come richiesto, ecco il video di 1 minuto: [LINK]
 > Ogni mese [NOME NEGOZIO] pubblica un'offerta, i clienti del quartiere la trovano nell'app e mostrano un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Se non vi interessa rispondete «NO» e non vi scriviamo più.
@@ -57,7 +57,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 ## FACEBOOK-MSG: messaggio alla pagina del negozio
 
-> Buongiorno, siamo **Sconti Roma**, l'app degli sconti nei negozi di Garbatella, San Paolo e Marconi.
+> Buongiorno, siamo **Sconti Roma**, l'app degli sconti nei negozi di Roma e dintorni.
 > Scriviamo a [NOME NEGOZIO] perché ogni mese potrebbe pubblicare un'offerta: i clienti del quartiere la trovano nell'app e la usano con un QR che voi inquadrate alla cassa.
 > Gratis nella fase di lancio, poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Video di un minuto: [LINK]
@@ -67,7 +67,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 Usare solo nei gruppi dove le regole ammettono le attività commerciali (leggere il regolamento o chiedere agli amministratori prima di pubblicare). Un solo post per gruppo, nessun messaggio privato a chi commenta senza invito.
 
-> Avete un'attività a Garbatella, San Paolo o Marconi? 🏪
+> Avete un attività a Roma? 🏪
 > Sconti Roma è un'app dove ogni attività pubblica un'offerta al mese e i clienti del quartiere la trovano e la usano con un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Video di un minuto: [LINK]
 > Se vi interessa commentate qui sotto o scriveteci in privato. Se non è per voi, nessun problema: ignorate pure il post.
@@ -78,7 +78,7 @@ Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
 
 > Buongiorno,
 >
-> siamo Sconti Roma (scontiroma.it), un'app che fa conoscere le attività di Garbatella, San Paolo e Marconi a chi abita vicino. Vi scriviamo all'indirizzo pubblico di [NOME NEGOZIO] per presentarci.
+> siamo Sconti Roma (scontiroma.it), un'app che fa conoscere le attività di Roma e dintorni a chi abita vicino. Vi scriviamo all'indirizzo pubblico di [NOME NEGOZIO] per presentarci.
 >
 > Ogni mese pubblicate un'offerta, la controlliamo noi e i clienti la trovano nell'app. Alla cassa mostrano un QR che voi inquadrate con il telefono.
 >
@@ -108,4 +108,4 @@ Lasciare il QR o il link [LINK], senza insistere e senza chiedere il numero se n
 
 ## SMS (solo a chi ha dato il numero per riceverlo)
 
-> Sconti Roma: ecco il video di 1 minuto, come richiesto: [LINK]. App degli sconti per i negozi di Garbatella, San Paolo e Marconi, gratis nella fase di lancio. Per non ricevere altri messaggi rispondete NO.
+> Sconti Roma: ecco il video di 1 minuto, come richiesto: [LINK]. App degli sconti per i negozi di Roma e dintorni, gratis nella fase di lancio. Per non ricevere altri messaggi rispondete NO.
