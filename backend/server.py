@@ -42,6 +42,8 @@ from email_service import (
     send_grace_period_reminder,
     send_subscription_cancelled,
     send_master_reset,
+    send_admin_segnalazione,
+    send_esito_segnalazione,
     send_merchant_trial_reminder,
     send_next_offer_reminder,
     send_offer_expired,
@@ -5040,6 +5042,7 @@ async def on_startup():
     await db.scansioni_locandina.create_index([("merchant_id", 1), ("giorno", 1)], unique=True)
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
+    await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     # Garantisce idempotenza reale dei webhook di rinnovo (Stripe/PayPal possono
@@ -5134,6 +5137,126 @@ async def create_review(payload: ReviewIn, user: dict = Depends(require_client))
     }
     await db.reviews.insert_one(doc)
     return {"ok": True, "review": {k: v for k, v in doc.items() if k != "_id"}}
+
+
+# ---------- Segnalazioni (contenuti, sconti non rispettati) e reclami dei commercianti ----------
+# Canale unico: il pubblico segnala dalla scheda dell'offerta, il commerciante manda i reclami dalla sua area.
+# Tutto arriva nell'area admin → Segnalazioni; conferma di ricezione entro 5 giorni lavorativi, esito motivato.
+SEGNALAZIONE_TIPI = ("contenuto_illecito", "offerta_non_rispettata", "reclamo_commerciante", "altro")
+SEGNALAZIONE_ESITI = ("in_esame", "accolta", "respinta")
+SEGNALAZIONE_CONSERVAZIONE = timedelta(days=730)  # 24 mesi, poi si cancella da sola
+_segnalazioni_recenti: dict = {}  # solo in memoria: chi ha scritto di recente (nessun IP salvato)
+
+
+class SegnalazioneIn(BaseModel):
+    tipo: Literal["contenuto_illecito", "offerta_non_rispettata", "reclamo_commerciante", "altro"]
+    motivo: str = Field(min_length=10, max_length=1500)
+    discount_id: Optional[str] = Field(default=None, max_length=64)
+    email: Optional[EmailStr] = None
+
+
+class EsitoSegnalazioneIn(BaseModel):
+    stato: Literal["in_esame", "accolta", "respinta"]
+    motivazione: Optional[str] = Field(default="", max_length=1500)
+
+
+def _segnalazione_limite_ok(chiave: str, massimo: int = 5, finestra: int = 3600) -> bool:
+    """Al massimo 5 segnalazioni all'ora per chi scrive (chiave anonima, solo in memoria)."""
+    adesso = time.time()
+    recenti = [t for t in _segnalazioni_recenti.get(chiave, []) if adesso - t < finestra]
+    if len(recenti) >= massimo:
+        _segnalazioni_recenti[chiave] = recenti
+        return False
+    recenti.append(adesso)
+    _segnalazioni_recenti[chiave] = recenti
+    return True
+
+
+async def _crea_segnalazione(payload: SegnalazioneIn, chiave: str, user: Optional[dict]) -> dict:
+    if not _segnalazione_limite_ok(chiave):
+        raise HTTPException(429, "Troppe segnalazioni in poco tempo: riprova più tardi")
+    merchant_id, riferimento = None, "-"
+    if payload.discount_id:
+        d = await db.discounts.find_one({"id": payload.discount_id})
+        if d:
+            merchant_id = d.get("merchant_id")
+            m = await db.users.find_one({"id": merchant_id})
+            riferimento = f"{d.get('title') or 'offerta'} · {(m or {}).get('shop_name') or '-'}"
+    if user and user.get("role") == "merchant":
+        merchant_id, riferimento = user["id"], user.get("shop_name") or "negozio"
+    adesso = datetime.now(timezone.utc)
+    doc = {"id": str(uuid.uuid4()), "tipo": payload.tipo, "motivo": payload.motivo.strip(),
+           "discount_id": payload.discount_id, "merchant_id": merchant_id, "riferimento": riferimento,
+           "email": (str(payload.email).lower() if payload.email else (user or {}).get("email")),
+           "autore_ruolo": (user or {}).get("role"), "stato": "ricevuta", "motivazione": "",
+           "creata_il": adesso.isoformat(), "conferma_entro": (adesso + timedelta(days=7)).date().isoformat(),
+           "expires_at": adesso + SEGNALAZIONE_CONSERVAZIONE}
+    await db.segnalazioni.insert_one(dict(doc))
+    if _admin_notify_to():
+        _email_in_background(send_admin_segnalazione(_admin_notify_to(), payload.tipo.replace("_", " "),
+                                                     doc["motivo"], riferimento, doc["id"]), "segnalazione")
+    return {"ok": True, "id": doc["id"], "conferma_entro": doc["conferma_entro"]}
+
+
+@api.post("/segnalazioni")
+async def invia_segnalazione(payload: SegnalazioneIn, request: Request):
+    """Segnalazione pubblica (anche senza account). Nessun IP salvato."""
+    if payload.tipo == "reclamo_commerciante":
+        raise HTTPException(400, "I reclami dei commercianti si inviano dalla loro area")
+    chiave = hashlib.sha256((request.client.host if request.client else "x").encode()).hexdigest()[:16]
+    return await _crea_segnalazione(payload, chiave, await _optional_user(request))
+
+
+@api.post("/merchants/me/reclami")
+async def invia_reclamo(payload: SegnalazioneIn, user: dict = Depends(require_merchant)):
+    """Reclamo del commerciante (sospensione, rimozione di un'offerta, altro)."""
+    payload = payload.model_copy(update={"tipo": "reclamo_commerciante"})
+    return await _crea_segnalazione(payload, "m:" + user["id"], user)
+
+
+@api.get("/admin/segnalazioni")
+async def admin_segnalazioni(user: dict = Depends(require_admin_master)):
+    out = []
+    async for s in db.segnalazioni.find().sort("creata_il", -1).limit(500):
+        s.pop("_id", None)
+        s.pop("expires_at", None)
+        out.append(s)
+    return {"segnalazioni": out, "da_gestire": sum(1 for s in out if s["stato"] in ("ricevuta", "in_esame"))}
+
+
+@api.post("/admin/segnalazioni/{sid}/esito")
+async def admin_esito_segnalazione(sid: str, payload: EsitoSegnalazioneIn, user: dict = Depends(require_admin_master)):
+    """Esito motivato (obbligatorio per «accolta» e «respinta»); se c'è un'email, la persona lo riceve."""
+    s = await db.segnalazioni.find_one({"id": sid})
+    if not s:
+        raise HTTPException(404, "Segnalazione non trovata")
+    motivazione = (payload.motivazione or "").strip()
+    if payload.stato in ("accolta", "respinta") and len(motivazione) < 10:
+        raise HTTPException(422, "Scrivi la motivazione (almeno 10 caratteri)")
+    await db.segnalazioni.update_one({"id": sid}, {"$set": {
+        "stato": payload.stato, "motivazione": motivazione, "esaminata_il": datetime.now(timezone.utc).isoformat()}})
+    if payload.stato in ("accolta", "respinta") and s.get("email"):
+        _email_in_background(send_esito_segnalazione(s["email"], payload.stato, motivazione), "esito-segnalazione")
+    return {"ok": True}
+
+
+# ---------- Admin: elenco ed eliminazione dei clienti (richieste di cancellazione, pulizie) ----------
+@api.get("/admin/clients")
+async def admin_list_clients(user: dict = Depends(require_admin_master)):
+    out = []
+    async for c in db.users.find({"role": "client"}, {"_id": 0, "id": 1, "name": 1, "email": 1, "created_at": 1}).sort("created_at", -1).limit(1000):
+        out.append(c)
+    return {"clients": out}
+
+
+@api.delete("/admin/clients/{client_id}")
+async def admin_delete_client(client_id: str, user: dict = Depends(require_admin_master)):
+    c = await db.users.find_one({"id": client_id, "role": "client"})
+    if not c:
+        raise HTTPException(404, "Cliente non trovato")
+    await _erase_user_data(c)
+    await db.users.delete_one({"id": client_id, "role": "client"})
+    return {"ok": True}
 
 
 # ---------- Feedback sull'applicazione (banner stelle) ----------

@@ -22,6 +22,8 @@ import AdminMerchantsTable from "@/components/admin/AdminMerchantsTable";
 import AdminReferralsByMerchant from "@/components/admin/AdminReferralsByMerchant";
 import AdminRecoveryId from "@/components/admin/AdminRecoveryId";
 import AdminAppFeedback from "@/components/admin/AdminAppFeedback";
+import AdminSegnalazioni from "@/components/admin/AdminSegnalazioni";
+import AdminClienti from "@/components/admin/AdminClienti";
 import AdminEconomics from "@/components/admin/AdminEconomics";
 import AdminTraffic from "@/components/admin/AdminTraffic";
 import AdminNextMonth from "@/components/admin/AdminNextMonth";
@@ -130,6 +132,8 @@ export default function AdminDashboard() {
     ["fraud", "Registro Frodi"],
     ["reviews", "Feedback"],
     ["appfeedback", "Feedback App"],
+    ["segnalazioni", "Segnalazioni"],
+    ["clienti", "Clienti"],
     ["log", "Log completo"],
   ].filter(([k]) => subscriptionRequired || !SUBSCRIPTION_TABS.includes(k));
 
@@ -197,6 +201,8 @@ export default function AdminDashboard() {
       {tab === "fraud" && <FraudLog />}
       {tab === "reviews" && <ReviewsCenter />}
       {tab === "appfeedback" && <AdminAppFeedback hdrs={hdrs} />}
+      {tab === "segnalazioni" && <AdminSegnalazioni hdrs={hdrs} />}
+      {tab === "clienti" && <AdminClienti hdrs={hdrs} />}
       {tab === "economics" && subscriptionRequired && <AdminEconomics hdrs={hdrs} />}
       {tab === "traffic" && <AdminTraffic hdrs={hdrs} />}
       {tab === "log" && <AdminLog recent={stats.recent} />}
