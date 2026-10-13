@@ -14,17 +14,20 @@
 2. **Motivazione dei rifiuti** (Reg. UE 2019/1150 e DSA): basta il campo «Motivo» via email? Va reso obbligatorio nel codice? (doc. 1)
 3. **Prezzo di riferimento** (art. 17-bis Codice del Consumo): come lo verifichiamo in pratica? (doc. 1)
 4. **Tempi dei reclami**: conferma entro 5 giorni lavorativi (già nei Termini); proposta di esito in 30 giorni e riesame in 10 giorni lavorativi. (doc. 2, sez. 3)
-5. **Risposte preparate da un assistente**: va dichiarato? (doc. 2 e 3)
+5. **Dichiarazione che alcune risposte sono preparate da un assistente** (decisa dal titolare): formula e posizione. (doc. 2 e 3)
 6. **Diritti GDPR**: verifica dell'identità con l'email dell'account; conservazione della posta e dei messaggi social (proposta 12 mesi). (doc. 2 e 3)
-7. **Sospensione** dopo sconto non rispettato (quante segnalazioni accolte), procedura e preavviso (art. 7 Termini commercianti). (doc. 1)
+7. **Sospensione** dopo 3 segnalazioni accolte (numero deciso dal titolare, da validare), procedura e preavviso (art. 7 Termini commercianti). (doc. 1)
 8. **Minori e social**: comportamento quando qualcuno dichiara meno di 18 anni. (doc. 3)
 
-## Cosa deve decidere il titolare (sintesi)
-- **Mittente delle risposte**: «Invia messaggio come» `info@`, invio con Resend dal dominio, oppure solo bozze (doc. 2, D1).
-- **Alcol e categoria «Vino & Gastronomia»** (doc. 1, D1) e rendere obbligatorio il campo «Motivo» del rifiuto (D2).
-- Se Claude può inviare da solo le sole **conferme di ricezione** per non sforare i 5 giorni (doc. 2, D3).
-- Dove tenere il **registro** senza dati personali (doc. 2, D4).
-- Riallineare i testi social di PR #103 (doc. 3, D2).
+## Decisioni del titolare (13/10)
+- ✅ Alcol: si rifiuta solo se è l'oggetto principale dell'offerta (doc. 1, D1).
+- ✅ Il «Motivo» del rifiuto è obbligatorio (doc. 1, D2); modifica al codice in una PR a parte.
+- ✅ Sospensione dopo **3** segnalazioni accolte (doc. 1, D3): numero da validare dal consulente.
+- ✅ Le approvazioni le decide il titolare con un giudizio preparato da Claude (doc. 1, D4).
+- ✅ Claude può inviare da solo le conferme di ricezione (doc. 2, D3).
+- ✅ Si dichiara che alcune risposte sono preparate da un assistente (doc. 2, D2): formula da far vedere al consulente.
+- ✅ Registro, telefono, social (doc. 2 D4-D5, doc. 3 D1-D4): ok alle proposte.
+- ⏳ **Ancora aperto:** mittente delle risposte (doc. 2, D1). Proposta: partire con le bozze e passare a «Invia messaggio come» `info@` appena funziona.
 
 ## Documenti collegati
 - `docs/legale/bozze/` (ramo `claude/bozze-allineate` e `claude/pacchetto-legale`, PR #92): Termini commercianti (04), P2B (06), DSA (07), diritti degli interessati (12).

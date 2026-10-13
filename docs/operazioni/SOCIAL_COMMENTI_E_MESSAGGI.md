@@ -149,13 +149,13 @@ Regole: massimo tre frasi, firma «Sconti Roma». I [LINK] sono sempre verso il 
 6. **Risposte automatiche e IA**: se parte della risposta è preparata da un assistente, va dichiarato?
 7. **Uso del nome del negozio** in risposte pubbliche a critiche: solo se lo ha già fatto l'utente.
 
-## 12. Decisioni per il titolare
+## 12. Decisioni del titolare (13/10, registrate: «ok» a tutte le proposte)
 
 | # | Decisione | Proposta |
 |---|---|---|
-| D1 | Chi risponde e con quale permesso: Claude prepara le risposte (bozza), il titolare tocca «Pubblica» (come nel piano social); oppure risposte standard dirette? | Bozze per tutto; solo i "grazie" liberi dopo un periodo di prova. |
-| D2 | Riallineare `01_PROFILI.md` e `05_RISPOSTE.md` nel ramo `claude/social` (PR #103) a queste regole | Sì, in una PR a parte dopo che #103 è chiusa. |
-| D3 | Tempo massimo di risposta: 2 giorni lavorativi | Confermare. |
-| D4 | Conservazione dei messaggi: 12 mesi | Confermare dopo il consulente. |
+| D1 ✅ | Chi risponde e con quale permesso: Claude prepara le risposte (bozza), il titolare tocca «Pubblica» (come nel piano social); oppure risposte standard dirette? | Bozze per tutto; solo i "grazie" liberi dopo un periodo di prova. |
+| D2 ✅ | Riallineare `01_PROFILI.md` e `05_RISPOSTE.md` nel ramo `claude/social` (PR #103) a queste regole | Sì, in una PR a parte dopo che #103 è chiusa. |
+| D3 ✅ | Tempo massimo di risposta: 2 giorni lavorativi | Confermare. |
+| D4 ✅ (da validare dal consulente) | Conservazione dei messaggi: 12 mesi | Confermare dopo il consulente. |
 
 Questo documento **sostituisce** i testi di `05_RISPOSTE.md` solo dopo la tua conferma; nulla è stato cambiato in `claude/social`.

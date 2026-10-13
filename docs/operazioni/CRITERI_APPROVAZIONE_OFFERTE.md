@@ -14,7 +14,7 @@
 | Cosa vede l'amministratore | titolo, descrizione, prezzo pieno e scontato, foto (fino a 8), condizioni, «pianifica in anticipo», validità, informazioni aggiuntive, massimo utilizzi al mese, negozio (nome, categoria, zona) e, se i pagamenti sono accesi, lo stato del pagamento. |
 | Controlli automatici sui contenuti | **solo due**: prezzi maggiori di zero e prezzo scontato **più basso** del pieno. Non c'è nessun filtro su parole, categorie, foto o veridicità. **Ogni altro criterio di questo documento è un controllo umano.** |
 | Rifiuto | `POST /admin/discounts/{id}/reject` (e `/admin/next-offers/{id}/reject` per l'offerta del mese prossimo): stato «rifiutata», l'offerta va nell'archivio del commerciante con la nota, e parte un'email «Offerta da rivedere» con il campo **Motivo**. |
-| Il motivo è obbligatorio? | **No**: il campo può restare vuoto e l'email parte lo stesso, ma senza spiegazione. 🟠 I Termini e il Reg. 2019/1150 chiedono una motivazione: **regola interna: il motivo si scrive sempre** (sezione 5). Si può proporre di rendere il campo obbligatorio nel codice (decisione sotto). |
+| Il motivo è obbligatorio? | **No**: il campo può restare vuoto e l'email parte lo stesso, ma senza spiegazione. 🟠 I Termini e il Reg. 2019/1150 chiedono una motivazione: **regola interna (decisa il 13/10): il motivo si scrive sempre** (sezione 5); renderlo obbligatorio nel codice sarà una PR a parte. |
 | Dopo il rifiuto | il commerciante può modificare e reinviare l'offerta (torna «in attesa»). |
 | «Approva tutte» | esiste per il giorno del lancio (si scrive LANCIA). 🔴 **Prima di usarlo ogni offerta in attesa va letta con questi criteri**: il pulsante approva anche quelle che non andrebbero approvate. |
 | Pagamento | con `MERCHANT_PAYMENT_REQUIRED` acceso, dopo la prova l'approvazione è bloccata (errore 409) se il pagamento del mese non è arrivato; è un blocco di pagamento, **non** un giudizio sul contenuto. Oggi è spento. |
@@ -172,14 +172,16 @@ Ogni motivazione è un consiglio per sistemare, non un'accusa. Se dopo il rifiut
 6. **Sospensione dopo sconto non rispettato:** quante segnalazioni accolte prima di sospendere? Procedura e preavviso (art. 7 Termini commercianti).
 7. **Claim sanitari** (4.7): la regola «riscrivi, non rifiutare» è adeguata?
 
-## 9. Decisioni per il titolare
+## 9. Decisioni del titolare (13/10, registrate)
+
+Il titolare ha risposto «ok» alle proposte. Cosa resta da validare dal consulente è indicato.
 
 | # | Decisione | Proposta |
 |---|---|---|
-| D1 | **Alcol e la categoria «Vino & Gastronomia»**: la categoria esiste già nell'app. Rifiutiamo solo le offerte con l'alcol come oggetto principale, oppure ogni offerta con alcol? | Rifiutare solo le offerte dove l'alcol è l'oggetto principale e spinge al consumo (4.3). Se vuoi "zero alcol", la categoria «Vino & Gastronomia» va rinominata. |
-| D2 | Rendere **obbligatorio il campo «Motivo»** nel rifiuto (piccola modifica al codice, in un'altra PR)? | Sì, almeno 10 caratteri (come per le segnalazioni). |
-| D3 | Dopo quante segnalazioni accolte di sconto non rispettato si sospende un negozio? | Dalla 2ª segnalazione accolta, sempre con motivazione e reclamo. |
-| D4 | Il titolare approva **tutto** da solo, o Claude prepara una proposta («approva/rifiuta/chiedi chiarimento + motivo») che il titolare conferma con un tocco? | Proposta di Claude, conferma del titolare. |
-| D5 | Elenco dei prodotti vietati (4.4): aggiungi o togli voci. | Tenere l'elenco corto e aggiornarlo con i casi reali. |
+| D1 ✅ DECISO | **Alcol e la categoria «Vino & Gastronomia»**: la categoria esiste già nell'app. Rifiutiamo solo le offerte con l'alcol come oggetto principale, oppure ogni offerta con alcol? | **Deciso: l'alcol si rifiuta solo se è l'oggetto principale dell'offerta** (4.3). La categoria «Vino & Gastronomia» resta. |
+| D2 ✅ DECISO | Rendere **obbligatorio il campo «Motivo»** nel rifiuto (piccola modifica al codice, in un'altra PR)? | **Deciso: il «Motivo» è obbligatorio** (almeno 10 caratteri, come per le segnalazioni). Vale subito come regola per chi approva; la modifica al codice sarà una PR a parte. |
+| D3 ✅ DECISO (numero da validare) | Dopo quante segnalazioni accolte di sconto non rispettato si sospende un negozio? | **Deciso: 3 segnalazioni accolte** prima di sospendere un negozio, sempre con motivazione e possibilità di reclamo. **[DA VALIDARE dal consulente]** |
+| D4 ✅ DECISO | Il titolare approva **tutto** da solo, o Claude prepara una proposta («approva/rifiuta/chiedi chiarimento + motivo») che il titolare conferma con un tocco? | **Deciso: le approvazioni le decide il titolare, con un giudizio preparato da Claude.** |
+| D5 ✅ DECISO | Elenco dei prodotti vietati (4.4): aggiungi o togli voci. | Confermato: elenco corto, aggiornato con i casi reali. |
 
 Nessuna regola di questo documento è stata applicata al codice o al sito: è solo un manuale per chi approva.

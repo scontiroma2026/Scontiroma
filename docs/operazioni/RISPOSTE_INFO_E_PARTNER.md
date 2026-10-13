@@ -33,9 +33,9 @@ Stato oggi: la posta su `info@`/`privacy@`/`partner@` (inoltro dei tre indirizzi
 | **B. Invio con Resend dal dominio** | Claude manda la risposta con Resend (dominio `scontiroma.it` già verificato per le email dell'app), mittente `info@`, con «rispondi a» che torna nella casella letta da Claude. | mittente pulito e professionale; Claude non usa il Gmail per scrivere | un indirizzo di invio in più da proteggere; serve verificare che le risposte arrivino alla casella giusta e che rispettino i limiti del piano di Resend |
 | **C. Solo bozze** (soluzione ponte) | Claude scrive la risposta come **bozza**; il titolare la rivede, la manda dalla casella giusta con un tocco. | zero rischi | rallenta, il titolare resta nel giro per ogni messaggio |
 
-**Regola finché non si decide:** Claude **non invia** da solo risposte dal Gmail personale. Prepara **bozze** (soluzione C) e le fa vedere al titolare; per i messaggi urgenti e banali (es. conferma di ricezione di un reclamo, per rispettare i 5 giorni) chiede il permesso una volta sola.
+**Regola finché D1 è aperto:** Claude prepara **bozze** (soluzione C) e le fa vedere al titolare. Eccezione decisa il 13/10: le sole **conferme di ricezione** (M3, M11, M12) Claude le può inviare da solo, per rispettare i 5 giorni.
 
-**Decisione richiesta al titolare:** D1 (A, B o C). Non è una decisione tecnica di Claude.
+**Stato:** D1 ancora aperto; proposta: bozze ora, poi A.
 
 ## 3. Tempi (promessi nei Termini e nelle bozze P2B/DSA)
 
@@ -196,14 +196,14 @@ Il registro degli esiti dei reclami e delle segnalazioni, per legge/Termini da c
 4. Conservazione dei messaggi di posta: quanto tempo? (le email contengono dati personali.)
 5. Risposte di Claude in nome di Sconti Roma: va bene la firma «Sconti Roma» senza nome?
 
-## 11. Decisioni per il titolare
+## 11. Decisioni del titolare (13/10, registrate)
 
 | # | Decisione | Proposta |
 |---|---|---|
-| D1 | **Mittente delle risposte**: A) «Invia messaggio come» `info@` in Gmail; B) invio con Resend dal dominio; C) solo bozze | Cominciare con C; passare ad A (se riesci a configurarla da iPhone) o B (se vuoi che lo faccia Claude con un indirizzo di invio dedicato). |
-| D2 | Dire o no che la risposta è preparata da un assistente (IA)? | Consigliato un piccolo riferimento nella pagina contatti; tema da portare al consulente. |
-| D3 | Claude può inviare da solo le **conferme di ricezione** (M3, M11, M12) per non sforare i 5 giorni? | Sì, solo queste, con il testo fisso; tutto il resto in bozza. |
-| D4 | Dove tenere il registro (Sheets, etichette Gmail) | Etichette Gmail + riepilogo settimanale senza dati personali. |
-| D5 | Un numero di telefono o un modo per le urgenze dei negozi? | Per ora no: solo email. |
+| D1 ⏳ APERTO | **Mittente delle risposte**: A) «Invia messaggio come» `info@` in Gmail; B) invio con Resend dal dominio; C) solo bozze | Proposta (ancora da confermare): **partire con le bozze (C) e passare a «Invia messaggio come» `info@` (A) appena funziona**; B resta l'alternativa. |
+| D2 ✅ DECISO (da far vedere al consulente) | Dire o no che la risposta è preparata da un assistente (IA)? | **Deciso: dichiarare che alcune risposte sono preparate da un assistente**; formula e posizione (per es. pagina contatti) da far vedere al consulente. |
+| D3 ✅ DECISO | Claude può inviare da solo le **conferme di ricezione** (M3, M11, M12) per non sforare i 5 giorni? | **Deciso: sì**, Claude può inviare da solo le conferme di ricezione (M3, M11, M12), con testo fisso; tutto il resto in bozza finché D1 non è chiuso. |
+| D4 ✅ DECISO | Dove tenere il registro (Sheets, etichette Gmail) | Confermato. |
+| D5 ✅ DECISO | Un numero di telefono o un modo per le urgenze dei negozi? | Confermato. |
 
 Nessun messaggio è stato inviato e nessuna impostazione di posta è stata modificata per scrivere questo documento.
