@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
+import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 
 /**
  * Tab "Negozi" — tabella gestione commercianti & sconti con azioni inline
@@ -25,6 +26,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   const [discEdit, setDiscEdit] = useState(null);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
+  const [daRifiutare, setDaRifiutare] = useState(null);
 
   const needle = q.trim().toLowerCase();
   const filteredMerchants = needle
@@ -90,11 +92,15 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
     try { await api.post(`/admin/discounts/${id}/approve`, {}, hdrs()); toast.success("Approvata ✓"); onRefresh(); }
     catch (err) { toast.error(formatApiError(err)); }
   };
-  const rejectInline = async (id) => {
-    const reason = window.prompt("Rifiutare l'offerta?\n\nScrivi il motivo: il commerciante lo riceve per email e potrà correggerla.", "");
-    if (reason === null) return;
-    try { await api.post(`/admin/discounts/${id}/reject`, { reason }, hdrs()); toast.success("Rimandata in bozza"); onRefresh(); }
-    catch (err) { toast.error(formatApiError(err)); }
+  const rejectInline = async (motivo) => {
+    try {
+      await api.post(`/admin/discounts/${daRifiutare.id}/reject`, { reason: motivo }, hdrs());
+    } catch (err) {
+      throw new Error(formatApiError(err));
+    }
+    setDaRifiutare(null);
+    toast.success("Rimandata in bozza");
+    onRefresh();
   };
 
   const toggleApprove = async (m) => {
@@ -196,7 +202,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             onTogglePagato={() => togglePagato(m)}
             onToggleDiscountActive={() => toggleDiscountActive(m)}
             onApproveInline={() => approveInline(m.discount_id)}
-            onRejectInline={() => rejectInline(m.discount_id)}
+            onRejectInline={() => setDaRifiutare({ id: m.discount_id, titolo: m.discount_title })}
             onOpenDiscountEdit={() => openDiscountEdit(m)}
             onForceEdit={() => onForceEdit(m.discount_id)}
             onDelDiscount={() => delDiscount(m.discount_id, m.shop_name)}
@@ -214,6 +220,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
           busy={busy}
         />
       )}
+      <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={rejectInline} />
     </Card>
   );
 }

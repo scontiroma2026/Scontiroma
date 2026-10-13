@@ -11,6 +11,7 @@ import {
   Phone, MapPin, Edit3, Store,
 } from "lucide-react";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
+import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 import { renderBold } from "@/lib/renderBold";
 
 const STATUS_BADGE = {
@@ -27,6 +28,7 @@ export default function AdminNextMonth({ hdrs }) {
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState({});
   const [editRow, setEditRow] = useState(null);
+  const [daRifiutare, setDaRifiutare] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -46,13 +48,15 @@ export default function AdminNextMonth({ hdrs }) {
     } catch (err) { toast.error(formatApiError(err)); }
   };
 
-  const reject = async (id) => {
-    const reason = window.prompt("Motivo del rifiuto (visibile al commerciante):", "") || "";
+  const reject = async (motivo) => {
     try {
-      await api.post(`/admin/next-offers/${id}/reject`, { reason }, hdrs());
-      toast.success("Offerta rimandata in bozza al commerciante");
-      load();
-    } catch (err) { toast.error(formatApiError(err)); }
+      await api.post(`/admin/next-offers/${daRifiutare.id}/reject`, { reason: motivo }, hdrs());
+    } catch (err) {
+      throw new Error(formatApiError(err));
+    }
+    setDaRifiutare(null);
+    toast.success("Offerta rimandata in bozza al commerciante");
+    load();
   };
 
   const runReminders = async () => {
@@ -182,7 +186,7 @@ export default function AdminNextMonth({ hdrs }) {
                   nd={nd}
                   monthLabel={win.next_month_label}
                   onApprove={() => approve(nd.id)}
-                  onReject={() => reject(nd.id)}
+                  onReject={() => setDaRifiutare({ id: nd.id, titolo: nd.title })}
                   onEdit={() => setEditRow(r)}
                 />
               )}
@@ -199,6 +203,7 @@ export default function AdminNextMonth({ hdrs }) {
           onSaved={() => { setEditRow(null); load(); }}
         />
       )}
+      <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={reject} />
     </Card>
   );
 }
