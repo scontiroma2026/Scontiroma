@@ -3,7 +3,7 @@
 **Regola d'oro: prima si chiede il permesso agli amministratori. Senza risposta scritta «sì», non si pubblica nulla.** Un «no» o il silenzio valgono no.
 
 ## Messaggio agli amministratori (da scrivere a mano, in privato, a un gruppo per volta)
-> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi di quartiere a Roma e dintorni (zone pilota Garbatella, San Paolo, Marconi), gratuita nella fase di lancio, per maggiorenni.
+> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi di quartiere a Roma e dintorni, gratuita nella fase di lancio, per maggiorenni.
 > Posso chiedere se nel gruppo [NOME GRUPPO] è consentito un solo post di presentazione? Vi mandiamo prima il testo da approvare e lo togliamo subito se non va bene.
 > Se preferite di no, nessun problema: non scriviamo più. Grazie. Sconti Roma
 

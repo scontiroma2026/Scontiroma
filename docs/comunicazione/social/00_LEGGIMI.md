@@ -6,7 +6,7 @@ Bozze pronte, **niente è pubblicato**. Firma sempre «Sconti Roma», senza nomi
 1. Un solo profilo «Sconti Roma» su Instagram e Facebook, un WhatsApp Business, una scheda Google Business (se serve un indirizzo, vedi decisioni).
 2. Prima si creano i profili e si guardano per una settimana, senza pubblicare offerte di negozi.
 3. Poi 12 post pronti in 4 settimane (7 per i clienti, 3 per i negozi, 2 «come funziona»).
-4. Zone pilota: Garbatella, San Paolo, Marconi. Si scrive sempre «Roma e dintorni» e 18+.
+4. Niente «zone pilota» nei testi pubblici: l'app è aperta a tutta Roma. Si scrive sempre «Roma e dintorni» e 18+.
 5. Nei gruppi di quartiere si pubblica solo dopo il permesso scritto degli amministratori.
 6. Ai negozi si scrive un negozio alla volta, a mano, con un modo per dire no.
 7. Niente prezzi, percentuali, «gratis per sempre», «nessuna commissione», «prezzo bloccato»: solo «gratuita nella fase di lancio».

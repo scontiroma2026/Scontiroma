@@ -5,7 +5,7 @@ Firma sempre «Sconti Roma». Tono gentile, breve. Mai prezzi, percentuali, «pe
 ## Clienti
 - **Cos'è?** Sconti Roma è un'app con le offerte dei negozi di quartiere, a Roma e dintorni. Scegli la zona, guardi l'offerta del mese e mostri il QR al banco.
 - **Costa?** È gratuita nella fase di lancio.
-- **Dove funziona?** Zone pilota: Garbatella, San Paolo, Marconi. Poi Roma e dintorni, a poco a poco.
+- **Dove funziona?** Roma e dintorni: scegli la tua zona nell'app e guarda le offerte disponibili.
 - **Come lo uso?** Apri [LINK], scegli la zona, trova l'offerta, mostra il QR in negozio.
 - **Chi può usarla?** Solo maggiorenni (18+).
 - **Non c'è il mio quartiere.** Grazie! Nell'app tocca «Fammi sapere quando arrivate»: è un voto anonimo che ci aiuta a decidere dove andare. Non promettiamo avvisi.

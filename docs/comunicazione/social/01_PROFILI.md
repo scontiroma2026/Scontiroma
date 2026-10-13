@@ -12,14 +12,14 @@ Immagine profilo: logo dell'app su fondo bianco. Copertina: fucsia #D81B72 e vio
 - Nome profilo: **Sconti Roma**
 - Handle da cercare (in ordine): `scontiroma`, `sconti.roma`, `scontiroma.it`, `sconti_roma_app`
 - Bio (max 150 caratteri, qui 125):
-  > Offerte dei negozi di quartiere a Roma e dintorni. Pilota: Garbatella, San Paolo, Marconi. Gratuita nella fase di lancio. 18+
+  > Offerte dei negozi di quartiere a Roma e dintorni. Gratuita nella fase di lancio. 18+
 - Categoria: «App» o «Servizio locale». Pulsante contatto: email.
 - Link: quello sopra.
 
 ## Facebook (Pagina, non profilo personale)
 - Nome pagina: **Sconti Roma**; handle: `scontiroma` (alternative: `scontiroma.app`).
 - Descrizione breve:
-  > L'app con le offerte dei negozi di quartiere a Roma e dintorni. Zone pilota: Garbatella, San Paolo, Marconi. Gratuita nella fase di lancio. Solo per maggiorenni (18+).
+  > L'app con le offerte dei negozi di quartiere a Roma e dintorni. Gratuita nella fase di lancio. Solo per maggiorenni (18+).
 - Sezione «Informazioni»: sito, email di Sconti Roma, «Roma e dintorni». Nessun telefono personale.
 - Pulsante: «Scopri di più» verso il sito.
 
@@ -27,7 +27,7 @@ Immagine profilo: logo dell'app su fondo bianco. Copertina: fucsia #D81B72 e vio
 - Nome attività: **Sconti Roma**
 - Categoria: «Servizio di informazione» o «Altro».
 - Descrizione:
-  > Sconti Roma: l'app con le offerte dei negozi di quartiere, a Roma e dintorni. Zone pilota: Garbatella, San Paolo, Marconi. Gratuita nella fase di lancio. 18+
+  > Sconti Roma: l'app con le offerte dei negozi di quartiere, a Roma e dintorni. Gratuita nella fase di lancio. 18+
 - Messaggio di benvenuto:
   > Ciao, grazie per averci scritto! Siamo Sconti Roma. Ti rispondiamo appena possibile. Per non ricevere altri messaggi scrivi STOP.
 - Messaggio di assenza:
@@ -40,7 +40,7 @@ Immagine profilo: logo dell'app su fondo bianco. Copertina: fucsia #D81B72 e vio
 - Nome: **Sconti Roma**
 - Categoria principale: «Servizio di informazione» o «Sviluppatore di software» (scegliere la più vicina tra quelle offerte). Attività senza negozio: «area di servizio» = Roma.
 - Descrizione (max 750, qui breve):
-  > Sconti Roma è l'app con le offerte dei negozi di quartiere a Roma e dintorni. Scegli la tua zona, guarda l'offerta del mese e mostra il QR al banco. Zone pilota: Garbatella, San Paolo, Marconi. Gratuita nella fase di lancio. Solo per maggiorenni (18+).
+  > Sconti Roma è l'app con le offerte dei negozi di quartiere a Roma e dintorni. Scegli la tua zona, guarda l'offerta del mese e mostra il QR al banco. Gratuita nella fase di lancio. Solo per maggiorenni (18+).
 - Sito: link sopra. Orari: solo se c'è davvero chi risponde.
 - Attenzione: Google può chiedere verifica per posta, telefono o video; non si usa un indirizzo di casa se si vuole tenerlo privato (scegliere «attività senza indirizzo»).
 

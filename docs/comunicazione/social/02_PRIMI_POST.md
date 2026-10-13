@@ -9,14 +9,14 @@ Colori immagine: fondo bianco, testo #1A1530, titoli Fraunces, testi Manrope, ac
 ## A. Annuncio per i clienti (7)
 
 ### C1 – Ci siamo
-- **IG/FB:** Nasce Sconti Roma: le offerte dei negozi di quartiere, a Roma e dintorni. Parte da Garbatella, San Paolo e Marconi. Gratuita nella fase di lancio. 18+. Link in bio. Sconti Roma
+- **IG/FB:** Nasce Sconti Roma: le offerte dei negozi di quartiere, a Roma e dintorni. Gratuita nella fase di lancio. 18+. Link in bio. Sconti Roma
 - **WhatsApp:** Ciao! Siamo Sconti Roma: l'app con le offerte dei negozi di quartiere, a Roma e dintorni. Gratuita nella fase di lancio, per maggiorenni. [LINK]. Per non ricevere altri messaggi scrivi STOP.
 - **Immagine:** fondo bianco, grande titolo «Sconti Roma» in fucsia, sotto «Le offerte del tuo quartiere», fascia viola in basso con «18+».
 
 ### C2 – Scegli la tua zona
-- **IG/FB:** Apri l'app, scegli la tua zona e guarda le offerte. Garbatella, San Paolo, Marconi per iniziare. Gratuita nella fase di lancio. 18+. Sconti Roma
+- **IG/FB:** Apri l'app, scegli la tua zona e guarda le offerte. Gratuita nella fase di lancio. 18+. Sconti Roma
 - **WhatsApp:** Scegli la tua zona su Sconti Roma e guarda le offerte del quartiere: [LINK]. Gratuita nella fase di lancio, 18+. Per non ricevere altri messaggi scrivi STOP.
-- **Immagine:** tre cartelli teal «Garbatella · San Paolo · Marconi» su fondo bianco.
+- **Immagine:** tre cartelli teal «Scegli la tua zona» su fondo bianco.
 
 ### C3 – Il QR al banco
 - **IG/FB:** Trovi l'offerta del mese, vai in negozio, mostri il QR al banco. Tutto qui. Sconti Roma. Gratuita nella fase di lancio. 18+
@@ -39,7 +39,7 @@ Colori immagine: fondo bianco, testo #1A1530, titoli Fraunces, testi Manrope, ac
 - **Immagine:** disegno semplice di una vetrina con tenda a strisce fucsia e bianco (nessun marchio).
 
 ### C7 – Dillo a un amico
-- **IG/FB:** Conosci qualcuno che vive tra Garbatella, San Paolo e Marconi? Mandagli Sconti Roma. Gratuita nella fase di lancio. 18+
+- **IG/FB:** Conosci qualcuno che ama i negozi del suo quartiere? Mandagli Sconti Roma. Gratuita nella fase di lancio. 18+
 - **WhatsApp (da inoltrare dagli utenti, mai da noi in serie):** Guarda Sconti Roma, le offerte dei negozi del quartiere: [LINK]. 18+
 - **Immagine:** due fumetti viola e fucsia che si scambiano un cuore.
 
@@ -48,8 +48,8 @@ Colori immagine: fondo bianco, testo #1A1530, titoli Fraunces, testi Manrope, ac
 (Pubblicati sulla pagina; non sostituiscono i messaggi personali di `docs/commercianti/MESSAGGI.md`.)
 
 ### N1 – Hai un negozio?
-- **IG/FB:** Hai un negozio a Garbatella, San Paolo o Marconi? Pubblica la tua offerta del mese su Sconti Roma. La registrazione è gratuita nella fase di lancio. Info sul sito, link in bio. Se non è per te, ignora pure il post. Sconti Roma
-- **WhatsApp:** Hai un negozio a Garbatella, San Paolo o Marconi? Sconti Roma ti aspetta: [LINK]. Se non ti interessa scrivi STOP e non ti scriviamo più.
+- **IG/FB:** Hai un negozio a Roma o dintorni? Pubblica la tua offerta del mese su Sconti Roma. La registrazione è gratuita nella fase di lancio. Info sul sito, link in bio. Se non è per te, ignora pure il post. Sconti Roma
+- **WhatsApp:** Hai un negozio a Roma o dintorni? Sconti Roma ti aspetta: [LINK]. Se non ti interessa scrivi STOP e non ti scriviamo più.
 - **Immagine:** vetrina verde #127A47 con scritta «La tua offerta del mese».
 
 ### N2 – Come ti trovano i clienti
@@ -71,6 +71,6 @@ Colori immagine: fondo bianco, testo #1A1530, titoli Fraunces, testi Manrope, ac
 - **Immagine:** tre schermate con numeri grandi 1-2-3 (fucsia, viola, teal). Schermate dell'app solo con dati inventati.
 
 ### F2 – Domande veloci
-- **IG/FB:** È per tutti? Solo maggiorenni (18+). Costa? Gratuita nella fase di lancio. Dove? Roma e dintorni, a partire da Garbatella, San Paolo e Marconi. Sconti Roma
+- **IG/FB:** È per tutti? Solo maggiorenni (18+). Costa? Gratuita nella fase di lancio. Dove? Roma e dintorni. Sconti Roma
 - **WhatsApp:** Domande veloci su Sconti Roma: solo 18+, gratuita nella fase di lancio, Roma e dintorni. [LINK]. STOP per non ricevere altri messaggi.
 - **Immagine:** tre bolle domanda/risposta verdi e bianche.
