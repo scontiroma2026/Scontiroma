@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Come pubblicare la tua prima offerta - Sconti Roma</title>
+<style>
+@font-face{font-family:'Manrope';src:url('../../../frontend/public/fonts/manrope-latin-wght-normal.woff2') format('woff2');font-weight:200 800;font-display:block}
+@font-face{font-family:'Manrope';src:url('../../../frontend/public/fonts/manrope-latin-ext-wght-normal.woff2') format('woff2');font-weight:200 800;unicode-range:U+0100-02AF,U+1E00-1EFF,U+20A0-20CF,U+2C60-2C7F,U+A720-A7FF;font-display:block}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#1a1530;--soft:#5b5470;--rosa:#d6197a;--viola:#6d3df5;--teal:#0b7a8a;--tint:#f6f4fb;--line:#e4e0ee}
+html,body{background:#fff}
+body{font-family:'Manrope',system-ui,sans-serif;color:var(--ink);font-size:9pt;line-height:1.35}
+.pagina{width:210mm;height:297mm;margin:0 auto;padding:9mm 10mm 8mm;display:flex;flex-direction:column;gap:4.2mm;overflow:hidden}
+@media screen and (max-width:700px){.pagina{width:100%;height:auto;padding:16px}}
+header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1.2mm solid transparent;border-image:linear-gradient(90deg,var(--rosa),var(--viola),var(--teal)) 1;padding-bottom:2.5mm}
+.marchio{font-weight:800;color:var(--rosa);font-size:9pt;letter-spacing:.04em;text-transform:uppercase}
+h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em}
+.sotto{font-size:9pt;color:var(--soft);margin-top:1mm}
+.griglia{display:grid;grid-template-columns:1fr 1fr;gap:3.2mm}
+.passo{border:.3mm solid var(--line);border-radius:3mm;padding:3mm;display:grid;grid-template-columns:1fr 40mm;gap:3mm;align-items:start;background:#fff}
+.passo h2{font-weight:800;font-size:10.5pt;line-height:1.15;margin-bottom:1mm;letter-spacing:-.01em}
+.n{display:inline-flex;width:6mm;height:6mm;border-radius:50%;background:linear-gradient(135deg,var(--rosa),var(--viola));color:#fff;font-weight:800;font-size:9pt;align-items:center;justify-content:center;margin-right:1.5mm;vertical-align:1px}
+.passo p,.passo li{font-size:8.5pt;color:#2d2745}
+.passo ul{padding-left:3.6mm;margin-top:.8mm}
+.passo li{margin-bottom:.4mm}
+.passo img{width:40mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
+.fiche{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3.2mm}
+.box{border-radius:3mm;padding:3.2mm;background:var(--tint);font-size:8.5pt}
+.box h3{font-weight:800;font-size:10pt;margin-bottom:1mm;color:var(--viola)}
+.box.t h3{color:var(--teal)}.box.r h3{color:var(--rosa)}
+.box p,.box li{color:#2d2745}
+.box ul{padding-left:3.6mm}
+.box strong{font-weight:800}
+.nota{font-size:7.4pt;color:var(--soft);margin-top:auto;display:flex;justify-content:space-between;gap:6mm;border-top:.3mm solid var(--line);padding-top:2mm}
+.contatto{font-weight:800;color:var(--rosa);font-size:10.5pt}
+</style>
+</head>
+<body>
+<main class="pagina">
+  <header>
+    <div>
+      <div class="marchio">Sconti Roma &middot; Guida per i negozi</div>
+      <h1>Come pubblicare la tua prima offerta</h1>
+      <div class="sotto">Sei passi, dal telefono, in circa dieci minuti. Roma e dintorni.</div>
+    </div>
+  </header>
+
+  <section class="griglia">
+    <article class="passo">
+      <div>
+        <h2><span class="n">1</span>Registrati</h2>
+        <p>Dal sito scegli <strong>«Sono un commerciante»</strong>. Servono i dati del negozio e la <strong>Partita IVA</strong> (11 cifre). Devi avere almeno 18 anni.</p>
+        <ul><li>Leggi e accetta Termini e Privacy</li><li>Accedi con email e password</li></ul>
+      </div>
+      <img src="img/1-registrazione.jpg" alt="Modulo di registrazione con il campo Partita IVA">
+    </article>
+
+    <article class="passo">
+      <div>
+        <h2><span class="n">2</span>Scegli cosa offri e lo sconto</h2>
+        <p>Un prodotto o un servizio solo. Scrivi un <strong>titolo chiaro</strong>, una breve descrizione, il prezzo di listino e il prezzo scontato.</p>
+        <ul><li>Titolo: cosa ottiene il cliente, in poche parole</li><li>Niente nomi di marchi altrui</li></ul>
+      </div>
+      <img src="img/2-offerta.jpg" alt="Modulo offerta: titolo, descrizione e prezzi">
+    </article>
+
+    <article class="passo">
+      <div>
+        <h2><span class="n">3</span>Aggiungi una foto</h2>
+        <ul><li><strong>Luce naturale</strong>, vicino a una finestra</li><li>Prodotto in primo piano, sfondo semplice</li><li><strong>Niente scritte</strong> o prezzi sopra la foto</li><li><strong>Nessun marchio</strong> o logo di altri</li><li>Basta una foto vera: meglio semplice che ritoccata</li></ul>
+        <p style="margin-top:1mm">Non hai una foto? Scegli dalla libreria di esempio.</p>
+      </div>
+      <img src="img/3-foto.jpg" alt="Caricamento della foto dell'offerta">
+    </article>
+
+    <article class="passo">
+      <div>
+        <h2><span class="n">4</span>Giorni e utilizzi al mese</h2>
+        <p>In <strong>«Inclusioni ed esclusioni»</strong> scrivi giorni e orari in cui lo sconto vale. Poi scegli <strong>quante volte al mese</strong> ogni cliente lo può usare (da 1 a 10).</p>
+        <ul><li>Meglio poche regole, semplici</li><li>Puoi cambiare l'offerta ogni mese</li></ul>
+      </div>
+      <img src="img/4-giorni-utilizzi.jpg" alt="Giorni di validità e utilizzi al mese">
+    </article>
+
+    <article class="passo">
+      <div>
+        <h2><span class="n">5</span>Invia e aspetta l'approvazione</h2>
+        <p>Tocca <strong>«Pubblica (in revisione)»</strong>. Controlliamo noi l'offerta: finché non è approvata non la vede nessuno e puoi ancora modificarla.</p>
+        <ul><li>Se serve una correzione ti scriviamo</li><li>Dopo l'approvazione i clienti la trovano nell'app</li></ul>
+      </div>
+      <img src="img/5-approvazione.jpg" alt="Offerta in fase di revisione">
+    </article>
+
+    <article class="passo">
+      <div>
+        <h2><span class="n">6</span>Codice a 4 cifre e QR al banco</h2>
+        <p>Nell'area commerciante trovi il <strong>codice del negozio</strong>: dallo solo a chi lavora al banco. Il cliente mostra il suo QR, tu lo inquadri con <strong>«Scansiona codice»</strong>, scrivi il codice e applichi lo sconto.</p>
+        <ul><li>Puoi cambiare il codice quando vuoi</li><li>Stampa il tuo QR e mettilo in cassa</li></ul>
+      </div>
+      <img src="img/6-codice.jpg" alt="Scheda Codice del negozio">
+    </article>
+  </section>
+
+  <section class="fiche">
+    <div class="box">
+      <h3>E dopo?</h3>
+      <ul>
+        <li>Dopo l'approvazione i clienti vedono l'offerta e ti mostrano il QR alla cassa.</li>
+        <li>La fase di lancio è <strong>gratuita</strong>, con circa due mesi di prova dalla prima pubblicazione.</li>
+        <li>Dopo la prova: abbonamento mensile semplice, <strong>4,99 € al mese + IVA</strong>. Ti avvisiamo prima e non addebitiamo nulla senza la tua conferma.</li>
+      </ul>
+    </div>
+    <div class="box t">
+      <h3>Come disdire</h3>
+      <p>Puoi disdire quando vuoi: la disdetta vale <strong>dalla fine del mese</strong>. Fino a quel giorno <strong>lo sconto va rispettato</strong>.</p>
+      <p style="margin-top:1mm">Disdici dal pulsante <strong>«Disdici»</strong> nella scheda Pagamento, o scrivici.</p>
+    </div>
+    <div class="box r">
+      <h3>Hai bisogno di una mano?</h3>
+      <p>Scrivici, rispondiamo noi:</p>
+      <p class="contatto">info@scontiroma.it</p>
+      <p style="margin-top:1mm">Puoi anche usare la pagina <strong>Assistenza</strong> del sito.</p>
+    </div>
+  </section>
+
+  <footer class="nota">
+    <span>Schermate dell'app con dati di esempio. Sconti Roma &middot; per maggiorenni (18+).</span>
+    <span>scontiroma.it</span>
+  </footer>
+</main>
+</body>
+</html>
