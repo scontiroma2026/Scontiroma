@@ -54,6 +54,8 @@ os.environ.update({
     "GEMINI_API_KEY": "chiave-finta-solo-test",
     # I webhook veri di Stripe non arrivano mai a localhost: i test firmano i propri.
     "STRIPE_WEBHOOK_SECRET": "whsec_e2e_solo_test",
+    # I test iscrivono molti account dallo stesso IP: limiti anti-massa spenti (0 = spento).
+    "REGISTRAZIONI_MAX_PER_FINESTRA": "0", "RESET_MAX_PER_CLIENT_10MIN": "0", "RESET_MAX_PER_CLIENT_ORA": "0",
 })
 for k, v in {
     "JWT_SECRET": "e2e-jwt-secret-solo-test-0123456789abcdef",
