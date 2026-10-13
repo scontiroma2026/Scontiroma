@@ -67,7 +67,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 Usare solo nei gruppi dove le regole ammettono le attività commerciali (leggere il regolamento o chiedere agli amministratori prima di pubblicare). Un solo post per gruppo, nessun messaggio privato a chi commenta senza invito.
 
-> Avete un attività a Roma? 🏪
+> Avete un'attività a Roma? 🏪
 > Sconti Roma è un'app dove ogni attività pubblica un'offerta al mese e i clienti del quartiere la trovano e la usano con un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Video di un minuto: [LINK]
 > Se vi interessa commentate qui sotto o scriveteci in privato. Se non è per voi, nessun problema: ignorate pure il post.
