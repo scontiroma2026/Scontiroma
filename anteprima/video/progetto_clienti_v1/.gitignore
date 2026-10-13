@@ -1,0 +1,11 @@
+# Nel repository: script, testi e schermate piccole. Video, mp3, wav, fotogrammi, clip, caratteri e foto di lavorazione restano fuori.
+app/
+montaggio/export/
+montaggio/seg/
+montaggio/img/
+montaggio/fonts/
+riprese/foto/
+riprese/demo_ids.json
+*.mp4
+*.wav
+*.mp3

@@ -1,0 +1,56 @@
+{
+ "durata": 66.4,
+ "parti": [
+  {
+   "id": "s1",
+   "inizio": 0.0,
+   "durata": 4.1
+  },
+  {
+   "id": "s2",
+   "inizio": 4.1,
+   "durata": 6.4
+  },
+  {
+   "id": "s3",
+   "inizio": 10.5,
+   "durata": 10.2
+  },
+  {
+   "id": "s4",
+   "inizio": 20.7,
+   "durata": 11.1
+  },
+  {
+   "id": "s5",
+   "inizio": 31.8,
+   "durata": 8.5
+  },
+  {
+   "id": "s6a",
+   "inizio": 40.4,
+   "durata": 3.5
+  },
+  {
+   "id": "s6b",
+   "inizio": 43.9,
+   "durata": 5.6
+  },
+  {
+   "id": "s7",
+   "inizio": 49.4,
+   "durata": 4.7
+  },
+  {
+   "id": "s8",
+   "inizio": 54.1,
+   "durata": 9.6
+  },
+  {
+   "id": "s9",
+   "inizio": 63.7,
+   "durata": 2.7
+  }
+ ],
+ "caratteri_voce": 1013
+}

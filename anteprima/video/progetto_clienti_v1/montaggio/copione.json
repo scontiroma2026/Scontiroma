@@ -1,0 +1,52 @@
+{
+  "cps": 15.7,
+  "pausa_segmento": 0.0,
+  "pausa_scena": 0.3,
+  "parti": [
+    { "id": "s1", "grafica": "titolo", "segmenti": [
+      { "t": "Cerchi <b>sconti</b> vicino a casa?", "v": "Cerchi sconti vicino a casa?", "img": "titolo_1" },
+      { "t": "", "v": "Ecco come funziona Sconti Roma.", "img": "titolo_2" }
+    ]},
+    { "id": "s2", "clip": "home", "min": 5.5, "segmenti": [
+      { "t": "Sconti Roma raccoglie le <b>offerte dei negozi</b>, a <b>Roma e dintorni</b>.", "v": "Sconti Roma raccoglie le offerte dei negozi, a Roma e dintorni." },
+      { "t": "Per cominciare, tocca <b>Inizia ora</b>.", "v": "Per cominciare, tocca Inizia ora." }
+    ]},
+    { "id": "s3", "clip": "iscrizione", "ritaglia": [0.3, 8.0], "vmin": 0.85, "segmenti": [
+      { "t": "Ti registri con <b>nome</b>, <b>cognome</b>, <b>email</b> e <b>password</b>.", "v": "Ti registri con nome, cognome, email e password." },
+      { "t": "Confermi di avere <b>almeno 18 anni</b> e accetti i Termini,", "v": "Confermi di avere almeno diciotto anni e accetti i Termini," },
+      { "t": "poi tocchi <b>Crea account</b>.", "v": "poi tocchi Crea account." },
+      { "t": "Il <b>Face ID</b> è facoltativo.", "v": "Il Face ID è facoltativo." }
+    ]},
+    { "id": "s4", "clip": "catalogo", "vmin": 0.85, "segmenti": [
+      { "t": "Scegli la <b>tua zona</b> e vedi le offerte dei <b>negozi vicino a casa</b>.", "v": "Scegli la tua zona e vedi le offerte dei negozi vicino a casa." },
+      { "t": "Ogni negozio ha <b>un'offerta al mese</b>,", "v": "Ogni negozio ha un'offerta al mese," },
+      { "t": "e i badge <b>Nuova offerta</b> e <b>Nuovo su Sconti Roma</b> ti fanno vedere le novità.", "v": "e i badge Nuova offerta e Nuovo su Sconti Roma ti fanno vedere le novità." }
+    ]},
+    { "id": "s5", "clip": "pagina_offerta", "vmax": 1.65, "segmenti": [
+      { "t": "Apri un'offerta: trovi <b>cosa include</b> e <b>quando vale</b>.", "v": "Apri un'offerta: trovi cosa include e quando vale." },
+      { "t": "Con il <b>cuore</b> salvi i negozi <b>preferiti</b>,", "v": "Con il cuore salvi i negozi preferiti," },
+      { "t": "e <b>chiami</b> o scrivi su <b>WhatsApp</b> al negozio.", "v": "e chiami o scrivi su WhatsApp al negozio." }
+    ]},
+    { "id": "s6a", "clip": "qr_cliente", "min": 3.5, "segmenti": [
+      { "t": "Quando vai in negozio, tocca <b>Mostra QR Code</b>.", "v": "Quando vai in negozio, tocca Mostra QR Code." }
+    ]},
+    { "id": "s6b", "clip": "banco", "min": 5.4, "segmenti": [
+      { "t": "Il negozio lo <b>inquadra</b>, oppure scrive", "v": "Il negozio lo inquadra, oppure scrive" },
+      { "t": "il <b>codice a quattro cifre</b>: lo <b>sconto è valido</b>.", "v": "il codice a quattro cifre: lo sconto è valido." }
+    ]},
+    { "id": "s7", "clip": "zona_vuota", "vmin": 0.85, "segmenti": [
+      { "t": "La tua zona non ha ancora offerte?", "v": "La tua zona non ha ancora offerte?" },
+      { "t": "Tocca <b>Fammi sapere quando arrivate</b>.", "v": "Tocca Fammi sapere quando arrivate." }
+    ]},
+    { "id": "s8", "grafica": "costi", "segmenti": [
+      { "t": "", "v": "E quanto costa?", "img": "costi_0" },
+      { "t": "", "v": "Per ora Sconti Roma è gratuita per chi usa gli sconti:", "img": "costi_1" },
+      { "t": "", "v": "registrarsi e usare le offerte non costa nulla", "img": "costi_2" },
+      { "t": "", "v": "e non chiede dati di pagamento.", "img": "costi_3" }
+    ]},
+    { "id": "s9", "grafica": "chiusura", "segmenti": [
+      { "t": "", "v": "Apri Sconti Roma", "img": "chiusura_1" },
+      { "t": "", "v": "e scegli la tua zona.", "img": "chiusura_2" }
+    ]}
+  ]
+}
