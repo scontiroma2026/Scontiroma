@@ -45,7 +45,7 @@ export default function Landing() {
                 Scopri quanto puoi risparmiare nel tuo quartiere.
               </p>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">
-                Ti sblocchiamo il quartiere. Dal caffè alla pizza, dal parrucchiere alla palestra:
+                I negozi che ami, a prezzo scontato. Dal caffè alla pizza, dal parrucchiere alla palestra:
                 <strong className="text-neon"> sconti nei negozi vicino a casa</strong>. In tutta Roma e dintorni.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -89,7 +89,7 @@ export default function Landing() {
           {[
             { n: "01", t: "Registrati", d: "Crea il tuo account in pochi secondi.", c: "fucsia" },
             { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
-            { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Amen.", c: "neon" },
+            { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Tutto qui.", c: "neon" },
           ].map((s) => (
             <Card key={s.n} className="relative border-border bg-muted backdrop-blur p-8 hover:bg-muted transition group overflow-hidden">
               <div className={`absolute -top-4 -right-4 h-24 w-24 rounded-full bg-${s.c} opacity-20 blur-2xl`} />
