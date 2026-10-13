@@ -162,3 +162,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 12/10: i **pagamenti automatici** (Stripe/PayPal) compaiono ora anche nella scheda «Pagamenti» dell'admin (data, periodo coperto, ultimo pagamento, prossimo rinnovo) oltre a decidere la visibilità delle offerte. Il modulo «Registra pagamento» resta per bonifici o contanti. Ramo `claude/registro-automatico`.
 
 - 13/10 — Termini commercianti: correzioni proposte (PR «Termini correzioni»): «Roma e dintorni» al posto dei 3 quartieri; tolta la frase sui servizi a pagamento futuri per i Clienti; «€4,99 + IVA»; tolto «Prezzo bloccato»; «Nessun vincolo» con sconto valido fino a fine mese; eliminazione negozio allineata alla #102. Testo legale: da far vedere al consulente prima dell'unione.
+- 13/10 — Recesso: tolto l'articolo «Servizi a pagamento futuri» (proposta nella PR Termini correzioni, da vedere dal consulente).
