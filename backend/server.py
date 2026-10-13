@@ -720,9 +720,59 @@ async def next_offer_window() -> dict:
     }
 
 
+# ---------- Limite per client (anti registrazioni e richieste di massa) ----------
+# I contatori restano SOLO in memoria (il server li dimentica al riavvio) e usano l'impronta dell'IP,
+# mai l'IP in chiaro: nessun IP finisce nel database o nei log. Soglie larghe per non fermare gli utenti veri:
+# una famiglia sullo stesso Wi-Fi o un negozio che iscrive clienti in negozio restano ben sotto il limite.
+# Con il valore 0 il limite è spento (lo usano i test end-to-end, che iscrivono molti account dallo stesso IP).
+MSG_TROPPE_RICHIESTE = "Troppe richieste, riprova tra qualche minuto."
+_limiti_client: dict = {}
+
+
+def _soglia_env(nome: str, predefinito: int) -> int:
+    try:
+        return int(os.environ.get(nome, predefinito))
+    except (TypeError, ValueError):
+        return predefinito
+
+
+def _limite_client_ok(nome: str, request: Request, massimo: int, finestra_sec: int) -> bool:
+    """Vero se questo client può procedere; conta la richiesta. massimo <= 0 = limite spento."""
+    if massimo <= 0:
+        return True
+    adesso = time.monotonic()
+    chiave = (nome, hashlib.sha256(_ip_richiesta(request).encode()).hexdigest()[:16])
+    recenti = [t for t in _limiti_client.get(chiave, []) if adesso - t < finestra_sec]
+    if len(recenti) >= massimo:
+        _limiti_client[chiave] = recenti
+        return False
+    recenti.append(adesso)
+    _limiti_client[chiave] = recenti
+    if len(_limiti_client) > 5000:  # pulizia: via le chiavi scadute
+        for k in [k for k, v in _limiti_client.items() if not v or adesso - v[-1] >= 86400]:
+            _limiti_client.pop(k, None)
+    return True
+
+
+def _limite_registrazioni_ok(request: Request) -> bool:
+    return _limite_client_ok("registrazione", request,
+                             _soglia_env("REGISTRAZIONI_MAX_PER_FINESTRA", 10),
+                             _soglia_env("REGISTRAZIONI_FINESTRA_SEC", 600))
+
+
+def _limite_reset_ok(request: Request) -> bool:
+    return _limite_client_ok("reset-password", request,
+                             _soglia_env("RESET_MAX_PER_CLIENT_ORA", 15), 3600)
+
+
 # ---------- Auth Routes ----------
 @api.post("/auth/register")
-async def register(payload: RegisterIn, response: Response):
+async def register(payload: RegisterIn, response: Response, request: Request):
+    # Anti registrazioni di massa: al massimo REGISTRAZIONI_MAX_PER_FINESTRA tentativi per client in
+    # REGISTRAZIONI_FINESTRA_SEC (predefinito 10 ogni 10 minuti). Conta anche i tentativi con email già
+    # usata, così non si possono nemmeno provare a raffica indirizzi per scoprire chi è iscritto.
+    if not _limite_registrazioni_ok(request):
+        raise HTTPException(429, MSG_TROPPE_RICHIESTE, headers={"Retry-After": "600"})
     # Termini, Privacy e Cookie Policy vanno accettati: il sito lo impone già, il server ora lo verifica.
     # Gli account demo/admin creati all'avvio (seed_data) non passano da qui e non sono toccati.
     if not payload.legal_accepted:
@@ -1102,7 +1152,11 @@ GENERIC_RESET_MSG = "Se l'email è registrata, riceverai a breve un link per rei
 
 
 @api.post("/auth/forgot")
-async def forgot_password(payload: ForgotIn):
+async def forgot_password(payload: ForgotIn, request: Request):
+    # Oltre al limite per account (1 al minuto, 5 all'ora), un limite per client: impedisce di
+    # mandare email di reset a molti indirizzi diversi da un solo dispositivo (spam e quota Resend).
+    if not _limite_reset_ok(request):
+        raise HTTPException(429, MSG_TROPPE_RICHIESTE, headers={"Retry-After": "600"})
     email = payload.email.lower().strip()
     u = await db.users.find_one({"email": email})
     # Risposta identica sia se l'utente esiste sia se no (anti-enumeration).
@@ -5209,7 +5263,8 @@ async def invia_segnalazione(payload: SegnalazioneIn, request: Request):
     """Segnalazione pubblica (anche senza account). Nessun IP salvato."""
     if payload.tipo == "reclamo_commerciante":
         raise HTTPException(400, "I reclami dei commercianti si inviano dalla loro area")
-    chiave = hashlib.sha256((request.client.host if request.client else "x").encode()).hexdigest()[:16]
+    # Dietro il proxy di Render request.client.host è il proxy (uguale per tutti): si usa l'IP inoltrato.
+    chiave = hashlib.sha256(_ip_richiesta(request).encode()).hexdigest()[:16]
     return await _crea_segnalazione(payload, chiave, await _optional_user(request))
 
 
