@@ -16,6 +16,7 @@ import { renderBold } from "@/lib/renderBold";
 import StarRating from "@/components/StarRating";
 import OrariNegozio from "@/components/OrariNegozio";
 import CuorePreferito from "@/components/CuorePreferito";
+import SegnalaOfferta from "@/components/SegnalaOfferta";
 
 // Normalizza il numero di telefono in formato E.164 per link tel: / wa.me
 // Accetta "+39 06 12345", "06 12345", "0039 06 12345" e restituisce { digits, telHref, waHref, isMobile }
@@ -467,6 +468,7 @@ export default function DiscountDetail() {
           )}
         </DialogContent>
       </Dialog>
+      <div className="mx-auto max-w-5xl px-6 pb-10"><SegnalaOfferta discountId={discount.id} /></div>
     </main>
   );
 }

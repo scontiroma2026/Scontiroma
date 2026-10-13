@@ -211,6 +211,30 @@ async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_
     return await _send(to, f"La tua prova gratuita finisce tra {giorni} — Sconti Roma", _shell(inner))
 
 
+async def send_admin_segnalazione(to: str, tipo: str, dettaglio: str, riferimento: str, sid: str) -> Optional[str]:
+    """Avviso all'admin: nuova segnalazione o nuovo reclamo (testo breve, il resto si legge nell'area admin)."""
+    tipo, dettaglio, riferimento, sid = _esc(tipo), _esc(dettaglio[:300]), _esc(riferimento), _esc(sid[:8])
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:22px;color:#fff">Nuova segnalazione ({tipo})</h2>
+<p style="margin:0 0 12px;color:#d4d4d8">Riferimento: <strong>{riferimento}</strong> · codice {sid}</p>
+<p style="margin:0 0 16px;color:#d4d4d8">{dettaglio}</p>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Rispondere entro 5 giorni lavorativi dall'area admin → Segnalazioni.</p>
+"""
+    return await _send(to, f"Nuova segnalazione — {tipo}", _shell(inner))
+
+
+async def send_esito_segnalazione(to: str, esito: str, motivazione: str) -> Optional[str]:
+    """Esito motivato di una segnalazione o di un reclamo, a chi ha lasciato la sua email."""
+    esito, motivazione = _esc(esito), _esc(motivazione)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:22px;color:#fff">La tua segnalazione è stata esaminata</h2>
+<p style="margin:0 0 12px;color:#d4d4d8">Esito: <strong style="color:#00E5FF">{esito}</strong></p>
+<p style="margin:0 0 16px;color:#d4d4d8">{motivazione}</p>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Se non sei d'accordo puoi rispondere a questa email: la riesamineremo.</p>
+"""
+    return await _send(to, "Esito della tua segnalazione — Sconti Roma", _shell(inner))
+
+
 async def send_offer_expired(to: str, name: str, shop_name: str, no_renew: bool = False) -> Optional[str]:
     """Il 1° del mese: l'offerta del commerciante è scaduta perché non c'era quella nuova.
     Nessun rinnovo automatico: il negozio torna visibile solo con una nuova offerta approvata."""
