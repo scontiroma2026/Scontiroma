@@ -43,6 +43,7 @@ from email_service import (
     send_subscription_cancelled,
     send_master_reset,
     send_admin_segnalazione,
+    send_admin_riepilogo_settimanale,
     send_esito_segnalazione,
     send_merchant_trial_reminder,
     send_next_offer_reminder,
@@ -4022,6 +4023,13 @@ async def admin_session(request: Request, user: dict = Depends(require_admin)):
     return {"master_verified": verified, "biometric_available": bool((u or {}).get("webauthn_credentials"))}
 
 
+async def _negozi_senza_offerta() -> list:
+    """Nomi (dell'attività) dei negozi iscritti che non hanno ancora caricato nessuna offerta."""
+    con_offerta = set(await db.discounts.distinct("merchant_id"))
+    docs = await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1}).to_list(None)
+    return sorted((m.get("shop_name") or "senza nome") for m in docs if m["id"] not in con_offerta)
+
+
 @api.get("/admin/launch-summary")
 async def admin_launch_summary(user: dict = Depends(require_admin_master)):
     """Fase di lancio a colpo d'occhio: iscritti, negozi per quartiere, offerte da approvare,
@@ -4030,15 +4038,12 @@ async def admin_launch_summary(user: dict = Depends(require_admin_master)):
     merchants = await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1, "zone": 1, "created_at": 1}).to_list(None)
     offerte = {d["merchant_id"]: d for d in await db.discounts.find({}, {"_id": 0, "merchant_id": 1, "approval_status": 1, "active": 1}).to_list(None)}
     zone: dict = {}
-    senza_offerta = []
     for m in merchants:
         z = zone.setdefault(m.get("zone") or "—", {"zona": m.get("zone") or "—", "negozi": 0, "online": 0})
         z["negozi"] += 1
         d = offerte.get(m["id"])
         if d and d.get("approval_status") == "approved" and d.get("active", True) and m["id"] not in sospesi:
             z["online"] += 1
-        if not d:
-            senza_offerta.append(m.get("shop_name") or "senza nome")
     sette = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     mese = current_month_key()
     return {
@@ -4050,7 +4055,7 @@ async def admin_launch_summary(user: dict = Depends(require_admin_master)):
         "zone": sorted(zone.values(), key=lambda z: -z["negozi"]),
         "offerte_da_approvare": await db.discounts.count_documents({"approval_status": "pending"})
             + await db.next_discounts.count_documents({"approval_status": "pending"}),
-        "negozi_senza_offerta": sorted(senza_offerta),
+        "negozi_senza_offerta": await _negozi_senza_offerta(),
         "utilizzi_mese": await db.redemptions.count_documents({"status": "redeemed", "month_key": mese}),
         "mese": month_label_it(mese),
         "interesse_zone": await _interesse_per_zona(),
@@ -4304,8 +4309,9 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
 
 
 
-async def _iscrizioni_per_fonte() -> list:
-    """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale."""
+async def _iscrizioni_per_fonte(lo: Optional[str] = None, hi: Optional[str] = None) -> list:
+    """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale.
+    Con `lo`/`hi` (istanti ISO, hi escluso) aggiunge `nel_periodo` (usato dal riepilogo settimanale)."""
     da30 = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     conteggi: dict = {}
     async for c in db.users.find({"role": "client", "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
@@ -4316,6 +4322,8 @@ async def _iscrizioni_per_fonte() -> list:
         r["totale"] += 1
         if quando >= da30:
             r["ultimi_30_giorni"] += 1
+        if lo and hi:
+            r["nel_periodo"] = r.get("nel_periodo", 0) + (1 if lo <= quando < hi else 0)
     return sorted(conteggi.values(), key=lambda r: (r["totale"], r["fonte"]), reverse=True)
 
 
@@ -4323,6 +4331,170 @@ async def _iscrizioni_per_fonte() -> list:
 async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master)):
     """Quante iscrizioni arrivano da ogni volantino o QR di campagna (solo numeri)."""
     return {"fonti": await _iscrizioni_per_fonte()}
+
+
+# ---------- Riepilogo settimanale per l'admin (cosa funziona e cosa no) ----------
+# Solo conteggi aggregati: nessuna email, nessun nome di persona. Riusa i calcoli esistenti
+# (`_iscrizioni_per_fonte`, `_interesse_per_zona`, `_negozi_senza_offerta`, `_pag_righe_commercianti`).
+RIEPILOGO_ATTESA_GIORNI = 3
+
+
+def _settimana_conclusa(oggi: date) -> tuple:
+    """(lunedì, lunedì successivo escluso) della settimana di Roma appena conclusa."""
+    lunedi = oggi - timedelta(days=oggi.weekday())
+    return lunedi - timedelta(days=7), lunedi
+
+
+def _istante_roma(giorno: date) -> str:
+    """Mezzanotte di Roma di quel giorno, in UTC ISO (come le date salvate nel database)."""
+    return datetime(giorno.year, giorno.month, giorno.day, tzinfo=ROME_TZ).astimezone(timezone.utc).isoformat()
+
+
+def _etichetta_periodo(da: date, a: date) -> str:
+    ultimo = a - timedelta(days=1)
+    return f"{da.day} {MESI_IT[da.month - 1]} – {ultimo.day} {MESI_IT[ultimo.month - 1]}"
+
+
+def _variazione(questa: int, prima: int) -> dict:
+    return {"questa": questa, "precedente": prima, "delta": questa - prima,
+            "freccia": "↑" if questa > prima else "↓" if questa < prima else "="}
+
+
+async def _conteggi_settimana(da: date, a: date) -> dict:
+    """Conteggi di una settimana [da, a) (a escluso, date di Roma)."""
+    lo, hi = _istante_roma(da), _istante_roma(a)
+    intervallo = {"$gte": lo, "$lt": hi}
+    giorni = {"$gte": da.isoformat(), "$lt": a.isoformat()}
+    caricate = (await db.discounts.count_documents({"created_at": intervallo})
+                + await db.next_discounts.count_documents({"created_at": intervallo}))
+    approvate = (await db.discounts.count_documents({"approved_at": intervallo})
+                 + await db.next_discounts.count_documents({"approved_at": intervallo}))
+    scansioni = 0
+    async for d in db.scansioni_locandina.find({"giorno": giorni}, {"_id": 0, "conteggio": 1}):
+        scansioni += int(d.get("conteggio") or 0)
+    return {
+        "nuovi_clienti": await db.users.count_documents({"role": "client", "created_at": intervallo}),
+        "nuovi_commercianti": await db.users.count_documents({"role": "merchant", "created_at": intervallo}),
+        "offerte_caricate": caricate,
+        "offerte_approvate": approvate,
+        "sconti_usati": await db.redemptions.count_documents({"status": "redeemed", "redeemed_at": intervallo}),
+        "scansioni_qr": scansioni,
+        "iscrizioni_da_qr_negozi": await db.users.count_documents({"role": "client", "referred_at": intervallo}),
+        "nuove_segnalazioni": await db.segnalazioni.count_documents({"creata_il": intervallo}),
+        "fonti": {r["fonte"]: r["nel_periodo"] for r in await _iscrizioni_per_fonte(lo, hi)},
+    }
+
+
+METRICHE_RIEPILOGO = (
+    ("nuovi_clienti", "Nuovi clienti"),
+    ("nuovi_commercianti", "Nuovi commercianti"),
+    ("offerte_caricate", "Offerte caricate"),
+    ("offerte_approvate", "Offerte approvate"),
+    ("sconti_usati", "Sconti usati"),
+    ("scansioni_qr", "Scansioni dei QR dei negozi"),
+    ("iscrizioni_da_qr_negozi", "Iscrizioni dai QR dei negozi"),
+    ("nuove_segnalazioni", "Nuove segnalazioni e reclami"),
+)
+
+
+async def _riepilogo_settimanale(da: date, a: date, adesso: Optional[datetime] = None) -> dict:
+    """Riepilogo della settimana [da, a) (date di Roma, `a` escluso) con confronto con la settimana prima.
+    Solo conteggi: nessun dato personale."""
+    adesso = adesso or datetime.now(timezone.utc)
+    prima_da = da - (a - da)
+    ora, prima = await _conteggi_settimana(da, a), await _conteggi_settimana(prima_da, da)
+    metriche = [{"chiave": k, "etichetta": e, **_variazione(ora[k], prima[k])} for k, e in METRICHE_RIEPILOGO]
+
+    totali_fonte = {r["fonte"]: r["totale"] for r in await _iscrizioni_per_fonte()}
+    fonti = []
+    for f in sorted(totali_fonte, key=lambda f: (-totali_fonte[f], f)):
+        v = _variazione(ora["fonti"].get(f, 0), prima["fonti"].get(f, 0))
+        fonti.append({"fonte": f, "questa": v["questa"], "precedente": v["precedente"],
+                      "freccia": v["freccia"], "totale": totali_fonte[f]})
+
+    soglia = (adesso - timedelta(days=RIEPILOGO_ATTESA_GIORNI)).isoformat()
+    in_attesa = vecchie = 0
+    for coll in (db.discounts, db.next_discounts):
+        async for d in coll.find({"approval_status": "pending"}, {"_id": 0, "updated_at": 1, "created_at": 1}):
+            in_attesa += 1
+            if (d.get("updated_at") or d.get("created_at") or "") < soglia:
+                vecchie += 1
+    senza_offerta = await _negozi_senza_offerta()
+    aperte = [s async for s in db.segnalazioni.find({"stato": {"$in": ["ricevuta", "in_esame"]}}, {"_id": 0, "tipo": 1})]
+    reclami = sum(1 for s in aperte if s.get("tipo") == "reclamo_commerciante")
+
+    pagamenti = None
+    if merchant_payment_required():
+        per_stato = {s: 0 for s in PAG_STATI}
+        for r in await _pag_righe_commercianti():
+            per_stato[r["stato"]] += 1
+        pagamenti = {"per_stato": per_stato}
+
+    situazione = {
+        "offerte_in_attesa": in_attesa, "offerte_in_attesa_oltre_3_giorni": vecchie,
+        "negozi_senza_offerta": len(senza_offerta), "negozi_senza_offerta_nomi": senza_offerta,
+        "segnalazioni_aperte": len(aperte) - reclami, "reclami_aperti": reclami,
+    }
+    riepilogo = {
+        "periodo": {"da": da.isoformat(), "a": (a - timedelta(days=1)).isoformat(), "etichetta": _etichetta_periodo(da, a),
+                    "precedente": {"da": prima_da.isoformat(), "a": (da - timedelta(days=1)).isoformat()}},
+        "metriche": metriche, "fonti": fonti, "interesse_zone": await _interesse_per_zona(),
+        "situazione": situazione, "pagamenti": pagamenti,
+    }
+    riepilogo["da_guardare"] = _da_guardare(riepilogo)
+    return riepilogo
+
+
+def _da_guardare(r: dict) -> list:
+    """Al massimo 3 cose, scelte con regole semplici, dalla più urgente."""
+    s, voci = r["situazione"], []
+    aperte = s["segnalazioni_aperte"] + s["reclami_aperti"]
+    if aperte:
+        voci.append(f"{aperte} segnalazioni o reclami aperti: la risposta va data entro 5 giorni lavorativi.")
+    if s["offerte_in_attesa_oltre_3_giorni"]:
+        voci.append(f"{s['offerte_in_attesa_oltre_3_giorni']} offerte in attesa da più di {RIEPILOGO_ATTESA_GIORNI} giorni: da approvare o rifiutare.")
+    scaduti = ((r.get("pagamenti") or {}).get("per_stato") or {}).get("scaduto", 0)
+    if scaduti:
+        voci.append(f"{scaduti} negozi con il pagamento scaduto.")
+    ferme = [f["fonte"] for f in r["fonti"] if f["questa"] == 0 and f["totale"] > 0]
+    if ferme:
+        voci.append("Zero iscrizioni questa settimana da: " + ", ".join(ferme[:3]) + ".")
+    if s["negozi_senza_offerta"]:
+        voci.append(f"{s['negozi_senza_offerta']} negozi iscritti senza nessuna offerta: da contattare.")
+    nuovi = next((m for m in r["metriche"] if m["chiave"] == "nuovi_clienti"), None)
+    if nuovi and nuovi["questa"] == 0:
+        voci.append("Nessun nuovo cliente iscritto questa settimana.")
+    return voci[:3]
+
+
+@api.get("/admin/riepilogo-settimanale")
+async def admin_riepilogo_settimanale(user: dict = Depends(require_admin_master)):
+    """Riepilogo dell'ultima settimana conclusa (lunedì-domenica, ora di Roma) col confronto con quella prima."""
+    da, a = _settimana_conclusa(_rome_now().date())
+    return await _riepilogo_settimanale(da, a)
+
+
+async def _run_riepilogo_settimanale(oggi: Optional[date] = None) -> dict:
+    """Ogni lunedì: manda il riepilogo a `ADMIN_NOTIFY_EMAIL`. Una sola email a settimana: la settimana
+    viene «prenotata» nel database prima dell'invio, quindi un riavvio o un secondo avvio non la ripetono."""
+    to = os.environ.get("ADMIN_NOTIFY_EMAIL", "").strip()
+    if not to:
+        logging.info("[riepilogo-settimanale] ADMIN_NOTIFY_EMAIL non impostato: niente invio")
+        return {"sent": 0, "skipped": "nessun_destinatario"}
+    da, a = _settimana_conclusa(oggi or _rome_now().date())
+    chiave = f"riepilogo_settimanale_{da.isoformat()}"
+    res = await db.settings.update_one({"key": chiave}, {"$setOnInsert": {
+        "key": chiave, "claimed_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    if res.upserted_id is None:
+        return {"sent": 0, "skipped": "gia_inviato"}
+    try:
+        riepilogo = await _riepilogo_settimanale(da, a)
+        await send_admin_riepilogo_settimanale(to, riepilogo)
+    except Exception as e:
+        logging.error(f"[riepilogo-settimanale] invio non riuscito: {e}")
+        await db.settings.delete_one({"key": chiave})   # si potrà ritentare
+        return {"sent": 0, "skipped": "errore"}
+    return {"sent": 1, "settimana": da.isoformat()}
 
 
 async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool = False) -> dict:
@@ -5004,6 +5176,15 @@ def _start_scheduler() -> None:
         CronTrigger(hour=9, minute=45),
         id="trial_reminders_daily",
         replace_existing=True,
+    )
+    # Riepilogo settimanale all'admin — ogni lunedì alle 8:00 (idempotente; senza ADMIN_NOTIFY_EMAIL non fa nulla)
+    _scheduler.add_job(
+        _run_riepilogo_settimanale,
+        CronTrigger(day_of_week="mon", hour=8, minute=0, timezone="Europe/Rome"),
+        id="riepilogo_settimanale",
+        replace_existing=True,
+        misfire_grace_time=6 * 3600,
+        coalesce=True,
     )
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
     _scheduler.add_job(
