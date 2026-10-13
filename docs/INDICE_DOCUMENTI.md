@@ -29,7 +29,7 @@ Da iPhone: apri il link, poi tocca il nome del file per leggerlo. Le PR non anco
 | Cosa | PR | File |
 |---|---|---|
 | Piano di lancio commercianti | #81 | `docs/commercianti/PIANO_LANCIO_COMMERCIANTI.md` |
-| Kit messaggi (WhatsApp, social, email) | #41 | `docs/commercianti/MESSAGGI.md` (da correggere: «IVA inclusa» e «prezzo bloccato») |
+| Kit messaggi (WhatsApp, social, email) | #41 | `docs/commercianti/MESSAGGI.md` (corretto il 13/10: + IVA, niente prezzo bloccato) |
 | Video v13 | #62 | `anteprima/video/progetto_v13/` |
 | Video per i clienti (bozza) | senza PR | ramo `claude/bozza-video-clienti` |
 

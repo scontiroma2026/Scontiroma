@@ -162,3 +162,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 12/10: i **pagamenti automatici** (Stripe/PayPal) compaiono ora anche nella scheda «Pagamenti» dell'admin (data, periodo coperto, ultimo pagamento, prossimo rinnovo) oltre a decidere la visibilità delle offerte. Il modulo «Registra pagamento» resta per bonifici o contanti. Ramo `claude/registro-automatico`.
 
 - 13/10: **segnalazioni e reclami** (punto rosso DSA/P2B): pulsante «Segnala questa offerta» (anche senza account) e scheda «Hai un reclamo?» per i commercianti; arrivano nell'area admin → Segnalazioni (conferma entro 5 giorni lavorativi, esito sempre motivato e mandato per email se c'è l'indirizzo; conservate 24 mesi; nessun IP salvato; al massimo 5 all'ora). Aggiunta anche la scheda admin «Clienti» con eliminazione definitiva (richieste di cancellazione e pulizie). Ramo `claude/segnalazioni-reclami`.
+- 13/10 — Lista di lancio e indice documenti aggiornati dopo le correzioni di prezzo e zone (#41, #81, #116).
+- 13/10 — Home: nuove frasi (hero «I negozi che ami, a prezzo scontato», passo 3 «Tutto qui»).
