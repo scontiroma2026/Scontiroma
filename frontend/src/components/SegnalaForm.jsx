@@ -38,23 +38,23 @@ export default function SegnalaForm({ endpoint = "/segnalazioni", tipi, discount
       <label className="block text-sm">
         <span className="mb-1 block font-semibold">Di cosa si tratta?</span>
         <select value={tipo} onChange={(e) => setTipo(e.target.value)} data-testid={`${testId}-tipo`}
-          className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm">
+          className="w-full min-h-11 rounded-md border border-input bg-card px-3 py-2 text-sm">
           {tipi.map((t) => <option key={t.valore} value={t.valore}>{t.etichetta}</option>)}
         </select>
       </label>
       <label className="block text-sm">
         <span className="mb-1 block font-semibold">Racconta cosa è successo</span>
         <textarea value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={4} maxLength={1500} required
-          data-testid={`${testId}-motivo`} className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm" />
+          data-testid={`${testId}-motivo`} className="w-full min-h-11 rounded-md border border-input bg-card px-3 py-2 text-sm" />
       </label>
       {conEmail && (
         <label className="block text-sm">
-          <span className="mb-1 block font-semibold">La tua email <span className="font-normal text-muted-foreground">(facoltativa, per l'esito)</span></span>
+          <span className="mb-1 block font-semibold">La tua email <span className="font-normal text-foreground">(facoltativa, per l'esito)</span></span>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} data-testid={`${testId}-email`}
-            className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm" />
+            className="w-full min-h-11 rounded-md border border-input bg-card px-3 py-2 text-sm" />
         </label>
       )}
-      <Button type="submit" disabled={busy} data-testid={`${testId}-invia`} className="rounded-full">Invia</Button>
+      <Button type="submit" disabled={busy} data-testid={`${testId}-invia`} className="min-h-11 rounded-full px-6">Invia</Button>
     </form>
   );
 }

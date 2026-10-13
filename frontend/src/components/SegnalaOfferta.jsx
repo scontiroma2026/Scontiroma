@@ -15,7 +15,7 @@ export default function SegnalaOfferta({ discountId }) {
     <div className="mt-6 border-t border-border pt-4" data-testid="segnala-offerta">
       {!aperto ? (
         <button type="button" onClick={() => setAperto(true)} data-testid="segnala-apri"
-          className="inline-flex items-center gap-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-foreground underline underline-offset-2 hover:text-fucsia">
           <Flag size={13} aria-hidden="true" /> Segnala questa offerta
         </button>
       ) : (
