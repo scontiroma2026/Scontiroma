@@ -21,8 +21,8 @@ export default function Termini() {
         <p>
           Sconti Roma è una piattaforma digitale che mette in contatto{" "}
           <strong>utenti registrati</strong> ("Clienti") con{" "}
-          <strong>esercenti locali</strong> ("Commercianti") dei quartieri
-          Garbatella, San Paolo e Marconi a Roma, permettendo ai primi di accedere a sconti esclusivi presso i
+          <strong>esercenti locali</strong> ("Commercianti") di Roma e
+          dintorni, permettendo ai primi di accedere a sconti esclusivi presso i
           punti vendita dei secondi mediante l'esposizione di codici QR
           dinamici.
         </p>
@@ -58,12 +58,9 @@ export default function Termini() {
         <h2 className="font-serif text-2xl text-foreground mt-8">3. Costi del servizio</h2>
         <h3 className="font-serif text-xl text-foreground mt-6">3.1 Per i Clienti</h3>
         <p>
-          Durante la <strong>fase di lancio</strong> la registrazione e l'uso
-          degli sconti sono <strong>gratuiti</strong> per i Clienti. Non è
-          richiesto alcun dato di pagamento. Se in futuro
-          venissero introdotti servizi a pagamento per i Clienti, saranno
-          comunicati con almeno 30 giorni di preavviso e si attiveranno solo
-          con la tua accettazione espressa.
+          Per ora la registrazione e l'uso degli sconti sono{" "}
+          <strong>gratuiti</strong> per i Clienti. Non è richiesto alcun dato
+          di pagamento.
         </p>
         <h3 className="font-serif text-xl text-foreground mt-6">3.2 Per i Commercianti</h3>
         <ul className="list-disc pl-6 space-y-2">
@@ -73,13 +70,8 @@ export default function Termini() {
             nell'area del Commerciante.
           </li>
           <li>
-            <strong>Dopo la fase di lancio</strong>: €4,99 al mese, IVA
-            inclusa.
-          </li>
-          <li>
-            <strong>Prezzo bloccato</strong> per i Commercianti che aderiscono
-            durante la fase di lancio, finché restano iscritti senza
-            interruzioni.
+            <strong>Dopo la fase di lancio</strong>: €4,99 al mese + IVA
+            (aliquota di legge, oggi 22%).
           </li>
           <li>
             <strong>Preavviso di 30 giorni</strong> prima della fine della fase
@@ -91,8 +83,9 @@ export default function Termini() {
             non paghi nulla e la tua offerta non viene più pubblicata.
           </li>
           <li>
-            <strong>Nessun vincolo</strong>: puoi smettere quando vuoi, anche
-            scegliendo «Non rinnovo» per l'offerta del mese.
+            <strong>Nessun vincolo</strong>: puoi disdire quando vuoi dal tuo
+            profilo. L'addebito si ferma dal mese successivo e lo sconto già
+            pubblicato resta valido per i Clienti fino alla fine del mese.
           </li>
           <li>
             <strong>Pagamento</strong>: tramite Stripe o PayPal. Non
@@ -182,9 +175,12 @@ export default function Termini() {
             Il Commerciante può in qualsiasi momento, dal proprio profilo,{" "}
             <strong>modificare</strong> i propri dati, scegliere{" "}
             <strong>«Non rinnovo»</strong> per l'offerta del mese oppure{" "}
-            <strong>eliminare l'account</strong>: l'eliminazione rimuove subito
-            il negozio dalla piattaforma e dalla mappa e cancella i dati
-            collegati.
+            <strong>eliminare l'account</strong>: se hai un'offerta in
+            corso, il negozio resta visibile fino all'ultimo giorno del mese
+            (i Clienti possono usare lo sconto) e viene rimosso dalla
+            piattaforma e dalla mappa dal 1° del mese successivo; senza offerte
+            in corso la rimozione è immediata. I dati collegati vengono poi
+            cancellati.
           </p>
           <p className="mt-2 text-sm">
             Per <strong>sospendere temporaneamente</strong> l'esposizione dello

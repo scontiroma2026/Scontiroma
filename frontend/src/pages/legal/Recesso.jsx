@@ -40,18 +40,7 @@ export default function Recesso() {
           termina l'ultimo giorno del mese e non riparte.
         </p>
 
-        <h2 className="font-serif text-2xl text-foreground mt-8">3. Servizi a pagamento futuri</h2>
-        <p>
-          Se in futuro verranno introdotti servizi a pagamento per i Clienti
-          consumatori, varrà il diritto di recesso entro{" "}
-          <strong>14 giorni</strong> previsto dagli artt. 52 e seguenti del{" "}
-          <strong>Codice del Consumo</strong> (D.Lgs. 206/2005), con rimborso
-          entro 14 giorni sullo stesso mezzo di pagamento. Le modalità
-          dettagliate e il modulo di recesso tipo saranno pubblicati in questa
-          pagina prima dell'attivazione.
-        </p>
-
-        <h2 className="font-serif text-2xl text-foreground mt-8">4. Assistenza</h2>
+        <h2 className="font-serif text-2xl text-foreground mt-8">3. Assistenza</h2>
         <p>
           Per qualsiasi problema scrivi a{" "}
           <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">

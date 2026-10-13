@@ -26,7 +26,7 @@ test('privacy: fornitori della mappa e dati visti dal commerciante', async ({ pa
 test('termini: costi per i commercianti dopo la fase di lancio', async ({ page }) => {
   await page.goto('/termini');
   const t = page.getByTestId('termini-page');
-  await expect(t).toContainText('€4,99 al mese, IVA inclusa');
+  await expect(t).toContainText('€4,99 al mese + IVA');
   await expect(t).toContainText('Nessun addebito senza la tua conferma');
   await expect(t).toContainText('non si rinnovano');
 });
