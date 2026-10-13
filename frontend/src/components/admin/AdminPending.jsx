@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
+import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 
 /**
  * Tab "Offerte in attesa": lista degli sconti pending con Approva / Rifiuta inline.
@@ -12,6 +13,7 @@ import AdminSearchInput from "@/components/admin/AdminSearchInput";
  */
 export default function AdminPending({ pending, hdrs, onRefresh }) {
   const [q, setQ] = useState("");
+  const [daRifiutare, setDaRifiutare] = useState(null);
   const approve = async (id) => {
     try {
       await api.post(`/admin/discounts/${id}/approve`, {}, hdrs());
@@ -35,15 +37,15 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
     }
   };
 
-  const reject = async (id) => {
-    const reason = window.prompt("Motivo del rifiuto (visibile al commerciante):", "") || "";
+  const reject = async (motivo) => {
     try {
-      await api.post(`/admin/discounts/${id}/reject`, { reason }, hdrs());
-      toast.success("Offerta rimandata in bozza");
-      onRefresh();
+      await api.post(`/admin/discounts/${daRifiutare.id}/reject`, { reason: motivo }, hdrs());
     } catch (err) {
-      toast.error(formatApiError(err));
+      throw new Error(formatApiError(err));
     }
+    setDaRifiutare(null);
+    toast.success("Offerta rimandata in bozza");
+    onRefresh();
   };
 
   const needle = q.trim().toLowerCase();
@@ -141,7 +143,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                 </Button>
                 <Button
                   data-testid={`reject-${d.id}`}
-                  onClick={() => reject(d.id)}
+                  onClick={() => setDaRifiutare({ id: d.id, titolo: d.title })}
                   variant="outline"
                   className="rounded-full border-destructive/40 text-destructive hover:bg-destructive/10"
                 >
@@ -152,6 +154,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
           ))}
         </div>
       )}
+      <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={reject} />
     </Card>
   );
 }

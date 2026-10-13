@@ -165,4 +165,9 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 13/10 — Lista di lancio e indice documenti aggiornati dopo le correzioni di prezzo e zone (#41, #81, #116).
 - 13/10 — Home: nuove frasi (hero «I negozi che ami, a prezzo scontato», passo 3 «Tutto qui»).
 - 13/10 — Titoli del sito in Manrope (scelta del titolare, modello A): classe font-serif, titoli h1-h4 e test di carattere aggiornati; le locandine stampabili restano in Fraunces.
+- 13/10 — Lista di lancio aggiornata (posta su Aruba, Atlas Flex e Render Starter prima del lancio, video v14 e clienti, social fatti).
 - 13/10 — Eliminando un negozio ora spariscono anche gli sconti usati e le scansioni QR presso di lui (prima restavano e falsavano le statistiche dell'admin); all'avvio il server ripulisce quelli già orfani (test_dati_orfani.py).
+- 13/10 — Test email del dominio (sola lettura): Resend verificato (DKIM, SPF e MX di `send` ok, tracciamento spento, 0 spam, 29/31 consegnate); DNS pubblico della radice (MX, SPF, DMARC) non leggibile dall'ambiente, da controllare dal titolare; da decidere DMARC, `REPLY_TO_EMAIL`, nome del mittente e testo «abbonamento 2,99 €» dell'email mensile. Rapporto: `docs/operazioni/TEST_EMAIL_DOMINIO.md`.
+- 13/10 — Email abbonamento clienti (oggi spento): tolto il prezzo «2,99 €» dai testi e «quartiere» → «Roma e dintorni» (test email dominio, PR #126).
+- 13/10 — Nuova skill «lavoro-con-sub-agenti»: delega con lo stesso modello e worktree isolata; quando un sub-agente finisce interrompiamo il lavoro in corso, vediamo il risultato, decidiamo e poi riprendiamo (decisione del titolare).
+- 13/10 — Rifiuto di un'offerta: il motivo è obbligatorio (almeno 10 caratteri), controllato dal server (errore 422 in italiano) e dal pannello admin con finestra dedicata e pulsante spento finché non è valido; vale per offerta corrente e del mese prossimo (test_motivo_rifiuto.py, e2e 08-admin).
