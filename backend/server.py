@@ -5060,6 +5060,12 @@ async def on_startup():
     )
     await seed_data()
     await ensure_master_doc()
+    try:
+        orfani = await _pulisci_dati_orfani()
+        if any(orfani.values()):
+            logging.info(f"[orfani] puliti all'avvio: {orfani}")
+    except Exception as e:
+        logging.error(f"[orfani] pulizia fallita: {e}")
     _start_scheduler()
     # Catch-up rollover: se il pod era spento il 1° del mese alle 00:05, il job cron
     # è andato perso. Idempotente via rollover_runs: gira solo se non già eseguito.
@@ -5854,7 +5860,24 @@ async def _erase_user_data(user: dict) -> None:
             await coll.delete_many({"merchant_id": uid})
         await db.avvisi_preferiti.delete_many({"merchant_id": uid})
         await db.scansioni_locandina.delete_many({"merchant_id": uid})
+        # Sconti usati e scansioni QR fatti dai clienti presso questo negozio: senza il negozio
+        # restavano orfani e continuavano a contare nelle statistiche dell'admin.
+        await db.redemptions.delete_many({"merchant_id": uid})
+        await db.qr_scans.delete_many({"merchant_id": uid})
         await db.users.update_many({"preferiti": uid}, {"$pull": {"preferiti": uid}})
+
+
+async def _pulisci_dati_orfani() -> dict:
+    """Toglie sconti usati e scansioni QR che puntano a un negozio che non esiste più
+    (rimasti da prima della correzione di _erase_user_data). Idempotente."""
+    negozi = {m["id"] async for m in db.users.find({"role": "merchant"}, {"id": 1})}
+    esito = {}
+    for nome, coll in (("redemptions", db.redemptions), ("qr_scans", db.qr_scans)):
+        orfani = [x["_id"] async for x in coll.find({"merchant_id": {"$nin": list(negozi), "$ne": None}}, {"_id": 1})]
+        if orfani:
+            await coll.delete_many({"_id": {"$in": orfani}})
+        esito[nome] = len(orfani)
+    return esito
 
 
 @api.delete("/gdpr/delete-account")
