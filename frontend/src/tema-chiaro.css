@@ -39,11 +39,11 @@ html, body, .App {
   color: #1a1530;
 }
 
-/* Solo Fraunces e Manrope: niente carattere monospazio */
+/* Titoli in Manrope (scelta del titolare, 13/10): niente carattere monospazio */
 h1, h2, h3, h4 {
-  font-family: 'Fraunces', ui-serif, Georgia, serif;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 .font-testo,
 .font-mono,

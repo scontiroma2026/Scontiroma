@@ -38,8 +38,8 @@ test('feedback: mai sopra la scansione del commerciante', async ({ page, request
   await expect(page.getByTestId('app-feedback-banner')).toHaveCount(0);
 });
 
-test('font: i titoli usano Fraunces', async ({ page }) => {
+test('font: i titoli usano Manrope', async ({ page }) => {
   await page.goto('/');
   const f = await page.locator('h1').first().evaluate((e) => getComputedStyle(e).fontFamily);
-  expect(f).toMatch(/^Fraunces/);
+  expect(f).toMatch(/^"?Manrope/);
 });

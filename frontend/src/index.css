@@ -9,8 +9,8 @@
     font-family: 'Manrope', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  /* WONK 0 e SOFT 0: forme classiche (s, f, h, n dritte); il font variabile da solo le inclina sui titoli grandi */
-  .font-serif { font-family: 'Fraunces', serif; font-optical-sizing: auto; font-variation-settings: "WONK" 0, "SOFT" 0; }
+  /* Titoli in Manrope: la classe resta «font-serif» per non cambiare tutti i componenti */
+  .font-serif { font-family: 'Manrope', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
 }
 
 @layer utilities {

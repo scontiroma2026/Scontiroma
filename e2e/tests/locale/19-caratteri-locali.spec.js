@@ -37,7 +37,7 @@ test('caratteri: serviti dal nostro sito, nessuna richiesta a domini esterni', a
 
   expect(risultato.fraunces).toBe(true);
   expect(risultato.manrope).toBe(true);
-  expect(risultato.h1).toMatch(/^"?Fraunces/);
+  expect(risultato.h1).toMatch(/^"?Manrope/);
 
   expect(fontCaricati.length).toBeGreaterThan(0);
   for (const f of fontCaricati) expect(f.ok, f.url).toBe(true);

@@ -44,7 +44,7 @@ test('area commerciante: fondo chiaro, Fraunces e Manrope, nessuno scroll orizzo
 
     expect(r.lumBody, `${url}: fondo ${r.sfondoBody}`).toBeGreaterThan(0.9); // bianco o quasi
     expect(r.lumTesto, `${url}: il testo deve essere scuro`).toBeLessThan(0.1);
-    expect(r.h1, url).toBe('Fraunces');
+    expect(r.h1, url).toBe('Manrope');
     expect(r.famiglie, `${url}: famiglie di carattere usate`).toEqual(expect.arrayContaining(['Manrope']));
     for (const f of r.famiglie) expect(['Fraunces', 'Manrope'], `${url}: carattere inatteso ${f}`).toContain(f);
     expect(r.eccesso, `${url}: scroll orizzontale`).toBeLessThanOrEqual(0);

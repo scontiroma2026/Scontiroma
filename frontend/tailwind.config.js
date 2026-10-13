@@ -7,10 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Titoli in Fraunces su tutti i telefoni (prima la classe font-serif di Tailwind
-      // vinceva sul CSS e iPhone/Android mostravano font diversi)
+      // Titoli in Manrope su tutti i telefoni (la classe font-serif resta per compatibilità)
       fontFamily: {
-        serif: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+        serif: ['Manrope', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',
