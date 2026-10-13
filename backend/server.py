@@ -33,6 +33,7 @@ from urllib.parse import urlparse, urljoin
 import prova_pagamenti as pp
 from email_service import (
     send_password_reset,
+    send_email_confirmation,
     send_preferito_nuova_offerta,
     send_merchant_approved,
     send_merchant_rejected,
@@ -89,6 +90,13 @@ REFRESH_TTL_DAYS = 7
 # promemoria di pagamento spenti. Acceso ("true") = tutto torna come prima.
 def client_subscription_required() -> bool:
     return os.environ.get("CLIENT_SUBSCRIPTION_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+# Conferma dell'email per i soli CLIENTI (i commercianti hanno Partita IVA e approvazione manuale).
+# Acceso (predefinito) = il cliente non entra finché non tocca il link ricevuto per email. Spento
+# ("false") = si entra subito, come prima; i test e2e e di backend lo tengono spento.
+def client_email_confirmation_required() -> bool:
+    return os.environ.get("CLIENT_EMAIL_CONFIRMATION_REQUIRED", "true").strip().lower() in ("1", "true", "yes", "on")
 
 
 # «Prima il pagamento, poi la pubblicazione» per i negozi. Spento (predefinito) = nessun effetto:
@@ -250,6 +258,7 @@ def set_auth_cookies(response: Response, access: str, refresh: str):
 _PRIVATE_USER_FIELDS = (
     "_id", "password_hash", "pin_hash", "master_hash", "recovery_id_hash",
     "reset_token", "reset_expires", "reset_req_log",
+    "email_confirmed", "email_confirm_token_hash", "email_confirm_expires", "email_confirm_req_log",
     "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log",
     "login_failed_attempts", "pin_failed_attempts", "recovery_failed_attempts",
     "webauthn_credentials", "webauthn_user_id",
@@ -770,6 +779,131 @@ def _limite_reset_ok(request: Request) -> bool:
                              (_soglia_env("RESET_MAX_PER_CLIENT_ORA", 5), 3600))
 
 
+# ---------- Conferma dell'email dei clienti ----------
+CONFERMA_EMAIL_ORE = 48
+CONFERMA_ACCOUNT_GIORNI = 7
+MSG_CONFERMA_INVIATA = "Ti abbiamo mandato un'email: tocca il link per confermare il tuo account."
+MSG_EMAIL_NON_CONFERMATA = ("Devi ancora confermare il tuo account: tocca il link nell'email che ti abbiamo mandato. "
+                            "Non la trovi? Controlla lo spam oppure fattela rimandare.")
+MSG_CONFERMA_RIMANDATA = "Se c'è un account da confermare con questa email, ti abbiamo mandato un nuovo link."
+CODICE_EMAIL_NON_CONFERMATA = "email_non_confermata"
+MSG_LINK_NON_VALIDO = "Questo link non è valido o è già stato usato."
+
+
+def _hash_token_conferma(token: str) -> str:
+    return hashlib.sha256((token or "").encode()).hexdigest()
+
+
+def _campi_conferma_email(token: str) -> dict:
+    """Campi da salvare per un account da confermare: solo l'impronta del token e la scadenza."""
+    return {
+        "email_confirmed": False,
+        "email_confirm_token_hash": _hash_token_conferma(token),
+        "email_confirm_expires": (datetime.now(timezone.utc) + timedelta(hours=CONFERMA_EMAIL_ORE)).isoformat(),
+    }
+
+
+_TOGLI_CONFERMA = {"email_confirm_token_hash": "", "email_confirm_expires": "", "email_confirm_req_log": ""}
+
+
+async def _blocca_se_non_confermato(user: dict) -> None:
+    """Chiamata dopo la verifica della password: un cliente non confermato non entra.
+    Con l'interruttore spento chi era rimasto da confermare viene ammesso e segnato confermato."""
+    if not user or user.get("role") != "client" or user.get("email_confirmed") is not False:
+        return
+    if client_email_confirmation_required():
+        raise HTTPException(403, {"code": CODICE_EMAIL_NON_CONFERMATA, "msg": MSG_EMAIL_NON_CONFERMATA})
+    await db.users.update_one({"id": user["id"]}, {"$set": {"email_confirmed": True}, "$unset": _TOGLI_CONFERMA})
+
+
+class ConfirmEmailIn(BaseModel):
+    token: str
+
+
+class ResendConfirmIn(BaseModel):
+    email: EmailStr
+
+
+def _limite_conferma_ok(request: Request) -> bool:
+    """«Rimanda l'email»: al massimo 3 richieste ogni 10 minuti E 5 all'ora per dispositivo.
+    Solo in memoria (impronta dell'indirizzo, mai salvato)."""
+    return _limite_client_ok("conferma-email", request,
+                             (_soglia_env("CONFERMA_MAX_PER_CLIENT_10MIN", 3), 600),
+                             (_soglia_env("CONFERMA_MAX_PER_CLIENT_ORA", 5), 3600))
+
+
+@api.post("/auth/confirm-email")
+async def confirm_email(payload: ConfirmEmailIn):
+    """Conferma con il token ricevuto per email. Monouso: dopo la conferma l'impronta sparisce.
+    Si chiama con POST dalla pagina dell'app (un GET potrebbe essere aperto dagli antivirus della posta)."""
+    token = (payload.token or "").strip()
+    u = await db.users.find_one({"email_confirm_token_hash": _hash_token_conferma(token)}) if token else None
+    if not u:
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LINK_NON_VALIDO})
+    try:
+        scaduto = datetime.fromisoformat(u.get("email_confirm_expires", "")) < datetime.now(timezone.utc)
+    except Exception:
+        scaduto = True
+    if scaduto:
+        raise HTTPException(400, {"code": "link_scaduto", "msg": "Questo link è scaduto."})
+    res = await db.users.update_one(
+        {"id": u["id"], "email_confirm_token_hash": u["email_confirm_token_hash"]},
+        {"$set": {"email_confirmed": True, "email_confirmed_at": datetime.now(timezone.utc).isoformat()},
+         "$unset": _TOGLI_CONFERMA},
+    )
+    if res.modified_count != 1:  # due tocchi insieme: ne vale uno solo
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LINK_NON_VALIDO})
+    _email_in_background(send_welcome_client(u["email"], u.get("name") or ""), "benvenuto-cliente")
+    return {"ok": True}
+
+
+@api.post("/auth/resend-confirmation")
+async def resend_confirmation(payload: ResendConfirmIn, request: Request):
+    """Rimanda il link. Risposta identica se l'email esiste, non esiste o è già confermata."""
+    if not _limite_conferma_ok(request):
+        raise HTTPException(429, MSG_TROPPE_RICHIESTE, headers={"Retry-After": "600"})
+    email = payload.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    if (u and u.get("role") == "client" and u.get("email_confirmed") is False
+            and await _reset_request_allowed(u, "email_confirm_req_log")):
+        token = secrets.token_urlsafe(32)  # il nuovo link sostituisce il precedente
+        await db.users.update_one({"id": u["id"]}, {"$set": _campi_conferma_email(token)})
+        try:
+            await send_email_confirmation(u["email"], u.get("name") or "", token)
+        except Exception as e:
+            logging.warning(f"[email:conferma] non inviata: {e}")
+    return {"ok": True, "message": MSG_CONFERMA_RIMANDATA}
+
+
+async def _migra_conferma_email() -> int:
+    """Chi era già iscritto prima di questa funzione è confermato: nessun utente esistente resta bloccato.
+    Idempotente; non tocca gli account che hanno già il campo (compresi i nuovi non confermati)."""
+    r = await db.users.update_many({"email_confirmed": {"$exists": False}}, {"$set": {"email_confirmed": True}})
+    return r.modified_count
+
+
+async def _run_unconfirmed_cleanup() -> dict:
+    """Cancella i clienti mai confermati dopo CONFERMA_ACCOUNT_GIORNI giorni, con gli stessi dati
+    collegati della cancellazione GDPR (`_erase_user_data`). Con l'interruttore spento non fa nulla."""
+    if not client_email_confirmation_required():
+        return {"skipped": True, "deleted": 0}
+    limite = datetime.now(timezone.utc) - timedelta(days=CONFERMA_ACCOUNT_GIORNI)
+    cancellati = 0
+    async for u in db.users.find({"role": "client", "email_confirmed": False}):
+        try:
+            creato = datetime.fromisoformat(u.get("created_at", ""))
+            if creato.tzinfo is None:
+                creato = creato.replace(tzinfo=timezone.utc)
+        except Exception:
+            continue
+        if creato >= limite:
+            continue
+        await _erase_user_data(u)
+        await db.users.delete_one({"id": u["id"], "email_confirmed": False})
+        cancellati += 1
+    return {"skipped": False, "deleted": cancellati}
+
+
 # ---------- Auth Routes ----------
 @api.post("/auth/register")
 async def register(payload: RegisterIn, response: Response, request: Request):
@@ -820,6 +954,15 @@ async def register(payload: RegisterIn, response: Response, request: Request):
     if fonte:
         doc["fonte_iscrizione"] = fonte
         doc["fonte_iscrizione_at"] = now_iso
+    # Conferma dell'email: solo clienti, solo con l'interruttore acceso. Si salva l'impronta (sha256)
+    # del token, mai il token. Chi si iscrive con l'interruttore spento è già confermato.
+    conferma_token = None
+    if payload.role == "client":
+        if client_email_confirmation_required():
+            conferma_token = secrets.token_urlsafe(32)
+            doc.update(_campi_conferma_email(conferma_token))
+        else:
+            doc["email_confirmed"] = True
     if payload.role == "merchant":
         phone = (payload.phone or "").strip()
         if not phone:
@@ -855,6 +998,10 @@ async def register(payload: RegisterIn, response: Response, request: Request):
         if _admin_notify_to():
             _email_in_background(send_admin_new_merchant(_admin_notify_to(), doc.get("shop_name") or "", doc.get("category") or "",
                                                          doc.get("zone") or "", email, doc.get("phone") or ""), "admin-nuovo-commerciante")
+    elif conferma_token:
+        # Niente accesso finché non tocca il link; il benvenuto parte dopo la conferma.
+        _email_in_background(send_email_confirmation(email, doc.get("name") or "", conferma_token), "conferma-email")
+        return {"confirmation_required": True, "email": email, "message": MSG_CONFERMA_INVIATA}
     else:
         _email_in_background(send_welcome_client(email, doc.get("name") or ""), "benvenuto-cliente")
 
@@ -911,6 +1058,7 @@ async def login(payload: LoginIn, response: Response):
         else:
             await _login_guard_fail(email)
         raise HTTPException(401, "Credenziali non valide")
+    await _blocca_se_non_confermato(user)
 
     await db.users.update_one(
         {"email": email},
@@ -1142,6 +1290,7 @@ async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Respons
         raise HTTPException(401, "Sessione scaduta, riprova")
     if v is None:
         raise HTTPException(401, "Autenticazione fallita")
+    await _blocca_se_non_confermato(u)
     await db.users.update_one(
         {"id": u["id"], "webauthn_credentials.credential_id": cid},
         {"$set": {"webauthn_credentials.$.sign_count": v.new_sign_count}, "$unset": _OLD_PIN_FIELDS},
@@ -1196,6 +1345,9 @@ async def reset_password(payload: ResetIn):
         "$set": {"password_hash": hash_password(payload.new_password)},
         "$unset": {"reset_token": "", "reset_expires": ""},
     })
+    # Aver ricevuto e usato il link di reset prova che l'indirizzo è suo: vale come conferma.
+    if u.get("email_confirmed") is False:
+        await db.users.update_one({"id": u["id"]}, {"$set": {"email_confirmed": True}, "$unset": _TOGLI_CONFERMA})
     return {"ok": True, "email": u["email"]}
 
 
@@ -5085,6 +5237,13 @@ def _start_scheduler() -> None:
         id="month_rollover",
         replace_existing=True,
     )
+    # Account cliente non confermati da 7 giorni: ogni giorno alle 03:30 (e anche all'avvio)
+    _scheduler.add_job(
+        _run_unconfirmed_cleanup,
+        CronTrigger(hour=3, minute=30),
+        id="unconfirmed_cleanup_daily",
+        replace_existing=True,
+    )
     _scheduler.start()
     logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, next-offer reminders 09:30, rollover 1° 00:05 Europe/Rome")
 
@@ -5118,6 +5277,7 @@ async def on_startup():
     await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
+    await db.users.create_index("email_confirm_token_hash", sparse=True)
     # Garantisce idempotenza reale dei webhook di rinnovo (Stripe/PayPal possono
     # ri-consegnare lo stesso evento più volte): l'indice unique fa fallire a
     # livello DB il secondo insert concorrente, anche se il check applicativo
@@ -5133,6 +5293,20 @@ async def on_startup():
     )
     await seed_data()
     await ensure_master_doc()
+    # Migrazione sicura: chi era già iscritto è confermato (nessun utente esistente resta bloccato).
+    # Idempotente; non tocca chi ha già il campo (anche i nuovi non confermati).
+    try:
+        n = await _migra_conferma_email()
+        if n:
+            logging.info(f"[conferma-email] account già esistenti segnati come confermati: {n}")
+    except Exception as e:
+        logging.error(f"[conferma-email] migrazione fallita: {e}")
+    try:
+        esito = await _run_unconfirmed_cleanup()
+        if esito.get("deleted"):
+            logging.info(f"[conferma-email] account non confermati cancellati all'avvio: {esito['deleted']}")
+    except Exception as e:
+        logging.error(f"[conferma-email] pulizia all'avvio fallita: {e}")
     try:
         orfani = await _pulisci_dati_orfani()
         if any(orfani.values()):
