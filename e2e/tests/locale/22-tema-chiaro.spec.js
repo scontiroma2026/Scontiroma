@@ -109,7 +109,7 @@ test('tema chiaro: pagine pubbliche', async ({ page, request }) => {
     await controlla(page, url);
   }
   const h1 = await page.goto('/').then(() => page.evaluate(() => getComputedStyle(document.querySelector('h1')).fontFamily));
-  expect(h1).toMatch(/^"?Fraunces/);
+  expect(h1).toMatch(/^"?Manrope/);
 });
 
 test('tema chiaro: banner dei cookie e delle stelle', async ({ page, request }) => {
