@@ -12,7 +12,7 @@
 :root{--ink:#1a1530;--soft:#5b5470;--rosa:#d6197a;--viola:#6d3df5;--teal:#0b7a8a;--tint:#f6f4fb;--line:#e4e0ee}
 html,body{background:#fff}
 body{font-family:'Manrope',system-ui,sans-serif;color:var(--ink);font-size:9pt;line-height:1.35}
-.pagina{width:210mm;height:297mm;margin:0 auto;padding:9mm 10mm 8mm;display:flex;flex-direction:column;gap:3.6mm;overflow:hidden}
+.pagina{width:210mm;height:297mm;margin:0 auto;padding:7mm 10mm 6mm;display:flex;flex-direction:column;gap:3.6mm;overflow:hidden}
 @media screen and (max-width:700px){.pagina{width:100%;height:auto;padding:16px}}
 header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1.2mm solid transparent;border-image:linear-gradient(90deg,var(--rosa),var(--viola),var(--teal)) 1;padding-bottom:2.5mm}
 .marchio{font-weight:800;color:var(--rosa);font-size:9pt;letter-spacing:.04em;text-transform:uppercase}
@@ -22,17 +22,18 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em}
 .passo{border:.3mm solid var(--line);border-radius:3mm;padding:3mm;display:grid;grid-template-columns:1fr 31mm;gap:3mm;align-items:start;background:#fff}
 .passo h2{font-weight:800;font-size:10.5pt;line-height:1.15;margin-bottom:1mm;letter-spacing:-.01em}
 .n{display:inline-flex;width:6mm;height:6mm;border-radius:50%;background:linear-gradient(135deg,var(--rosa),var(--viola));color:#fff;font-weight:800;font-size:9pt;align-items:center;justify-content:center;margin-right:1.5mm;vertical-align:1px}
-.passo p,.passo li{font-size:8.5pt;color:#2d2745}
+.passo p,.passo li{font-size:8.2pt;color:#2d2745}
 .passo ul{padding-left:3.6mm;margin-top:.8mm}
 .passo li{margin-bottom:.4mm}
 .passo img{width:31mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
-.dati{display:grid;grid-template-columns:34mm 1fr;gap:4mm;align-items:center;border-radius:3mm;padding:3mm 3.2mm;background:var(--tint);font-size:8.5pt}
-.dati img{width:34mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
+.dati2{display:grid;grid-template-columns:1fr 1fr;gap:3.2mm}
+.dati{display:grid;grid-template-columns:27mm 1fr;gap:3mm;align-items:center;border-radius:3mm;padding:3mm 3.2mm;background:var(--tint);font-size:8.5pt}
+.dati img{width:27mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
 .dati h3{font-weight:800;font-size:10pt;margin-bottom:1mm;color:var(--teal)}
 .dati ul{padding-left:3.6mm;margin-top:.8mm}
 .dati p,.dati li{color:#2d2745}
 .fiche{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3.2mm}
-.box{border-radius:3mm;padding:3.2mm;background:var(--tint);font-size:8.5pt}
+.box{border-radius:3mm;padding:3mm;background:var(--tint);font-size:8.2pt}
 .box h3{font-weight:800;font-size:10pt;margin-bottom:1mm;color:var(--viola)}
 .box.t h3{color:var(--teal)}.box.r h3{color:var(--rosa)}
 .box p,.box li{color:#2d2745}
@@ -102,18 +103,28 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em}
       <div>
         <h2><span class="n">6</span>Codice a 4 cifre e QR al banco</h2>
         <p>Nell'area commerciante trovi il <strong>codice del negozio</strong>: dallo solo a chi lavora al banco. Il cliente mostra il suo QR, tu lo inquadri con <strong>«Scansiona codice»</strong>, scrivi il codice e applichi lo sconto.</p>
-        <ul><li>Puoi cambiare il codice quando vuoi</li><li>Stampa il tuo QR e mettilo in cassa</li></ul>
+        <ul><li>Puoi cambiare il codice quando vuoi</li><li>Stampa la locandina con il tuo QR e mettila in cassa</li></ul>
       </div>
       <img src="img/6-codice.jpg" alt="Scheda Codice del negozio">
     </article>
   </section>
 
-  <section class="dati">
-    <img src="img/7-dashboard.jpg" alt="Dashboard del commerciante: sconti usati, clienti del mese e ultimi sei mesi">
-    <div>
-      <h3>Guarda come vanno le cose</h3>
-      <p>Nella <strong>Dashboard</strong> della tua area vedi i numeri del negozio, sempre aggiornati e senza nomi dei clienti:</p>
-      <ul><li>quanti sconti sono stati usati nel mese</li><li>quanti clienti nuovi e quanti tornano da te</li><li>il giorno con più sconti usati e l'andamento degli ultimi sei mesi</li></ul>
+  <section class="dati2">
+    <div class="dati">
+      <img src="img/7-dashboard.jpg" alt="Dashboard del commerciante: sconti usati e clienti del mese">
+      <div>
+        <h3>Guarda come vanno le cose</h3>
+        <p>Nella <strong>Dashboard</strong> della tua area vedi i numeri del negozio, senza i nomi dei clienti:</p>
+        <ul><li>sconti usati nel mese</li><li>clienti nuovi e clienti che tornano</li><li>giorno con più sconti e ultimi sei mesi</li></ul>
+      </div>
+    </div>
+    <div class="dati">
+      <img src="img/8-locandina.jpg" alt="Scheda Il tuo QR personale con il pulsante Stampa la mia locandina">
+      <div>
+        <h3>Stampa la locandina</h3>
+        <p>Nella scheda <strong>«Il tuo QR personale»</strong> tocca <strong>«Stampa la mia locandina»</strong>: si apre il foglio A5 con il nome del negozio e il tuo QR.</p>
+        <ul><li>Tocca «Stampa / Salva PDF»</li><li>Appendila o mettila in cassa</li></ul>
+      </div>
     </div>
   </section>
 
