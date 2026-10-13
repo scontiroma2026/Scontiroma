@@ -13,7 +13,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 4. [ ] **Utente:** server e dati: Render su «Starter» (non si addormenta); backup automatici su MongoDB Atlas con prova di ripristino; riga «Indirizzi (LocationIQ)» verde in admin (altrimenti chiave `LOCATIONIQ_API_KEY` su Render).
 5. [ ] **Utente:** contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google (Gmail gratuito non ne ha: si cambia quando c'è il secondo account Google).
 6. [ ] **Utente:** prova generale sul sito di prova: registrazione, Partita IVA, offerta, approvazione, QR, scansione. Poi eventualmente una prova sul sito vero con un negozio finto, da cancellare.
-7. [ ] **Utente:** alcuni negozi con offerte pubblicate nelle tre zone pilota (Garbatella, San Paolo, Marconi) e primo messaggio ai negozi (uno alla volta, con modo per dire no), dopo che il consulente ha visto i testi.
+7. [ ] **Utente:** alcuni negozi con offerte pubblicate a Roma e dintorni (le prime attività da cercare restano Garbatella, San Paolo e Marconi) e primo messaggio ai negozi (uno alla volta, con modo per dire no), dopo che il consulente ha visto i testi.
 8. [ ] **Claude:** allineare le bozze legali alle decisioni del 12/10 (prova «circa due mesi», 4,99 € + IVA, pagamento dal 1° al 5, disdetta, eliminazione account) prima che le veda il consulente.
 
 ## B. Dopo il lancio, prima del primo addebito (circa due mesi dopo)
@@ -29,7 +29,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [ ] **Utente:** profili social e WhatsApp Business (email e numero dedicati, nome e handle `scontiroma`), Google Business, gruppi di quartiere (permesso agli amministratori). Piano in #103.
 - [ ] **Claude e utente:** video commercianti (testo dell'utente, poi voce e montaggio; chiedere prima il permesso per i crediti) e video per i clienti.
 - [ ] **Utente:** file `roma.pmtiles` della mappa (guida `docs/guide/MAPPE.md`); foto del negozio nel profilo (da decidere).
-- [ ] **Claude:** ripulire i dati demo («a metà prezzo», «-50%»), «SOLO ROMA» e «3 quartieri pilota» nella home, segnaposto del modulo offerta; correggere i messaggi del kit (#41) e il piano (#81).
+- [x] **Claude:** correzioni di testo (13/10): «+ IVA» e niente «prezzo bloccato» nel kit (#41) e nel piano (#81); «Roma e dintorni» al posto dei tre quartieri nel kit, nei Termini (#116) e nella home; segnaposto del modulo offerta già corretto. I dati demo stanno solo nei test (`e2e/seed_demo.py`), mai in produzione.
 - [ ] **Utente:** revocare `EMERGENT_LLM_KEY`; avvisi di UptimeRobot sull'email di Sconti Roma e sull'app del telefono.
 
 ## Fatto
