@@ -90,3 +90,4 @@ Aggiornato: 07/10/2026 — ultimo commit in `main`: `723f21a`
   - contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google;
   - Gemini su piano a pagamento;
   - testi legali.
+- 13/10 — Kit messaggi (#41): prezzo «+ IVA», tolto «prezzo bloccato» e i tre quartieri («Roma e dintorni»).

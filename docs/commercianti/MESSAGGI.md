@@ -13,7 +13,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 3. **WhatsApp e SMS.** Messaggi pubblicitari inviati in serie a chi non ha dato il consenso non sono ammessi (normativa ePrivacy e GDPR, indicazioni del Garante). Quindi WhatsApp e SMS **solo** a chi ha già risposto o ha dato lui stesso il numero per ricevere il video. Un numero pubblicato su Google o sul sito non è un consenso.
 4. **Chi dice no non si contatta più.** Appena arriva un «no», «stop» o simili: nel file Excel Stato = «Non ricontattare», nessun promemoria, nessun altro canale.
 5. **Ogni messaggio ha una via d'uscita semplice** (rispondere «NO»). Va rispettata subito.
-6. **Cosa non scrivere.** Mai «gratis per sempre», «nessuna commissione», «0 €». Si può dire: gratis durante la fase di lancio; dopo, 4,99 € al mese IVA inclusa, prezzo bloccato per chi parte adesso, preavviso di 30 giorni, nessun addebito senza conferma. Niente promesse di numeri di clienti o di sconti garantiti.
+6. **Cosa non scrivere.** Mai «gratis per sempre», «nessuna commissione», «0 €». Si può dire: gratis durante la fase di lancio; dopo, 4,99 € al mese + IVA, preavviso di 30 giorni, nessun addebito senza conferma. Niente promesse di numeri di clienti o di sconti garantiti.
 7. **Dati.** Il file con i contatti dei negozi resta sul proprio telefono o computer, mai nel repository (è pubblico). Registrare solo ciò che serve: canale, data, esito.
 8. **Video.** Due versioni: WhatsApp (sotto i 16 MB) e social (Instagram, Facebook). Nei fotogrammi di esempio compaiono nomi e dati inventati.
 
@@ -35,7 +35,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 > Buongiorno, siamo Sconti Roma, l'app degli sconti nei negozi di Garbatella, San Paolo e Marconi.
 > Come richiesto, ecco il video di 1 minuto: [LINK]
-> Ogni mese [NOME NEGOZIO] pubblica un'offerta, i clienti del quartiere la trovano nell'app e mostrano un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese IVA inclusa, senza vincoli.
+> Ogni mese [NOME NEGOZIO] pubblica un'offerta, i clienti del quartiere la trovano nell'app e mostrano un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Se non vi interessa rispondete «NO» e non vi scriviamo più.
 
 *(Se il numero è stato dato a voce: aprire con «Come concordato, ecco il video».)*
@@ -49,9 +49,9 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 ## INSTAGRAM-DM: messaggio diretto
 
-> Ciao! Siamo **Sconti Roma**, un'app che porta clienti ai negozi di Garbatella, San Paolo e Marconi.
+> Ciao! Siamo **Sconti Roma**, un'app che porta clienti ai negozi di Roma e dintorni.
 > Per [NOME NEGOZIO] funzionerebbe così: pubblicate un'offerta al mese, il cliente la trova nell'app e mostra un QR alla cassa. Voi lo inquadrate e lo sconto è fatto.
-> Nella fase di lancio è gratis, poi 4,99 € al mese IVA inclusa, senza vincoli.
+> Nella fase di lancio è gratis, poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Video di un minuto: [LINK]. Se vi incuriosisce, vi spieghiamo tutto in 5 minuti.
 > Se non vi interessa basta scrivere «no» e non vi disturbiamo più 🙂
 
@@ -59,7 +59,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 
 > Buongiorno, siamo **Sconti Roma**, l'app degli sconti nei negozi di Garbatella, San Paolo e Marconi.
 > Scriviamo a [NOME NEGOZIO] perché ogni mese potrebbe pubblicare un'offerta: i clienti del quartiere la trovano nell'app e la usano con un QR che voi inquadrate alla cassa.
-> Gratis nella fase di lancio, poi 4,99 € al mese IVA inclusa, senza vincoli.
+> Gratis nella fase di lancio, poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Video di un minuto: [LINK]
 > Se preferite non ricevere altri messaggi, rispondete «NO»: non scriveremo più.
 
@@ -68,7 +68,7 @@ Firma sempre «Sconti Roma». Niente nomi di persone, niente prima persona singo
 Usare solo nei gruppi dove le regole ammettono le attività commerciali (leggere il regolamento o chiedere agli amministratori prima di pubblicare). Un solo post per gruppo, nessun messaggio privato a chi commenta senza invito.
 
 > Avete un'attività a Garbatella, San Paolo o Marconi? 🏪
-> Sconti Roma è un'app dove ogni attività pubblica un'offerta al mese e i clienti del quartiere la trovano e la usano con un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese IVA inclusa, senza vincoli.
+> Sconti Roma è un'app dove ogni attività pubblica un'offerta al mese e i clienti del quartiere la trovano e la usano con un QR alla cassa. Nella fase di lancio è gratis; poi 4,99 € al mese + IVA, disdici quando vuoi.
 > Video di un minuto: [LINK]
 > Se vi interessa commentate qui sotto o scriveteci in privato. Se non è per voi, nessun problema: ignorate pure il post.
 
@@ -82,7 +82,7 @@ Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
 >
 > Ogni mese pubblicate un'offerta, la controlliamo noi e i clienti la trovano nell'app. Alla cassa mostrano un QR che voi inquadrate con il telefono.
 >
-> Nella fase di lancio è gratis. Dopo costa 4,99 € al mese IVA inclusa, con il prezzo bloccato per chi parte adesso, preavviso di 30 giorni e nessun addebito senza la vostra conferma.
+> Nella fase di lancio è gratis. Dopo costa 4,99 € al mese + IVA, preavviso di 30 giorni e nessun addebito senza la vostra conferma.
 >
 > Video di un minuto: [LINK]
 > Iscrizione: scontiroma.it
@@ -95,7 +95,7 @@ Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
 
 Si chiama il numero pubblico del negozio, meglio fuori dagli orari di punta. Parlare al plurale.
 
-> «Buongiorno, siamo di Sconti Roma. Avete un minuto? Stiamo lanciando un'app che porta i clienti del quartiere ai negozi di Garbatella, San Paolo e Marconi. L'attività pubblica un'offerta al mese, il cliente arriva con un QR e voi lo inquadrate con il telefono. Nella fase di lancio è gratis. Possiamo mandarvi un video di un minuto?»
+> «Buongiorno, siamo di Sconti Roma. Avete un minuto? Stiamo lanciando un'app che porta i clienti del quartiere ai negozi di Roma e dintorni. L'attività pubblica un'offerta al mese, il cliente arriva con un QR e voi lo inquadrate con il telefono. Nella fase di lancio è gratis. Possiamo mandarvi un video di un minuto?»
 
 - Se dicono sì e indicano loro un numero o un indirizzo: usare quello (WhatsApp o email), con WHATSAPP-1 o EMAIL.
 - Se dicono che non è il momento: «Nessun problema, grazie e buona giornata» e non richiamare. Stato = «Non ricontattare» se lo chiedono.
