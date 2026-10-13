@@ -310,7 +310,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
           <td style="padding:36px 40px 8px 40px">
             <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:24px;color:#111">Ciao {safe_name},</h1>
             <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#333">
-              Il tuo abbonamento mensile da <strong>{_eur(PRICE_EUR)}</strong> è attivo e si è rinnovato con successo!
+              Il tuo abbonamento mensile è attivo e si è rinnovato con successo!
             </p>
             <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#333">
               I commercianti del tuo quartiere hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
@@ -491,7 +491,7 @@ async def send_subscription_cancelled(
 </div>
 
 <p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
-  Cambiato idea? Puoi <strong>riattivare il tuo abbonamento</strong> in qualsiasi momento — solo {_eur(PRICE_EUR)} al mese e torni subito a risparmiare sui commercianti del tuo quartiere.
+  Cambiato idea? Puoi <strong>riattivare il tuo abbonamento</strong> in qualsiasi momento e torni subito a risparmiare sui negozi di Roma e dintorni.
 </p>
 
 <div style="text-align:center;margin:28px 0">
