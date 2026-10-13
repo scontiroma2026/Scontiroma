@@ -12,7 +12,7 @@ Il Commerciante è un **professionista**: le tutele dei consumatori (recesso del
 Sconti Roma pubblica le offerte del Commerciante e permette ai Clienti di usarle con il QR. Sconti Roma è un **intermediario**: non è parte del contratto di vendita tra Commerciante e Cliente.
 
 ## 2. Registrazione e approvazione
-Il Commerciante fornisce dati veritieri (attività, indirizzo, telefono) e la **Partita IVA** (obbligatoria alla registrazione: 11 cifre, con controllo della cifra di controllo) e dichiara di poter agire per l'attività. **[PROPOSTA; punto aperto: i commercianti già registrati senza P.IVA, vedi indice domanda 5 e 22]** Ogni offerta è **approvata** da Sconti Roma prima della pubblicazione (criteri nel doc. 06). Un account per attività.
+Il Commerciante fornisce dati veritieri (attività, indirizzo, telefono) e la **Partita IVA** (obbligatoria alla registrazione: 11 cifre, con controllo della cifra di controllo) e dichiara di poter agire per l'attività. **[PROPOSTA; i vecchi commercianti senza P.IVA erano fittizi e sono stati cancellati]** Ogni offerta è **approvata** da Sconti Roma prima della pubblicazione (criteri nel doc. 06). Un account per attività.
 
 ## 3. Prezzo, prova e pagamenti
 1. **Prova gratuita di circa due mesi**, che parte dalla **prima pubblicazione** dell'offerta (cioè dalla sua approvazione). Dura da 49 a 81 giorni a seconda del giorno di approvazione, perché si paga sempre il 1° del mese (punto 5). La data esatta di fine prova è comunicata via email e nell'area del Commerciante; **promemoria via email 10 giorni e 3 giorni prima della fine della prova**.

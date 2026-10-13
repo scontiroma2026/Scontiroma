@@ -20,10 +20,10 @@ Responsabile della protezione dei dati (DPO): non designato, perché non è obbl
 | Chi | Dati | Obbligatorio? |
 |---|---|---|
 | Tutti gli iscritti | Email, password (salvata solo come impronta cifrata, mai in chiaro), nome e cognome, ruolo (cliente / commerciante), data di iscrizione, versione dei testi accettati e data di accettazione | Sì, per creare l'account |
-| Clienti | Offerte usate (data, ora, negozio, offerta), negozi salvati tra i preferiti, eventuale negozio da cui ti sei iscritto (QR della locandina o link: **[PROPOSTA, scelta A del titolare, non ancora realizzata]** il dato sarà tenuto solo fino a completare l'iscrizione), valutazioni e commenti sull'app, valutazioni dei negozi | I primi due sì per il servizio; gli altri sono facoltativi |
-| Commercianti | Nome dell'attività, **Partita IVA** (obbligatoria alla registrazione, 11 cifre con controllo), categoria, zona, indirizzo, telefono, orari, descrizione, foto e testi delle offerte, coordinate della mappa ricavate dall'indirizzo | Sì per pubblicare [PROPOSTA: P.IVA nuova; i commercianti già registrati senza P.IVA sono un punto aperto] |
+| Clienti | Offerte usate (data, ora, negozio, offerta), negozi salvati tra i preferiti, eventuale negozio da cui ti sei iscritto (QR della locandina o link: il dato resta nel browser **30 giorni**, inizialmente; il titolare valuterà poi se ridurlo **[DA VALIDARE]**), valutazioni e commenti sull'app, valutazioni dei negozi | I primi due sì per il servizio; gli altri sono facoltativi |
+| Commercianti | Nome dell'attività, **Partita IVA** (obbligatoria alla registrazione, 11 cifre con controllo), categoria, zona, indirizzo, telefono, orari, descrizione, foto e testi delle offerte, coordinate della mappa ricavate dall'indirizzo | Sì per pubblicare [PROPOSTA: P.IVA nuova; i vecchi commercianti senza P.IVA erano fittizi e sono stati cancellati] |
 | Accesso | Face ID / impronta (facoltativi): sul server resta solo una chiave pubblica, la tua biometria non esce dal telefono. Contatore dei tentativi errati e blocco di 15 minuti dopo 5 errori (salvato come impronta dell'email digitata) | Facoltativo / sicurezza |
-| Scansione del QR | Esito (valido / non valido), ora, negozio, cliente. Registro delle scansioni non valide usato contro gli abusi | Sì |
+| Scansione del QR | Esito (valido / non valido), ora, negozio, cliente. Registro delle scansioni non valide usato contro gli abusi (conservato 12 mesi) | Sì |
 | Consenso ai cookie | Scelta fatta, data, indirizzo IP e tipo di browser (prova del consenso) | Sì, se usi il banner |
 | Statistiche di visita | Solo con il tuo consenso ai cookie «funzionali»: un codice casuale non collegato all'account (`sr_vid`), pagine viste, giorno | No |
 | Contatori anonimi | «Fammi sapere quando arrivate» (voti per zona) e aperture del link del QR della locandina: solo un numero per zona o per negozio e per giorno, nessun dato personale | No |
@@ -42,12 +42,14 @@ Non trattiamo dati particolari (art. 9). Il servizio è per maggiorenni (18+) ed
 | Creare e gestire l'account, far funzionare QR, offerte e preferiti | Contratto (art. 6.1.b) | Finché l'account è attivo; cancellazione quando lo elimini (vedi punto 6) |
 | Identificare i commercianti e fatturare (Partita IVA, dati dell'attività) | Contratto (6.1.b) e obbligo di legge (6.1.c) | Finché l'account è attivo; dati contabili 10 anni **[PROPOSTA]** |
 | Email di servizio: benvenuto, recupero password, promemoria di scadenza delle offerte, promemoria di fine prova (10 e 3 giorni prima), approvazione o rifiuto offerte, conferma di disdetta e di cancellazione | Contratto (6.1.b) | Come sopra |
-| Sicurezza, antifrode, blocco dopo tentativi errati, registro delle scansioni non valide | Legittimo interesse (6.1.f) [DA VALIDARE: valutazione di bilanciamento, vedi doc. 10] | **[DA VALIDARE: proposta 12 mesi]** oggi senza cancellazione automatica (vedi indice, punto rosso 3) |
+| Sicurezza, antifrode, blocco dopo tentativi errati, registro delle scansioni non valide | Legittimo interesse (6.1.f) [DA VALIDARE: valutazione di bilanciamento, vedi doc. 10] | **12 mesi**, poi cancellato automaticamente (PR #114) **[DA VALIDARE: durata]** |
 | Mostrare al commerciante i dati della scansione e le statistiche aggregate | Contratto (6.1.b) | Finché l'account è attivo |
-| Sapere da quale negozio arrivano le iscrizioni (QR / link) | Legittimo interesse (6.1.f) | Solo fino all'iscrizione per i dati del browser **[PROPOSTA, scelta A, da realizzare]**; poi finché l'account è attivo |
+| Sapere da quale negozio arrivano le iscrizioni (QR / link) | Legittimo interesse (6.1.f) | Dati nel browser: 30 giorni (inizialmente, da rivalutare). Nell'account resta solo l'attribuzione dell'iscrizione, finché l'account è attivo **[DA VALIDARE]** |
 | Valutazioni sull'app e sui negozi | Legittimo interesse: migliorare il servizio (6.1.f) | Finché l'account è attivo |
-| Prova del consenso ai cookie | Obbligo di dimostrare il consenso (art. 7.1, 6.1.c) | 24 mesi, poi cancellato **[DA VALIDARE; la cancellazione automatica oggi non è ancora nel codice, punto rosso 3]** |
-| Statistiche di visita anonime | Consenso (6.1.a), revocabile dal banner «Gestisci cookie» | **[DA VALIDARE: proposta 13 mesi]** oggi senza cancellazione automatica |
+| Prova del consenso ai cookie | Obbligo di dimostrare il consenso (art. 7.1, 6.1.c) | 24 mesi, poi cancellato automaticamente (PR #95) **[DA VALIDARE: durata]** |
+| Statistiche di visita anonime | Consenso (6.1.a), revocabile dal banner «Gestisci cookie» | **13 mesi**, poi cancellato automaticamente (PR #114) **[DA VALIDARE: durata]** |
+| Offerte usate e mai usate (sconti riscattati) | Contratto (6.1.b) | **24 mesi**, poi cancellate automaticamente (PR #114) **[DA VALIDARE]** |
+| Segnalazioni su un'offerta e reclami dei commercianti (nessun IP salvato) | Legittimo interesse (6.1.f) e obblighi DSA/P2B se applicabili **[DA VALIDARE]** | **24 mesi** (PR #113) **[DA VALIDARE]** |
 | Avvisi email sulle offerte dei negozi preferiti | Consenso (6.1.a), revocabile («Non avvisarmi più») | Finché non revochi |
 | Comunicazioni promozionali di Sconti Roma | Consenso (6.1.a), separato dai Termini; revocabile in ogni momento | Finché non revochi |
 | Pagamenti dei commercianti (solo dopo la prova, con conferma esplicita e addebito mensile automatico) | Contratto (6.1.b) e obblighi fiscali (6.1.c) | 10 anni (dati contabili) |

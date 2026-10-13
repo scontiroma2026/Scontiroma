@@ -1,8 +1,8 @@
 # 02 - Cookie Policy e testo del banner (art. 122 Codice privacy, Linee guida Garante 10/06/2021)
 
-> **Rischio: 🟠 medio: categoria «Marketing» già tolta (🟢), ma i cookie di attribuzione sono ancora da ridurre (scelta A decisa, non realizzata) e il registro del consenso non si cancella da solo.**
+> **Rischio: 🟠 medio: categoria «Marketing» già tolta (🟢) e registro del consenso cancellato dopo 24 mesi (🟢); resta da qualificare se i cookie di attribuzione, tenuti 30 giorni, sono tecnici o richiedono il consenso.**
 > **[PROPOSTA] [DA VALIDARE]** - Bozza per il consulente. Non è pubblicata. La pagina `CookiePolicy.jsx` e il banner NON sono stati toccati.
-> Allineata al codice del 12/10/2026 e alle decisioni del titolare del 10-12/10. La categoria «Marketing» è già stata tolta dal banner (PR #95); la riduzione dei cookie di attribuzione (scelta A) è decisa ma **non ancora realizzata nel codice**.
+> Allineata al codice del 12/10/2026 e alle decisioni del titolare del 10-12/10. La categoria «Marketing» è già stata tolta dal banner (PR #95); il 13/10 il titolare ha **annullato la scelta A**: i cookie di attribuzione restano nel browser 30 giorni «inizialmente» (da rivalutare).
 
 Ultimo aggiornamento: **[DA COMPLETARE]**
 
@@ -22,11 +22,11 @@ Cookie e strumenti simili (memoria del browser, `localStorage` e `sessionStorage
 | `sr_da_fare_non_adesso_v1`, `app_feedback_dismissed_v1`, `pwa_install_dismissed_at`, `sr_interesse_zona` | memoria del browser | Ricordano gli avvisi che hai chiuso o la zona per cui hai già votato | Finché non cancelli i dati del browser |
 | `sr_opened` | memoria della sessione | Evita di ripetere una schermata nella stessa visita | Chiusura del browser |
 
-## 3. Cookie di attribuzione e tempo d'uso: da ridurre [DA VALIDARE: qualificazione]
+## 3. Cookie di attribuzione e tempo d'uso: 30 giorni, base da qualificare [DA VALIDARE]
 | Nome | Cosa fa | Durata | Proposta |
 |---|---|---|---|
-| `referral_merchant_id`, `referral_captured_at`, `fonte_iscrizione`, `fonte_iscrizione_at` | Ricordano da quale negozio (QR / link) sei arrivato, per attribuire l'iscrizione | 30 giorni | **Scelta A del titolare (decisa, da realizzare):** ridurli ai soli dati **necessari all'iscrizione**, tenuti solo fino a iscrizione completata e poi cancellati; così restano strumenti tecnici. Alternativa non scelta: consenso «funzionale». Il consulente conferma che con la riduzione bastano come tecnici |
-| `app_feedback_secondi_v1` | Conta il tempo d'uso per sapere quando chiedere le stelle | Finché non cancelli i dati | Come sopra: consenso «funzionale» oppure eliminare |
+| `referral_merchant_id`, `referral_captured_at`, `fonte_iscrizione`, `fonte_iscrizione_at` | Ricordano da quale negozio (QR / link) sei arrivato, per attribuire l'iscrizione | 30 giorni | **Decisione del titolare (13/10):** restano **30 giorni** «inizialmente», poi si valuta. Il consulente dice se per 30 giorni sono **strumenti tecnici** (finalità: attribuire l'iscrizione al negozio) o se serve il **consenso** «funzionale» |
+| `app_feedback_secondi_v1` | Conta il tempo d'uso per sapere quando chiedere le stelle | Finché non cancelli i dati | Consenso «funzionale» oppure eliminare [DA VALIDARE] |
 
 ## 4. Strumenti con il tuo consenso (funzionali / statistiche)
 | Nome | Cosa fa | Durata |

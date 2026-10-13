@@ -27,6 +27,9 @@
 | Non essere sottoposti a decisioni automatizzate (22) | Non applicabile: nessuna decisione automatizzata | - |
 | Reclamo al Garante (77) | Indicalo sempre nella risposta | - |
 
+## 3 bis. Strumento admin (PR #113, da validare)
+La scheda admin **«Clienti»** permette l'**eliminazione definitiva** di un cliente per le richieste di cancellazione (art. 17), dopo la verifica dell'identità del punto 2. Annota l'esito nel registro. Per segnalazioni e reclami c'è l'area admin **«Segnalazioni»** (conferma in 5 giorni lavorativi, esito motivato).
+
 ## 4. Casi particolari
 - **Commercianti:** la cancellazione toglie negozio, offerte, archivio, contatori; i dati contabili (e la fattura con la Partita IVA) restano per obbligo di legge, anonimizzati dall'account. Con un'offerta in corso la cancellazione parte dal 1° del mese dopo (verificare di restare nel mese dalla richiesta); senza offerta in corso è immediata. L'export include anche la Partita IVA.
 - **Richiesta di un Cliente sul commerciante:** il Commerciante è titolare autonomo dei dati che vede; indicare a chi rivolgersi.

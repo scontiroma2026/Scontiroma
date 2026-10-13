@@ -1,6 +1,6 @@
 # 06 - Informativa P2B ai Commercianti (Regolamento UE 2019/1150)
 
-> **Rischio: 🔴 alto: applicabilità del Reg. 2019/1150 da chiedere al consulente, preavvisi, motivazioni, reclami su info@.**
+> **Rischio: 🔴 alto: applicabilità del Reg. 2019/1150 da chiedere al consulente, preavvisi, motivazioni, reclami su info@ (strumento già realizzato, da validare).**
 > **[PROPOSTA] [DA VALIDARE]** - Bozza. Sconti Roma è un «servizio di intermediazione online» tra imprese (i commercianti) e consumatori (i clienti). Va verificato se rientra nel Regolamento. **[DA VALIDARE, domanda 3]**
 > Applicabilità del Regolamento: **domanda aperta al consulente**. Può diventare un articolo dei Termini Commercianti (doc. 04) o una pagina `/commercianti/regole`.
 
@@ -37,8 +37,8 @@ Il Commerciante vede: i propri dati; per ogni scansione nome e iniziale del cogn
 Nessuna commissione sulle vendite. Un solo prezzo fisso mensile (**4,99 € + IVA**, IVA esclusa) dopo la prova di circa due mesi, **senza prezzo bloccato** (variazioni con preavviso di 30 giorni). Addebito automatico il 1° dopo una sola conferma esplicita. Disdetta a fine mese (lo sconto va rispettato fino all'ultimo giorno), nessuna penale, mese pagato non rimborsabile. Partita IVA obbligatoria alla registrazione. I dati dopo la chiusura: cancellati (vedi Privacy), tranne dati contabili e fatture (10 anni).
 
 ## 8. Sistema interno di gestione dei reclami (art. 11)
-- Punto di contatto: **info@scontiroma.it**.
-- Risposta: conferma entro 5 giorni lavorativi, esito motivato entro **[DA COMPLETARE: proposta 30 giorni]**.
+- Punto di contatto: **info@scontiroma.it** e **scheda «Reclami» nell'area del Commerciante** (realizzata, PR #113, da validare).
+- Risposta: **conferma entro 5 giorni lavorativi** e **esito sempre motivato** (area admin «Segnalazioni»); nessun IP salvato; conservazione **24 mesi**. Tempo dell'esito: **[DA COMPLETARE: proposta 30 giorni]**.
 - Registro annuale dei reclami e delle decisioni (anche per aggiornare i Termini). L'obbligo del sistema interno **non si applica alle piccole imprese** (meno di 50 addetti e fatturato ≤ 10 milioni di euro) **[DA VALIDARE: Euro Linea rientra, quindi forse non obbligatorio, ma è consigliato]**.
 
 ## 9. Mediazione (art. 12)
