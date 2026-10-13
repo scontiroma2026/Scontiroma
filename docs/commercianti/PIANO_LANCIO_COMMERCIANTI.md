@@ -1,5 +1,8 @@
 # Piano di lancio lato commercianti (bozza del 10/10/2026)
 
+> **Aggiornamento 13/10 (decisioni chiuse):** prezzo **4,99 € al mese + IVA** (IVA esclusa); **niente prezzo bloccato**; la prova parte dalla prima pubblicazione e il primo pagamento è sempre un 1° (entro l'11 → due mesi dopo, dal 12 → tre mesi dopo; prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale. Le domande su IVA e prezzo bloccato più sotto sono quindi superate.
+
+
 Piano descritto dal titolare, con il controllo di coerenza con Termini, Recesso e app.
 **Solo documento di lavoro**: nessun testo del sito è stato modificato e nessun pagamento è acceso
 (`CLIENT_SUBSCRIPTION_REQUIRED=false`, Stripe e PayPal spenti). Le parti legali vanno al consulente.

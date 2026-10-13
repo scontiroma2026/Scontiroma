@@ -144,3 +144,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
   - contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google;
   - Gemini su piano a pagamento;
   - testi legali, regole d'uso dei messaggi ai commercianti, contatore aggregato delle scansioni.
+- 13/10 — Piano lancio (#81): nota in testa con le decisioni chiuse (+ IVA, niente prezzo bloccato, regola dell'11).
