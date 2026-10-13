@@ -12,20 +12,25 @@
 :root{--ink:#1a1530;--soft:#5b5470;--rosa:#d6197a;--viola:#6d3df5;--teal:#0b7a8a;--tint:#f6f4fb;--line:#e4e0ee}
 html,body{background:#fff}
 body{font-family:'Manrope',system-ui,sans-serif;color:var(--ink);font-size:9pt;line-height:1.35}
-.pagina{width:210mm;height:297mm;margin:0 auto;padding:9mm 10mm 8mm;display:flex;flex-direction:column;gap:4.2mm;overflow:hidden}
+.pagina{width:210mm;height:297mm;margin:0 auto;padding:9mm 10mm 8mm;display:flex;flex-direction:column;gap:3.6mm;overflow:hidden}
 @media screen and (max-width:700px){.pagina{width:100%;height:auto;padding:16px}}
 header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1.2mm solid transparent;border-image:linear-gradient(90deg,var(--rosa),var(--viola),var(--teal)) 1;padding-bottom:2.5mm}
 .marchio{font-weight:800;color:var(--rosa);font-size:9pt;letter-spacing:.04em;text-transform:uppercase}
 h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em}
 .sotto{font-size:9pt;color:var(--soft);margin-top:1mm}
 .griglia{display:grid;grid-template-columns:1fr 1fr;gap:3.2mm}
-.passo{border:.3mm solid var(--line);border-radius:3mm;padding:3mm;display:grid;grid-template-columns:1fr 40mm;gap:3mm;align-items:start;background:#fff}
+.passo{border:.3mm solid var(--line);border-radius:3mm;padding:3mm;display:grid;grid-template-columns:1fr 31mm;gap:3mm;align-items:start;background:#fff}
 .passo h2{font-weight:800;font-size:10.5pt;line-height:1.15;margin-bottom:1mm;letter-spacing:-.01em}
 .n{display:inline-flex;width:6mm;height:6mm;border-radius:50%;background:linear-gradient(135deg,var(--rosa),var(--viola));color:#fff;font-weight:800;font-size:9pt;align-items:center;justify-content:center;margin-right:1.5mm;vertical-align:1px}
 .passo p,.passo li{font-size:8.5pt;color:#2d2745}
 .passo ul{padding-left:3.6mm;margin-top:.8mm}
 .passo li{margin-bottom:.4mm}
-.passo img{width:40mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
+.passo img{width:31mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
+.dati{display:grid;grid-template-columns:34mm 1fr;gap:4mm;align-items:center;border-radius:3mm;padding:3mm 3.2mm;background:var(--tint);font-size:8.5pt}
+.dati img{width:34mm;border-radius:2mm;border:.3mm solid var(--line);display:block}
+.dati h3{font-weight:800;font-size:10pt;margin-bottom:1mm;color:var(--teal)}
+.dati ul{padding-left:3.6mm;margin-top:.8mm}
+.dati p,.dati li{color:#2d2745}
 .fiche{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3.2mm}
 .box{border-radius:3mm;padding:3.2mm;background:var(--tint);font-size:8.5pt}
 .box h3{font-weight:800;font-size:10pt;margin-bottom:1mm;color:var(--viola)}
@@ -52,7 +57,7 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em}
       <div>
         <h2><span class="n">1</span>Registrati</h2>
         <p>Dal sito scegli <strong>«Sono un commerciante»</strong>. Servono i dati del negozio e la <strong>Partita IVA</strong> (11 cifre). Devi avere almeno 18 anni.</p>
-        <ul><li>Leggi e accetta Termini e Privacy</li><li>Accedi con email e password</li></ul>
+        <ul><li>Leggi e accetta Termini e Privacy</li><li>Nella tua area scrivi anche la <strong>descrizione del negozio</strong>: la leggono i clienti</li></ul>
       </div>
       <img src="img/1-registrazione.jpg" alt="Modulo di registrazione con il campo Partita IVA">
     </article>
@@ -101,6 +106,15 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em}
       </div>
       <img src="img/6-codice.jpg" alt="Scheda Codice del negozio">
     </article>
+  </section>
+
+  <section class="dati">
+    <img src="img/7-dashboard.jpg" alt="Dashboard del commerciante: sconti usati, clienti del mese e ultimi sei mesi">
+    <div>
+      <h3>Guarda come vanno le cose</h3>
+      <p>Nella <strong>Dashboard</strong> della tua area vedi i numeri del negozio, sempre aggiornati e senza nomi dei clienti:</p>
+      <ul><li>quanti sconti sono stati usati nel mese</li><li>quanti clienti nuovi e quanti tornano da te</li><li>il giorno con più sconti usati e l'andamento degli ultimi sei mesi</li></ul>
+    </div>
   </section>
 
   <section class="fiche">
