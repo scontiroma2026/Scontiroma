@@ -56,11 +56,26 @@ def testo_semplice(h):
     return re.sub(r"<[^>]+>", "", h)
 
 
+# ---- modalità con voce: --voce traccia.mp3 --al tempi.json --nome fernando
+def arg(n, d=None):
+    return sys.argv[sys.argv.index(n) + 1] if n in sys.argv else d
+
+
+VOCE, ALJ, NOME = arg("--voce"), arg("--al"), arg("--nome", "muto")
+PRE = "" if not VOCE else NOME + "_"
+AL = json.load(open(ALJ)) if ALJ else None
+if AL:
+    pst = []
+    for p in cop["parti"]:
+        pst.append(min(AL["segmenti"][f"{p['id']}:{i}"][0] for i, s in enumerate(p["segmenti"]) if s["v"]))
+    pst[0] = 0.0
+    pen = pst[1:] + [AL["durata_audio"] + 0.8]
+
 tempo = 0.0
 parti_info = []
-for p in cop["parti"]:
+for pi, p in enumerate(cop["parti"]):
     durs = []
-    for s in p["segmenti"]:
+    for i, s in enumerate(p["segmenti"]):
         n = len(s["v"])
         durs.append(max(0.9, n / cop["cps"] + cop["pausa_segmento"]) if n else 0)
     D = p.get("durata") or max(sum(durs) + cop["pausa_scena"], p.get("min", 0))
@@ -68,14 +83,19 @@ for p in cop["parti"]:
         durs = [D]
     else:
         durs[-1] += cop["pausa_scena"]
-    out = os.path.join(SEG, f"parte_{p['id']}.mp4")
+    if AL:
+        D = pen[pi] - pst[pi]
+        starts = [AL["segmenti"][f"{p['id']}:{i}"][0] for i in range(len(p["segmenti"]))]
+        starts[0] = pst[pi]
+        durs = [(starts[i + 1] if i + 1 < len(starts) else pen[pi]) - starts[i] for i in range(len(starts))]
+    out = os.path.join(SEG, f"{PRE}parte_{p['id']}.mp4")
     if p.get("grafica"):
         lista = []
         for s, d in zip(p["segmenti"], durs):
             lista += [f"file '{os.path.join(IMG, s['img'])}.png'", f"duration {d:.3f}"]
         lista.append(f"file '{os.path.join(IMG, p['segmenti'][-1]['img'])}.png'")
-        open(os.path.join(SEG, f"lista_{p['id']}.txt"), "w").write("\n".join(lista))
-        ffmpeg("-f", "concat", "-safe", "0", "-i", os.path.join(SEG, f"lista_{p['id']}.txt"), "-vf", "fps=30,format=yuv420p",
+        open(os.path.join(SEG, f"{PRE}lista_{p['id']}.txt"), "w").write("\n".join(lista))
+        ffmpeg("-f", "concat", "-safe", "0", "-i", os.path.join(SEG, f"{PRE}lista_{p['id']}.txt"), "-vf", "fps=30,format=yuv420p",
                "-t", f"{D:.3f}", "-c:v", "libx264", "-crf", "18", out)
         nota = ""
     else:
@@ -83,7 +103,7 @@ for p in cop["parti"]:
         dc = durata(clip)
         if p.get("ritaglia") or p.get("congela"):   # ritaglio e/o fotogramma fermo (es. il messaggio «Offerta inviata!», che dura poco)
             a, b = p.get("ritaglia", [0, dc])
-            prep = os.path.join(SEG, f"prep_{p['id']}.mp4")
+            prep = os.path.join(SEG, f"{PRE}prep_{p['id']}.mp4")
             if p.get("congela"):
                 t, sec = p["congela"]
                 f = (f"[0:v]split=3[x][y][z];[x]trim=start={a}:end={t},setpts=PTS-STARTPTS[x1];"
@@ -125,27 +145,21 @@ for p in cop["parti"]:
     tempo += D
     print(f"{p['id']:10s} {tempo - D:6.1f} -> {tempo:6.1f}  {nota}")
 
-lista = "\n".join(f"file '{os.path.join(SEG, 'parte_' + p['id'] + '.mp4')}'" for p in cop["parti"])
-open(os.path.join(SEG, "tutte.txt"), "w").write(lista)
+lista = "\n".join(f"file '{os.path.join(SEG, PRE + 'parte_' + p['id'] + '.mp4')}'" for p in cop["parti"])
+open(os.path.join(SEG, PRE + "tutte.txt"), "w").write(lista)
+if VOCE:
+    # voce normalizzata a circa -16 LUFS, nessuna musica; il video dura quanto la voce più 0,8 s di coda
+    ffmpeg("-f", "concat", "-safe", "0", "-i", os.path.join(SEG, PRE + "tutte.txt"), "-i", VOCE,
+           "-filter_complex", "[1:a]loudnorm=I=-16:TP=-1.5:LRA=9,aformat=sample_rates=44100:channel_layouts=stereo,apad[a]",
+           "-map", "0:v", "-map", "[a]", "-shortest", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart",
+           os.path.join(EXP, f"scontiroma_v14_{NOME}_master.mp4"))
+    ffmpeg("-i", os.path.join(EXP, f"scontiroma_v14_{NOME}_master.mp4"), "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-maxrate", "1400k",
+           "-bufsize", "2800k", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", os.path.join(EXP, f"scontiroma_v14_{NOME}.mp4"))
+    print(NOME, "durata totale %.1f s" % tempo, os.path.getsize(os.path.join(EXP, f"scontiroma_v14_{NOME}.mp4")) // 1024, "KB")
+    json.dump({"durata": round(tempo, 1), "parti": [{"id": a, "inizio": round(b, 1), "durata": round(c, 1)} for a, b, c, _ in parti_info]},
+              open(os.path.join(AQUI, f"tempi_{NOME}.json"), "w"), indent=1)
+    sys.exit(0)
 ffmpeg("-f", "concat", "-safe", "0", "-i", os.path.join(SEG, "tutte.txt"), "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
        "-map", "0:v", "-map", "1:a", "-shortest", "-c:v", "copy", "-c:a", "aac", "-b:a", "32k", "-movflags", "+faststart",
        os.path.join(EXP, "scontiroma_v14_muto_master.mp4"))
-ffmpeg("-i", os.path.join(EXP, "scontiroma_v14_muto_master.mp4"), "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-maxrate", "1200k",
-       "-bufsize", "2400k", "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart", os.path.join(EXP, "scontiroma_v14_muto_anteprima.mp4"))
 print("durata totale %.1f s" % tempo)
-for f in ("master", "anteprima"):
-    pth = os.path.join(EXP, f"scontiroma_v14_muto_{f}.mp4")
-    print(f, os.path.getsize(pth) // 1024, "KB")
-
-# ---- testo vocale e tempi stimati
-voce = []
-for p in cop["parti"]:
-    if p["id"] == "titolare":
-        voce.append("[SCENA SEGNAPOSTO: DA INSERIRE, testo del titolare]")
-        continue
-    voce.append(" ".join(s["v"] for s in p["segmenti"]))
-blocco = " ".join(v for v in voce if not v.startswith("["))
-open(os.path.join(AQUI, "testo_voce.txt"), "w").write(blocco + "\n")
-json.dump({"durata": round(tempo, 1), "parti": [{"id": a, "inizio": round(b, 1), "durata": round(c, 1)} for a, b, c, _ in parti_info],
-           "caratteri_voce": len(blocco)}, open(os.path.join(AQUI, "tempi.json"), "w"), indent=1)
-print("caratteri del testo vocale:", len(blocco))

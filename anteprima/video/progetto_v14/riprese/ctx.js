@@ -2,8 +2,8 @@
 // I caratteri (Fraunces, Manrope) sono ospitati dall'app stessa: nessuna cache di font da disco.
 const { chromium, devices } = require('/opt/node22/lib/node_modules/playwright');
 const path = require('path'); const fs = require('fs');
-const APP = 'http://localhost:3000';
-const API = 'http://localhost:8001';
+const APP = process.env.V14_APP || 'http://localhost:3010';
+const API = process.env.V14_API || 'http://localhost:8011';
 const VP = { viewport: { width: 390, height: 606 }, deviceScaleFactor: 2.4, isMobile: true, hasTouch: true };
 const FOTO = path.join(__dirname, 'foto') + '/';
 const APPDIR = path.join(__dirname, '..', 'app') + '/';

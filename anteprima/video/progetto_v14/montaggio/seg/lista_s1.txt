@@ -1,5 +1,0 @@
-file '/home/user/Scontiroma/.claude/worktrees/agent-a8bde847411a45991/anteprima/video/progetto_v14/montaggio/img/titolo_1.png'
-duration 1.465
-file '/home/user/Scontiroma/.claude/worktrees/agent-a8bde847411a45991/anteprima/video/progetto_v14/montaggio/img/titolo_2.png'
-duration 4.759
-file '/home/user/Scontiroma/.claude/worktrees/agent-a8bde847411a45991/anteprima/video/progetto_v14/montaggio/img/titolo_2.png'

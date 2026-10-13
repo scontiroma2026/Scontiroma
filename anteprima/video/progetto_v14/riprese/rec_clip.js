@@ -24,8 +24,8 @@ const pronta = async p => { await p.evaluate(() => document.fonts.ready); await 
 // (si sostituiscono con il dominio del sito, solo a video: nel video non compaiono indirizzi locali)
 const nascondiLocale = p => p.evaluate(() => {
   document.querySelectorAll('input,a,p,span,code').forEach(e => {
-    if (e.value && /localhost:3000/.test(e.value)) e.value = e.value.replace('http://localhost:3000', 'https://scontiroma.it');
-    else if (e.children.length === 0 && /localhost:3000/.test(e.textContent || '')) e.textContent = e.textContent.replace('http://localhost:3000', 'https://scontiroma.it');
+    if (e.value && /localhost:\d+/.test(e.value)) e.value = e.value.replace(/http:\/\/localhost:\d+/, 'https://scontiroma.it');
+    else if (e.children.length === 0 && /localhost:\d+/.test(e.textContent || '')) e.textContent = e.textContent.replace(/http:\/\/localhost:\d+/, 'https://scontiroma.it');
   });
 });
 
@@ -42,9 +42,9 @@ const clip = {
     await p.goto(APP + '/discounts', { waitUntil: 'networkidle' });
     await p.getByTestId(`discount-card-${osteria.discount}`).first().waitFor({ timeout: 30000 }); await pronta(p);
     const r = await startRec(p, TMP + 'rec_cat');
-    await wait(p, 1.0);
-    await glide(p, p.getByTestId(`discount-card-${tutti['bottega.esempio@example.com'].discount}`).first(), 110, 2.0); await wait(p, 1.8);
-    await glide(p, p.getByTestId(`discount-card-${tutti['forno.esempio@example.com'].discount}`).first(), 110, 2.4); await wait(p, 2.2);
+    await wait(p, 0.4);
+    await glide(p, p.getByTestId(`discount-card-${tutti['bottega.esempio@example.com'].discount}`).first(), 110, 1.1); await wait(p, 0.9);
+    await glide(p, p.getByTestId(`discount-card-${tutti['forno.esempio@example.com'].discount}`).first(), 110, 1.2); await wait(p, 1.0);
     console.log('catalogo', await stopRec(r, OUT('catalogo')));
   },
   // iscrizione dell'account nuovo (con Partita IVA) e modulo dell'offerta, nello stesso contesto
@@ -55,7 +55,7 @@ const clip = {
     let r = await startRec(p, TMP + 'rec_reg');
     await wait(p, 0.4);
     await typeSlow(p.getByTestId('reg-name'), 'Luca', 30);
-    await typeSlow(p.getByTestId('reg-email'), 'osteria.nuova2@example.com', 60);
+    await typeSlow(p.getByTestId('reg-email'), 'osteria.nuova3@example.com', 60);
     await typeSlow(p.getByTestId('reg-password'), 'demo-luca-2026', 60);
     await typeSlow(p.getByTestId('reg-shop'), "Osteria dell'Esempio", 45);
     await glide(p, p.getByTestId('reg-address-input'), 200, 0.9);

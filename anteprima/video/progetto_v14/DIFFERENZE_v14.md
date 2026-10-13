@@ -6,7 +6,7 @@ La v14 è un video **muto** (nessuna voce, nessuna musica), rifatto da zero con 
 | Novità nell'app | Dove si vede nel video |
 |---|---|
 | Home «I negozi che ami, a prezzo scontato… In tutta Roma e dintorni» (#117) | Scena 2 |
-| Titoli in Fraunces con forme classiche, senza «wonky» (#115) | Tutti i titoli dell'app e del video (anche i caratteri delle grafiche) |
+| Titoli in Fraunces con forme classiche, senza «wonky» (#115) | Titoli dentro le schermate dell'app; le grafiche del video usano invece Manrope (scelta del titolare del 13/10) |
 | Badge «Nuovo su Sconti Roma» (7 giorni) e «Nuova offerta» (48 ore, teal) (#90 e seguenti) | Scena 3 e pagina dell'offerta (scena 5) |
 | Partita IVA all'iscrizione dei commercianti, 11 cifre validate (#93) | Scena 4b (nuova) |
 | Offerta in revisione: «Attende approvazione dell'amministratore» | Scena 4a |
@@ -28,9 +28,9 @@ La v14 è un video **muto** (nessuna voce, nessuna musica), rifatto da zero con 
 | Al banco | QR scansionato | QR scansionato oppure codice a 4 cifre | Codice del negozio |
 | QR del negozio | Assente | Scena 8 | Novità dell'app |
 | «Funziona così:», «Tutto qui.», «Quello che ci guadagni è visibilità…», «Per iscriverti bastano pochi minuti.» | Presenti | Tolte | Domanda 6 «lascia fuori» |
-| Scene sospese | – | Nessuna, tranne il segnaposto «DA INSERIRE: testo del titolare» (scena 8bis) | Il testo personale non c'è ancora |
+| Scene sospese | – | Nessuna (il segnaposto del testo del titolare è stato tolto il 13/10) | Decisione del titolare |
 | 18+ e firma | Assenti | Riga finale «Per maggiorenni (18+) · Roma e dintorni · Sconti Roma» | `comunicazione-marchio` |
-| Durata | 84 s | 87 s + 4,5 s di segnaposto (stima a voce di 15,7 caratteri al secondo) | I testi nuovi (prezzo e disdetta) allungano la scena 7 di circa 8 s |
+| Durata | 84 s | 76,5 s (voce Fernando) e 84,2 s (voce Enea) | I testi nuovi (prezzo e disdetta) allungano la scena 7 di circa 8 s |
 | Voce e musica | Voce ElevenLabs e musica | **Nessuna** (audio silenzioso) | Serve il permesso del titolare per i crediti |
 
 ## Come sono state fatte le riprese
@@ -42,5 +42,15 @@ La v14 è un video **muto** (nessuna voce, nessuna musica), rifatto da zero con 
 
 ## Dubbi da sciogliere
 1. «Negozi di quartiere» (scena 2) e «nel tuo quartiere» nel testo della home dell'app: sono espressioni generiche, non zone pilota; lasciate. Da togliere?
-2. Durata: 87 s (+ segnaposto) contro gli 80 s richiesti; tagli facoltativi elencati in `COPIONE_v14.md`.
+2. Durata: 76,5 s e 84,2 s, in linea con gli 80 s richiesti.
 3. Schermata «Attiva il pagamento» vera nel video? Non inclusa per prudenza (testi in attesa del consulente).
+
+## Aggiornamento 13/10 (mattina): due versioni con voce
+| Punto | Prima | Ora |
+|---|---|---|
+| Voce | Nessuna | Due versioni: Fernando Martínez (76,5 s) ed Enea (84,2 s), tracce generate dal titolare, normalizzate a circa -16 LUFS, nessuna musica |
+| Esempio | Trattoria, 40 € → 20 € | Ristorante, 50 € → 30 € |
+| Titoli e scheda costi | Fraunces | Manrope (Modello A) |
+| Scena del titolare | Segnaposto da 4,5 s | Tolta |
+| Tempi | Stima a caratteri | Pause rilevate nell'audio (`allinea.py`), ricalcolate per ogni voce |
+| Riprese | Server su porte 8001/3000 | Porte proprie 8011/3010 (le altre erano occupate da un altro lavoro); rifatte tutte le clip |

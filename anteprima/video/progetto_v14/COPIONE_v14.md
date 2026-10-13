@@ -1,12 +1,12 @@
 # Sconti Roma, video per i commercianti: COPIONE v14 (montato muto)
 
 Stato: **montaggio muto pronto, nessuna voce, nessun credito speso, nulla pubblicato.** Il video **non è pubblicabile** finché i Termini non sono allineati a «+ IVA» (oggi dicono ancora «IVA inclusa»).
-Durata: **circa 87 s** (scena segnaposto tolta). I tempi sono una stima (15,7 caratteri al secondo, come il v13) e si ricalcolano quando c'è la voce.
+Durata: **76,5 s con la voce di Fernando Martínez, 84,2 s con la voce di Enea** (due versioni, stesso montaggio, scene e sottotitoli ricalcolati sulle pause di ciascuna voce con `montaggio/allinea.py`). Voce normalizzata a circa -16 LUFS, nessuna musica. File: `scontiroma_v14_fernando.mp4` e `scontiroma_v14_enea.mp4` (1080×1920, 30 fps, circa 12 MB ciascuno) più le versioni leggere `_leggero` (circa 6 MB), fuori dal repository.
 Formato: MP4 verticale 1080×1920, 30 fps, traccia audio silenziosa (niente musica, niente voce).
 Regole rispettate: `comunicazione-marchio`, nessun marchio di terzi, nessuna percentuale, nessun nome di quartiere o «zona pilota», dati tutti inventati («… dell'Esempio», email `@example.com`), 18+ in chiusura.
 
 ## Stile (più pulito del v13)
-Fondo chiaro unico, un solo colore di accento (fucsia dell'app), caratteri Fraunces e Manrope dell'app. Niente sfondi fotografici, niente telefono 3D, niente grana, niente etichette «Esempio», niente scritte grafiche aggiunte: l'unico testo è il sottotitolo del parlato (una o due righe, parole chiave in fucsia) e la scheda dei costi. Le schermate dell'app sono quelle vere di `main` del 13/10, in una finestra con angoli arrotondati.
+Fondo chiaro unico, un solo colore di accento (fucsia dell'app), carattere **Manrope** (Modello A, scelta del titolare del 13/10) per titoli, sottotitoli e scheda dei costi; Fraunces non è più usato nelle grafiche del video (resta solo dentro le schermate dell'app, che sono riprese vere). Niente sfondi fotografici, niente telefono 3D, niente grana, niente etichette «Esempio», niente scritte grafiche aggiunte: l'unico testo è il sottotitolo del parlato (una o due righe, parole chiave in fucsia) e la scheda dei costi. Le schermate dell'app sono quelle vere di `main` del 13/10, in una finestra con angoli arrotondati.
 
 ## Scene (tempi stimati)
 | # | Tempo | Cosa si vede | Sottotitoli | Parlato |
@@ -43,3 +43,9 @@ Restano fuori «Funziona così:», «Tutto qui.», «Quello che ci guadagni è v
 2. `node riprese/rec_clip.js tutte` registra le clip in `app/`.
 3. `node montaggio/grafica.js` disegna sottotitoli e schede; `python3 montaggio/monta.py` monta in `montaggio/export/`.
 Con la voce: si mettono i tempi veri in `copione.json` e si aggiunge la traccia audio.
+
+## Versione con voce (13/10, mattina)
+- Voci già generate dal titolare (nessun credito speso da me): Fernando Martínez 75,6 s e Enea 83,3 s, entrambe sul testo di `montaggio/testo_voce.txt`. I file mp3 e i video restano fuori dal repository.
+- Esempio cambiato: **ristorante**, menù di pesce **50 € → 30 €** («Risparmi €20.00»); le riprese del modulo offerta e della pagina offerta sono state rifatte.
+- Sincronizzazione: nessuno strumento di trascrizione è disponibile, quindi `allinea.py` rileva le pause con ffmpeg e le assegna ai sottotitoli con una programmazione dinamica sulle sillabe (errore atteso sui confini: circa mezzo secondo, più alto nei punti senza pausa, come «tu lo inquadri, oppure scrivi»). Comando: `python3 montaggio/monta.py --voce <mp3> --al montaggio/al_<nome>.json --nome <nome>`.
+- Scene (tempi Fernando / Enea, s): 1 titolo 0 / 0; 2 home 5,8 / 5,4; 3 catalogo 15,3 / 15,9; 4a modulo offerta 18,5 / 19,2; 4b iscrizione 26,6 / 27,2; 5 esempio 30,5 / 31,6; 6a QR cliente 41,7 / 43,9; 6b banco 44,8 / 47,2; 7 costi 48,9 / 51,5; 8 QR negozio 68,2 / 74,6; 9 chiusura 71,0 / 78,1.

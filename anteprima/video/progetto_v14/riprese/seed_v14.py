@@ -10,7 +10,7 @@ import json
 import os
 import httpx
 
-B = "http://localhost:8001/api"
+B = os.environ.get("V14_API", "http://localhost:8011") + "/api"
 D = os.path.dirname(os.path.abspath(__file__))
 ADMIN_EMAIL, ADMIN_PASSWORD, MASTER = "admin@example.com", "e2e-admin-password", "e2e-master-password"  # solo test locali
 PIVA = "12345678903"  # Partita IVA di fantasia (cifra di controllo valida), la stessa del segnaposto del modulo
@@ -58,7 +58,7 @@ for s in SHOPS:
     ok = a.post(f"{B}/admin/discounts/{did}/approve")
     print(s["shop"], s["zone"], "approvazione", ok.status_code)
     if s["retro"]:
-        print("  retrodata", httpx.post("http://localhost:8001/__video/retrodata", params={"email": s["email"], **s["retro"]}).json())
+        print("  retrodata", httpx.post(os.environ.get("V14_API", "http://localhost:8011") + "/__video/retrodata", params={"email": s["email"], **s["retro"]}).json())
     ids[s["email"]] = {"merchant": uid, "discount": did}
 r = httpx.post(f"{B}/auth/register", json={"email": "cliente.demo@example.com", "password": "demo-cliente-2026", "name": "Giulia Esempio", "role": "client", "legal_accepted": True})
 print("cliente", r.status_code, r.text[:120])
