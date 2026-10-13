@@ -4721,6 +4721,35 @@ from apscheduler.triggers.cron import CronTrigger  # noqa: E402
 _scheduler: Optional[AsyncIOScheduler] = None
 
 
+# Durate di conservazione (proposta da validare col consulente): dopo questo tempo i dati si cancellano da soli.
+CONSERVAZIONE_GIORNI = {
+    "qr_scans": 365,          # registro delle scansioni (anche non valide): 12 mesi
+    "analytics_events": 396,  # statistiche di visita (solo con consenso): 13 mesi
+    "redemptions": 730,       # sconti usati o mai usati: 24 mesi
+}
+_CONSERVAZIONE_CAMPO = {"qr_scans": "timestamp", "analytics_events": "created_at", "redemptions": "created_at"}
+
+
+async def _pulizia_conservazione() -> dict:
+    """Cancella i dati più vecchi della durata dichiarata (idempotente). Ritorna quante righe per raccolta."""
+    adesso = datetime.now(timezone.utc)
+    esito = {}
+    for nome, giorni in CONSERVAZIONE_GIORNI.items():
+        limite = (adesso - timedelta(days=giorni)).isoformat()
+        res = await db[nome].delete_many({_CONSERVAZIONE_CAMPO[nome]: {"$lt": limite}})
+        esito[nome] = res.deleted_count
+    return esito
+
+
+async def _run_pulizia_conservazione() -> None:
+    try:
+        esito = await _pulizia_conservazione()
+        if any(esito.values()):
+            logging.info("Pulizia conservazione: %s", esito)
+    except Exception as e:  # non deve mai fermare il server
+        logging.warning("Pulizia conservazione non riuscita: %s", e)
+
+
 async def _run_trial_reminders(oggi=None) -> dict:
     """Promemoria di fine prova ai negozi: uno a 10 giorni e uno a 3 giorni prima (idempotente: ogni
     promemoria parte una volta sola per negozio). Attivo solo con MERCHANT_PAYMENT_REQUIRED acceso;
@@ -5001,6 +5030,13 @@ def _start_scheduler() -> None:
         _run_trial_reminders,
         CronTrigger(hour=9, minute=45),
         id="trial_reminders_daily",
+        replace_existing=True,
+    )
+    # Pulizia dei dati oltre la durata dichiarata — ogni giorno 00:35
+    _scheduler.add_job(
+        _run_pulizia_conservazione,
+        CronTrigger(hour=0, minute=35),
+        id="pulizia_conservazione",
         replace_existing=True,
     )
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
