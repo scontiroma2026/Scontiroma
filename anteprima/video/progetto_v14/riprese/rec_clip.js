@@ -86,7 +86,7 @@ const clip = {
     await wait(p, 0.4);
     await typeSlow(p.getByTestId('disc-title'), 'Menù di pesce', 9); await wait(p, 0.3);
     await glide(p, p.getByTestId('disc-original'), 200, 1.2);
-    await typeSlow(p.getByTestId('disc-original'), '40', 3); await typeSlow(p.getByTestId('disc-discounted'), '20', 3); await wait(p, 0.4);
+    await typeSlow(p.getByTestId('disc-original'), '50', 3); await typeSlow(p.getByTestId('disc-discounted'), '30', 3); await wait(p, 0.4);
     await glide(p, p.getByTestId('disc-uses-1'), 260, 1.8);
     await p.getByTestId('disc-uses-1').click(); await wait(p, 0.6);
     await glide(p, p.getByTestId('disc-submit'), 400, 1.2); await wait(p, 0.3);

@@ -26,10 +26,10 @@
       { "t": "e noi la <b>approviamo</b>.", "v": "e noi la approviamo." }
     ]},
     { "id": "s5", "clip": "pagina_offerta", "segmenti": [
-      { "t": "Facciamo un esempio: una trattoria ha il <b>menù di pesce</b> a quaranta euro.", "v": "Facciamo un esempio: una trattoria ha il menù di pesce a quaranta euro." },
+      { "t": "Facciamo un esempio: un ristorante ha il <b>menù di pesce</b> a cinquanta euro.", "v": "Facciamo un esempio: un ristorante ha il menù di pesce a cinquanta euro." },
       { "t": "Decide di <b>scontarlo</b> il mercoledì e il venerdì.", "v": "Decide di scontarlo il mercoledì e il venerdì." },
-      { "t": "Il cliente lo paga <b>venti euro</b>,", "v": "Il cliente lo paga venti euro," },
-      { "t": "e la trattoria riempie i <b>giorni più tranquilli</b>.", "v": "e la trattoria riempie i giorni più tranquilli." }
+      { "t": "Il cliente lo paga <b>trenta euro</b>,", "v": "Il cliente lo paga trenta euro," },
+      { "t": "e il ristorante riempie i <b>giorni più tranquilli</b>.", "v": "e il ristorante riempie i giorni più tranquilli." }
     ]},
     { "id": "s6a", "clip": "qr_cliente", "min": 3.8, "segmenti": [
       { "t": "Il cliente ti mostra il <b>codice QR</b> sul telefono,", "v": "Il cliente ti mostra il codice QR sul telefono," }
@@ -51,9 +51,6 @@
     ]},
     { "id": "s8", "clip": "qr_negozio", "min": 4.5, "segmenti": [
       { "t": "Il <b>QR del tuo negozio</b> fa iscrivere i clienti.", "v": "Il QR del tuo negozio fa iscrivere i clienti." }
-    ]},
-    { "id": "titolare", "grafica": "segnaposto", "durata": 4.5, "segmenti": [
-      { "t": "", "v": "", "img": "segnaposto" }
     ]},
     { "id": "s9", "grafica": "chiusura", "segmenti": [
       { "t": "", "v": "Scrivici a info@scontiroma.it,", "img": "chiusura_1" },

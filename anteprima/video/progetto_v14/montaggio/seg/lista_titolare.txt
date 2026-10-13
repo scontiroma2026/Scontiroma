@@ -1,0 +1,3 @@
+file '/home/user/Scontiroma/.claude/worktrees/agent-a8bde847411a45991/anteprima/video/progetto_v14/montaggio/img/segnaposto.png'
+duration 4.500
+file '/home/user/Scontiroma/.claude/worktrees/agent-a8bde847411a45991/anteprima/video/progetto_v14/montaggio/img/segnaposto.png'

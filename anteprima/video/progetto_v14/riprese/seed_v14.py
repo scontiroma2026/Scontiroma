@@ -28,7 +28,7 @@ a.headers["X-Admin-Master"] = a.post(f"{B}/admin/verify-master", json={"password
 SHOPS = [
     dict(email="osteria.esempio@example.com", shop="Osteria dell'Esempio", zone="Cassia", cat="Ristorante", addr="Via dell'Esempio 1, Roma",
          retro=None,
-         offer=dict(title="Menù di pesce", description="Antipasto, primo e secondo di mare.", original_price=40, discounted_price=20,
+         offer=dict(title="Menù di pesce", description="Antipasto, primo e secondo di mare.", original_price=50, discounted_price=30,
                     validity_info="Il mercoledì e il venerdì", max_uses_per_month=1, image_url=img("menu_pesce.jpg"))),
     dict(email="forno.esempio@example.com", shop="Forno dell'Esempio", zone="Monte Mario", cat="Vino & Gastronomia", addr="Via dell'Esempio 2, Roma",
          retro=dict(giorni_negozio=20),  # negozio già presente: offerta nuova ma non negozio nuovo
