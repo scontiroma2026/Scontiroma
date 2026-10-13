@@ -9,7 +9,8 @@
     font-family: 'Manrope', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  .font-serif { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+  /* WONK 0 e SOFT 0: forme classiche (s, f, h, n dritte); il font variabile da solo le inclina sui titoli grandi */
+  .font-serif { font-family: 'Fraunces', serif; font-optical-sizing: auto; font-variation-settings: "WONK" 0, "SOFT" 0; }
 }
 
 @layer utilities {
