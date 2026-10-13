@@ -34,7 +34,8 @@ def _ambiente(monkeypatch):
     monkeypatch.setattr(server, "send_admin_segnalazione", benvenuto)
     monkeypatch.setenv("ADMIN_NOTIFY_EMAIL", "")
     monkeypatch.setenv("REGISTRAZIONI_MAX_PER_FINESTRA", "10")
-    monkeypatch.setenv("RESET_MAX_PER_CLIENT_ORA", "15")
+    monkeypatch.setenv("RESET_MAX_PER_CLIENT_10MIN", "3")
+    monkeypatch.setenv("RESET_MAX_PER_CLIENT_ORA", "5")
     server._limiti_client.clear()
     server._interesse_richieste.clear()
     server._segnalazioni_recenti.clear()
@@ -162,16 +163,42 @@ def test_segnalazioni_a_raffica():
 def test_reset_password_a_raffica(_ambiente):
     async def body(c):
         await c.post("/api/auth/register", json={**CLIENTE, "email": "reset@example.com"}, headers=da(1))
-        # stesso indirizzo: una sola email, le altre richieste vengono ignorate in silenzio (risposta identica)
-        for _ in range(6):
+        # stesso indirizzo (3 richieste, entro il limite del client): una sola email, le altre richieste vengono ignorate in silenzio (risposta identica)
+        for _ in range(3):
             r = await c.post("/api/auth/forgot", json={"email": "reset@example.com"}, headers=da(2))
             assert r.status_code == 200
         assert _ambiente["reset"] == 1
-        # molti indirizzi diversi dallo stesso client: dopo 15 richieste arriva il 429
-        stati = [(await c.post("/api/auth/forgot", json={"email": f"x{i}@example.com"}, headers=da(3))).status_code for i in range(20)]
-        assert stati[:15] == [200] * 15 and stati[15:] == [429] * 5
+        # (le 6 richieste sopra erano di un altro client: questo parte da zero)
+        # molti indirizzi diversi dallo stesso client: la 4ª in 10 minuti arriva con 429
+        stati = []
+        for i in range(5):
+            r = await c.post("/api/auth/forgot", json={"email": f"x{i}@example.com"}, headers=da(3))
+            stati.append(r.status_code)
+        assert stati == [200, 200, 200, 429, 429]
+        assert r.json()["detail"] == "Troppe richieste, riprova tra qualche minuto."
+        # un altro client non è toccato
+        assert (await c.post("/api/auth/forgot", json={"email": "y@example.com"}, headers=da(4))).status_code == 200
         esito("Reset password a raffica sullo stesso indirizzo", "protetto", "1 al minuto e 5 all'ora per account")
-        esito("Reset password verso molti indirizzi dallo stesso client", "protetto", "15 all'ora per client")
+        esito("Reset password verso molti indirizzi dallo stesso client", "protetto", "3 ogni 10 minuti e 5 all'ora per client")
+    run(body, False)
+
+
+def test_reset_sesta_richiesta_in_un_ora_bloccata(monkeypatch):
+    """Passano 3 richieste, trascorrono 11 minuti (finestra breve libera): la 4ª e la 5ª passano
+    (5 all'ora), la 6ª no."""
+    async def body(c):
+        t = [1000.0]
+        monkeypatch.setattr(server.time, "monotonic", lambda: t[0])
+        stati = []
+        for i in range(6):
+            if i == 3:
+                t[0] += 660
+            r = await c.post("/api/auth/forgot", json={"email": f"o{i}@example.com"}, headers=da(8))
+            stati.append(r.status_code)
+        assert stati == [200, 200, 200, 200, 200, 429]
+        # passata l'ora, si può di nuovo
+        t[0] += 3600
+        assert (await c.post("/api/auth/forgot", json={"email": "o9@example.com"}, headers=da(8))).status_code == 200
     run(body, False)
 
 

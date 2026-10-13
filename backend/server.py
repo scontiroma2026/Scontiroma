@@ -736,16 +736,19 @@ def _soglia_env(nome: str, predefinito: int) -> int:
         return predefinito
 
 
-def _limite_client_ok(nome: str, request: Request, massimo: int, finestra_sec: int) -> bool:
-    """Vero se questo client può procedere; conta la richiesta. massimo <= 0 = limite spento."""
-    if massimo <= 0:
+def _limite_client_ok(nome: str, request: Request, *regole: tuple) -> bool:
+    """Vero se questo client può procedere; conta la richiesta solo se passa tutte le regole.
+    Ogni regola è (massimo, finestra in secondi); massimo <= 0 = regola spenta."""
+    regole = [(m, f) for m, f in regole if m > 0]
+    if not regole:
         return True
     adesso = time.monotonic()
     chiave = (nome, hashlib.sha256(_ip_richiesta(request).encode()).hexdigest()[:16])
-    recenti = [t for t in _limiti_client.get(chiave, []) if adesso - t < finestra_sec]
-    if len(recenti) >= massimo:
-        _limiti_client[chiave] = recenti
-        return False
+    recenti = [t for t in _limiti_client.get(chiave, []) if adesso - t < max(f for _, f in regole)]
+    for massimo, finestra_sec in regole:
+        if sum(1 for t in recenti if adesso - t < finestra_sec) >= massimo:
+            _limiti_client[chiave] = recenti
+            return False
     recenti.append(adesso)
     _limiti_client[chiave] = recenti
     if len(_limiti_client) > 5000:  # pulizia: via le chiavi scadute
@@ -756,13 +759,15 @@ def _limite_client_ok(nome: str, request: Request, massimo: int, finestra_sec: i
 
 def _limite_registrazioni_ok(request: Request) -> bool:
     return _limite_client_ok("registrazione", request,
-                             _soglia_env("REGISTRAZIONI_MAX_PER_FINESTRA", 10),
-                             _soglia_env("REGISTRAZIONI_FINESTRA_SEC", 600))
+                             (_soglia_env("REGISTRAZIONI_MAX_PER_FINESTRA", 10),
+                              _soglia_env("REGISTRAZIONI_FINESTRA_SEC", 600)))
 
 
 def _limite_reset_ok(request: Request) -> bool:
+    """Doppio limite per client: al massimo 3 richieste ogni 10 minuti E 5 all'ora."""
     return _limite_client_ok("reset-password", request,
-                             _soglia_env("RESET_MAX_PER_CLIENT_ORA", 15), 3600)
+                             (_soglia_env("RESET_MAX_PER_CLIENT_10MIN", 3), 600),
+                             (_soglia_env("RESET_MAX_PER_CLIENT_ORA", 5), 3600))
 
 
 # ---------- Auth Routes ----------

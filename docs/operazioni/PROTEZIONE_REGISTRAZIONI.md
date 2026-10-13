@@ -30,7 +30,7 @@ Rischio: 🔴 alto, 🟠 medio, 🟢 basso. «Dopo» = dopo le modifiche di ques
 | «Fammi sapere quando arrivate» a raffica | parzialmente | parzialmente: 10 all'ora per client, ma un bot che falsifica l'intestazione del proxy lo aggira (effetto: numeri gonfiati, nessun dato personale) | 🟢 |
 | Segnalazioni a raffica | parzialmente: dietro il proxy di Render il contatore era unico per tutti (5 all'ora in totale: un bot poteva impedire a chiunque di segnalare) | **protetto**: contatore per client; manca un tetto globale | 🟢 |
 | Reset password a raffica sullo stesso indirizzo | protetto | protetto | 🟢 |
-| Reset password verso molti indirizzi da un client | non protetto (spam e quota Resend) | **protetto**: 15 all'ora per client | 🟢 |
+| Reset password verso molti indirizzi da un client | non protetto (spam e quota Resend) | **protetto**: 3 ogni 10 minuti e 5 all'ora per client | 🟢 |
 | Tentativi di accesso a raffica | protetto | protetto | 🟢 |
 
 Altri punti notati (non toccati): `/track` (eventi anonimi) e `/gdpr/consent-log` accettano scritture senza limiti e senza accesso (riempimento del database), rischio 🟠. `consent-log` salva l'IP come prova del consenso: da far valutare al consulente insieme al resto.
@@ -38,7 +38,7 @@ Altri punti notati (non toccati): `/track` (eventi anonimi) e `/gdpr/consent-log
 ## 3. Cosa è stato aggiunto
 
 - **Limite registrazioni per client**: `REGISTRAZIONI_MAX_PER_FINESTRA` (predefinito 10) ogni `REGISTRAZIONI_FINESTRA_SEC` (predefinito 600 secondi). Conta anche i tentativi con email già usata. Con `0` il limite è spento.
-- **Limite reset password per client**: `RESET_MAX_PER_CLIENT_ORA` (predefinito 15 all'ora; `0` = spento), in aggiunta al limite per account.
+- **Limite reset password per client (doppio)**: massimo 3 richieste ogni 10 minuti (`RESET_MAX_PER_CLIENT_10MIN`) E massimo 5 all'ora (`RESET_MAX_PER_CLIENT_ORA`); `0` = spento. In aggiunta al limite per account (1 al minuto, 5 all'ora), che resta com'è. Messaggio: «Troppe richieste, riprova tra qualche minuto.»
 - **Segnalazioni**: il contatore usa ora l'indirizzo inoltrato dal proxy (come `/interesse-zona`), non quello del proxy.
 - **Privacy**: contatori solo in memoria, con l'impronta dell'indirizzo (non l'indirizzo); si azzerano al riavvio del server; niente nel database né nei log.
 - **Test end-to-end**: `e2e/server_e2e.py` li spegne (iscrivono molti account dallo stesso indirizzo); i test del server li spengono in `backend/tests/conftest.py`.
