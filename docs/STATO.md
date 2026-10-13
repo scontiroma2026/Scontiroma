@@ -166,3 +166,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 13/10 — Home: nuove frasi (hero «I negozi che ami, a prezzo scontato», passo 3 «Tutto qui»).
 - 13/10 — Titoli del sito in Manrope (scelta del titolare, modello A): classe font-serif, titoli h1-h4 e test di carattere aggiornati; le locandine stampabili restano in Fraunces.
 - 13/10 — Eliminando un negozio ora spariscono anche gli sconti usati e le scansioni QR presso di lui (prima restavano e falsavano le statistiche dell'admin); all'avvio il server ripulisce quelli già orfani (test_dati_orfani.py).
+
+- 13/10: **manuali operativi** (solo documenti, bozze [DA VALIDARE]) in `docs/operazioni/`: criteri per approvare/rifiutare le offerte, procedura per rispondere a `info@`/`privacy@`/`partner@` e alle segnalazioni (con il limite del mittente Gmail e 3 soluzioni da scegliere), regole per commenti e messaggi su Instagram/Facebook, indice con i punti per il consulente. Ramo `claude/operazioni-policy`. Nessuna modifica al codice.
