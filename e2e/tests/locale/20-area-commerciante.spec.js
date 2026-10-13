@@ -6,7 +6,7 @@ const PAGINE = ['/merchant/dashboard', '/merchant/discount', '/merchant/discount
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-test('area commerciante: fondo chiaro, Fraunces e Manrope, nessuno scroll orizzontale a 390 px', async ({ page, request }) => {
+test('area commerciante: fondo chiaro, Manrope, nessuno scroll orizzontale a 390 px', async ({ page, request }) => {
   const m = await registra(request, 'merchant');
   await creaOffertaApprovata(request, m.token, { title: `Menù chiaro e2e ${Date.now()}` });
   await loginNelBrowser(page, m.email, m.password);
@@ -48,7 +48,7 @@ test('area commerciante: fondo chiaro, Fraunces e Manrope, nessuno scroll orizzo
     expect(r.famiglie, `${url}: famiglie di carattere usate`).toEqual(expect.arrayContaining(['Manrope']));
     for (const f of r.famiglie) expect(['Fraunces', 'Manrope'], `${url}: carattere inatteso ${f}`).toContain(f);
     expect(r.eccesso, `${url}: scroll orizzontale`).toBeLessThanOrEqual(0);
-    expect(r.manrope && r.fraunces).toBe(true);
+    expect(r.manrope).toBe(true); // i titoli sono ora in Manrope: Fraunces non si carica più su queste pagine
   }
 });
 
