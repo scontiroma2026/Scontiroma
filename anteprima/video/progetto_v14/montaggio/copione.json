@@ -1,0 +1,63 @@
+{
+  "cps": 15.7,
+  "pausa_segmento": 0.0,
+  "pausa_scena": 0.3,
+  "parti": [
+    { "id": "s1", "grafica": "titolo", "segmenti": [
+      { "t": "Hai un'attività a <b>Roma</b>?", "v": "Hai un'attività a Roma?", "img": "titolo_1" },
+      { "t": "", "v": "Ti spiego in pochi secondi come portare nuovi clienti nel tuo negozio.", "img": "titolo_2" }
+    ]},
+    { "id": "s2", "clip": "home", "segmenti": [
+      { "t": "Sconti Roma è <b>un'app nuova</b>, nata a Roma per i <b>negozi di quartiere</b>.", "v": "Sconti Roma è un'app nuova, nata a Roma per i negozi di quartiere." },
+      { "t": "Stiamo partendo adesso a <b>Roma e dintorni</b>,", "v": "Stiamo partendo adesso a Roma e dintorni," },
+      { "t": "e cerchiamo le <b>prime attività</b> con cui costruirla insieme.", "v": "e cerchiamo le prime attività con cui costruirla insieme." }
+    ]},
+    { "id": "s3", "clip": "catalogo", "min": 6.0, "segmenti": [
+      { "t": "I romani trovano nell'app i negozi che offrono <b>sconti</b>.", "v": "I romani trovano nell'app i negozi che offrono sconti." }
+    ]},
+    { "id": "s4a", "clip": "offerta_form", "ritaglia": [0.3, 9.5], "congela": [9.42, 1.5], "segmenti": [
+      { "t": "Tu scegli un <b>prodotto</b> o un <b>servizio</b>.", "v": "Tu scegli un prodotto o un servizio." },
+      { "t": "Decidi di <b>quanto scontarlo</b>, in <b>quali giorni</b> vale", "v": "Decidi di quanto scontarlo, in quali giorni vale" },
+      { "t": "e <b>quante volte al mese</b>.", "v": "e quante volte al mese." },
+      { "t": "<b>Le regole le fai tu.</b>", "v": "Le regole le fai tu." }
+    ]},
+    { "id": "s4b", "clip": "iscrizione", "ritaglia": [0.2, 7.95], "min": 5.0, "vmax": 1.8, "segmenti": [
+      { "t": "Ti iscrivi con la <b>Partita IVA</b>, pubblichi l'offerta", "v": "Ti iscrivi con la Partita IVA, pubblichi l'offerta" },
+      { "t": "e noi la <b>approviamo</b>.", "v": "e noi la approviamo." }
+    ]},
+    { "id": "s5", "clip": "pagina_offerta", "segmenti": [
+      { "t": "Facciamo un esempio: una trattoria ha il <b>menù di pesce</b> a quaranta euro.", "v": "Facciamo un esempio: una trattoria ha il menù di pesce a quaranta euro." },
+      { "t": "Decide di <b>scontarlo</b> il mercoledì e il venerdì.", "v": "Decide di scontarlo il mercoledì e il venerdì." },
+      { "t": "Il cliente lo paga <b>venti euro</b>,", "v": "Il cliente lo paga venti euro," },
+      { "t": "e la trattoria riempie i <b>giorni più tranquilli</b>.", "v": "e la trattoria riempie i giorni più tranquilli." }
+    ]},
+    { "id": "s6a", "clip": "qr_cliente", "min": 3.8, "segmenti": [
+      { "t": "Il cliente ti mostra il <b>codice QR</b> sul telefono,", "v": "Il cliente ti mostra il codice QR sul telefono," }
+    ]},
+    { "id": "s6b", "clip": "banco", "segmenti": [
+      { "t": "tu lo <b>inquadri</b>, oppure scrivi", "v": "tu lo inquadri, oppure scrivi" },
+      { "t": "il <b>codice a quattro cifre</b> del tuo negozio.", "v": "il codice a quattro cifre del tuo negozio." }
+    ]},
+    { "id": "s7", "grafica": "costi", "segmenti": [
+      { "t": "", "v": "E quanto costa?", "img": "costi_0" },
+      { "t": "", "v": "È gratuita nella fase di lancio,", "img": "costi_1" },
+      { "t": "", "v": "con circa due mesi di prova dalla prima offerta.", "img": "costi_2" },
+      { "t": "", "v": "Poi un abbonamento mensile semplice:", "img": "costi_3" },
+      { "t": "", "v": "quattro euro e novantanove al mese, più IVA,", "img": "costi_3" },
+      { "t": "", "v": "che attivi una volta sola con carta o PayPal.", "img": "costi_4" },
+      { "t": "", "v": "Nessuna sorpresa.", "img": "costi_4" },
+      { "t": "", "v": "Se vuoi smettere, la disdetta vale dalla fine del mese:", "img": "costi_5" },
+      { "t": "", "v": "fino a quel giorno mantieni lo sconto.", "img": "costi_5" }
+    ]},
+    { "id": "s8", "clip": "qr_negozio", "min": 4.5, "segmenti": [
+      { "t": "Il <b>QR del tuo negozio</b> fa iscrivere i clienti.", "v": "Il QR del tuo negozio fa iscrivere i clienti." }
+    ]},
+    { "id": "titolare", "grafica": "segnaposto", "durata": 4.5, "segmenti": [
+      { "t": "", "v": "", "img": "segnaposto" }
+    ]},
+    { "id": "s9", "grafica": "chiusura", "segmenti": [
+      { "t": "", "v": "Scrivici a info@scontiroma.it,", "img": "chiusura_1" },
+      { "t": "", "v": "e ti aiutiamo a partire.", "img": "chiusura_2" }
+    ]}
+  ]
+}
