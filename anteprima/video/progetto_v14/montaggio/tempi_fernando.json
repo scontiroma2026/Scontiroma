@@ -1,0 +1,60 @@
+{
+ "durata": 76.5,
+ "parti": [
+  {
+   "id": "s1",
+   "inizio": 0.0,
+   "durata": 5.8
+  },
+  {
+   "id": "s2",
+   "inizio": 5.8,
+   "durata": 9.6
+  },
+  {
+   "id": "s3",
+   "inizio": 15.3,
+   "durata": 3.1
+  },
+  {
+   "id": "s4a",
+   "inizio": 18.5,
+   "durata": 8.1
+  },
+  {
+   "id": "s4b",
+   "inizio": 26.6,
+   "durata": 3.9
+  },
+  {
+   "id": "s5",
+   "inizio": 30.5,
+   "durata": 11.2
+  },
+  {
+   "id": "s6a",
+   "inizio": 41.7,
+   "durata": 3.1
+  },
+  {
+   "id": "s6b",
+   "inizio": 44.8,
+   "durata": 4.1
+  },
+  {
+   "id": "s7",
+   "inizio": 48.9,
+   "durata": 19.3
+  },
+  {
+   "id": "s8",
+   "inizio": 68.2,
+   "durata": 2.8
+  },
+  {
+   "id": "s9",
+   "inizio": 71.0,
+   "durata": 5.4
+  }
+ ]
+}
