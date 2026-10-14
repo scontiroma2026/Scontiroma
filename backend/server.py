@@ -3981,12 +3981,13 @@ def _qr_permit_claims(permit: Optional[str], r: dict) -> Optional[dict]:
 
 
 def _codice_di_mese_scaduto(r: dict) -> bool:
-    """Un codice non ancora usato, creato in un mese passato, vale solo durante il 1° giorno del mese dopo
+    """Un codice non ancora usato, creato in un mese passato, vale solo fino alle 02:00 (ora di Roma) del 1° giorno del mese dopo
     (ora di Roma); poi scade. L'uso conta comunque per il mese di creazione (`month_key`)."""
     mk = r.get("month_key")
     if r.get("status") != "pending" or not mk or mk == current_month_key():
         return False
-    return not (pp.mese_dopo(mk) == current_month_key() and _rome_now().day == 1)
+    ora = _rome_now()
+    return not (pp.mese_dopo(mk) == current_month_key() and ora.day == 1 and ora.hour < 2)
 
 
 MSG_CODICE_MESE_SCADUTO = "Codice scaduto: era del mese scorso, il cliente ne chiede uno nuovo"

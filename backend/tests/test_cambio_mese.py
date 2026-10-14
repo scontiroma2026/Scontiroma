@@ -547,18 +547,31 @@ def test_pagamento_in_ritardo_vale_dal_mese_dopo_a_cavallo_d_anno():
 
 
 # ============================================================
-# Codice creato a fine mese: vale solo durante il 1° giorno del mese dopo (ora di Roma)
+# Codice creato a fine mese: vale solo fino alle 02:00 (ora di Roma) del 1° giorno del mese dopo
 # ============================================================
 
 @pytest.mark.parametrize("creato,quando,valido", [
     ("2026-10", ("2026-10-31", 23, 59), True),    # ancora il mese di creazione
-    ("2026-10", ("2026-11-01", 0, 1), True),      # 1° giorno del mese dopo
-    ("2026-10", ("2026-11-01", 23, 59), True),    # fino alla fine del 1° giorno
-    ("2026-10", ("2026-11-02", 0, 0), False),     # dal 2 scade
-    ("2026-10", ("2026-12-01", 10, 0), False),    # il 1° ma di due mesi dopo: scade
-    ("2026-12", ("2027-01-01", 12, 0), True),     # cambio d'anno
-    ("2026-12", ("2027-01-02", 0, 0), False),
-    ("2028-02", ("2028-03-01", 12, 0), True),     # febbraio bisestile
+    ("2026-10", ("2026-11-01", 0, 1), True),      # dopo mezzanotte del 1°
+    ("2026-10", ("2026-11-01", 1, 59), True),     # 01:59
+    ("2026-10", ("2026-11-01", 2, 0), False),     # 02:00: scade
+    ("2026-10", ("2026-11-01", 2, 1), False),     # 02:01
+    ("2026-10", ("2026-11-01", 23, 59), False),
+    ("2026-10", ("2026-11-02", 0, 0), False),
+    ("2026-10", ("2026-12-01", 0, 30), False),    # il 1° ma di due mesi dopo: scade
+    ("2026-09", ("2026-10-01", 1, 59), True),     # ora legale (CEST) a fine settembre
+    ("2026-09", ("2026-10-01", 2, 0), False),
+    ("2026-10", ("2026-10-25", 12, 0), True),     # giorno del cambio d'ora (fine ora legale): stesso mese
+    ("2026-10", ("2026-10-25", 2, 30), True),     # 02:30 ambiguo del 25/10: stesso mese, nessun effetto
+    ("2026-11", ("2026-12-01", 1, 59), True),
+    ("2026-11", ("2026-12-01", 2, 1), False),
+    ("2026-12", ("2027-01-01", 1, 59), True),     # cambio d'anno
+    ("2026-12", ("2027-01-01", 2, 0), False),
+    ("2026-12", ("2027-01-01", 2, 1), False),
+    ("2027-02", ("2027-03-01", 1, 59), True),
+    ("2027-02", ("2027-03-01", 2, 0), False),
+    ("2028-02", ("2028-03-01", 1, 59), True),     # febbraio bisestile
+    ("2028-02", ("2028-03-01", 2, 0), False),
     ("2028-02", ("2028-03-02", 0, 0), False),
 ])
 def test_codice_di_fine_mese(orologio, posta, creato, quando, valido):
