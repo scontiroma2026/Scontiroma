@@ -13,6 +13,7 @@ import PasswordInput from "@/components/PasswordInput";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
 import ZoneOptions from "@/components/ZoneOptions";
+import RimandaConferma from "@/components/RimandaConferma";
 
 export default function Register() {
   const { register } = useAuth();
@@ -40,6 +41,7 @@ export default function Register() {
   const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [acceptedSpecific, setAcceptedSpecific] = useState(false);   // solo commercianti
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [daConfermare, setDaConfermare] = useState(null); // email del cliente appena iscritto, in attesa del link
   // Ricorda credenziali su questo dispositivo (default: attivo, come UX consumer)
   const [rememberCreds, setRememberCreds] = useState(true);
 
@@ -99,9 +101,32 @@ export default function Register() {
         console.warn("[register] localStorage cleanup failed:", err?.message || err);
       }
     }
+    if (res.confirmationRequired) {
+      setDaConfermare(res.email || form.email);
+      return;
+    }
     toast.success("Benvenuto in Sconti Roma!");
     nav("/setup-security");
   };
+
+  if (daConfermare) {
+    return (
+      <main data-testid="register-conferma" className="mx-auto max-w-lg px-6 py-16">
+        <Card className="border-warm bg-card border border-border p-8">
+          <div className="text-xs uppercase tracking-[0.2em] text-gold">Quasi fatto</div>
+          <h1 className="mt-2 font-serif text-4xl">Controlla la tua email</h1>
+          <p data-testid="register-conferma-testo" className="mt-4 text-foreground/80">
+            Ti abbiamo mandato un'email: tocca il link per confermare il tuo account.
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            L'abbiamo spedita a <strong className="text-foreground break-all">{daConfermare}</strong>. Il link vale 48 ore. Non la trovi? Guarda anche nello spam.
+          </p>
+          <div className="mt-6"><RimandaConferma email={daConfermare} testid="register-rimanda" /></div>
+          <Link to="/login" data-testid="register-conferma-login" className="mt-4 flex min-h-11 items-center justify-center text-sm text-fucsia hover:underline">Vai al login</Link>
+        </Card>
+      </main>
+    );
+  }
 
   return (
     <main data-testid="register-page" className="mx-auto max-w-lg px-6 py-16">

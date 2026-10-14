@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
+Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -71,6 +71,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 | #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
 | #73 | Ambiente di prova: variabile facoltativa `EMAIL_ALLOWED_RECIPIENTS` (indirizzi o `@dominio`): se impostata le email partono solo verso quelli, gli altri sono scartati con riga `[email:bloccata-prova]` (solo dominio). Non impostata = produzione invariata. Guida: sezione «Email nell'ambiente di prova». Ramo `claude/email-prova-allowlist` | 09/10 (in attesa di unione) |
+| nuova | Conferma dell'email dei clienti (non dei commercianti): email con link «Conferma il tuo account» (48 ore, monouso, nel DB solo l'impronta), niente accesso finché non conferma, «Rimanda l'email» (3 ogni 10 minuti e 5 all'ora per dispositivo, solo in memoria), pagina `/conferma-email`, clienti già iscritti confermati con migrazione all'avvio, non confermati cancellati dopo 7 giorni (03:30 e all'avvio, via `_erase_user_data`). Interruttore `CLIENT_EMAIL_CONFIRMATION_REQUIRED` (predefinito acceso; spento in e2e e nei test). Ramo `claude/conferma-email-clienti` | Controllo da iPhone; decisioni nella PR (Privacy, Resend attivo prima di unire) |
 | nuova | Materiale per i clienti, solo testo: locandina e post (`docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md`); i copioni video sono rimandati. Ramo `claude/materiale-clienti` | Il consulente deve vedere le righe marcate «da far vedere al consulente» |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -125,6 +126,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 9. **Controllo online** (UptimeRobot, gratuito): **fatto il 10/10** (controlli su sito e server, avvisi alla email personale: da spostare su quella di Sconti Roma quando c'è; falso allarme normale nel risveglio di Render). Guida in `docs/guide/CONTROLLO_ONLINE.md`. Prima del lancio, server Render a «Starter». Lista completa di cosa manca al lancio ufficiale: `docs/LISTA_LANCIO.md`.
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
 
+- Conferma dell'email dei clienti (13/10, decisione del titolare): solo i clienti, non i commercianti (hanno Partita IVA e approvazione manuale). Accedono solo dopo aver toccato il link; chi era già iscritto è confermato. Account non confermati cancellati dopo 7 giorni. Chi reimposta la password con il link ricevuto per email risulta confermato. Con `CLIENT_EMAIL_CONFIRMATION_REQUIRED=false` si torna a entrare subito. Nessun accesso con Google o altri provider nel codice: solo email e password e Face ID.
+
 ## Pulizie tecniche (#65, 08/10)
 - Tolti i file del carattere Archivo Black (due `.woff2`, licenza, regole in `fonts.css`): nessun CSS o JS li usava. Restano solo Fraunces e Manrope; il test e2e 19 controlla solo quelli.
 - Tolto `frontend/plugins/health-check` e il suo aggancio in `craco.config.js`: si attivava solo con `ENABLE_HEALTH_CHECK=true`, variabile mai impostata né in CI né su Render; residuo della piattaforma Emergent. L'endpoint di salute di Render è `/api/` (`render.yaml`), non quello del plugin.
@@ -174,5 +177,6 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 13/10 — Rifiuto di un'offerta: il motivo è obbligatorio (almeno 10 caratteri), controllato dal server (errore 422 in italiano) e dal pannello admin con finestra dedicata e pulsante spento finché non è valido; vale per offerta corrente e del mese prossimo (test_motivo_rifiuto.py, e2e 08-admin).
 - 14/10 — Lista di lancio: aggiunte le idee per dopo il lancio (Coupon Flash, notifiche di prossimità, punti) con le note di valutazione.
 - 14/10 — Rapporto test email: aggiornati i punti già risolti (testo 2,99 € e `REPLY_TO_EMAIL`) e tolti i due indirizzi di prova con nome dal rapporto (repository pubblico).
+- 14/10 — Ricerca comparativa su come far validare i testi legali (generatori e consulenza online): `docs/legale/CONFRONTO_SERVIZI_LEGALI.md`. Raccomandazione ibrida; prezzi da riconfermare sui siti (pagine non raggiungibili dall ambiente). Nessun testo legale toccato. Ramo `claude/confronto-servizi-legali`.
 - 14/10 — Pulizia dell'app vera: il titolare ha cancellato tutti i clienti di prova; segnata come fatta nella lista di lancio.
 - 14/10 — Bozza della richiesta di preventivo a un legale (email, versione breve, pacchetto da allegare, tabella di confronto): `docs/legale/RICHIESTA_PREVENTIVO.md`. Non inviata; la invia il titolare.

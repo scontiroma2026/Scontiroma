@@ -598,6 +598,22 @@ _BTN = "display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;tex
 _P = "margin:0 0 16px;color:#d4d4d8"
 
 
+async def send_email_confirmation(to: str, name: str, token: str) -> Optional[str]:
+    """Conferma dell'indirizzo per i clienti appena iscritti (link valido 48 ore, monouso).
+    Il token compare solo nel link dell'email: mai nei log (vedi `_send`)."""
+    name = _esc((name or "").strip().split(" ")[0] or "ciao")
+    link = f"{APP_URL}/conferma-email?token={token}"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Conferma il tuo account</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">grazie per esserti iscritto a {BRAND}. Per attivare il tuo account tocca il pulsante qui sotto. Il link è valido per 48 ore.</p>
+<div style="text-align:center;margin:24px 0"><a href="{link}" style="{_BTN}">Conferma il tuo account</a></div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Se non sei stato tu a iscriverti, ignora questa email: senza conferma l'account non si attiva e viene cancellato da solo.</p>
+<p style="margin:24px 0 0;color:#71717a;font-size:12px;word-break:break-all">Link diretto: {link}</p>
+"""
+    return await _send(to, f"Conferma il tuo account — {BRAND}", _shell(inner))
+
+
 async def send_welcome_client(to: str, name: str) -> Optional[str]:
     """Benvenuto al cliente appena iscritto. Breve, senza date né prezzi."""
     name = _esc((name or "").strip().split(" ")[0] or "ciao")

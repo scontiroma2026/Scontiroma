@@ -11,6 +11,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { ScanFace, KeyRound, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import PasswordInput from "@/components/PasswordInput";
 import BrandMark from "@/components/BrandMark";
+import RimandaConferma from "@/components/RimandaConferma";
 
 export default function Login() {
   const { login, refresh } = useAuth();
@@ -28,6 +29,8 @@ export default function Login() {
   const [lockedUntil, setLockedUntil] = useState(0);
   const [now, setNow] = useState(Date.now());
   const locked = lockedUntil > now;
+  // Cliente che non ha ancora toccato il link di conferma: testo del server e offerta di rimandare l'email.
+  const [nonConfermato, setNonConfermato] = useState("");
   const lockMinutes = Math.max(1, Math.ceil((lockedUntil - now) / 60000));
   useEffect(() => {
     if (!lockedUntil) return undefined;
@@ -36,7 +39,7 @@ export default function Login() {
   }, [lockedUntil]);
 
   // Il blocco riguarda un solo account: cambiando email non deve restare.
-  const changeEmail = (v) => { setEmail(v); setLockedUntil(0); };
+  const changeEmail = (v) => { setEmail(v); setLockedUntil(0); setNonConfermato(""); };
   // «Usa un altro account»: dimentica l'ultimo account usato su questo telefono.
   const switchAccount = () => {
     cambiato.current = true;
@@ -91,6 +94,7 @@ export default function Login() {
     setBusy(false);
     if (!res.ok) {
       setPassword("");
+      if (res.code === "email_non_confermata") { setNonConfermato(res.error); return; }
       const m = /Riprova tra (\d+)\s*minut/.exec(res.error || "");
       if (m) {
         setLockedUntil(Date.now() + parseInt(m[1], 10) * 60000);
@@ -180,6 +184,13 @@ export default function Login() {
                 <strong className="block text-red-800">Accesso bloccato per sicurezza</strong>
                 Troppi tentativi sbagliati. Riprova tra {lockMinutes} {lockMinutes === 1 ? "minuto" : "minuti"},
                 oppure usa "Password dimenticata?" per crearne una nuova.
+              </div>
+            )}
+            {nonConfermato && (
+              <div data-testid="login-non-confermato" role="alert" className="mt-6 rounded-xl border border-fucsia/40 bg-muted p-4 text-sm text-foreground">
+                <strong className="block">Account da confermare</strong>
+                <p className="mt-1">{nonConfermato}</p>
+                <div className="mt-3"><RimandaConferma email={email} testid="login-rimanda" /></div>
               </div>
             )}
             <form onSubmit={submitPassword} className="mt-6 space-y-4" autoComplete="on">
