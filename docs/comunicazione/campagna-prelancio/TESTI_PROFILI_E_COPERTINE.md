@@ -6,7 +6,7 @@ Stato: **solo testi pronti; niente è pubblicato né caricato.** Regole: quelle 
 Cosa dice l'immagine: titolo **«Ci siamo!»**, sotto «Nasce Sconti Roma: le offerte dei negozi di quartiere, a Roma e dintorni», in basso «Sconti Roma» e «18+ · Roma e dintorni». Nessuna data, nessuna cifra, nessun marchio.
 
 **Quando si può usare: solo dal giorno del lancio (L1, 10:30).** Prima dice che l'app c'è già, mentre fino ad allora diciamo «stiamo arrivando»: sarebbe una promessa non vera e in contrasto con la campagna. Per il periodo di attesa usare `immagini/p1-stiamo-arrivando.png` (stesso stile).
-**Attenzione (da decidere):** la lista di lancio dice che il 13/10 è stato pubblicato un primo post di prova su Instagram con questa grafica. Se il post è ancora visibile, chi arriva sul profilo vede «Ci siamo!» e poi «Stiamo arrivando». Proposta: **archiviare quel post** (su Instagram «Archivia», non cancella) fino al giorno del lancio, poi riportarlo in vista. Lo decide il titolare; non è stato toccato nulla.
+**Il post di prova del 13/10 con questa grafica resta dov'è (decisione del titolare: non si archivia).** Si evita solo di **riproporla** (nuovi post, storie, stati) fino al lancio.
 
 **Didascalie per il giorno del lancio** (le tre varianti L1 A/B/C sono già in `CONTENUTI_SOCIAL.md` §10; qui i testi accessori nuovi):
 - **Testo alternativo (accessibilità):** > Grafica con la scritta «Ci siamo!» e sotto «Nasce Sconti Roma: le offerte dei negozi di quartiere, a Roma e dintorni». In basso: Sconti Roma, 18+, Roma e dintorni.

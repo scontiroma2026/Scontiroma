@@ -15,10 +15,11 @@ Stato: **testi finali, niente è pubblicato, nessun credito speso, nessuno conta
 **Semafori** (come in `PIANO_CAMPAGNA.md` §6). **[LISTA]** oggi significa: `PRELAUNCH_MODE` acceso su Render (è spento di serie, lo accende il titolare), modulo provato da iPhone con una email vera di prova, e frase di Privacy sulla lista vista dal consulente (`docs/legale/BOZZA_LISTA_ATTESA.md`). Se manca una di queste cose, i testi con AVVISA / link in bio **non escono**: si usa «Seguici qui» (CTA B di `CONTENUTI_SOCIAL.md`).
 
 ## 1. Ordine dei video (deciso dal titolare)
-1. **V4 «solo mani» per primo** (ven 23/10). **Bozza #143: versione «dito animato»** (35 s, 1080×1920, nessuna persona, nessuna ripresa da fare, nessun credito, traccia audio silenziosa). Il titolare sceglie: pubblicare la versione animata (consigliata: pronta) **oppure** girare le mani vere (§5 dei copioni). La musica la mette il titolare dalla raccolta dei brani consentiti agli account professionali, dentro Instagram/Facebook, oppure resta senza musica. **Si guarda a mano prima di pubblicare** (si controlla che non compaiano prezzi, percentuali o nomi di zona: il montaggio ha controlli automatici, ma il giudizio finale è del titolare).
-2. **V1 «Due amici»** (sab 24/10): solo con liberatorie firmate e permesso del luogo. Se non sono pronti, quel giorno esce il post P2 (nessun reel).
-3. **V6** (lun 26/10) e **V5** (mar 27/10): animazioni da produrre dopo l'OK, senza crediti.
-4. **V2 / V3**: solo dopo un negozio vero con permesso; V3 dal lancio.
+1. **V4 «solo mani» per primo** (ven 23/10). **Bozza #143: versione «dito animato»** (35 s, 1080×1920, nessuna persona, nessuna ripresa da fare, nessun credito, traccia audio silenziosa). Il titolare sceglie (**scelta ancora aperta, vedi §5**): pubblicare la versione animata (consigliata: pronta) **oppure** girare le mani vere (§5 dei copioni). La musica la mette il titolare dalla raccolta dei brani consentiti agli account professionali, dentro Instagram/Facebook, oppure resta senza musica. **Si guarda a mano prima di pubblicare** (si controlla che non compaiano prezzi, percentuali o nomi di zona: il montaggio ha controlli automatici, ma il giudizio finale è del titolare).
+2. **V1 «Due amici»: BLOCCATO** (decisione del titolare 14/10: per ora niente liberatorie, quindi niente persone riprese). **Sabato 24/10 esce il post P2**, non il reel. V1 si riprende solo se un giorno ci sono liberatorie e permesso del luogo.
+3. **Video con voce** (video clienti #121 rifatto senza nomi di zona): testo approvato e controllato in `TESTO_VOCE_PRELANCIO_CLIENTI.md` (versione completa e corta, con «scrivici AVVISA»); voce di una persona vera, nessun credito.
+4. **V6** (lun 26/10) e **V5** (mar 27/10): animazioni da produrre dopo l'OK, senza crediti.
+5. **V2 / V3**: solo dopo un negozio vero con permesso; V3 dal lancio.
 Nota: il video clienti della PR #121 nomina una zona pilota nel testo: **non usarlo** in pubblico finché non è rifatto senza nomi di zona.
 
 ## 2. Calendario finale
@@ -31,16 +32,18 @@ Orari: colazione 8:00–8:30, pausa pranzo 12:30–13:00, sera 18:30–20:30. «
 | Mer 21/10 | Altri 3 negozi. Prova da iPhone del modulo lista; accendere `PRELAUNCH_MODE` la sera, solo se la prova è ok | Render, iPhone | sera | — | [LISTA] |
 | Gio 22/10 | **P1 + S1 + commento fissato + stato WhatsApp W1** | IG, FB, WhatsApp | 18:30 | `immagini/p1-stiamo-arrivando.png` (1080×1080); storie S1 da fare | [LISTA] |
 | Ven 23/10 | **Reel V4** + storia sondaggio S2 | IG, FB | 12:30 | V4 animata (mp4 della #143), copertina del reel dal fotogramma della scena 2 | [LISTA] + musica |
-| Sab 24/10 | **Reel V1** (altrimenti post P2) + risposte ai commenti | IG, FB | 11:00 | Video V1 girato mercoledì 21/10 o dopo | [LIBERATORIA] [LISTA] |
+| Sab 24/10 | **Post P2** (V1 bloccato) + risposte ai commenti | IG, FB | 11:00 | Grafica semplice come P1 (da fare) | [LISTA] |
 | Dom 25/10 | **Carosello P3** + stato W2 + primo post nei gruppi **solo dove c'è il «sì»** | IG, FB, gruppi, WhatsApp | 11:00 | `immagini/p3-1…p3-5` (5 immagini 1080×1080) | [LISTA] [PERMESSO] |
 | Lun 26/10 | **P4 «Hai un negozio?»** (senza prova né prezzo) + **reel V6** | FB, IG | 18:30 | V6 da produrre; per P4 grafica semplice su fondo bianco, da fare | OK-TITOLARE; V6 [LISTA] |
 | Mar 27/10 | **Reel V5** + storia box domande S3 | IG, FB | 12:30 | V5 da produrre | [LISTA] |
 | Mer 28/10 | **Go/no-go** alle 9:00. Storia S4 (clip dal video V4, niente volto). Se «go»: avviso privato ai negozi con offerta pronta (senza data pubblica). Stato W3 | storie, DM, WhatsApp | 12:30 | Clip V4 | [LISTA] |
 | Gio 29/10 | **P6** «Che negozio vorresti trovare?» (18:30). Se «go»: **P7** «Ci siamo quasi» alle 12:30 | IG, FB | 12:30 / 18:30 | Grafica semplice come P1, da fare | [LISTA] |
 | Ven 30/10 | **P5 «Dillo a un amico»** (sostituisce P8 «Domani», vedi nota) + prove finali di link, QR, lista | IG, FB, storie | 18:30 | Grafica semplice come P1, da fare | [LISTA] |
-| Sab 31/10 (data interna) | **Lancio** solo con «go» e OK: L1, S5, L3, L4, avviso L2 | tutti | vedi `PIANO_CAMPAGNA.md` §8 | Immagine #119 «Ci siamo!» (solo da qui) | Dal lancio |
+| Sab 31/10 (data interna) | **Lancio** solo con «go» e OK: L1, S5, L3, L4, avviso L2 | tutti | vedi `PIANO_CAMPAGNA.md` §8 | Immagine #119 «Ci siamo!» (solo da qui, mai prima) | Dal lancio |
 
-**Nota su P8 «Domani»** (decisione proposta, da confermare): in `CONTENUTI_SOCIAL.md` P8 dice «Domani» e P7 ammette «a fine ottobre»: sono **date di lancio date al pubblico** e contraddicono la regola 1. Qui sono **sostituite** da P7 senza giorno e da P5. Se il titolare vuole tenerle, lo decida esplicitamente.
+**Allineamento con il testo parlato:** la chiusura delle grafiche e dei video dice «Scrivi AVVISA · link in bio» e «Stiamo arrivando», come in `TESTO_VOCE_PRELANCIO_CLIENTI.md`. Nella clip finale del V4 animato (#143) la scritta oggi è «Lista d'attesa: link in bio»: da portare a «Scrivi AVVISA · link in bio» nel montaggio (nessun costo). Le grafiche `immagini/p1` e `p3-5` hanno già AVVISA.
+
+**Nota su P8 «Domani»** (decisione del titolare): in `CONTENUTI_SOCIAL.md` P8 dice «Domani» e P7 ammette «a fine ottobre»: sono **date di lancio date al pubblico** e contraddicono la regola 1. Qui sono **sostituite** da P7 senza giorno e da P5. **Confermato dal titolare il 14/10: P7 «a fine ottobre» e P8 «Domani» sono tolti.**
 **Se non c'è il «go»** (meno di circa 10 negozi con offerta pronta): il 29 e il 30 escono P6 e P5 e basta; nessun annuncio di ritardo.
 
 ## 3. Testi finali, giorno per giorno
@@ -73,12 +76,13 @@ Le righe `>` sono i testi da copiare. Dove c'è «CTA B» (lista non attiva) si 
 - **Storia S2 (sondaggio), schermate:** > 1. Dove fai più spesso la spesa vicino a casa? [Negozio di quartiere / Supermercato] > 2. Quando esci a colazione? [Ogni giorno / Ogni tanto / Mai] > 3. Ti piacerebbe trovare le offerte in un posto solo? [Sì / Dipende] > 4. Grazie! Stiamo arrivando. Scrivici AVVISA e ti avvisiamo noi. 18+
   (I risultati non si citano in pubblico come numeri.)
 
-### Sab 24/10, 11:00 – Reel V1 «Due amici» (solo con liberatorie)
-> Hai visto la nuova app? Due amici, una colazione, un'app che sta arrivando. Scena di esempio, con persone che hanno dato il consenso.
-> Vuoi sapere quando parte? Scrivi AVVISA o usa il link in bio. Gratuita nella fase di lancio. Roma e dintorni. 18+.
-> #ScontiRoma #Roma #RomaEDintorni #ColazioneFuoriCasa #NegoziDiQuartiere
-- Sul video: la scritta finale «Avvisami → link in bio» diventa «Scrivi AVVISA · link in bio». Nessuna data, nessun marchio (tazze senza logo), niente alcol.
-- **Se V1 non è pronto → P2:** > Perché un'app? Perché i negozi di quartiere hanno spesso offerte che nessuno vede, e chi abita lì non sa dove guardare. > Sconti Roma mette tutto in un posto: l'offerta del mese di ogni negozio, il QR da mostrare al banco, niente di più. Stiamo arrivando. > Vuoi sapere quando parte? Scrivi AVVISA o usa il link in bio. Gratuita nella fase di lancio. Roma e dintorni. 18+. Sconti Roma
+### Sab 24/10, 11:00 – Post P2 «Perché Sconti Roma» (al posto di V1, che resta bloccato)
+> Perché un'app? Perché i negozi di quartiere hanno spesso offerte che nessuno vede, e chi abita lì non sa dove guardare.
+> Sconti Roma mette tutto in un posto: l'offerta del mese di ogni negozio, il QR da mostrare al banco, niente di più. Stiamo arrivando.
+> Vuoi sapere quando parte? Scrivi AVVISA o usa il link in bio. Gratuita nella fase di lancio. Roma e dintorni. 18+. Sconti Roma
+> #ScontiRoma #Roma #RomaEDintorni #NegoziDiQuartiere #SpesaDiQuartiere
+- Immagine: stessa grafica di P1 con titolo «Perché un'app?» (da fare, 1080×1080).
+- **Reel V1 [LIBERATORIA]: bloccato.** Caption già pronta in `CONTENUTI_SOCIAL.md` §5 R1, da aggiornare con AVVISA se un giorno si sblocca.
 
 ### Dom 25/10, 11:00 – Carosello P3 «Come funziona»
 > Tre passi: 1) cerca vicino a te, 2) guarda l'offerta del mese, 3) mostra il QR al banco. Tutto qui.
@@ -134,8 +138,8 @@ Righe di `CHECK_REGOLE.md`: Terzi, %/€, Costo, Luogo/18+, Dati, Promesse, Veri
 | Stati W1, W2, W3 | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì (account dell'attività, link con consenso nel modulo) | Sì | Sì | **OK**, [LISTA] (W3 solo OK-TITOLARE) |
 | Reel V4 (caption) | Sì | Sì | Sì | Sì | Sì (dati di prova) | Sì | Sì (illustrazioni dichiarate) | Sì | Sì | Sì | Sì | **OK**; serve la visione del titolare sul video e la musica con licenza |
 | S2 (sondaggio) | Sì | Sì | n.a. | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | **OK** |
-| Reel V1 (caption) | Sì (tazze senza logo) | Sì | Sì | Sì | Sì | Sì | Sì (scena di esempio) | Sì | Liberatoria + luogo | Sì | Sì | **Blocco [LIBERATORIA]** |
-| P2 (alternativa a V1) | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | **OK**, [LISTA] |
+| Reel V1 | — | — | — | — | — | — | — | — | Liberatoria + luogo | — | — | **BLOCCATO** (per ora niente liberatorie) |
+| P2 (24/10, al posto di V1) | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | **OK**, [LISTA] |
 | Carosello P3 + stato W2 | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | **OK**, [LISTA] |
 | Post nei gruppi (§8.2 A) | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì (riga per togliere) | Sì | Sì | **Blocco [PERMESSO]** |
 | P4 A + commento | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì (si può ignorare) | Sì | n.a. | **OK**; **nessuna riga con prova o prezzo** |
@@ -151,13 +155,12 @@ Righe di `CHECK_REGOLE.md`: Terzi, %/€, Costo, Luogo/18+, Dati, Promesse, Veri
 Resta **non coperto da questo controllo** (da far vedere al consulente, non è consulenza legale): formula «gratuita nella fase di lancio»; la frase di Privacy sulla lista; l'uso di stati WhatsApp e risposte automatiche; liberatoria e permesso del luogo.
 
 ## 5. Cosa serve da te (titolare) per tenere questo calendario
-1. Scegliere **V4**: animata (#143) o mani vere; scegliere la **musica** (o nessuna) dopo aver letto la licenza.
-2. Dire se **P8 «Domani»** e «a fine ottobre» restano fuori (proposto) o tornano.
-3. **Accendere `PRELAUNCH_MODE`** su Render il 21/10 sera, dopo la prova da iPhone.
-4. Foto/liberatorie: **V1** (due amici maggiorenni, bar con permesso scritto) o rinunciare e usare P2.
-5. Quale **numero WhatsApp Business** usare per gli stati e per le risposte AVVISA (numero dedicato, mai quello personale).
-6. Se archiviare il post «Ci siamo!» già pubblicato il 13/10 (vedi `TESTI_PROFILI_E_COPERTINE.md` §1).
-7. Approvare i gruppi della ricerca (`GRUPPI_DA_CONTATTARE.md`) dal tuo account.
+1. **Ancora aperta: scegliere V4** animata (#143, pronta) **oppure** mani vere, e la **musica** (o nessuna) dopo aver letto la licenza.
+2. **Accendere `PRELAUNCH_MODE`**: quando e a quali condizioni, vedi `FONTI_E_LISTA_ATTESA.md` §6 (raccomandazione: dopo la prova da iPhone e non prima di aver risolto i punti elencati lì).
+3. Approvare i gruppi della ricerca: come sceglierli è in `GRUPPI_DA_CONTATTARE.md` §6.
+4. Se vuoi le schermate dell'app nel carosello P3 (ora cinque carte di sola grafica).
+Decisioni già prese il 14/10: niente P7 «a fine ottobre» né P8 «Domani»; **V1 bloccato, al suo posto P2**; **il post «Ci siamo!» del 13/10 non si archivia**; il numero WhatsApp Business dedicato esiste già (nessuna azione); versione inglese per gli studenti Erasmus: dopo il lancio (`DOPO_LANCIO.md`).
+**Il post «Ci siamo!» (immagine #119) non si ripropone fino al lancio**: nessun nuovo post, storia o stato con quella grafica prima del 31/10 (data interna) e solo con il «go».
 
 ## 6. Risposta a chi scrive AVVISA (commento, DM, WhatsApp)
 Risposta manuale (o con risposta rapida), una sola volta, dopo l'OK del titolare sul testo:

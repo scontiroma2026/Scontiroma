@@ -59,6 +59,13 @@ Messaggio già pronto in `CONTENUTI_SOCIAL.md` §8.1 (varianti A e B), poi testo
 5. **Un contatto chiaro** per gli amministratori. Senza risposta in 7 giorni = no.
 6. Un gruppo per volta, **massimo due richieste al giorno**; il nome del gruppo sta solo nel messaggio privato; mai una menzione a pagamento (la pubblicità è esclusa).
 
+**Come scegliere i primi 2 gruppi (per il titolare).** Questo elenco è dei **gruppi per i clienti**, non la lista dei negozi (`M11`, che è un altro foglio).
+1. Apri `scratchpad/prospezione/ELENCO_PRIVATO_GRUPPI.md` (cartella privata, fuori dal repository): ogni riga ha nome, fonte, priorità e il messaggio da usare (lettera A–G).
+2. Parti dalle righe a priorità «Media» e controlla **dal tuo account, senza iscriverti né scrivere**: cerca il nome su Facebook o Instagram e guarda la scheda pubblica.
+3. Segna i tre dati: numero di iscritti visibili, data dell'ultimo post, regole sulle promozioni. Se mancano o dicono «vietate», scarta.
+4. **Criterio di scelta:** prendi il gruppo con **post recente (ultimo mese), regole che ammettono presentazioni o chiedono il permesso, pubblico di Roma e dintorni**, e a parità quello con più iscritti. Il secondo deve essere di una categoria diversa dal primo (per esempio uno di famiglie/eventi e uno di risparmio).
+5. Scrivi il messaggio (lettera dell'elenco) agli amministratori, uno per volta, e annota data ed esito nella scheda in fondo all'elenco. Senza risposta in 7 giorni vale no. Se nessuna riga supera il controllo, vale la ricerca sul tuo account con le parole di §2.
+
 **Messaggi tipo** (invio privato dal titolare, un gruppo per volta; ogni messaggio ha il modo di dire no e non nomina quartieri; regole come `CONTENUTI_SOCIAL.md` §8). La categoria A (quartiere) usa §8.1 di `CONTENUTI_SOCIAL.md`.
 - **B – studenti (associazioni e community universitarie):**
 > Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi vicino a te, a Roma e dintorni, per maggiorenni. Stiamo arrivando e pensiamo possa interessare a chi studia e vive la città. Possiamo condividere con [NOME GRUPPO] un solo post di presentazione, che vi mandiamo prima da approvare? È gratuita nella fase di lancio. Se preferite di no, nessun problema: non scriviamo più. Sconti Roma
