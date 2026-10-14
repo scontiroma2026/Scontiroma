@@ -87,6 +87,18 @@ services:
     # REACT_APP_VERSION = commit pubblicato (Render imposta RENDER_GIT_COMMIT), letto dallo smoke.
     buildCommand: yarn install --frozen-lockfile && CI=false REACT_APP_VERSION=$RENDER_GIT_COMMIT yarn build
     staticPublishPath: build
+    # Intestazioni di sicurezza (le stesse del server): niente "indovinare" il tipo dei file, sito non
+    # incorniciabile in altri siti, indirizzo completo non passato ai siti esterni. Il CSP non c'è ancora (vedi PROVA_GENERALE).
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
     routes:
       # App a pagina singola: ogni indirizzo (/login, /dashboard…) apre index.html
       - type: rewrite

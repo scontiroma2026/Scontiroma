@@ -14,9 +14,12 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
 import ZoneOptions from "@/components/ZoneOptions";
 import RimandaConferma from "@/components/RimandaConferma";
+import ListaAttesaForm from "@/components/ListaAttesaForm";
+import { useAppConfig } from "@/context/ConfigContext";
 
 export default function Register() {
   const { register } = useAuth();
+  const { prelaunch } = useAppConfig();
   const nav = useNavigate();
   const [params] = useSearchParams();
 
@@ -153,6 +156,16 @@ export default function Register() {
           </button>
         </div>
 
+        {prelaunch && role === "client" ? (
+          // Pre-lancio: i clienti non si registrano ancora, lasciano l'email nella lista d'attesa. I negozi sì.
+          <div data-testid="register-prelancio" className="mt-6 rounded-2xl border border-border bg-muted p-6">
+            <h2 className="font-serif text-2xl">Stiamo arrivando a Roma e dintorni</h2>
+            <p className="mt-2 mb-4 text-sm text-foreground/80">
+              Le iscrizioni dei clienti si aprono quando partiamo. Lasciaci la tua email e ti avvisiamo noi. Sconti Roma è per maggiorenni (18+).
+            </p>
+            <ListaAttesaForm testid="lista-attesa-reg" />
+          </div>
+        ) : (
         <form onSubmit={submit} className="mt-6 space-y-4">
           {role === "client" ? (
             <div className="grid grid-cols-2 gap-3">
@@ -343,6 +356,7 @@ export default function Register() {
             {loading ? "Creazione…" : "Crea account"}
           </Button>
         </form>
+        )}
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Hai già un account?{" "}
