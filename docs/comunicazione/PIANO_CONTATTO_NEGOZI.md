@@ -7,7 +7,7 @@ Lo stato dei controlli (CI) non è leggibile dall'ambiente (nessuno stato riport
 
 | PR | Cosa contiene | Proposta | Perché |
 |---|---|---|---|
-| **#41** Kit messaggi (`docs/commercianti/MESSAGGI.md`) | WhatsApp, Instagram, Facebook, email, telefonata, SMS | **SCARTARE** (chiudere senza unire) | Sostituita da `KIT_MESSAGGI_NEGOZI.md`. Ha ancora «quartiere», «disdici quando vuoi», «preavviso di 30 giorni», «senza vincoli» (non decisi) e il prezzo nel primo messaggio. Le «Regole d'uso» sono state riprese qui |
+| **#41** Kit messaggi (`docs/commercianti/MESSAGGI.md`) | WhatsApp, Instagram, Facebook, email, telefonata, SMS | **SCARTARE** (chiudere senza unire) | Sostituita da `KIT_MESSAGGI_NEGOZI.md`. Ha ancora «quartiere», «preavviso di 30 giorni», «senza vincoli» (non decisi) e il «disdici quando vuoi» senza la precisazione sull'offerta in corso e il prezzo nel primo messaggio. Le «Regole d'uso» sono state riprese qui |
 | **#62** Video v13 | Cartella `progetto_v13`, riprese con app vecchia, 32 file | **SCARTARE** | Superata dal v14 (app nuova, niente quartieri). Il titolare ha comunque già deciso i tre punti di voce; nessun valore da riprendere |
 | **#120** Video v14 (bozza) | Copione, riprese, montaggio; video fuori dal repository | **AGGIORNARE, poi unire** (dopo la scelta della voce) | È il video buono. Da cambiare nel `COPIONE_v14.md`: frase sulla disdetta decisa dal titolare (riga a parte), esempio senza prezzi, «+ IVA» già a posto. Il copione parlato aggiornato è in `COPIONI_VOCE_ELEVENLABS.md`. **Video non pubblicabile** finché i Termini (#116) non sono validati. Il COPIONE contiene due versioni dello stesso stato (muto / con voci Fernando ed Enea): chiarire nel testo quale è l'ultima |
 | **#127** Manuali operativi (bozza) | Criteri di approvazione, risposte info/partner, social | **TENERE IN BOZZA** (non unire ora) | Ha testi con rilievo legale ([DA VALIDARE]); serve per le risposte dopo i primi contatti. Unire dopo il consulente |
@@ -26,10 +26,10 @@ Lo stato dei controlli (CI) non è leggibile dall'ambiente (nessuno stato riport
 | Scheda di prospezione | `SCHEDA_PROSPEZIONE_NEGOZI.md` | Criteri, ricerca, orari, script, obiezioni, tracciamento |
 | Modello del foglio | `modello_tracciamento_negozi.csv` | Solo intestazione, nessun dato |
 
-Regole rispettate: nessuna percentuale, nessun «gratis per sempre», «nessuna commissione», «prezzo bloccato», «nessun vincolo», «disdici quando vuoi»; nessun nome di persona né contatto personale; nessun elenco di attività reali nel repository (il file con i nomi è privato).
+Regole rispettate: nessuna percentuale, nessun «gratis per sempre», «nessuna commissione», «prezzo bloccato», «nessun vincolo»; nessun nome di persona né contatto personale; nessun elenco di attività reali nel repository (il file con i nomi è privato).
 
 ## 3. Cosa deve decidere il titolare (la disdetta è già decisa)
-1. **Frase sulla disdetta: DECISA dal titolare** e inserita ovunque (kit, guida, copioni, scheda): «Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto.» Resta **comunque da far vedere al consulente** prima dell'uso. Non si usano varianti come «puoi smettere quando vuoi», «disdici quando vuoi», «nessun vincolo».
+1. **Frase sulla disdetta: DECISA dal titolare** e inserita ovunque (kit, guida, copioni, scheda): «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» (decisione esplicita del titolare, che ha sostituito la formula precedente). **«Disdici quando vuoi» va fatto vedere al consulente** prima dell'uso: finora la evitavamo, ora è ammessa solo in questa frase intera. Non si usano altre formule («puoi smettere quando vuoi», «nessun vincolo»).
 2. **Il prezzo (4,99 € + IVA)** nei messaggi: la proposta è non scriverlo nel primo contatto (solo a richiesta e nella guida). Va bene?
 3. **Quando si può usare «circa due mesi di prova»** nei messaggi e nel video: dopo il consulente e i Termini (#116).
 4. **Voce del video** (Fernando o Enea) e permesso ai crediti ElevenLabs per le righe cambiate.

@@ -2,12 +2,12 @@
 
 **Stato: pronto per l'uso solo dopo l'OK del titolare e il colpo d'occhio del consulente.** Nessun messaggio è stato inviato. Sostituisce `MESSAGGI_COMMERCIANTI.md` (versione vecchia, con «Garbatella, San Paolo e Marconi» e «gratis») e il kit della PR #41; il copione parlato resta `COPIONE_TELEFONATA.md` (da allineare con le frasi qui sotto).
 
-> **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto.» Si usa solo così, parola per parola, a voce e per iscritto; non si dice «puoi smettere quando vuoi», «disdici quando vuoi» né «nessun vincolo».
+> **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» Si usa solo così, parola per parola, a voce e per iscritto, senza altre formule (niente «puoi smettere quando vuoi», niente «nessun vincolo»). **Il consulente deve vedere «disdici quando vuoi».**
 
 ## Regole del marchio (controllo prima di ogni invio)
 - Firma **«Sconti Roma»**, plurale («siamo», «vi scriviamo»), nessun nome di persona, nessun numero o email personale.
 - **«Roma e dintorni»** (mai «quartiere», mai l'elenco delle zone pilota nei testi ai negozi). Dentro l'app si dice **18+**.
-- **«Gratuita nella fase di lancio»** e **«circa due mesi di prova dalla prima offerta»**. Mai: percentuali, «gratis per sempre», «nessuna commissione», «0 €», «prezzo bloccato», «nessun vincolo», «disdici quando vuoi», promesse di clienti o incassi.
+- **«Gratuita nella fase di lancio»** e **«circa due mesi di prova dalla prima offerta»**. Mai: percentuali, «gratis per sempre», «nessuna commissione», «0 €», «prezzo bloccato», «nessun vincolo», «puoi smettere quando vuoi», promesse (la disdetta si dice solo con la frase decisa, vedi in alto) di clienti o incassi.
 - Il prezzo (4,99 € al mese + IVA) **non si scrive nel primo messaggio**: si dice solo se il negozio lo chiede o nella guida. Dopo la prova: «vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma».
 - Ogni messaggio ha un **modo gentile per dire no** e il no si rispetta subito (vedi «Cosa fare dopo un no»).
 - Si usa il «voi» nei messaggi ai negozi; la guida e il video usano il «tu» (come l'app).
@@ -83,7 +83,7 @@ Oggetto: **Un'idea per portare nuovi clienti a [NOME NEGOZIO]**
 | Domanda o obiezione | Risposta |
 |---|---|
 | «Quanto costa?» | «Nella fase di lancio è gratuita, con circa due mesi di prova dalla prima offerta. Dopo è un abbonamento mensile semplice, 4,99 € al mese + IVA; vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.» *(Il prezzo si dice solo se lo chiedono.)* |
-| «Come si disdice?» | «Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto.» (frase decisa dal titolare; da far comunque vedere al consulente) |
+| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» (frase decisa dal titolare; da far comunque vedere al consulente) |
 | «Non ho tempo» | «Capisco. Pochi minuti per iniziare e poi una sola offerta al mese. Quando vi va meglio?» |
 | «Ho già Instagram» | «Benissimo, non lo sostituisce: è un posto in più dove chi abita vicino vi trova. Non serve fare post.» |
 | «Sono i dati dei miei clienti?» | «No. Il cliente si registra da solo nell'app. A voi arriva, alla scansione, solo il nome con l'iniziale del cognome, l'ora, l'offerta e se è nuovo o di ritorno.» |
@@ -96,7 +96,7 @@ Oggetto: **Un'idea per portare nuovi clienti a [NOME NEGOZIO]**
 
 ## G. Controllo rapido prima di inviare
 - [ ] Nome del negozio inserito a mano, nessun segnaposto rimasto (`[LINK]`, `[NOME NEGOZIO]`)
-- [ ] Nessuna parola vietata (percentuali, «gratis per sempre», «nessuna commissione», «prezzo bloccato», «nessun vincolo», «disdici quando vuoi», «quartiere»)
+- [ ] Nessuna parola vietata (percentuali, «gratis per sempre», «nessuna commissione», «prezzo bloccato», «nessun vincolo», «puoi smettere quando vuoi», «quartiere»; la disdetta solo con la frase esatta)
 - [ ] Se si parla di disdetta, si usa la frase esatta della sezione in alto, senza varianti
 - [ ] C'è il modo di dire no
 - [ ] Il canale è uno di quelli ammessi (vedi tabella)
