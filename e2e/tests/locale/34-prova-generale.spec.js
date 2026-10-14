@@ -318,6 +318,32 @@ test('sito pubblico (pre-lancio ACCESO): «stiamo arrivando», 18+, nessuna data
   }
 });
 
+test('pre-lancio: i clienti non si registrano (lista d\'attesa), i negozi sì; a pre-lancio spento tutto come prima', async ({ page, request }) => {
+  await interruttore(request, 'prelancio', true);
+  try {
+    await page.goto('/register');
+    await expect(page.getByTestId('register-prelancio')).toContainText('Stiamo arrivando');
+    await expect(page.getByTestId('lista-attesa-reg-form')).toBeVisible();
+    await expect(page.getByTestId('reg-submit')).toHaveCount(0);
+    expect(await scrollOrizzontale(page)).toBeLessThanOrEqual(0);
+    const rifiutato = await chiama(request, 'POST', '/auth/register', { body: {
+      legal_accepted: true, email: unico('pre-cliente'), password: PASSWORD, name: 'Giulia Prova', role: 'client' } });
+    expect(rifiutato.status).toBe(403);
+    // i negozi continuano a registrarsi
+    await page.getByTestId('role-merchant').click();
+    await expect(page.getByTestId('reg-submit')).toBeVisible();
+    await expect(page.getByTestId('register-prelancio')).toHaveCount(0);
+    const negozio = await registra(request, 'merchant');
+    expect(negozio.token).toBeTruthy();
+  } finally {
+    await interruttore(request, 'prelancio', false);
+  }
+  await page.goto('/register');
+  await expect(page.getByTestId('reg-submit')).toBeVisible();
+  const cliente = await registra(request, 'client');
+  expect(cliente.token).toBeTruthy();
+});
+
 test('pagine incorporate nel sito: titolo e descrizione senza zone pilota né percentuali', async ({ request }) => {
   const r = await request.get('http://localhost:3000/');
   const html = await r.text();

@@ -37,7 +37,7 @@ Cosa copre ogni percorso (dove sta il test):
 
 Usa **il sito di prova**, non quello vero. Account di prova con email tue inventate (`nome+prova1@…`). Dopo, cancella gli account di prova (admin → Clienti / Negozi).
 
-### Cliente
+### Cliente (con il pre-lancio SPENTO: se è acceso la registrazione dei clienti è chiusa e compare la lista d'attesa)
 
 | # | Passo | Esito atteso |
 |---|---|---|
@@ -97,15 +97,23 @@ Si cambia da Render → servizio `scontiroma-api-xqib` → Environment. Ogni mod
 2. Apri `https://api.scontiroma.it/api/` (deve rispondere) e il sito dal telefono.
 3. Iscrivi **una tua email vera** alla lista d'attesa: deve arrivare l'email di conferma; tocca il link.
 4. Admin → «Lista d'attesa»: vedi 1 confermata. Non premere «Invia l'avviso di lancio» (serve solo il giorno del lancio).
-5. Non approvare offerte finché non è il giorno del lancio: un'offerta approvata è visibile a chi apre `/discounts`, anche con il pre-lancio acceso.
+5. **Non approvare offerte prima del lancio** (decisione del titolare, 14/10): un'offerta approvata è visibile a chi apre `/discounts`, anche con il pre-lancio acceso. Le offerte restano «in attesa» fino a «Approva tutte» + `LANCIA` il giorno del lancio.
+6. Con il pre-lancio acceso **i clienti non possono registrarsi** (il sito e il server mostrano «Stiamo arrivando» e la lista d'attesa); negozi e admin non cambiano. I clienti già iscritti accedono come sempre.
 
 ### Il giorno del lancio (non prima)
 
 1. `PRELAUNCH_MODE` → `false`.
 2. Admin → «Offerte in attesa» → «Approva tutte» → `LANCIA`.
-3. Admin → «Lista d'attesa» → «Invia l'avviso di lancio» → `AVVISA`. Partono al massimo **80 email al giorno** a lotti: se gli iscritti confermati sono di più, ripremi `AVVISA` il giorno dopo (non riparte da solo). Nessuno riceve due volte l'avviso.
+3. Admin → «Lista d'attesa» → «Invia l'avviso di lancio» → `AVVISA`. Partono al massimo **80 email al giorno** (`WAITLIST_DAILY_CAP`) a lotti. Se gli iscritti confermati sono di più, **il giorno dopo riprende da solo alle 10:00 (ora di Roma)**, con lo stesso tetto, finché non restano iscritti da avvisare. Senza aver premuto `AVVISA` non parte mai nulla. Nessuno riceve due volte l'avviso (ogni persona e ogni giorno vengono «prenotati» nel database prima dell'invio). Non serve nessun interruttore in più.
 
 ## 6. Limiti della prova
 
 - I test girano su un server e un database finti; le email, Stripe, PayPal, Gemini e gli indirizzi (LocationIQ) sono simulati: la consegna vera delle email, Face ID su iPhone e i colori reali vanno visti dal telefono (sezione 4).
 - Nessun dato di produzione è stato letto o scritto. Il controllo dei record DNS della posta non si può fare da qui (`TEST_EMAIL_DOMINIO.md`).
+
+## 7. Log di Render: cosa si può controllare e cosa no
+
+- **Fatto nel codice (14/10):** negli indirizzi dei destinatari delle email i log mostrano solo l'iniziale e il dominio (`g***@gmail.com`), sia per `[email:sent]` e `[email:mock]` sia per gli errori di invio e i promemoria. Test: `backend/tests/test_prova_generale.py`.
+- **Non controllabile da qui / non coperto:** i log che Render ha già conservato prima di questa modifica (restano com'erano e scadono secondo il piano di Render: non si cancellano a mano); i log di altri servizi (Resend, Atlas, Cloudflare/DNS) e i log di accesso del proxy di Render (indirizzi IP dei visitatori, percorsi richiesti), su cui non abbiamo controllo; eventuali indirizzi dentro i messaggi d'errore dei fornitori sono mascherati solo nei log di invio email.
+- **Oggetto delle email:** resta nel log (per esempio «Nuovo commerciante: Negozio di prova»): può contenere il nome di un negozio, non dati di persone private.
+- **Da guardare tu su Render → Logs:** cerca `@` e verifica che accanto ci sia sempre `***`. Se trovi un indirizzo intero, dimmi la riga (senza altri dati) e la correggo.

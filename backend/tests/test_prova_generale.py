@@ -77,3 +77,30 @@ def test_render_yaml_valori_prudenti_e_nessun_segreto():
     # Il sito statico manda le stesse intestazioni di sicurezza del server.
     for nome, valore in ATTESE.items():
         assert re.search(rf"name: {nome}\s+value: {re.escape(valore)}", testo), f"render.yaml: manca {nome} sul sito"
+
+
+# ---------- Log senza indirizzi email interi ----------
+def test_maschera_email():
+    import email_service
+    assert email_service.mask_email("Giulia.Rossi@Gmail.com") == "G***@gmail.com"
+    assert email_service.mask_email("a@b.it") == "a***@b.it"
+    assert email_service.mask_email("senza-chiocciola") == "?"
+    assert email_service.mask_email(None) == "?"
+    t = email_service.mask_emails_in_text("Invalid to: mario.rossi@example.com; cc luisa@example.org, ok")
+    assert "mario.rossi" not in t and "luisa@" not in t and "m***@example.com" in t and "l***@example.org" in t
+
+
+def test_i_log_delle_email_non_contengono_indirizzi_interi(caplog):
+    import logging
+    import email_service
+    caplog.set_level(logging.INFO)
+    asyncio.run(email_service._send(["persona.vera@example.com", "altra@example.org"], "Prova", "<p>x</p>"))  # senza chiave: simulata
+    testo = caplog.text
+    assert "[email:mock]" in testo
+    assert "persona.vera@example.com" not in testo and "altra@example.org" not in testo
+    assert "p***@example.com" in testo
+
+
+def test_nel_codice_nessun_log_con_indirizzo_intero():
+    sorgente = (Path(__file__).resolve().parents[1] / "server.py").read_text(encoding="utf-8")
+    assert re.search(r"logging\.\w+\(f\"[^\"\n]*to=\{u\['email'\]\}", sorgente) is None

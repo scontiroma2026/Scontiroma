@@ -486,6 +486,62 @@ def test_interruttore_acceso_espone_la_modalita_e_lascia_i_negozi(_ambiente):
     run(body)
 
 
+def test_registrazione_clienti_chiusa_in_prelancio(_ambiente, monkeypatch):
+    """Con PRELAUNCH_MODE acceso i CLIENTI non si registrano (403); i negozi sì; spento tutto come sempre."""
+    cliente = {"email": "cliente-pre@example.com", "password": "password-giusta-123", "name": "Giulia Prova",
+               "role": "client", "legal_accepted": True}
+    negozio = {"email": "negozio-pre@example.com", "password": "password-giusta-123", "name": "Titolare Prova",
+               "role": "merchant", "legal_accepted": True, "legal_specific_accepted": True,
+               "shop_name": "Negozio Prova", "phone": "0600000000"}
+
+    async def body(c):
+        r = await c.post("/api/auth/register", json=cliente)
+        assert r.status_code == 403 and "Stiamo arrivando" in r.json()["detail"]
+        assert await server.db.users.find_one({"email": cliente["email"]}) is None
+        assert (await c.post("/api/auth/register", json=negozio)).status_code == 200
+        monkeypatch.setenv("PRELAUNCH_MODE", "false")
+        assert (await c.post("/api/auth/register", json=cliente)).status_code == 200
+    run(body)
+
+
+def test_avviso_riprende_da_solo_ogni_giorno(_ambiente, monkeypatch):
+    """Dopo AVVISA l'invio prosegue da solo, un giorno alla volta, col tetto giornaliero e senza doppi invii."""
+    monkeypatch.setenv("WAITLIST_DAILY_CAP", "2")
+
+    async def body(c):
+        for i in range(5):
+            await iscrivi(c, f"g{i}@example.com")
+            await conferma(c, _ambiente, f"g{i}@example.com")
+        # prima di AVVISA non parte mai nulla
+        assert (await server._avviso_giornaliero())["saltato"] == "non_avviato"
+        assert _ambiente["avvisi"] == []
+        ah = await admin(c)
+        await avvia_avviso(c, ah)                      # giorno 1: ne partono 2 (tetto)
+        assert len(_ambiente["avvisi"]) == 2
+        assert (await server._avviso_giornaliero())["inviati"] == 0   # stesso giorno: tetto raggiunto, nulla di più
+        giorno = server._rome_now().date()
+
+        async def passa_un_giorno(n):
+            monkeypatch.setattr(server, "_rome_now", lambda: datetime.combine(giorno + timedelta(days=n), datetime.min.time()).replace(hour=10))
+            ieri = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            await server.db.waitlist.update_many({"notice_sent_at": {"$ne": None}}, {"$set": {"notice_sent_at": ieri}})
+
+        await passa_un_giorno(1)                       # giorno 2: altri 2, anche con due lavori insieme
+        esiti = await asyncio.gather(server._avviso_giornaliero(), server._avviso_giornaliero())
+        assert sum(e["inviati"] for e in esiti) == 2
+        assert (await server._avviso_giornaliero())["saltato"] == "gia_fatto_oggi"
+        assert len(_ambiente["avvisi"]) == 4
+        await passa_un_giorno(2)                       # giorno 3: l'ultima, poi il proseguimento si spegne
+        assert (await server._avviso_giornaliero())["inviati"] == 1
+        assert len(_ambiente["avvisi"]) == 5 and len({m["to"] for m in _ambiente["avvisi"]}) == 5
+        stato = await server.db.settings.find_one({"key": "avviso_lancio_automatico"})
+        assert stato["attivo"] is False
+        await passa_un_giorno(3)
+        assert (await server._avviso_giornaliero())["saltato"] == "non_avviato"
+        assert len(_ambiente["avvisi"]) == 5
+    run(body)
+
+
 def test_valore_predefinito_dell_interruttore_e_spento(monkeypatch):
     monkeypatch.delenv("PRELAUNCH_MODE", raising=False)
     assert server.prelaunch_mode() is False
