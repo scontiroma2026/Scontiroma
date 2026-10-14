@@ -86,3 +86,12 @@ Ricerca di testo nei cinque file di `docs/comunicazione/campagna-prelancio/`:
 6. Termini (PR #116): finché non sono validati restano bloccati tutti i contenuti [TERMINI].
 7. `GRUPPI_DA_CONTATTARE.md`: nessun nome di gruppo, persona o amministratore; solo categorie e parole di ricerca; tutte le voci «non verificato».
 8. Musica dei video (`COPIONI_VIDEO.md` §11): nessun brano scelto; il titolare verifica i termini di licenza per uso commerciale prima di usarne uno.
+
+## 7. Controlli del 14/10 sul calendario finale
+Le tabelle contenuto per contenuto dei testi finali (con le colonne in più «Data» e «CTA» per la regola «niente data di lancio» e la parola AVVISA) sono in `CALENDARIO_PRONTO.md` §4 e `TESTI_PROFILI_E_COPERTINE.md` §6: non si ripetono qui. Esiti da ricordare:
+- **Immagine #119 «Ci siamo!»**: **Blocco fino al lancio** (dice che l'app c'è già). Prima si usa `immagini/p1-stiamo-arrivando.png`.
+- **P7 «a fine ottobre» e P8 «Domani» di `CONTENUTI_SOCIAL.md`**: **non conformi** alla regola «niente data» (data data al pubblico); sostituiti nel calendario finale.
+- **Caption R4-B «Zona, offerta, QR»**: non coerente con il video V4 animato (mostra le categorie): sostituita.
+- **Video clienti della PR #121**: nomina una zona pilota nel testo: **Blocco** finché non è rifatto.
+- **Link `?fonte=ig-…`, `fb-…`, `gruppo-…`**: nella lista d'attesa finivano in «altro»; sostituiti con i codici di `FONTI_E_LISTA_ATTESA.md`.
+- **Messaggi di richiesta di permesso per categoria** (`GRUPPI_DA_CONTATTARE.md` §6): stesse regole di §8.1 (Sì su tutte; il nome del gruppo solo nel messaggio privato).

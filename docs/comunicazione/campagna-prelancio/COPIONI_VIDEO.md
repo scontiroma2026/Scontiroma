@@ -10,7 +10,9 @@
 | V2 | Il commerciante col QR | Commerciante vero | Clienti (versione A); negozi (versione B) | ~25 s | [PERMESSO negozio] [LIBERATORIA]; versione B [TERMINI] | dopo l'adesione di un negozio | A: da 26/10; B: dopo validazione |
 | V3 | Il cliente alla cassa | Cliente + commerciante | Clienti | ~18 s | [DAL LANCIO] [LIBERATORIA] [PERMESSO] | ven 30/10 + schermata sab 31/10 | sab 31/10 13:00 |
 | V5 | Come funziona (animazione) | Nessuno | Clienti | ~22 s | [LISTA] | Claude, dopo l'OK | mar 27/10 |
-| V6 | Il negozio sotto casa sta per arrivare (animazione) | Nessuno | Clienti | ~15 s | [LISTA] | Claude, dopo l'OK | ven 23/10 |
+| V6 | Il negozio sotto casa sta per arrivare (animazione) | Nessuno | Clienti | ~15 s | [LISTA] | Claude, dopo l'OK | lun 26/10 |
+
+**V4: esiste una bozza «dito animato» (PR #143, nessuna ripresa da fare); per l'ordine e le caption finali vedi `CALENDARIO_PRONTO.md` §1.**
 
 **Ordine deciso dal titolare (14/10):** primo **V4 solo mani**, poi **V1 due amici**, poi V6, V5, V2 e V3. V2 e V3 dipendono da un negozio vero che dia il permesso. La liberatoria serve solo per V1, V2 e V3.
 

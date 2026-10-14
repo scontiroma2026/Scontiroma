@@ -1,7 +1,7 @@
 # Piano della campagna pre-lancio (19/10 – 31/10)
 
 Stato: **bozza per il titolare. Niente è pubblicato, nessun credito speso, nessuno contattato.**
-Firma di tutti i testi: «Sconti Roma» (nessun nome personale). Documenti collegati, nella stessa cartella: `CONTENUTI_SOCIAL.md`, `COPIONI_VIDEO.md`, `ELENCO_VOLANTINI_E_MATERIALI.md`, `CHECK_REGOLE.md`. Idee di partenza riprese dalla PR #103 (profili, 12 post, calendario, gruppi, risposte) e dalla PR #119 (immagine «Ci siamo!»).
+Firma di tutti i testi: «Sconti Roma» (nessun nome personale). Documenti collegati, nella stessa cartella: **`CALENDARIO_PRONTO.md` (testi finali giorno per giorno, da usare per pubblicare)**, `TESTI_PROFILI_E_COPERTINE.md`, `FONTI_E_LISTA_ATTESA.md`, `CONTENUTI_SOCIAL.md`, `COPIONI_VIDEO.md`, `ELENCO_VOLANTINI_E_MATERIALI.md`, `CHECK_REGOLE.md`. Idee di partenza riprese dalla PR #103 (profili, 12 post, calendario, gruppi, risposte) e dalla PR #119 (immagine «Ci siamo!»).
 
 ## 1. La strategia in sei righe (decisa dal titolare il 14/10)
 1. **Al pubblico non si dà una data.** Si dice «stiamo arrivando» e, solo quando la soglia è garantita, «a fine ottobre». Il 31/10 resta una data **interna**.
@@ -10,6 +10,8 @@ Firma di tutti i testi: «Sconti Roma» (nessun nome personale). Documenti colle
 4. La **chiamata all'azione dei clienti è la lista d'attesa** («Avvisami quando parte»). Quella dei negozi è «parliamone» (iscrizione e prima offerta).
 5. **Soglia per partire: circa 10 negozi con almeno un'offerta pronta.** Se non c'è, il lancio scivola alla settimana dopo e nessuno se ne accorge, perché non c'è una data pubblica.
 6. Pubblicazione via Composio **solo dopo l'OK esplicito del titolare, contenuto per contenuto**.
+
+**Aggiornamento 14/10 (regola del titolare per i clienti):** nessuna data di lancio, **nemmeno «a fine ottobre» o «domani»**; chiamata all'azione = parola **AVVISA** o link in bio. Nel calendario finale (`CALENDARIO_PRONTO.md`) P8 «Domani» è sostituito da P5 e P7 non ha giorni; la riga «solo quando la soglia è garantita, a fine ottobre» del punto 1 è sospesa finché il titolare non decide.
 
 ## 2. Obiettivi (proposte di lavoro, da correggere: non esistono dati storici)
 | Pubblico | Obiettivo | Come lo misuriamo (senza dati personali) |

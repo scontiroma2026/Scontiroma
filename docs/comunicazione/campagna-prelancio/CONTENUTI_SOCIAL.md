@@ -11,16 +11,20 @@
 - Emoji: al massimo una o due per testo, facoltative (qui non inserite).
 
 ## 1. Link e fonti (si usano `?fonte=` con lettere minuscole, numeri e trattini)
+**I codici validi per la lista d'attesa e il motivo sono in `FONTI_E_LISTA_ATTESA.md`** (il server riduce la fonte a `instagram`, `facebook`, `volantino`, `passaparola`: un codice che non comincia così finisce in «altro»). I testi finali giorno per giorno sono in `CALENDARIO_PRONTO.md`; qui restano le alternative.
 | Dove | Link |
 |---|---|
-| Bio Instagram | `https://scontiroma.it/?fonte=ig-bio` |
-| Storie Instagram | `https://scontiroma.it/?fonte=ig-storia` |
-| Reel Instagram | `https://scontiroma.it/?fonte=ig-reel` |
-| Pagina Facebook | `https://scontiroma.it/?fonte=fb-pagina` |
-| Gruppi (uno per codice) | `https://scontiroma.it/?fonte=gruppo-01` (`gruppo-02`…) |
-| Messaggi ai negozi | `https://scontiroma.it/?fonte=negozi-dm` |
+| Bio Instagram | `https://scontiroma.it/?fonte=instagram-bio` |
+| Storie Instagram | `https://scontiroma.it/?fonte=instagram-storia` |
+| Reel Instagram | `https://scontiroma.it/?fonte=instagram-reel` |
+| Risposta a chi scrive AVVISA su Instagram | `https://scontiroma.it/?fonte=instagram-commento` |
+| Pagina Facebook | `https://scontiroma.it/?fonte=facebook-pagina` |
+| Gruppi (uno per codice) | `https://scontiroma.it/?fonte=facebook-gruppo-01` (`-02`…) |
+| WhatsApp Business e amici | `https://scontiroma.it/?fonte=passaparola-whatsapp` |
 | Volantino/cartolina clienti | `https://scontiroma.it/?fonte=volantino-clienti` |
-| Video con amici | `https://scontiroma.it/?fonte=video-amici` |
+| Negozi (messaggi, cartolina) | `https://scontiroma.it/per-i-commercianti` (la fonte dei negozi non si misura) |
+
+**Chiamata all'azione dei clienti (decisione 14/10):** «Scrivi AVVISA» oppure il link in bio; l'email non si chiede mai in chat. **Niente data di lancio** nemmeno nelle varianti P7 («a fine ottobre») e P8 («Domani»): vedi la nota in `CALENDARIO_PRONTO.md` §2.
 
 ## 2. Profili: bio e link
 **Instagram `sconti.roma`, bio (max 150 caratteri)**
@@ -156,7 +160,7 @@ Aggiungere sempre «Gratuita nella fase di lancio. Roma e dintorni. 18+. Sconti 
 - **R5 – V5 «Come funziona»** (27/10)
   - A: `Tre tocchi. Zona, offerta, QR. Stiamo arrivando.`
   - B: `Più facile di così? Dicci nei commenti. Lista d'attesa: link in bio.`
-- **R6 – V6 «Il negozio sotto casa sta per arrivare»** (23/10)
+- **R6 – V6 «Il negozio sotto casa sta per arrivare»** (26/10)
   - A: `Il negozio sotto casa sta per avere una vetrina in più. Stiamo arrivando.`
   - B: `Quella vetrina che guardi ogni giorno sta per diventare un'offerta. Lista d'attesa: link in bio.`
 
