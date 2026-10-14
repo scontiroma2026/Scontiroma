@@ -172,5 +172,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 13/10 — Email abbonamento clienti (oggi spento): tolto il prezzo «2,99 €» dai testi e «quartiere» → «Roma e dintorni» (test email dominio, PR #126).
 - 13/10 — Nuova skill «lavoro-con-sub-agenti»: delega con lo stesso modello e worktree isolata; quando un sub-agente finisce interrompiamo il lavoro in corso, vediamo il risultato, decidiamo e poi riprendiamo (decisione del titolare).
 - 13/10 — Rifiuto di un'offerta: il motivo è obbligatorio (almeno 10 caratteri), controllato dal server (errore 422 in italiano) e dal pannello admin con finestra dedicata e pulsante spento finché non è valido; vale per offerta corrente e del mese prossimo (test_motivo_rifiuto.py, e2e 08-admin).
+- 14/10 — Lista di lancio: aggiunte le idee per dopo il lancio (Coupon Flash, notifiche di prossimità, punti) con le note di valutazione.
 - 14/10 — Rapporto test email: aggiornati i punti già risolti (testo 2,99 € e `REPLY_TO_EMAIL`) e tolti i due indirizzi di prova con nome dal rapporto (repository pubblico).
 - 14/10 — Ricerca comparativa su come far validare i testi legali (generatori e consulenza online): `docs/legale/CONFRONTO_SERVIZI_LEGALI.md`. Raccomandazione ibrida; prezzi da riconfermare sui siti (pagine non raggiungibili dall ambiente). Nessun testo legale toccato. Ramo `claude/confronto-servizi-legali`.
+- 14/10 — Pulizia dell'app vera: il titolare ha cancellato tutti i clienti di prova; segnata come fatta nella lista di lancio.
