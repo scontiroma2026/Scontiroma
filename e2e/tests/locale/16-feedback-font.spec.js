@@ -40,6 +40,8 @@ test('feedback: mai sopra la scansione del commerciante', async ({ page, request
 
 test('font: i titoli usano Manrope', async ({ page }) => {
   await page.goto('/');
-  const f = await page.locator('h1').first().evaluate((e) => getComputedStyle(e).fontFamily);
-  expect(f).toMatch(/^"?Manrope/);
+  // La home mostra prima un titolo di attesa e, appena il server risponde, quello vero: l'asserzione
+  // si ripete finché il titolo è stabile (prima leggeva il carattere di un elemento già sostituito).
+  await expect(page.getByTestId('landing-caricamento')).toHaveCount(0);
+  await expect(page.locator('h1').first()).toHaveCSS('font-family', /^"?Manrope/);
 });
