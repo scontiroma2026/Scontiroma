@@ -981,14 +981,16 @@ async def register(payload: RegisterIn, response: Response, request: Request):
         phone = (payload.phone or "").strip()
         if not phone:
             raise HTTPException(422, "Il numero di telefono è obbligatorio per i commercianti")
-        partita_iva = None
-        if (payload.partita_iva or "").strip():
-            partita_iva = _partita_iva_valida(payload.partita_iva)
-            if not partita_iva:
-                solo_cifre = re.sub(r"[\s.]", "", str(payload.partita_iva or "")).upper().removeprefix("IT")
-                if re.fullmatch(r"\d{11}", solo_cifre):
-                    raise HTTPException(422, "La Partita IVA ha 11 cifre ma non risulta corretta: controlla le cifre, soprattutto l'ultima")
-                raise HTTPException(422, "La Partita IVA deve avere 11 numeri (solo cifre)")
+        # Partita IVA obbligatoria (decisione del titolare, 14/10): solo controllo formale, mai online.
+        # I negozi già registrati senza Partita IVA non sono toccati (questo controllo vale solo alla registrazione).
+        if not (payload.partita_iva or "").strip():
+            raise HTTPException(422, "La Partita IVA è obbligatoria per i commercianti (11 numeri)")
+        partita_iva = _partita_iva_valida(payload.partita_iva)
+        if not partita_iva:
+            solo_cifre = re.sub(r"[\s.]", "", str(payload.partita_iva or "")).upper().removeprefix("IT")
+            if re.fullmatch(r"\d{11}", solo_cifre):
+                raise HTTPException(422, "La Partita IVA ha 11 cifre ma non risulta corretta: controlla le cifre, soprattutto l'ultima")
+            raise HTTPException(422, "La Partita IVA deve avere 11 numeri (solo cifre)")
         doc.update({
             "shop_name": (payload.shop_name or payload.name or "").strip() or "Negozio",
             "zone": (payload.zone or "Centro storico").strip(),
@@ -998,8 +1000,7 @@ async def register(payload: RegisterIn, response: Response, request: Request):
             "image_url": "",
             "phone": phone,
         })
-        if partita_iva:
-            doc["partita_iva"] = partita_iva
+        doc["partita_iva"] = partita_iva
     await db.users.insert_one(doc)
 
     # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)
@@ -1577,6 +1578,60 @@ async def _run_waitlist_cleanup() -> dict:
     limite = (datetime.now(timezone.utc) - timedelta(days=WAITLIST_NON_CONFERMATI_GIORNI)).isoformat()
     r = await db.waitlist.delete_many({"status": "da_confermare", "consent_at": {"$lt": limite}})
     return {"deleted": r.deleted_count}
+
+
+WAITLIST_CONSERVAZIONE_MESI = 12  # confermate e annullate (decisione del titolare, 14/10); le non confermate restano a 7 giorni
+
+
+def _data_iso(valore) -> Optional[datetime]:
+    try:
+        d = datetime.fromisoformat(str(valore))
+    except Exception:
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def _meno_mesi(d: datetime, mesi: int) -> datetime:
+    """Stessa data di `mesi` mesi fa (il 29/02 diventa 28/02 se l'anno prima non è bisestile)."""
+    tot = d.year * 12 + (d.month - 1) - mesi
+    anno, mese = divmod(tot, 12)
+    mese += 1
+    giorno = d.day
+    while True:
+        try:
+            return d.replace(year=anno, month=mese, day=giorno)
+        except ValueError:
+            giorno -= 1
+
+
+async def _run_waitlist_retention(adesso: Optional[datetime] = None) -> dict:
+    """Cancella le iscrizioni alla lista d'attesa più vecchie di 12 mesi. Vale sempre, anche con PRELAUNCH_MODE spento.
+    Data di riferimento: per le confermate la data di iscrizione (consent_at, rinnovata a ogni nuovo consenso); per le
+    annullate la data di annullamento (unsubscribed_at, altrimenti consent_at): l'indirizzo annullato serve a non
+    riscrivere per errore chi ha detto no, quindi i 12 mesi partono da quando ha detto no.
+    Il giorno si «prenota» in modo atomico: due copie del server o un riavvio non lo ripetono. Nei log nessun indirizzo intero."""
+    adesso = adesso or datetime.now(timezone.utc)
+    giorno = adesso.astimezone(ZoneInfo("Europe/Rome")).strftime("%Y-%m-%d")
+    chiave = f"waitlist_retention:{giorno}"
+    prenota = await db.job_claims.update_one({"key": chiave}, {"$setOnInsert": {"key": chiave, "ran_at": adesso.isoformat()}}, upsert=True)
+    if prenota.upserted_id is None:
+        return {"skipped": True, "deleted": 0}
+    limite = _meno_mesi(adesso, WAITLIST_CONSERVAZIONE_MESI)
+    cancellate = 0
+    try:
+        async for d in db.waitlist.find({"status": {"$in": ["confermata", "disiscritta"]}}):
+            campo = "unsubscribed_at" if d.get("status") == "disiscritta" else "consent_at"
+            rif = _data_iso(d.get(campo)) or _data_iso(d.get("consent_at")) or _data_iso(d.get("created_at"))
+            if rif is None or rif >= limite:
+                continue
+            r = await db.waitlist.delete_one({"id": d.get("id"), "status": d.get("status")})
+            if r.deleted_count:
+                cancellate += 1
+                logging.info(f"[lista-attesa] iscrizione {d.get('status')} oltre {WAITLIST_CONSERVAZIONE_MESI} mesi cancellata to={mask_email(d.get('email'))}")
+    except Exception:
+        await db.job_claims.delete_one({"key": chiave})  # si potrà ritentare
+        raise
+    return {"skipped": False, "deleted": cancellate}
 
 
 @api.get("/categories")
@@ -5842,6 +5897,13 @@ def _start_scheduler() -> None:
         id="waitlist_cleanup_daily",
         replace_existing=True,
     )
+    # Lista d'attesa: confermate e annullate oltre 12 mesi, ogni giorno alle 03:50 (e anche all'avvio)
+    _scheduler.add_job(
+        _run_waitlist_retention,
+        CronTrigger(hour=3, minute=50, timezone="Europe/Rome"),
+        id="waitlist_retention_daily",
+        replace_existing=True,
+    )
     _scheduler.start()
     logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, next-offer reminders 09:30, rollover 1° 00:05 Europe/Rome")
 
@@ -5916,6 +5978,12 @@ async def on_startup():
             logging.info(f"[lista-attesa] iscrizioni non confermate cancellate all'avvio: {esito['deleted']}")
     except Exception as e:
         logging.error(f"[lista-attesa] pulizia all'avvio fallita: {e}")
+    try:
+        esito = await _run_waitlist_retention()
+        if esito.get("deleted"):
+            logging.info(f"[lista-attesa] iscrizioni oltre 12 mesi cancellate all'avvio: {esito['deleted']}")
+    except Exception as e:
+        logging.error(f"[lista-attesa] pulizia 12 mesi all'avvio fallita: {e}")
     try:
         orfani = await _pulisci_dati_orfani()
         if any(orfani.values()):

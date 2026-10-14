@@ -295,6 +295,56 @@ def test_pulizia_dei_non_confermati_dopo_7_giorni(_ambiente):
     run(body)
 
 
+def test_cancellazione_dopo_12_mesi_confermate_e_annullate(_ambiente, caplog):
+    """Orologio finto: 11 mesi e 29 giorni resta, 12 mesi e 1 giorno sparisce; confermate (data iscrizione) e annullate
+    (data annullamento). Nei log solo indirizzi mascherati."""
+    import logging
+    ora = datetime(2027, 10, 14, 3, 50, tzinfo=timezone.utc)
+    limite = server._meno_mesi(ora, 12)
+    dopo = lambda giorni: (limite + timedelta(days=giorni)).isoformat()  # noqa: E731
+    righe = [
+        ("conf-nuova@example.com", "confermata", {"consent_at": dopo(1)}),     # 11 mesi e 29 giorni
+        ("conf-vecchia@example.com", "confermata", {"consent_at": dopo(-1)}),  # 12 mesi e 1 giorno
+        ("ann-nuova@example.com", "disiscritta", {"consent_at": dopo(-500), "unsubscribed_at": dopo(1)}),
+        ("ann-vecchia@example.com", "disiscritta", {"consent_at": dopo(-500), "unsubscribed_at": dopo(-1)}),
+        ("ann-senza-data@example.com", "disiscritta", {"consent_at": dopo(-30)}),  # ripiega su consent_at
+        ("attesa@example.com", "da_confermare", {"consent_at": dopo(-300)}),       # non è compito di questo lavoro
+        ("esatta@example.com", "confermata", {"consent_at": limite.isoformat()}),  # 12 mesi esatti: ancora dentro
+    ]
+
+    async def body(c):
+        for i, (email, stato, campi) in enumerate(righe):
+            await server.db.waitlist.insert_one({"id": f"id{i}", "email": email, "status": stato,
+                                                 "created_at": dopo(-1000), **campi})
+        with caplog.at_level(logging.INFO):
+            assert await server._run_waitlist_retention(ora) == {"skipped": False, "deleted": 3}
+        resta = sorted([d["email"] async for d in server.db.waitlist.find({})])
+        assert resta == ["ann-nuova@example.com", "attesa@example.com", "conf-nuova@example.com", "esatta@example.com"]
+        assert "conf-vecchia@example.com" not in caplog.text and "c***@example.com" in caplog.text
+        # stessa giornata: prenotata, non si ripete (nemmeno da un'altra copia del server)
+        assert await server._run_waitlist_retention(ora) == {"skipped": True, "deleted": 0}
+        # il giorno dopo l'iscrizione di 12 mesi esatti è diventata troppo vecchia
+        assert await server._run_waitlist_retention(ora + timedelta(days=1)) == {"skipped": False, "deleted": 1}
+    run(body)
+
+
+def test_cancellazione_12_mesi_vale_a_interruttore_spento_e_senza_iscrizioni(_ambiente, monkeypatch):
+    monkeypatch.setenv("PRELAUNCH_MODE", "false")
+
+    async def body(c):
+        await server.db.waitlist.delete_many({})
+        assert await server._run_waitlist_retention(datetime(2027, 1, 1, tzinfo=timezone.utc)) == {"skipped": False, "deleted": 0}
+        await server.db.waitlist.insert_one({"id": "x", "email": "x@example.com", "status": "confermata",
+                                             "consent_at": "2025-01-01T00:00:00+00:00"})
+        assert (await server._run_waitlist_retention(datetime(2027, 1, 2, tzinfo=timezone.utc)))["deleted"] == 1
+    run(body)
+
+
+def test_meno_mesi_bisestile():
+    assert server._meno_mesi(datetime(2028, 2, 29, tzinfo=timezone.utc), 12) == datetime(2027, 2, 28, tzinfo=timezone.utc)
+    assert server._meno_mesi(datetime(2027, 1, 15, tzinfo=timezone.utc), 12) == datetime(2026, 1, 15, tzinfo=timezone.utc)
+
+
 def test_conteggi_e_csv_solo_confermate(_ambiente):
     async def body(c):
         await iscrivi(c, "a@example.com", src="instagram")
@@ -470,7 +520,7 @@ def test_interruttore_spento_nulla_cambia(_ambiente, monkeypatch):
         assert reg.status_code == 200
         neg = await c.post("/api/auth/register", json={
             "email": "negozio@example.com", "password": "password-giusta-123", "name": "Titolare Prova", "role": "merchant",
-            "legal_accepted": True, "legal_specific_accepted": True, "shop_name": "Negozio Prova", "phone": "0600000000"})
+            "legal_accepted": True, "legal_specific_accepted": True, "shop_name": "Negozio Prova", "phone": "0600000000", "partita_iva": "12345678903"})
         assert neg.status_code == 200
     run(body)
 
@@ -480,7 +530,7 @@ def test_interruttore_acceso_espone_la_modalita_e_lascia_i_negozi(_ambiente):
         assert (await c.get("/api/config/public")).json()["prelaunch_mode"] is True
         neg = await c.post("/api/auth/register", json={
             "email": "negozio@example.com", "password": "password-giusta-123", "name": "Titolare Prova", "role": "merchant",
-            "legal_accepted": True, "legal_specific_accepted": True, "shop_name": "Negozio Prova", "phone": "0600000000"})
+            "legal_accepted": True, "legal_specific_accepted": True, "shop_name": "Negozio Prova", "phone": "0600000000", "partita_iva": "12345678903"})
         assert neg.status_code == 200
         assert (await c.get("/api/discounts")).json() == {"discounts": []}
     run(body)
@@ -492,7 +542,7 @@ def test_registrazione_clienti_chiusa_in_prelancio(_ambiente, monkeypatch):
                "role": "client", "legal_accepted": True}
     negozio = {"email": "negozio-pre@example.com", "password": "password-giusta-123", "name": "Titolare Prova",
                "role": "merchant", "legal_accepted": True, "legal_specific_accepted": True,
-               "shop_name": "Negozio Prova", "phone": "0600000000"}
+               "shop_name": "Negozio Prova", "phone": "0600000000", "partita_iva": "12345678903"}
 
     async def body(c):
         r = await c.post("/api/auth/register", json=cliente)

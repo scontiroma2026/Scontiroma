@@ -11,7 +11,7 @@ import requests
 
 from _test_config import ADMIN_EMAIL, ADMIN_PASSWORD, API_URL
 
-MERCHANT_FIELDS = {"shop_name": "TEST Negozio", "zone": "Garbatella", "category": "Ristorante", "phone": "+39 06 0000000"}
+MERCHANT_FIELDS = {"shop_name": "TEST Negozio", "zone": "Garbatella", "category": "Ristorante", "phone": "+39 06 0000000", "partita_iva": "12345678903"}
 
 
 def _email(tag):
