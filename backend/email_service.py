@@ -6,6 +6,7 @@ Se `RESEND_API_KEY` non è configurata o è un placeholder, le send diventano no
 e loggano soltanto (non blocca il flusso applicativo).
 """
 import os
+import re
 import asyncio
 import html
 import logging
@@ -57,6 +58,23 @@ def _domain_of(address: str) -> str:
     return addr.rsplit("@", 1)[1] if "@" in addr else "?"
 
 
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+
+
+def mask_email(address) -> str:
+    """Per i log: solo l'iniziale e il dominio («g***@gmail.com»). Mai l'indirizzo intero."""
+    addr = str(address or "").strip()
+    if "@" not in addr:
+        return "?"
+    nome, dominio = addr.rsplit("@", 1)
+    return f"{nome[:1]}***@{dominio.lower()}"
+
+
+def mask_emails_in_text(testo) -> str:
+    """Maschera ogni indirizzo email dentro un testo (per esempio un messaggio d'errore del fornitore)."""
+    return _EMAIL_RE.sub(lambda m: mask_email(m.group(0)), str(testo))
+
+
 async def _send(to, subject: str, html: str) -> Optional[str]:
     """`to` può essere un indirizzo o una lista. Con `EMAIL_ALLOWED_RECIPIENTS`
     impostata (solo ambiente di prova) i destinatari non consentiti sono scartati
@@ -73,7 +91,7 @@ async def _send(to, subject: str, html: str) -> Optional[str]:
         recipients = kept
         if not recipients:
             return None
-    label = ", ".join(recipients)
+    label = ", ".join(mask_email(r) for r in recipients)  # nei log mai l'indirizzo intero
     if not _configured:
         log.info(f"[email:mock] to={label} subject={subject!r} (RESEND_API_KEY not set)")
         return None
@@ -86,7 +104,7 @@ async def _send(to, subject: str, html: str) -> Optional[str]:
         log.info(f"[email:sent] to={label} id={eid}")
         return eid
     except Exception as e:
-        log.error(f"[email:error] to={label} subject={subject!r} err={e}")
+        log.error(f"[email:error] to={label} subject={subject!r} err={mask_emails_in_text(e)}")
         return None
 
 
