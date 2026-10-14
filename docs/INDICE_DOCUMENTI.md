@@ -39,6 +39,7 @@ Da iPhone: apri il link, poi tocca il nome del file per leggerlo. Le PR non anco
 |---|---|---|
 | Profili, 12 post, calendario, gruppi, risposte, punti per il consulente | #103 | ramo `claude/social`, `docs/comunicazione/social/` |
 | Gruppi di quartiere trovati (da verificare) | senza PR | ramo `claude/gruppi-quartiere`, `docs/comunicazione/social/07_GRUPPI_TROVATI.md` |
+| Campagna pre-lancio 19/10–31/10: piano, contenuti social, copioni video, materiali, controllo regole | ramo `claude/campagna-prelancio` | `docs/comunicazione/campagna-prelancio/` (inizia da `PIANO_CAMPAGNA.md`) |
 
 ## Come aprire un ramo da iPhone
 `https://github.com/scontiroma2026/Scontiroma/tree/<nome-del-ramo>` (esempio: `.../tree/claude/pacchetto-legale/docs/legale/bozze`).
