@@ -81,6 +81,15 @@ test('prelancio acceso: la home dice «Stiamo arrivando» senza data e ha il mod
   await expect(modulo).toContainText("Voglio ricevere un'email quando Sconti Roma è online");
   const privacy = page.getByTestId('lista-attesa-privacy');
   await expect(privacy).toHaveAttribute('href', '/privacy');
+  // frase provvisoria di informativa (testo legale PROPOSTO, da validare): titolare, durata 12 mesi, Resend, 18+
+  const info = page.getByTestId('lista-attesa-informativa');
+  await expect(info).toBeVisible();
+  await expect(info).toContainText('Titolare: Euro Linea S.r.l.s.');
+  await expect(info).toContainText('al massimo 12 mesi');
+  await expect(info).toContainText('privacy@scontiroma.it');
+  await expect(info).toContainText('Resend (server in Irlanda)');
+  await expect(info).toContainText('Solo maggiorenni (18+)');
+  await expect(info.getByTestId('lista-attesa-privacy')).toHaveAttribute('href', '/privacy');
 
   // tema chiaro, Manrope, controlli da 44 px, testo contrastato, nessuno scroll laterale
   const font = await page.getByTestId('prelaunch-titolo').evaluate((e) => getComputedStyle(e).fontFamily);
@@ -267,6 +276,7 @@ test('prelancio spento: home e catalogo sono quelli di sempre', async ({ page, r
   await expect(page.getByTestId('cta-start')).toBeVisible();
   await expect(page.getByTestId('prelaunch-home')).toHaveCount(0);
   await expect(page.getByTestId('lista-attesa-form')).toHaveCount(0);
+  await expect(page.getByTestId('lista-attesa-informativa')).toHaveCount(0);
   await page.goto('/discounts');
   await page.getByTestId('filter-zone').selectOption('Aurelio');
   await expect(page.getByTestId('scheda-zona-vuota')).toBeVisible();
