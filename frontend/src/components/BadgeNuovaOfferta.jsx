@@ -10,7 +10,7 @@ export default function BadgeNuovaOfferta({ isNew, isNewShop, className = "" }) 
       <span
         data-testid="badge-nuovo-negozio"
         aria-label="Nuovo su Sconti Roma"
-        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full grad-fucsia-viola px-2.5 py-1 text-[11px] font-bold leading-none text-white shadow-lg ${className}`}
+        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full grad-fucsia-viola px-2.5 py-1 text-xs font-bold leading-none text-white shadow-lg ${className}`}
       >
         <Store size={11} aria-hidden="true" /> Nuovo su Sconti Roma
       </span>
@@ -21,7 +21,7 @@ export default function BadgeNuovaOfferta({ isNew, isNewShop, className = "" }) 
     <span
       data-testid="badge-nuova-offerta"
       aria-label="Nuova offerta"
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-ac-teal px-2.5 py-1 text-[11px] font-bold leading-none text-white shadow-lg ${className}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-ac-teal px-2.5 py-1 text-xs font-bold leading-none text-white shadow-lg ${className}`}
     >
       <Sparkles size={11} aria-hidden="true" /> Nuova offerta
     </span>

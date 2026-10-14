@@ -273,7 +273,7 @@ Fonte: lettura di `Termini.jsx`, `PrivacyPolicy.jsx`, `CookiePolicy.jsx`, `Reces
 | 18 | **Cookie Policy**: «Google Fonts» non c'è (corretto); **Privacy** nomina «Google LLC (Gemini)» tra i fornitori attuali | Gemini è spento | 🟢 | Aggiungere «oggi spento» |
 | 19 | **Recesso art. 1**: richiesta via email evasa in 3 giorni lavorativi | Eliminazione dall'app immediata; email: tempo di legge un mese | 🟢 | Va bene; citare il mese |
 | 20 | **Termini, Recesso e Privacy** non dicono che i negozi devono avere la Partita IVA | Il modulo la chiede, ma il **server** accetta ancora registrazioni di negozi senza (`server.py` righe 980-983). Decisione del titolare 15/10: **solo con Partita IVA** | 🟠 | Frase nei Termini + istruzione di codice (sezione 12.7) |
-| 21 | **Privacy** (art. 4.1) cita solo OpenStreetMap per i contenuti esterni | La home (`Landing.jsx` righe 12-13) carica **due foto da `images.unsplash.com`**: Unsplash riceve l'IP del visitatore | 🟠 | Riga proposta in sezione 12.3 (oppure ospitare le due foto da noi, come già fatto per le altre) |
+| 21 | ~~Unsplash~~ **risolto su `main` il 15/10 (foto ospitate da noi)**. Prima: **Privacy** (art. 4.1) cita solo OpenStreetMap per i contenuti esterni | La home (`Landing.jsx` righe 12-13) carica **due foto da `images.unsplash.com`**: Unsplash riceve l'IP del visitatore | 🟠 | Riga proposta in sezione 12.3 (oppure ospitare le due foto da noi, come già fatto per le altre) |
 
 ---
 
@@ -338,7 +338,7 @@ Nessuna di queste PR è stata chiusa o toccata: prima le vede il titolare.
 |---|---|---|
 | Art. 2 (dati) e art. 4 | **Lista d'attesa** | Frase della sezione 4.2 (con 12 mesi) |
 | Art. 4 (fornitori) | **LocationIQ** | «**LocationIQ** (Unwired Labs, USA) — trasforma l'indirizzo del negozio in coordinate sulla mappa. Riceve solo il testo dell'indirizzo, inviato dal nostro server, non l'indirizzo IP di chi usa il sito.» *(Il fornitore e la sede sono da verificare nel contratto.)* |
-| Art. 4.1 (contenuti esterni) | **Unsplash** | «Due foto di Roma nella pagina iniziale sono caricate da **Unsplash**: il servizio riceve dal tuo browser l'indirizzo IP e i dati tecnici della richiesta e li tratta come titolare autonomo.» *(Alternativa senza testo: ospitare le due foto sul nostro server, come già fatto per le altre immagini.)* |
+| Art. 4.1 (contenuti esterni) | **Unsplash** — **SUPERATO il 15/10:** su `main` le foto della home sono ora ospitate sul nostro sito (STATO 14/10), quindi la riga NON serve più. Testo conservato solo per memoria | «Due foto di Roma nella pagina iniziale sono caricate da **Unsplash**: il servizio riceve dal tuo browser l'indirizzo IP e i dati tecnici della richiesta e li tratta come titolare autonomo.» *(Alternativa senza testo: ospitare le due foto sul nostro server, come già fatto per le altre immagini.)* |
 | Art. 2 (dati) e art. 3 (basi) | **Partita IVA dei negozi** | «Per i commercianti raccogliamo la **Partita IVA**, controllata solo nel formato, per identificare l'attività e, in futuro, per la fatturazione. Base: contratto (art. 6.1.b) e obbligo di legge per la fatturazione (6.1.c). Conservata finché l'account è attivo; i dati contabili 10 anni.» |
 | Art. 2, 3 e 6 | **Segnalazioni e reclami** | «Se segnali un'offerta o presenti un reclamo conserviamo il testo, l'offerta o il negozio coinvolto e, se vuoi una risposta, la tua email. Non salviamo l'indirizzo IP. Conserviamo tutto per 24 mesi, poi cancelliamo. Base: legittimo interesse a gestire le segnalazioni, e obbligo di legge se il Regolamento (UE) 2022/2065 o 2019/1150 si applica.» |
 

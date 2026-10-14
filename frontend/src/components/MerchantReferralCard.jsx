@@ -78,7 +78,7 @@ export default function MerchantReferralCard() {
               href={refUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 truncate py-3 text-xs font-bold text-ac-teal underline decoration-ac-teal/40 underline-offset-2"
+              className="flex-1 truncate min-h-11 leading-[2.75rem] text-xs font-bold text-ac-teal underline decoration-ac-teal/40 underline-offset-2"
               aria-label="Apri il link del tuo QR"
             >
               {refUrl}

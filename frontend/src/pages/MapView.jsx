@@ -51,7 +51,7 @@ const buildIcon = (percent) => L.divIcon({
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%) rotate(45deg);
-    color: white; font-weight: 800; font-size: 11px; font-family: 'Manrope', sans-serif;
+    color: white; font-weight: 800; font-size: 12px; font-family: 'Manrope', sans-serif;
     white-space: nowrap;
   ">-${percent}%</span></div>`,
   iconSize: [44, 44],
@@ -238,7 +238,7 @@ export default function MapView() {
                       </div>
                     </div>
                     <div className="p-3">
-                      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ciano">
+                      <div className="flex items-center gap-1 text-xs uppercase tracking-wider text-ciano">
                         <MapPin size={10} /> {d.merchant.zone} · {d.merchant.category}
                         {d._distKm != null && <span className="text-muted-foreground">· {d._distKm.toFixed(1)} km</span>}
                       </div>

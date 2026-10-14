@@ -51,7 +51,7 @@ export default function Navbar() {
           <div className="grad-fucsia-viola flex h-10 w-10 items-center justify-center rounded-2xl text-white font-serif text-lg glow-fucsia">S</div>
           <div className="flex flex-col leading-tight">
             <BrandMark inline className="text-xl tracking-tight text-foreground" />
-            <span className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-ciano">Roma è tua</span>
+            <span className="mt-0.5 text-xs uppercase tracking-[0.18em] text-ciano">Roma è tua</span>
           </div>
         </Link>
 

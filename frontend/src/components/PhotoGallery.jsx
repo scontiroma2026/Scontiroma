@@ -170,12 +170,12 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
               </button>
               {/* Badge copertina */}
               {i === 0 && (
-                <div className="absolute top-1 left-1 z-20 flex items-center gap-1 rounded-full bg-muted text-ac-ink px-2 py-0.5 text-[11px] font-extrabold shadow pointer-events-none">
+                <div className="absolute top-1 left-1 z-20 flex items-center gap-1 rounded-full bg-muted text-ac-ink px-2 py-0.5 text-xs font-extrabold shadow pointer-events-none">
                   <Star size={10} fill="currentColor" /> Copertina
                 </div>
               )}
               {/* Numero */}
-              <div className="absolute top-1 right-1 z-20 rounded-full bg-black/70 text-white text-[11px] font-bold w-6 h-6 flex items-center justify-center pointer-events-none">
+              <div className="absolute top-1 right-1 z-20 rounded-full bg-black/70 text-white text-xs font-bold w-6 h-6 flex items-center justify-center pointer-events-none">
                 {i + 1}
               </div>
               {/* Overlay controlli */}
@@ -221,7 +221,7 @@ export default function PhotoGallery({ value = [], onChange, max = 8, disabled =
                   data-testid={`photo-ai-enhance-${i}`}
                   onClick={() => enhanceAt(i)}
                   disabled={enhancingIdx !== -1}
-                  className={`absolute top-8 left-1 right-1 z-20 flex min-h-11 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-extrabold uppercase tracking-wider shadow-lg backdrop-blur-md transition ${
+                  className={`absolute top-8 left-1 right-1 z-20 flex min-h-11 items-center justify-center gap-1 rounded-full px-2 py-1 text-xs font-extrabold uppercase tracking-wider shadow-lg backdrop-blur-md transition ${
                     enhancingIdx === i
                       ? "ac-grad text-white"
                       : enhancingIdx !== -1
