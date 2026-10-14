@@ -16,9 +16,9 @@ Riferimenti: `docs/LISTA_LANCIO.md` (le voci numerate), `docs/comunicazione/camp
 | Giorno | Cosa | Chi |
 |---|---|---|
 | **Gio 15 – Sab 17/10** | Claude: consegna triage (`TRIAGE_PR.md`), unione di #145 e #119 a controlli verdi, rinnovo dei branch con conflitti banali. Titolare: decide le voci di §6 e **invia la richiesta di preventivo** al legale (bozza in `docs/legale/RICHIESTA_PREVENTIVO.md`, non ancora inviata). | Claude, Titolare |
-| **Dom 18/10** | **Titolare (mattina, 1–2 ore):** sicurezza account (`SICUREZZA_ACCOUNT.md`: Google, Aruba, GitHub, Render, Atlas, Resend); posta funzionante (voce 3 della lista: casella `info@`, inoltro, `REPLY_TO_EMAIL`); visura camerale (voce 2). **Titolare (pomeriggio):** **cambio di piano Render → Starter e Atlas → Flex** (§3), **prima** che arrivino i dati veri dei primi negozi. **Claude:** materiali per i negozi pronti (guida, kit), controllo giornaliero delle 8:00, controlla che i controlli di `main` siano verdi. | Titolare, Claude |
-| **Lun 19/10** | Parte il contatto con i negozi: **3 contatti** (uno alla volta, con modo per dire no) tra le 10 e le 12. Richiesta di permesso ai primi 2 gruppi. **Riepilogo settimanale** all'admin alle 8:00. **Titolare** controlla in Atlas che sia comparso il **primo backup** (entro circa 24 ore dal passaggio a Flex). Consulente: riceve il pacchetto (preventivo/validazione). | Titolare, Consulente |
-| **Mar 20/10** | 3 contatti. **Prova di ripristino Atlas** (§3.3) sul primo backup, **su un cluster nuovo**, mai sopra quello vero. Riprese V4 «solo mani». Claude: controllo giornaliero, bozze. | Titolare, Claude |
+| **Dom 18/10** | **Decisione del titolare (14/10): si attivano TUTTI i piani a pagamento**, prima dei dati veri del 19/10. Ordine in §3.2: (1) sicurezza account e carta valida, (2) avvisi di spesa, (3) Atlas → Flex, (4) Render → Starter, (5) Resend → Pro, (6) verifiche. Poi posta (voce 3) e visura (voce 2). **Claude:** controllo di `main` verde, controllo giornaliero delle 8:00, ripete i controlli dopo ogni passaggio (senza scrivere sul database). | Titolare, Claude |
+| **Lun 19/10** | **Prova di ripristino Atlas (§3.3)** sul primo backup. Parte il contatto con i negozi: **3 contatti** (uno alla volta, con modo per dire no) tra le 10 e le 12. Richiesta di permesso ai primi 2 gruppi. **Riepilogo settimanale** all'admin alle 8:00. **Titolare** controlla in Atlas che sia comparso il **primo backup** (entro circa 24 ore dal passaggio a Flex di domenica) e fa la **prova di ripristino** (§3.3) lunedì stesso se c'è, altrimenti martedì mattina. Consulente: riceve il pacchetto (preventivo/validazione). | Titolare, Consulente |
+| **Mar 20/10** | 3 contatti. Se lunedì non c'era ancora un backup: **prova di ripristino Atlas** (§3.3) oggi, **su un cluster nuovo**, mai sopra quello vero. Riprese V4 «solo mani». Claude: controllo giornaliero, bozze. | Titolare, Claude |
 | **Mer 21/10** | 3 contatti. **Prova generale sul sito di prova** (voce 6 della lista): registrazione, Partita IVA, offerta, approvazione, QR, scansione, **iscrizione alla lista d'attesa**. Se va bene e il titolare decide: accendere `PRELAUNCH_MODE=true` sul server vero (§4) per il 22/10. **Claude** prepara le schermate della prova. | Titolare, Claude |
 | **Gio 22/10** | **Inizio campagna** (post P1 «Stiamo arrivando» + storia S1, ore 18:30). Il contenuto che manda alla lista d'attesa va pubblicato **solo se** la lista è accesa e provata (semaforo `[LISTA]`); altrimenti si usa la chiamata provvisoria «Seguici qui». Claude: testi e controllo regole; **non pubblica**. | Titolare, Claude |
 | **Ven 23/10** | Reel V4 «Dietro le quinte» (solo mani). Claude controlla i numeri della lista d'attesa (conteggio aggregato, senza email). | Titolare |
@@ -63,19 +63,20 @@ La prova parte dalla prima pubblicazione e si paga sempre il **1° del mese**. P
 
 ## 3. Passaggio a Starter / Flex, tempi di attivazione, prova di ripristino
 
-### 3.1 Perché la domenica 18/10 e non «il giorno prima del lancio»
-La lista di lancio dice «il giorno prima». Qui la **propongo prima**, domenica 18/10, per due motivi: (1) dal 19/10 si registrano negozi veri con dati personali e il piano Free di Atlas **non ha backup**; (2) la prima copia di sicurezza di Flex si forma dopo il passaggio (di norma entro 24 ore, da verificare), quindi per fare una **prova di ripristino vera prima di D** serve almeno un giorno intero. Se il titolare preferisce restare al piano della lista, tutto il §3 si sposta a D−2 e D−1 senza altre differenze. **Decisione del titolare.**
-Costo dell'anticipo: i giorni in più di Starter (7 $/mese) e Flex (a consumo, tetto 30 $).
+### 3.1 Decisione del titolare (14/10): domenica 18/10 si attivano tutti i piani a pagamento
+Render **Starter**, Atlas **Flex** e Resend **Pro** partono **domenica 18/10**, prima che arrivino i dati veri dei primi negozi (19/10): il piano Free di Atlas non ha backup e la prima copia di Flex si forma dopo il passaggio (di norma entro 24 ore, da verificare), così la **prova di ripristino si fa lunedì 19/10**. Ordine pensato per ridurre i rischi: prima il database (dove stanno i dati), poi il server, poi le email. Costi da domenica: vedi `COSTI_MENSILI.md` (totale 32 $/mese più Atlas, tetto 62 $).
 
-### 3.2 Cambio di piano
+### 3.2 Cambio di piano: ordine di domenica 18/10
+Ordine dei passaggi (circa 2 ore, pomeriggio, fuori orario): **(1)** carta valida su Render, Atlas e Resend e 2FA attiva; **(2)** avvisi di spesa (Render 10 $, Atlas 15 $); **(3) Atlas → Flex** e verifica; **(4) Render → Starter** e verifica; **(5) Resend → Pro** e verifica; **(6)** controllo finale (sito, `/api/`, admin «Server Health», UptimeRobot). Si passa al punto successivo solo se il precedente è verde.
+
 | Servizio | Dove | Tempo di attivazione | Rischio | Cosa verificare |
 |---|---|---|---|---|
 | **Render** | Dashboard → servizio del server (`-xqib`) → Settings → Instance Type → **Starter** → conferma | pochi minuti: Render riavvia il servizio | breve interruzione durante il riavvio (decine di secondi, da verificare); farlo di domenica pomeriggio, fuori orario | `https://api.scontiroma.it/api/` risponde; UptimeRobot torna verde; in Logs il promemoria delle 9:30 parte il giorno dopo |
 | **MongoDB Atlas** | Cluster → Edit/Upgrade → **Flex** (tetto 30 $/mese) | di norma pochi minuti; connessioni brevemente interrotte (da verificare); l'indirizzo di collegamento di solito resta (da verificare) | **se cambia l'indirizzo del cluster** va aggiornata la variabile `MONGO_URL` su Render (mai in chat) | admin → «Server Health» database verde; i negozi esistenti sono tutti presenti (conteggio); backup attivo |
-| **Resend** | Settings → Billing → Pro | di norma immediato (da verificare) | nessuno per il sito | Usage mostra i limiti nuovi |
-Prima del passaggio: avviso di spesa in entrambi i servizi (Render 10 $, Atlas 15 $) e carta valida; email di fatturazione = email di Sconti Roma.
+| **Resend** | Settings → Billing → **Pro** (20 $/mese, attivato domenica 18/10) | di norma immediato (da verificare) | nessuno per il sito | Usage mostra i limiti nuovi |
+Prima dei passaggi: avviso di spesa nei servizi (Render 10 $, Atlas 15 $) e carta valida; email di fatturazione = email di Sconti Roma.
 
-### 3.3 Prova di ripristino Atlas (lunedì 19 o martedì 20/10)
+### 3.3 Prova di ripristino Atlas (lunedì 19/10; martedì 20/10 se il backup non c'è ancora)
 Principio: **mai sopra il database vero**, mai scrivere sulla produzione.
 1. Atlas → cluster → Backup: verificare che esista almeno uno snapshot (data/ora annotate).
 2. «Restore» dello snapshot verso un **cluster nuovo e temporaneo** (non quello vero) o scarico dello snapshot, se il piano Flex lo consente (da verificare cosa permette Flex).
@@ -91,14 +92,14 @@ Se la prova **fallisce**: non lanciare finché non si è capito perché (support
 - Per spegnerla: `PRELAUNCH_MODE=false`. L'effetto è solo sulla home e sull'iscrizione: le offerte già approvate non si nascondono da sole (§7).
 
 ## 5. Avviso alla lista e limiti di Resend
-- Piano gratuito: 100 email al giorno, 3.000 al mese (letto il 14/10: 44 usate questo mese). L'avviso di lancio si ferma a 80 al giorno (`WAITLIST_DAILY_CAP`).
-- Decisione il 28/10: **N** = iscritti confermati (scheda admin). Se N ≤ 80: nessun costo. Se N > 80: (a) lasciare spalmato su più giorni (gratis), oppure (b) Resend Pro (20 $/mese) e `WAITLIST_DAILY_CAP` più alto su Render. Con Pro non dimenticare di riguardare la chiave e i limiti.
+- **Dal 18/10 Resend è Pro** (decisione del titolare). Il tetto giornaliero dell'avviso resta `WAITLIST_DAILY_CAP` = 80 al giorno (predefinito): con Pro si può alzare su Render (limiti esatti del piano Pro: da verificare in Resend → Usage). Prima del lancio: contare gli iscritti confermati (scheda admin) e scegliere un tetto adatto; con 80 al giorno una lista di 400 persone richiede 5 giorni.
+- Prima del 18/10 (piano gratuito): 100 email al giorno, 3.000 al mese (letto il 14/10: 44 usate).
 - Il giorno del lancio si inviano anche le email di servizio (benvenuto, esiti offerte): lasciare margine di quota.
 
 ## 6. Cosa deve decidere il titolare (per questo piano)
-1. Cambio di piano (Starter + Flex) **domenica 18/10** invece del giorno prima.
+1. ~~Cambio di piano domenica 18/10~~ **già deciso (14/10): domenica 18/10 tutti i piani a pagamento (Render Starter, Atlas Flex, Resend Pro).**
 2. Accendere la lista d'attesa il 21/10 **prima** o **dopo** il consulente.
-3. Resend Pro oppure invio spalmato.
+3. Con quale tetto giornaliero (`WAITLIST_DAILY_CAP`) mandare l'avviso, ora che Resend è Pro.
 4. Chi è la persona di fiducia (busta con i codici) e quando la avvisa.
 5. Confermare i criteri Go/No-go del 30/10 (soglia ~10 negozi).
 6. Invio della richiesta di preventivo al legale (entro il 17/10).

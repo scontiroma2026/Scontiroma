@@ -32,6 +32,7 @@ import socket
 from urllib.parse import urlparse, urljoin
 import prova_pagamenti as pp
 from email_service import (
+    mask_email,
     send_password_reset,
     send_email_confirmation,
     send_preferito_nuova_offerta,
@@ -397,7 +398,7 @@ async def _cancel_expired_grace(user_id: str) -> None:
                 {"id": user_id},
                 {"$set": {"cancellation_email_sent": True, "cancellation_email_sent_at": now_iso}},
             )
-            logging.info(f"[grace-expired] email cancellazione inviata to={u['email']}")
+            logging.info(f"[grace-expired] email cancellazione inviata to={mask_email(u['email'])}")
     except Exception as e:
         logging.error(f"[grace-expired] email send failed: {e}")
 
@@ -926,6 +927,9 @@ async def register(payload: RegisterIn, response: Response, request: Request):
     # Gli account demo/admin creati all'avvio (seed_data) non passano da qui e non sono toccati.
     if not payload.legal_accepted:
         raise HTTPException(400, "Devi accettare Termini, Privacy e Cookie Policy per registrarti")
+    # Pre-lancio: i CLIENTI non si registrano ancora (lista d'attesa); commercianti e admin non cambiano.
+    if prelaunch_mode() and payload.role == "client":
+        raise HTTPException(403, "Stiamo arrivando: le iscrizioni dei clienti si aprono al lancio. Lascia la tua email nella lista d'attesa.")
     email = payload.email.lower().strip()
     if await db.users.find_one({"email": email}):
         raise HTTPException(400, "Email già registrata")
@@ -2994,7 +2998,7 @@ async def suspend_subscription_on_payment_failed(
                 grace_expires_iso=grace_expires_iso,
                 provider=provider,
             )
-            logging.info(f"[payment-failed] email inviata to={u['email']}")
+            logging.info(f"[payment-failed] email inviata to={mask_email(u['email'])}")
     except Exception as e:
         logging.error(f"[payment-failed] email send failed: {e}")
 
@@ -3101,7 +3105,7 @@ async def extend_subscription_on_renewal(
             price_eur=price_eur,
             provider=provider,
         )
-        logging.info(f"[renewal] email inviata to={u['email']} id={email_id}")
+        logging.info(f"[renewal] email inviata to={mask_email(u['email'])} id={email_id}")
     except Exception as e:
         logging.error(f"[renewal] email send failed: {e}")
 
@@ -4540,8 +4544,41 @@ async def admin_lista_attesa_avviso(payload: AvvisoLancioIn, user: dict = Depend
     if da_inviare == 0:
         return {"avviato": False, "da_inviare": 0}
     _avviso_stato["in_corso"] = True
+    await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {
+        "key": "avviso_lancio_automatico", "attivo": True, "avviato_il": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     _avviso_task = asyncio.create_task(_avviso_in_background())
     return {"avviato": True, "da_inviare": da_inviare}
+
+
+async def _avviso_giornaliero() -> dict:
+    """Ogni giorno alle 10:00 (Roma): se l'admin ha già avviato l'avviso con AVVISA e ci sono ancora iscritte da avvisare,
+    riprende da dove si era fermato, con lo stesso tetto giornaliero (WAITLIST_DAILY_CAP). Senza AVVISA non parte mai.
+    Il giorno viene «prenotato» nel database prima dell'invio (un riavvio o due server non lo ripetono) e ogni persona
+    è comunque prenotata con un'operazione atomica: nessun doppio invio."""
+    stato = await db.settings.find_one({"key": "avviso_lancio_automatico"})
+    if not stato or not stato.get("attivo"):
+        return {"inviati": 0, "saltato": "non_avviato"}
+    if _avviso_stato["in_corso"]:
+        return {"inviati": 0, "saltato": "in_corso"}
+    if await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None}) == 0:
+        await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {"attivo": False}})
+        return {"inviati": 0, "saltato": "finito"}
+    chiave = f"avviso_lancio_giorno_{_rome_now().date().isoformat()}"
+    res = await db.settings.update_one({"key": chiave}, {"$setOnInsert": {
+        "key": chiave, "claimed_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    if res.upserted_id is None:
+        return {"inviati": 0, "saltato": "gia_fatto_oggi"}
+    _avviso_stato["in_corso"] = True
+    try:
+        esito = await _invia_avviso_lancio()
+    except Exception as e:
+        logging.error(f"[lista-attesa] avviso giornaliero interrotto: {e}")
+        esito = {"inviati": 0, "fermato_per": "errore"}
+    _avviso_stato["ultimo"] = {**esito, "fine": datetime.now(timezone.utc).isoformat()}
+    _avviso_stato["in_corso"] = False
+    if esito.get("restano") == 0:
+        await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {"attivo": False}})
+    return esito
 
 
 @api.get("/admin/launch-summary")
@@ -5508,7 +5545,7 @@ async def _run_grace_reminders() -> dict:
                 {"$set": {"grace_reminder_sent": True, "grace_reminder_sent_at": now.isoformat()}},
             )
             sent += 1
-            logging.info(f"[grace-reminder] email inviata to={u['email']} days_left={days_left}")
+            logging.info(f"[grace-reminder] email inviata to={mask_email(u['email'])} days_left={days_left}")
         except Exception as e:
             logging.error(f"[grace-reminder] send failed for user={user_id[:8]}: {e}")
     return {"checked": len(subs), "sent": sent}
@@ -5704,6 +5741,15 @@ def _start_scheduler() -> None:
         CronTrigger(hour=9, minute=45),
         id="trial_reminders_daily",
         replace_existing=True,
+    )
+    # Avviso di lancio alla lista d'attesa: riprende ogni giorno alle 10:00 (Roma) solo dopo che l'admin ha premuto AVVISA
+    _scheduler.add_job(
+        _avviso_giornaliero,
+        CronTrigger(hour=10, minute=0, timezone="Europe/Rome"),
+        id="avviso_lancio_giornaliero",
+        replace_existing=True,
+        misfire_grace_time=3 * 3600,
+        coalesce=True,
     )
     # Riepilogo settimanale all'admin — ogni lunedì alle 8:00 (idempotente; senza ADMIN_NOTIFY_EMAIL non fa nulla)
     _scheduler.add_job(
@@ -7426,6 +7472,18 @@ async def origin_check_middleware(request: Request, call_next):
                 if CSRF_ORIGIN_MODE == "enforce":
                     return JSONResponse({"detail": "Origine non consentita"}, status_code=403)
     return await call_next(request)
+
+
+@app.middleware("http")
+async def intestazioni_sicurezza(request: Request, call_next):
+    """Intestazioni di sicurezza su ogni risposta del server: il browser non indovina il tipo dei file
+    (nosniff), nessuna pagina del server può essere incorniciata in un altro sito (clickjacking) e
+    l'indirizzo completo non viene passato ai siti esterni. Non cambiano il funzionamento del sito."""
+    risposta = await call_next(request)
+    risposta.headers.setdefault("X-Content-Type-Options", "nosniff")
+    risposta.headers.setdefault("X-Frame-Options", "DENY")
+    risposta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return risposta
 
 
 app.add_middleware(
