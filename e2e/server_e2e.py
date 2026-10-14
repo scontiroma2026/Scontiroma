@@ -60,6 +60,11 @@ os.environ.update({
     # Conferma dell'email dei clienti spenta: i test esistenti entrano subito. Quelli dedicati la
     # accendono con /__e2e/conferma-email-obbligatoria e la rispengono alla fine.
     "CLIENT_EMAIL_CONFIRMATION_REQUIRED": "false",
+    # Pre-lancio spento: la home e il catalogo sono quelli di sempre. I test della lista d'attesa lo accendono
+    # con /__e2e/prelancio e lo rispengono alla fine. Limiti per dispositivo spenti (0), pause dell'avviso azzerate.
+    "PRELAUNCH_MODE": "false",
+    "WAITLIST_MAX_PER_CLIENT_10MIN": "0", "WAITLIST_MAX_PER_CLIENT_ORA": "0",
+    "WAITLIST_PAUSA_MESSAGGIO_SEC": "0", "WAITLIST_PAUSA_LOTTO_SEC": "0",
 })
 for k, v in {
     "JWT_SECRET": "e2e-jwt-secret-solo-test-0123456789abcdef",
@@ -169,6 +174,45 @@ async def _e2e_conferma_email(acceso: bool):
     """Accende/spegne la conferma dell'email dei clienti (solo nel server di prova)."""
     os.environ["CLIENT_EMAIL_CONFIRMATION_REQUIRED"] = "true" if acceso else "false"
     return {"acceso": acceso}
+
+
+@server.app.post("/__e2e/prelancio")
+async def _e2e_prelancio(acceso: bool):
+    """Accende/spegne la modalità pre-lancio (solo nel server di prova)."""
+    os.environ["PRELAUNCH_MODE"] = "true" if acceso else "false"
+    return {"acceso": acceso}
+
+
+# Lista d'attesa: nessuna email vera. Si tiene a mente l'ultimo token di conferma e i destinatari dell'avviso.
+_TOKEN_LISTA: dict = {}
+_AVVISI_LISTA: list = []
+
+
+async def _conferma_lista_e2e(to, token, uid, utoken):
+    _TOKEN_LISTA[str(to).lower()] = {"token": token, "id": uid, "utoken": utoken}
+
+
+async def _avviso_lista_e2e(to, uid, utoken):
+    _AVVISI_LISTA.append(str(to).lower())
+    return "id-finto-e2e"
+
+
+server.send_waitlist_confirmation = _conferma_lista_e2e
+server.send_waitlist_launch_notice = _avviso_lista_e2e
+
+
+@server.app.get("/__e2e/lista-attesa/token")
+async def _e2e_lista_token(email: str):
+    """Ultimo token di conferma «spedito» a questo indirizzo, più i dati del link di disiscrizione."""
+    t = _TOKEN_LISTA.get(email.lower())
+    if not t:
+        raise HTTPException(404, "nessun token")
+    return t
+
+
+@server.app.get("/__e2e/lista-attesa/avvisi")
+async def _e2e_lista_avvisi():
+    return {"destinatari": _AVVISI_LISTA}
 
 
 @server.app.post("/__e2e/stripe/sessione-finta")

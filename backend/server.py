@@ -54,6 +54,8 @@ from email_service import (
     send_admin_new_merchant,
     send_admin_new_offer,
     send_account_deleted,
+    send_waitlist_confirmation,
+    send_waitlist_launch_notice,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
@@ -90,6 +92,13 @@ REFRESH_TTL_DAYS = 7
 # promemoria di pagamento spenti. Acceso ("true") = tutto torna come prima.
 def client_subscription_required() -> bool:
     return os.environ.get("CLIENT_SUBSCRIPTION_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+# Modalità pre-lancio: SPENTA per impostazione predefinita (il sito vero non cambia). La accende il titolare
+# su Render (PRELAUNCH_MODE=true) quando serve: la home e l'elenco offerte vuoto mostrano «Stiamo arrivando»
+# con la lista d'attesa. Le funzioni per i negozi restano sempre attive. Letta a ogni richiesta.
+def prelaunch_mode() -> bool:
+    return os.environ.get("PRELAUNCH_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 # Conferma dell'email per i soli CLIENTI (i commercianti hanno Partita IVA e approvazione manuale).
@@ -1407,6 +1416,164 @@ async def _interesse_per_zona() -> list:
                   key=lambda x: (-x["voti"], x["zona"]))
 
 
+# ---------- Lista d'attesa pre-lancio ----------
+# Collezione `waitlist`: email, data e versione del consenso, stato, fonte generica. Nessun IP, nessun cookie.
+# Doppio consenso: l'iscritto è «da_confermare» finché non tocca il link ricevuto per email (48 ore, nel DB solo
+# l'impronta del token). Le voci mai confermate si cancellano dopo 7 giorni. Il link per disiscriversi non si salva:
+# è una firma (HMAC) dell'id, così si può mettere in ogni email senza tenere altri segreti nel database.
+WAITLIST_CONSENT_VERSION = "2026-10-v1"  # cambia insieme al testo del consenso mostrato nel sito
+WAITLIST_CONFERMA_ORE = 48
+WAITLIST_NON_CONFERMATI_GIORNI = 7
+WAITLIST_FONTI = ("instagram", "facebook", "volantino", "passaparola")  # lista chiusa; poi «diretto» e «altro»
+WAITLIST_STATI = ("da_confermare", "confermata", "disiscritta")
+MSG_LISTA_RICHIESTA = ("Ti abbiamo mandato un'email: tocca il link per confermare l'iscrizione. "
+                       "Se non la trovi, controlla lo spam.")
+MSG_LISTA_LINK = "Questo link non è valido o è già stato usato."
+
+
+def _waitlist_fonte(valore) -> str:
+    """Fonte generica da una lista chiusa; qualsiasi altro testo diventa «altro», assente = «diretto»."""
+    v = (valore or "").strip().lower()
+    if not v:
+        return "diretto"
+    for f in WAITLIST_FONTI:
+        if v == f or v.startswith(f + "-"):
+            return f
+    return "altro"
+
+
+def _waitlist_unsub_token(uid: str) -> str:
+    return hmac_lib.new(JWT_SECRET.encode(), f"waitlist-unsub:{uid}".encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def _limite_lista_attesa_ok(request: Request) -> bool:
+    """Per dispositivo (impronta, solo in memoria): 3 iscrizioni ogni 10 minuti e 5 all'ora. 0 = spento (test)."""
+    return _limite_client_ok("lista-attesa", request,
+                             (_soglia_env("WAITLIST_MAX_PER_CLIENT_10MIN", 3), 600),
+                             (_soglia_env("WAITLIST_MAX_PER_CLIENT_ORA", 5), 3600))
+
+
+def _waitlist_rimando_ok(doc: dict) -> bool:
+    """Per indirizzo: almeno RESET_REQ_MIN_GAP_SEC secondi tra due email e al massimo RESET_REQ_MAX_PER_HOUR all'ora."""
+    adesso = datetime.now(timezone.utc)
+    recenti = []
+    for raw in (doc.get("req_log") or []):
+        try:
+            t = datetime.fromisoformat(raw)
+        except Exception:
+            continue
+        if (adesso - t).total_seconds() < 3600:
+            recenti.append(t)
+    recenti.sort()
+    if recenti and (adesso - recenti[-1]).total_seconds() < RESET_REQ_MIN_GAP_SEC:
+        return False
+    return len(recenti) < RESET_REQ_MAX_PER_HOUR
+
+
+class ListaAttesaIn(BaseModel):
+    email: EmailStr
+    consenso: bool = False
+    src: Optional[str] = None
+    sito_web: Optional[str] = ""  # campo trappola: un utente vero non lo vede e non lo compila
+
+
+class ListaAttesaTokenIn(BaseModel):
+    token: str
+
+
+class ListaAttesaAnnullaIn(BaseModel):
+    i: str
+    t: str
+
+
+@api.post("/prelaunch/waitlist")
+async def lista_attesa_iscrivi(payload: ListaAttesaIn, request: Request):
+    """Iscrizione alla lista d'attesa. Risposta identica per email nuova o già presente: non rivela nulla."""
+    if not prelaunch_mode():
+        raise HTTPException(404, "Non disponibile")
+    if not _limite_lista_attesa_ok(request):
+        raise HTTPException(429, MSG_TROPPE_RICHIESTE, headers={"Retry-After": "600"})
+    risposta = {"ok": True, "message": MSG_LISTA_RICHIESTA}
+    if (payload.sito_web or "").strip():  # trappola riempita: finta riuscita, non si salva nulla
+        return risposta
+    if not payload.consenso:
+        raise HTTPException(400, "Per iscriverti spunta la casella del consenso.")
+    email = payload.email.lower().strip()
+    ora = datetime.now(timezone.utc)
+    token = secrets.token_urlsafe(32)
+    campi = {
+        "status": "da_confermare",
+        "consent_at": ora.isoformat(),
+        "consent_version": WAITLIST_CONSENT_VERSION,
+        "src": _waitlist_fonte(payload.src),
+        "confirm_token_hash": _hash_token_conferma(token),
+        "confirm_expires": (ora + timedelta(hours=WAITLIST_CONFERMA_ORE)).isoformat(),
+    }
+    doc = await db.waitlist.find_one({"email": email})
+    if doc is None:
+        doc = {"id": str(uuid.uuid4()), "email": email, "created_at": ora.isoformat(),
+               "req_log": [ora.isoformat()], "notice_sent_at": None, **campi}
+        try:
+            await db.waitlist.insert_one(doc)
+        except Exception:  # due richieste insieme: vince la prima, l'altra non manda altro
+            return risposta
+    elif doc.get("status") == "confermata":
+        return risposta  # già dentro: niente da rifare, niente da rivelare
+    elif not _waitlist_rimando_ok(doc):
+        return risposta
+    else:
+        log = list(doc.get("req_log") or [])[-20:] + [ora.isoformat()]
+        await db.waitlist.update_one({"id": doc["id"]}, {"$set": {**campi, "req_log": log},
+                                                         "$unset": {"unsubscribed_at": ""}})
+    try:
+        await send_waitlist_confirmation(email, token, doc["id"], _waitlist_unsub_token(doc["id"]))
+    except Exception as e:
+        logging.warning(f"[lista-attesa] email di conferma non inviata: {e}")
+    return risposta
+
+
+@api.post("/prelaunch/waitlist/confirm")
+async def lista_attesa_conferma(payload: ListaAttesaTokenIn):
+    """Conferma con il token ricevuto per email. Monouso. Funziona anche a modalità pre-lancio spenta."""
+    token = (payload.token or "").strip()
+    doc = await db.waitlist.find_one({"confirm_token_hash": _hash_token_conferma(token)}) if token else None
+    if not doc or doc.get("status") != "da_confermare":
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LISTA_LINK})
+    try:
+        scaduto = datetime.fromisoformat(doc.get("confirm_expires", "")) < datetime.now(timezone.utc)
+    except Exception:
+        scaduto = True
+    if scaduto:
+        raise HTTPException(400, {"code": "link_scaduto", "msg": "Questo link è scaduto."})
+    res = await db.waitlist.update_one(
+        {"id": doc["id"], "confirm_token_hash": doc["confirm_token_hash"]},
+        {"$set": {"status": "confermata", "confirmed_at": datetime.now(timezone.utc).isoformat()},
+         "$unset": {"confirm_token_hash": "", "confirm_expires": ""}})
+    if res.modified_count != 1:
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LISTA_LINK})
+    return {"ok": True}
+
+
+@api.post("/prelaunch/waitlist/unsubscribe")
+async def lista_attesa_annulla(payload: ListaAttesaAnnullaIn):
+    """Disiscrizione dal link di ogni email. L'indirizzo resta segnato «disiscritta» per non riscriverti per errore."""
+    uid, tok = (payload.i or "").strip(), (payload.t or "").strip()
+    if not uid or not hmac_lib.compare_digest(_waitlist_unsub_token(uid).encode(), tok.encode()):
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LISTA_LINK})
+    await db.waitlist.update_one(
+        {"id": uid, "status": {"$ne": "disiscritta"}},
+        {"$set": {"status": "disiscritta", "unsubscribed_at": datetime.now(timezone.utc).isoformat()},
+         "$unset": {"confirm_token_hash": "", "confirm_expires": ""}})
+    return {"ok": True}
+
+
+async def _run_waitlist_cleanup() -> dict:
+    """Cancella le iscrizioni mai confermate dopo WAITLIST_NON_CONFERMATI_GIORNI giorni (data del consenso)."""
+    limite = (datetime.now(timezone.utc) - timedelta(days=WAITLIST_NON_CONFERMATI_GIORNI)).isoformat()
+    r = await db.waitlist.delete_many({"status": "da_confermare", "consent_at": {"$lt": limite}})
+    return {"deleted": r.deleted_count}
+
+
 @api.get("/categories")
 async def categories():
     return {"categories": CATEGORIES}
@@ -2588,6 +2755,7 @@ def _frontend_url() -> str:
 async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
     out = {"client_subscription_required": client_subscription_required(),
+           "prelaunch_mode": prelaunch_mode(),
            # «Migliora foto» compare solo se la chiave Gemini è impostata su Render
            "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip())}
     # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
@@ -4233,6 +4401,143 @@ async def admin_session(request: Request, user: dict = Depends(require_admin)):
     return {"master_verified": verified, "biometric_available": bool((u or {}).get("webauthn_credentials"))}
 
 
+# ---------- Lista d'attesa: area admin ----------
+WAITLIST_PAROLA_AVVISO = "AVVISA"
+_avviso_stato: dict = {"in_corso": False, "ultimo": None}
+_avviso_task: Optional[asyncio.Task] = None
+
+
+async def _pausa(secondi: float) -> None:
+    if secondi > 0:
+        await asyncio.sleep(secondi)
+
+
+def _env_float(nome: str, predefinito: float) -> float:
+    try:
+        return float(os.environ.get(nome, predefinito))
+    except (TypeError, ValueError):
+        return predefinito
+
+
+async def _waitlist_riepilogo() -> dict:
+    conteggi = {s: 0 for s in WAITLIST_STATI}
+    fonti: dict = {}
+    async for d in db.waitlist.find({}, {"_id": 0, "status": 1, "src": 1}):
+        st = d.get("status") if d.get("status") in conteggi else "da_confermare"
+        conteggi[st] += 1
+        nome = d.get("src") or "diretto"
+        f = fonti.setdefault(nome, {"fonte": nome, **{s: 0 for s in WAITLIST_STATI}})
+        f[st] += 1
+    oggi = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return {
+        "da_confermare": conteggi["da_confermare"], "confermate": conteggi["confermata"], "disiscritte": conteggi["disiscritta"],
+        "per_fonte": sorted(fonti.values(), key=lambda f: (-f["confermata"], f["fonte"])),
+        "avviso": {
+            "da_avvisare": await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None}),
+            "avvisate": await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": {"$ne": None}}),
+            "avvisate_oggi": await db.waitlist.count_documents({"notice_sent_at": {"$gte": oggi}}),
+            "tetto_giornaliero": _soglia_env("WAITLIST_DAILY_CAP", 80),
+            "in_corso": _avviso_stato["in_corso"], "ultimo": _avviso_stato["ultimo"],
+        },
+        "modalita_prelancio": prelaunch_mode(),
+    }
+
+
+@api.get("/admin/lista-attesa")
+async def admin_lista_attesa(user: dict = Depends(require_admin_master)):
+    return await _waitlist_riepilogo()
+
+
+@api.get("/admin/lista-attesa/esporta.csv")
+async def admin_lista_attesa_csv(user: dict = Depends(require_admin_master)):
+    """Solo le iscrizioni CONFERMATE (mai quelle da confermare o disiscritte)."""
+    righe = await db.waitlist.find({"status": "confermata"}, {"_id": 0}).to_list(None)
+    righe.sort(key=lambda d: (d.get("confirmed_at") or "", d.get("email") or ""))
+    linee = [";".join(_csv_cella(h) for h in ["Email", "Data del consenso", "Versione del testo", "Fonte", "Confermata il"])]
+    for d in righe:
+        linee.append(";".join(_csv_cella(v) for v in [d.get("email"), d.get("consent_at"), d.get("consent_version"),
+                                                       d.get("src"), d.get("confirmed_at")]))
+    return Response(content="﻿" + "\r\n".join(linee) + "\r\n", media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": 'attachment; filename="lista-attesa-confermate.csv"'})
+
+
+async def _invia_avviso_lancio() -> dict:
+    """Manda «Sconti Roma è online» alle iscrizioni confermate non ancora avvisate, a lotti con pause (limiti di Resend).
+    Idempotente: ogni persona viene «prenotata» con un'operazione atomica prima dell'invio, quindi non riceve mai due
+    avvisi, nemmeno rilanciando o con due richieste insieme. Se un invio fallisce la prenotazione viene tolta e potrà
+    essere riprovata. Si ferma dopo 3 errori di fila o al tetto giornaliero (WAITLIST_DAILY_CAP, 0 = nessun tetto)."""
+    lotto = max(1, _soglia_env("WAITLIST_LOTTO", 20))
+    pausa_msg, pausa_lotto = _env_float("WAITLIST_PAUSA_MESSAGGIO_SEC", 0.6), _env_float("WAITLIST_PAUSA_LOTTO_SEC", 3.0)
+    tetto = _soglia_env("WAITLIST_DAILY_CAP", 80)
+    oggi = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    gia_oggi = await db.waitlist.count_documents({"notice_sent_at": {"$gte": oggi}})
+    candidati = await db.waitlist.find({"status": "confermata", "notice_sent_at": None},
+                                       {"_id": 0, "id": 1, "email": 1}).to_list(None)
+    esito = {"inviati": 0, "non_inviati": 0, "lotti": 0, "fermato_per": None, "restano": len(candidati)}
+    errori_di_fila = 0
+    for i in range(0, len(candidati), lotto):
+        esito["lotti"] += 1
+        for c in candidati[i:i + lotto]:
+            if tetto > 0 and gia_oggi + esito["inviati"] >= tetto:
+                esito["fermato_per"] = "tetto_giornaliero"
+                break
+            preso = await db.waitlist.update_one({"id": c["id"], "status": "confermata", "notice_sent_at": None},
+                                                 {"$set": {"notice_sent_at": datetime.now(timezone.utc).isoformat()}})
+            if preso.modified_count != 1:
+                continue  # disiscritta nel frattempo o già avvisata da un altro giro
+            try:
+                eid = await send_waitlist_launch_notice(c["email"], c["id"], _waitlist_unsub_token(c["id"]))
+            except Exception as e:
+                logging.warning(f"[lista-attesa] avviso non inviato: {e}")
+                eid = None
+            if eid:
+                esito["inviati"] += 1
+                errori_di_fila = 0
+            else:
+                await db.waitlist.update_one({"id": c["id"]}, {"$set": {"notice_sent_at": None}})
+                esito["non_inviati"] += 1
+                errori_di_fila += 1
+                if errori_di_fila >= 3:
+                    esito["fermato_per"] = "errori"
+                    break
+            await _pausa(pausa_msg)
+        if esito["fermato_per"]:
+            break
+        await _pausa(pausa_lotto)
+    esito["restano"] = await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None})
+    return esito
+
+
+async def _avviso_in_background() -> None:
+    try:
+        esito = await _invia_avviso_lancio()
+    except Exception as e:
+        logging.error(f"[lista-attesa] avviso di lancio interrotto: {e}")
+        esito = {"fermato_per": "errore"}
+    _avviso_stato["ultimo"] = {**esito, "fine": datetime.now(timezone.utc).isoformat()}
+    _avviso_stato["in_corso"] = False
+
+
+class AvvisoLancioIn(BaseModel):
+    conferma: Optional[str] = ""
+
+
+@api.post("/admin/lista-attesa/invia-avviso")
+async def admin_lista_attesa_avviso(payload: AvvisoLancioIn, user: dict = Depends(require_admin_master)):
+    """«Invia l'avviso di lancio»: serve la parola AVVISA. Parte in background e si segue dai conteggi."""
+    global _avviso_task
+    if (payload.conferma or "").strip().upper() != WAITLIST_PAROLA_AVVISO:
+        raise HTTPException(400, f"Scrivi {WAITLIST_PAROLA_AVVISO} per confermare")
+    if _avviso_stato["in_corso"]:
+        raise HTTPException(409, "L'invio è già in corso")
+    da_inviare = await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None})
+    if da_inviare == 0:
+        return {"avviato": False, "da_inviare": 0}
+    _avviso_stato["in_corso"] = True
+    _avviso_task = asyncio.create_task(_avviso_in_background())
+    return {"avviato": True, "da_inviare": da_inviare}
+
+
 @api.get("/admin/launch-summary")
 async def admin_launch_summary(user: dict = Depends(require_admin_master)):
     """Fase di lancio a colpo d'occhio: iscritti, negozi per quartiere, offerte da approvare,
@@ -5244,6 +5549,13 @@ def _start_scheduler() -> None:
         id="unconfirmed_cleanup_daily",
         replace_existing=True,
     )
+    # Lista d'attesa: iscrizioni mai confermate da 7 giorni, ogni giorno alle 03:40 (e anche all'avvio)
+    _scheduler.add_job(
+        _run_waitlist_cleanup,
+        CronTrigger(hour=3, minute=40),
+        id="waitlist_cleanup_daily",
+        replace_existing=True,
+    )
     _scheduler.start()
     logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, next-offer reminders 09:30, rollover 1° 00:05 Europe/Rome")
 
@@ -5278,6 +5590,9 @@ async def on_startup():
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     await db.users.create_index("email_confirm_token_hash", sparse=True)
+    await db.waitlist.create_index("email", unique=True)
+    await db.waitlist.create_index("id", unique=True)
+    await db.waitlist.create_index("confirm_token_hash", sparse=True)
     # Garantisce idempotenza reale dei webhook di rinnovo (Stripe/PayPal possono
     # ri-consegnare lo stesso evento più volte): l'indice unique fa fallire a
     # livello DB il secondo insert concorrente, anche se il check applicativo
@@ -5307,6 +5622,12 @@ async def on_startup():
             logging.info(f"[conferma-email] account non confermati cancellati all'avvio: {esito['deleted']}")
     except Exception as e:
         logging.error(f"[conferma-email] pulizia all'avvio fallita: {e}")
+    try:
+        esito = await _run_waitlist_cleanup()
+        if esito.get("deleted"):
+            logging.info(f"[lista-attesa] iscrizioni non confermate cancellate all'avvio: {esito['deleted']}")
+    except Exception as e:
+        logging.error(f"[lista-attesa] pulizia all'avvio fallita: {e}")
     try:
         orfani = await _pulisci_dati_orfani()
         if any(orfani.values()):

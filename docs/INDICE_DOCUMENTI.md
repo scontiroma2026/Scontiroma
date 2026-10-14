@@ -12,6 +12,7 @@ Da iPhone: apri il link, poi tocca il nome del file per leggerlo. Le PR non anco
 | Ambiente di prova | `docs/guide/AMBIENTE_DI_PROVA.md` |
 | Proposte di testi legali (base) | `docs/legale/PROPOSTE_TESTI_LEGALI.md` |
 | Confronto servizi per validare i testi legali | `docs/legale/CONFRONTO_SERVIZI_LEGALI.md` |
+| Lista d'attesa pre-lancio: consenso, frase per la Privacy, limiti di Resend | `docs/legale/BOZZA_LISTA_ATTESA.md` |
 | Locandine per i clienti (10 stili) | `docs/comunicazione/locandine/` |
 | Materiale clienti: locandina e post | `docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md` |
 
