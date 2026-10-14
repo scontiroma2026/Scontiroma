@@ -207,7 +207,7 @@ export default function MerchantDiscount() {
     <main data-testid="merchant-discount-page" className="text-ac-ink">
       <section className="bg-ac-rosaSoft">
         <div className="mx-auto max-w-3xl px-4 pb-5 pt-6 sm:px-6">
-          <div className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-ac-viola">Il tuo sconto</div>
+          <div className="text-xs font-extrabold uppercase tracking-[0.12em] text-ac-viola">Il tuo sconto</div>
           <h1 className="mt-1.5 text-[30px] leading-[1.1] sm:text-4xl">
             {isNext ? `Offerta di ${monthLabel}` : (existing ? "La tua offerta" : "Crea la tua offerta")}
           </h1>
@@ -439,7 +439,7 @@ export default function MerchantDiscount() {
                   data-testid="disc-active"
                   checked={form.active}
                   onCheckedChange={(v) => setForm({ ...form, active: v })}
-                  className="h-8 w-14 shrink-0 data-[state=checked]:bg-ac-verde [&>span]:h-6 [&>span]:w-6 data-[state=checked]:[&>span]:translate-x-6"
+                  className="relative h-8 w-14 shrink-0 after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] data-[state=checked]:bg-ac-verde [&>span]:h-6 [&>span]:w-6 data-[state=checked]:[&>span]:translate-x-6"
                 />
               </div>
               <button

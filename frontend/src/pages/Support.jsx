@@ -23,7 +23,7 @@ export default function Support() {
       <Link
         to="/"
         data-testid="support-back"
-        className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-gold hover:text-terracotta transition"
+        className="inline-flex min-h-11 items-center gap-2 text-xs uppercase tracking-[0.2em] text-gold hover:text-terracotta transition"
       >
         <ArrowLeft size={14} /> Torna alla home
       </Link>

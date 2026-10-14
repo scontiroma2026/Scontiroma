@@ -19,7 +19,7 @@ export default function NavbarCommerciante({ user, navLinks, open, setOpen, onLo
           <BrandMark iconOnly className="text-[26px] text-ac-ink" />
           <span className="flex flex-col leading-tight">
             <span className="font-serif text-lg font-bold text-ac-ink">Sconti Roma</span>
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.06em] text-ac-viola">Area commerciante</span>
+            <span className="text-xs font-extrabold uppercase tracking-[0.06em] text-ac-viola">Area commerciante</span>
           </span>
         </Link>
 
