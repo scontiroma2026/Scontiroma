@@ -11,6 +11,7 @@ Da iPhone: apri il link, poi tocca il nome del file per leggerlo. Le PR non anco
 | Controllo online del sito | `docs/guide/CONTROLLO_ONLINE.md` |
 | Ambiente di prova | `docs/guide/AMBIENTE_DI_PROVA.md` |
 | Proposte di testi legali (base) | `docs/legale/PROPOSTE_TESTI_LEGALI.md` |
+| Confronto servizi per validare i testi legali | `docs/legale/CONFRONTO_SERVIZI_LEGALI.md` |
 | Locandine per i clienti (10 stili) | `docs/comunicazione/locandine/` |
 | Materiale clienti: locandina e post | `docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md` |
 
