@@ -1,0 +1,23 @@
+{
+  "nota": "Tempi in secondi. tipo «app» = clip dell'app vera dentro lo schermo dell'iPhone disegnato; tipo «grafica» = illustrazione vettoriale animata (nessuna ripresa, nessuna persona). 'scritte' = overlay di testo (file in img/), con ingresso e uscita in dissolvenza.",
+  "scene": [
+    { "id": "s1", "tipo": "grafica", "durata": 3.2, "grafica": "vetrina", "copione_clip": 1,
+      "scritte": [ { "img": "cap_s1", "da": 0.2, "a": 3.2 } ] },
+    { "id": "s2", "tipo": "app", "durata": 4.4, "clip": "home", "ritaglia": [0.2, 5.0], "copione_clip": 2,
+      "scritte": [ { "img": "cap_s2", "da": 0.2, "a": 4.4 } ] },
+    { "id": "s3", "tipo": "app", "durata": 4.4, "clip": "scegli", "ritaglia": [0.3, 5.3], "esempio": true, "copione_clip": 3,
+      "scritte": [ { "img": "cap_s3", "da": 0.2, "a": 4.4 } ] },
+    { "id": "s4", "tipo": "app", "durata": 5.2, "clip": "offerta", "ritaglia": [0.3, 6.5], "esempio": true, "copione_clip": 4,
+      "scritte": [ { "img": "cap_s4", "da": 0.2, "a": 5.2 } ] },
+    { "id": "s5", "tipo": "grafica", "durata": 3.3, "grafica": "colazione", "copione_clip": 5,
+      "scritte": [ { "img": "cap_s5", "da": 0.2, "a": 3.3 } ] },
+    { "id": "s6a", "tipo": "app", "durata": 3.2, "clip": "qr", "ritaglia": [0.3, 3.7], "esempio": true, "copione_clip": 6,
+      "scritte": [ { "img": "cap_s6", "da": 0.2, "a": 3.2 } ] },
+    { "id": "s6b", "tipo": "grafica", "durata": 3.2, "grafica": "cassa", "copione_clip": 6,
+      "scritte": [ { "img": "cap_s6", "da": 0.0, "a": 3.2 } ] },
+    { "id": "s7", "tipo": "grafica", "durata": 3.2, "grafica": "arrivando", "copione_clip": 7,
+      "scritte": [ { "img": "cap_s7", "da": 0.2, "a": 3.2 } ] },
+    { "id": "s8", "tipo": "grafica", "durata": 4.4, "grafica": "chiusura", "copione_clip": 8,
+      "scritte": [ { "img": "cap_s8a", "da": 0.3, "a": 4.4 }, { "img": "cap_s8b", "da": 1.2, "a": 4.4 }, { "img": "cap_s8c", "da": 2.0, "a": 4.4 } ] }
+  ]
+}

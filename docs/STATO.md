@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
+Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -73,6 +73,7 @@ Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #73 | Ambiente di prova: variabile facoltativa `EMAIL_ALLOWED_RECIPIENTS` (indirizzi o `@dominio`): se impostata le email partono solo verso quelli, gli altri sono scartati con riga `[email:bloccata-prova]` (solo dominio). Non impostata = produzione invariata. Guida: sezione «Email nell'ambiente di prova». Ramo `claude/email-prova-allowlist` | 09/10 (in attesa di unione) |
 | nuova | Conferma dell'email dei clienti (non dei commercianti): email con link «Conferma il tuo account» (48 ore, monouso, nel DB solo l'impronta), niente accesso finché non conferma, «Rimanda l'email» (3 ogni 10 minuti e 5 all'ora per dispositivo, solo in memoria), pagina `/conferma-email`, clienti già iscritti confermati con migrazione all'avvio, non confermati cancellati dopo 7 giorni (03:30 e all'avvio, via `_erase_user_data`). Interruttore `CLIENT_EMAIL_CONFIRMATION_REQUIRED` (predefinito acceso; spento in e2e e nei test). Ramo `claude/conferma-email-clienti` | Controllo da iPhone; decisioni nella PR (Privacy, Resend attivo prima di unire) |
 | nuova | Materiale per i clienti, solo testo: locandina e post (`docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md`); i copioni video sono rimandati. Ramo `claude/materiale-clienti` | Il consulente deve vedere le righe marcate «da far vedere al consulente» |
+| nuova | Video V4 «solo mani» nella versione «dito animato» (decisione del titolare 14/10): app vera registrata in locale (dati inventati) dentro un iPhone disegnato, dito e illustrazioni in grafica vettoriale, scritte grandi in zone sicure, 34,5 s, 1080×1920, audio silenzioso (la musica la sceglie il titolare). Script e guida in `anteprima/video/progetto_v4_mani/` (`README_V4.md`). Ramo `claude/video-v4-mani` (bozza) | Il titolare guarda il video da iPhone e sceglie la musica dalla libreria consentita; i MP4 non sono nel repository |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 

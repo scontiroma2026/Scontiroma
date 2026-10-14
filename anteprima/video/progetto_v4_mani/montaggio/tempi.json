@@ -1,0 +1,59 @@
+{
+ "durata": 34.5,
+ "scene": [
+  {
+   "id": "s1",
+   "tipo": "grafica",
+   "durata": 3.2,
+   "copione_clip": 1
+  },
+  {
+   "id": "s2",
+   "tipo": "app",
+   "durata": 4.4,
+   "copione_clip": 2
+  },
+  {
+   "id": "s3",
+   "tipo": "app",
+   "durata": 4.4,
+   "copione_clip": 3
+  },
+  {
+   "id": "s4",
+   "tipo": "app",
+   "durata": 5.2,
+   "copione_clip": 4
+  },
+  {
+   "id": "s5",
+   "tipo": "grafica",
+   "durata": 3.3,
+   "copione_clip": 5
+  },
+  {
+   "id": "s6a",
+   "tipo": "app",
+   "durata": 3.2,
+   "copione_clip": 6
+  },
+  {
+   "id": "s6b",
+   "tipo": "grafica",
+   "durata": 3.2,
+   "copione_clip": 6
+  },
+  {
+   "id": "s7",
+   "tipo": "grafica",
+   "durata": 3.2,
+   "copione_clip": 7
+  },
+  {
+   "id": "s8",
+   "tipo": "grafica",
+   "durata": 4.4,
+   "copione_clip": 8
+  }
+ ]
+}
