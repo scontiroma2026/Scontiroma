@@ -114,12 +114,12 @@ Come ho letto i rami: `git diff origin/main...origin/claude/<ramo>`. Il codice d
 
 ### 4.2 Frase proposta per la Privacy (da aggiungere come nuova voce in art. 2, nella tabella art. 3 e nella lista art. 6)
 
-> **[PROPOSTA] [DA VALIDARE]** *Lista d'attesa «Avvisami quando parte».* Se lasci la tua email nel modulo della lista d'attesa e spunti la casella, la usiamo solo per mandarti un'email per confermare l'iscrizione e, quando Sconti Roma è online, un solo avviso di lancio. Base giuridica: il tuo consenso (art. 6.1.a GDPR), che confermi toccando il link ricevuto per email e che puoi revocare in ogni momento con il link «Annulla l'iscrizione» presente in ogni email, senza conseguenze. Nel nostro database conserviamo l'indirizzo email, la data e la versione del testo del consenso, lo stato dell'iscrizione (da confermare, confermata, annullata), una provenienza generica scelta da un elenco fisso (per esempio «volantino» o «Instagram») e gli orari delle ultime richieste, solo per evitare invii in raffica. Nel database non salviamo l'indirizzo IP e il modulo non usa cookie. Le iscrizioni non confermate sono cancellate dopo 7 giorni. [DA DECIDERE: le iscrizioni confermate e quelle annullate sono cancellate entro **30 giorni dall'avviso di lancio** (proposta); per chi annulla teniamo solo l'indirizzo come elenco di esclusione fino a quel momento.] Le email partono tramite Resend (fornitore di invio, responsabile del trattamento, server in Irlanda). Il servizio è riservato ai maggiorenni (18+). Per cancellare i tuoi dati subito scrivi a privacy@scontiroma.it.
+> **[PROPOSTA] [DA VALIDARE]** *Lista d'attesa «Avvisami quando parte».* Se lasci la tua email nel modulo della lista d'attesa e spunti la casella, la usiamo solo per mandarti un'email per confermare l'iscrizione e, quando Sconti Roma è online, un solo avviso di lancio. Base giuridica: il tuo consenso (art. 6.1.a GDPR), che confermi toccando il link ricevuto per email e che puoi revocare in ogni momento con il link «Annulla l'iscrizione» presente in ogni email, senza conseguenze. Nel nostro database conserviamo l'indirizzo email, la data e la versione del testo del consenso, lo stato dell'iscrizione (da confermare, confermata, annullata), una provenienza generica scelta da un elenco fisso (per esempio «volantino» o «Instagram») e gli orari delle ultime richieste, solo per evitare invii in raffica. Nel database non salviamo l'indirizzo IP e il modulo non usa cookie. Le iscrizioni non confermate sono cancellate dopo 7 giorni. **[PROPOSTA, risposta del titolare 15/10]** Conserviamo l'indirizzo delle iscrizioni confermate e di quelle annullate per **12 mesi** (per chi annulla serve a non riscriverti per errore), poi lo cancelliamo. Le email partono tramite Resend (fornitore di invio, responsabile del trattamento, server in Irlanda). Il servizio è riservato ai maggiorenni (18+). Per cancellare i tuoi dati subito scrivi a privacy@scontiroma.it.
 
 ### 4.3 Domande per il consulente
 
 1. 🟠 Un solo consenso («un'email quando Sconti Roma è online») basta per conferma + avviso di lancio, o serve altro per mandare anche il promemoria sui contenuti?
-2. 🟠 Durata dopo l'avviso: va bene 30 giorni? Per chi annulla è lecito tenere l'email come elenco di esclusione, e per quanto?
+2. 🟠 Durata: il titolare ha scelto **12 mesi** per confermate e annullate (15/10). Va bene? Per chi annulla è lecito tenere l'email come elenco di esclusione per 12 mesi? (Oggi il codice non cancella nulla: istruzione per la PR di codice in sezione 12.)
 3. 🟠 Basta una Privacy completa, o serve anche una riga breve sotto il modulo (informativa a strati) con titolare e contatto per revocare?
 4. 🟠 I log del server con indirizzo email e IP (durata dei log di Render: **da verificare**) vanno citati?
 
@@ -232,7 +232,7 @@ Google Fonts: **non** usato (caratteri ospitati da noi).
 
 | # | Trattamento | Dati (collezione) | Base | Conservazione | Nota |
 |---|---|---|---|---|---|
-| **T18 (nuova)** | **Lista d'attesa pre-lancio** | `waitlist`: email, consenso (data, versione `2026-10-v1`), stato, fonte, date, `req_log` (max 20 orari) | Consenso | Non confermate 7 giorni (automatico); **confermate e annullate: nessun limite oggi** → proposta 30 giorni dall'avviso | 🔴 Manca nel registro e nella Privacy |
+| **T18 (nuova)** | **Lista d'attesa pre-lancio** | `waitlist`: email, consenso (data, versione `2026-10-v1`), stato, fonte, date, `req_log` (max 20 orari) | Consenso | Non confermate 7 giorni (automatico); **confermate e annullate: nessun limite oggi** → deciso 12 mesi (15/10), da realizzare in codice | 🔴 Manca nel registro e nella Privacy |
 | **T19 (nuova)** | **Conferma email dei clienti** | `users`: impronta del token (48 ore), non confermati cancellati dopo 7 giorni | Contratto | 7 giorni se non confermato | Manca nella Privacy |
 | **T20 (nuova)** | **Log del server** (Render) | Righe `[email:sent] to=<email>` e simili; indirizzi IP nei log tecnici | Legittimo interesse (sicurezza) | **Da verificare** la durata dei log di Render; la Privacy dice «log di sicurezza 12 mesi» | 🟠 Non c'è nulla che li cancelli dal nostro lato |
 | **T21 (nuova)** | **Riepilogo settimanale per l'admin** | Solo conteggi, nessun dato personale | — | — | 🟢 |
@@ -272,7 +272,8 @@ Fonte: lettura di `Termini.jsx`, `PrivacyPolicy.jsx`, `CookiePolicy.jsx`, `Reces
 | 17 | **Privacy**: «database crittografato at-rest», «TLS» | Non verificabile dal codice | 🟢 | Controllare nel pannello Atlas |
 | 18 | **Cookie Policy**: «Google Fonts» non c'è (corretto); **Privacy** nomina «Google LLC (Gemini)» tra i fornitori attuali | Gemini è spento | 🟢 | Aggiungere «oggi spento» |
 | 19 | **Recesso art. 1**: richiesta via email evasa in 3 giorni lavorativi | Eliminazione dall'app immediata; email: tempo di legge un mese | 🟢 | Va bene; citare il mese |
-| 20 | **Recesso** e **Termini** non dicono nulla di chi è la P.IVA «senza P.IVA» | Il server accetta ancora registrazioni senza P.IVA (vecchi account e test) | 🟠 | Decisione del titolare |
+| 20 | **Termini, Recesso e Privacy** non dicono che i negozi devono avere la Partita IVA | Il modulo la chiede, ma il **server** accetta ancora registrazioni di negozi senza (`server.py` righe 980-983). Decisione del titolare 15/10: **solo con Partita IVA** | 🟠 | Frase nei Termini + istruzione di codice (sezione 12.7) |
+| 21 | **Privacy** (art. 4.1) cita solo OpenStreetMap per i contenuti esterni | La home (`Landing.jsx` righe 12-13) carica **due foto da `images.unsplash.com`**: Unsplash riceve l'IP del visitatore | 🟠 | Riga proposta in sezione 12.3 (oppure ospitare le due foto da noi, come già fatto per le altre) |
 
 ---
 
@@ -282,7 +283,7 @@ Fonte: lettura di `Termini.jsx`, `PrivacyPolicy.jsx`, `CookiePolicy.jsx`, `Reces
 |---|---|---|
 | 1 | Dare l'OK a questo pacchetto e decidere cosa chiudere (sezione 3.3) | 17/10 |
 | 2 | **Visura camerale** (punto 3 della lista): vedi l'elenco in `RICHIESTA_PREVENTIVO.md`, sezione F | Prima di inviare il preventivo |
-| 3 | Decidere: 30 giorni di conservazione per la lista d'attesa dopo l'avviso (sezione 4) | Prima di accendere `PRELAUNCH_MODE` |
+| 3 | ~~Conservazione lista d'attesa~~ deciso 12 mesi (15/10); resta da accendere `PRELAUNCH_MODE` con la cautela della sezione 12.2 | Prima di accendere `PRELAUNCH_MODE` |
 | 4 | Scegliere il ruolo di Stripe/PayPal e che fare con Gmail gratuito (sezioni 7.3 e 8.1) | Prima del lancio |
 | 5 | Decidere se i negozi **senza Partita IVA** sono ammessi | Prima del lancio |
 | 6 | Controllare nei pannelli (io non posso): regione di Atlas, durata dei log di Render, DPA di Render/Atlas/Resend/Aruba | Con i punti 5-6 della lista |
@@ -303,3 +304,83 @@ Fonte: lettura di `Termini.jsx`, `PrivacyPolicy.jsx`, `CookiePolicy.jsx`, `Reces
 | Prove da iPhone dei testi (banner, schermata di pagamento) | Nessun iPhone in questa sessione |
 
 Tutto il resto dipende da codice di `main` o dei rami PR, letto da me il 14/10/2026.
+
+---
+
+## 12. Risposte del titolare (15/10) e cosa ne segue
+
+Tutto ciò che è marcato `[PROPOSTA]` è evidenziato, **non attivo sul sito** e da validare. Nessuna PR altrui è stata chiusa o modificata.
+
+### 12.1 Le PR #92, #100, #102, #80, #76, #81 in parole semplici
+
+| PR | Che cosa è | Cosa cambia per clienti e negozi | Perché accorparla o aggiornarla |
+|---|---|---|---|
+| **#92** | Il «dossier» per il consulente: 13 bozze di documenti legali (privacy, cookie, termini, ecc.) e un indice con 26 domande. | Niente: sono solo fogli di lavoro, il sito non cambia. | Si tiene: è la base da cui parte il consulente. Si unisce solo come archivio. |
+| **#100** | Cambia l'app dei negozi: quando premono «Non rinnovo» vedono un avviso («lo sconto va rispettato fino a fine mese») e ricevono un'email di conferma. | Il negozio capisce meglio cosa succede. Il cliente può usare lo sconto fino a fine mese. | La #102 contiene già tutto il lavoro della #100. Accorpare = fare un solo controllo invece di due sullo stesso lavoro. |
+| **#102** | Se un negozio con un'offerta attiva elimina l'account, sparisce dal 1° del mese dopo e non subito. Può ripensarci. | Il cliente non perde lo sconto a metà mese. Il negozio sa fino a quando resta visibile. | Contiene la #100. Va unita insieme alla #116 (Termini), altrimenti i Termini dicono una cosa e l'app ne fa un'altra. |
+| **#80** | Due documenti: un controllo di conformità (cosa manca nei testi) e una tabella dei fornitori e dei contratti da firmare. | Niente: sono documenti. | Sono utili come allegati: tenerli in `docs/legale/` invece di lasciare una PR aperta. |
+| **#76** | Un documento che legge i Termini e segnala i punti rischiosi. | Niente. | In parte è già superato (il prezzo bloccato è stato tolto). Si tiene come allegato. |
+| **#81** | Il piano di lancio con i negozi (un documento). | Niente di diretto. Ma contiene ancora «60 giorni» e «IVA inclusa», che sono sbagliati. | Va aggiornato (circa due mesi, + IVA) per non copiare messaggi sbagliati ai negozi. |
+
+Nessuna di queste PR è stata chiusa o toccata: prima le vede il titolare.
+
+### 12.2 Se si accende `PRELAUNCH_MODE` prima che il consulente veda la frase Privacy
+
+- **Rischio concreto:** chi lascia l'email vede solo «Useremo la tua email solo per questo avviso, puoi annullare quando vuoi» e un link alla Privacy. La Privacy non parla della lista d'attesa e il modulo non dice chi è il titolare, per quanto tempo si conserva la email e chi la spedisce. L'informazione è quindi incompleta (art. 13 GDPR) e il consenso potrebbe essere contestato come poco informato.
+- **Gravità:** 🟠 media. Poche email, doppio consenso, nessun IP salvato: la probabilità di un reclamo è bassa, ma è un difetto formale vero.
+- **Cautele minime se si accende comunque** (una piccola modifica del modulo, da fare in una PR di codice):
+  > **[PROPOSTA] [DA VALIDARE]** Titolare: Euro Linea S.r.l.s. Usiamo la tua email solo per confermare l'iscrizione e per un avviso quando Sconti Roma è online. La conserviamo al massimo 12 mesi. Puoi annullare quando vuoi con il link in ogni email o scrivendo a privacy@scontiroma.it. Le email partono con Resend (server in Irlanda). Solo maggiorenni (18+).
+- **Raccomandazione:** accendere **solo dopo** che questa frase provvisoria è nel modulo (e con l'OK del titolare), senza aspettare tutto il consulente. La frase completa per la Privacy (sezione 4.2) segue appena il consulente la vede. Se la frase nel modulo non c'è, aspettare.
+
+### 12.3 Privacy: modifiche PROPOSTE da aggiungere (non attive)
+
+| Dove | Cosa manca oggi | Riga proposta [PROPOSTA] [DA VALIDARE] |
+|---|---|---|
+| Art. 2 (dati) e art. 4 | **Lista d'attesa** | Frase della sezione 4.2 (con 12 mesi) |
+| Art. 4 (fornitori) | **LocationIQ** | «**LocationIQ** (Unwired Labs, USA) — trasforma l'indirizzo del negozio in coordinate sulla mappa. Riceve solo il testo dell'indirizzo, inviato dal nostro server, non l'indirizzo IP di chi usa il sito.» *(Il fornitore e la sede sono da verificare nel contratto.)* |
+| Art. 4.1 (contenuti esterni) | **Unsplash** | «Due foto di Roma nella pagina iniziale sono caricate da **Unsplash**: il servizio riceve dal tuo browser l'indirizzo IP e i dati tecnici della richiesta e li tratta come titolare autonomo.» *(Alternativa senza testo: ospitare le due foto sul nostro server, come già fatto per le altre immagini.)* |
+| Art. 2 (dati) e art. 3 (basi) | **Partita IVA dei negozi** | «Per i commercianti raccogliamo la **Partita IVA**, controllata solo nel formato, per identificare l'attività e, in futuro, per la fatturazione. Base: contratto (art. 6.1.b) e obbligo di legge per la fatturazione (6.1.c). Conservata finché l'account è attivo; i dati contabili 10 anni.» |
+| Art. 2, 3 e 6 | **Segnalazioni e reclami** | «Se segnali un'offerta o presenti un reclamo conserviamo il testo, l'offerta o il negozio coinvolto e, se vuoi una risposta, la tua email. Non salviamo l'indirizzo IP. Conserviamo tutto per 24 mesi, poi cancelliamo. Base: legittimo interesse a gestire le segnalazioni, e obbligo di legge se il Regolamento (UE) 2022/2065 o 2019/1150 si applica.» |
+
+### 12.4 Cookie «Marketing» e registro a 24 mesi: li risolve la #95? (letto il codice del ramo)
+
+| Punto | Risolto da #95? | Dettaglio |
+|---|---|---|
+| Banner con «Marketing» e «Accetta tutti» che salva marketing = sì | **SÌ** | Tolto il riquadro «Marketing»; «Accetta tutti» e «Salva scelte» salvano sempre `marketing: false`. |
+| Registro del consenso a 24 mesi | **SÌ** | Ogni riga nuova ha `expires_at` a 24 mesi con cancellazione automatica; all'avvio il server cancella anche le righe vecchie. |
+| Resta aperto (non dalla #95) | **NO** | Il registro conserva ancora IP e tipo di browser (domanda al consulente: IP abbreviato?). Su `main` il problema c'è finché la #95 non viene unita. |
+
+### 12.5 Log del server: istruzione per un'altra PR di codice (non la faccio io)
+
+**Cosa c'è (verificato nel codice):** `backend/email_service.py` scrive l'indirizzo email completo nei log alle righe 78, 86 e 89 (`to=<email>`), e `backend/server.py` alle righe 400, 2997, 3104 e 5511 (`to={u['email']}`). I messaggi di errore di Resend (`err=...`) possono contenere l'email.
+
+**Soluzione minima:**
+1. Una piccola funzione che maschera l'email (`m***@dominio.it`, oppure solo il dominio come già fa la riga 72 del file) e usarla in tutte le righe sopra al posto dell'indirizzo intero.
+2. Non scrivere nei log il testo dell'errore intero quando contiene l'indirizzo (tagliarlo o mascherarlo).
+3. Un test che controlla che una riga di log non contenga una `@` completa.
+4. Non toccare altro: i log di Render sono del fornitore e non si possono cancellare dal nostro codice.
+
+**Cosa possiamo davvero controllare dei log di Render (da verificare nel pannello, non l'ho potuto fare):** per quanto tempo il piano li tiene, se esiste un'esportazione e se si può abbreviare. Di solito è molto meno di 12 mesi: «fino a 12 mesi» è quindi un tetto massimo vero.
+
+**Privacy art. 6, testo proposto [PROPOSTA] [DA VALIDARE]**
+- Prima: «Log di sicurezza: 12 mesi.»
+- Dopo: «Log tecnici (indirizzo IP, tipo di browser, orario delle richieste): conservati dal fornitore di hosting per il periodo del suo piano, comunque non oltre 12 mesi, solo per sicurezza e prevenzione delle frodi. Nei nostri registri dell'applicazione non conserviamo indirizzi email in chiaro.» *(l'ultima frase è vera solo dopo la PR di codice)*
+
+### 12.6 Preavviso nei Termini (3.2): allineato all'app (promemoria a 10 e 3 giorni)
+
+- Prima (Termini 3.2): «**Preavviso di 30 giorni** prima della fine della fase di lancio e di qualsiasi variazione di prezzo.»
+- Dopo **[PROPOSTA] [DA VALIDARE]:** «**Promemoria prima della fine della prova**: ti scriviamo per email 10 giorni e 3 giorni prima della fine della prova gratuita (la data esatta è anche nell'area del Commerciante). **Preavviso di 30 giorni** per qualsiasi variazione di prezzo; in quel periodo puoi disdire senza costi.»
+- Attenzione: i promemoria partono solo con `MERCHANT_PAYMENT_REQUIRED` acceso (`STATO.md`). La frase va pubblicata quando i pagamenti si accendono.
+
+### 12.7 Le risposte del titolare
+
+1. **PR spiegate:** vedi 12.1.
+2. **Lista d'attesa, iscrizioni confermate e annullate: 12 mesi.** Aggiornate la frase della sezione 4.2, la 4.1, la 4.3 e il registro (T18). Oggi il codice non cancella: istruzione per la PR di codice: nel lavoro notturno `_run_waitlist_cleanup`, cancellare le iscrizioni `confermata` dopo 12 mesi dalla conferma e `disiscritta` dopo 12 mesi dalla disiscrizione (le date `confirmed_at` e `unsubscribed_at` ci sono già), con un test.
+3. **Stripe e PayPal: «responsabili» o «titolari autonomi»?**
+   - *Responsabile* = lavora per noi, solo su nostre istruzioni, come Resend che spedisce le email. Serve un contratto di nomina.
+   - *Titolare autonomo* = decide da solo come usare i dati di pagamento (è una banca o un circuito regolato, con obblighi propri). Non serve nomina: serve solo dirlo nella Privacy.
+   - Oggi la nostra Privacy dice tutte e due le cose (art. 4 «responsabili», art. 2 «titolari autonomi»).
+   - **Conviene «titolari autonomi»**: è quello che dice il resto dei nostri documenti e noi non vediamo mai i dati della carta. Va tolto dalla lista dei responsabili. *(Il consulente conferma; per alcune attività accessorie Stripe può comportarsi da responsabile: da verificare.)*
+4. **Gmail gratuito:** per ora resta (annotato; nessun DPA finché non c'è Workspace; il consulente valuta il rischio nel frattempo).
+5. **Negozi senza Partita IVA: NO, solo con Partita IVA.** Verifica: il modulo la chiede (campo obbligatorio) ma **il server la accetta vuota** (`server.py` righe 980-983) e **nessun testo** (Termini, Privacy, Recesso) dice che serve. Istruzione per la PR di codice: rendere obbligatoria la Partita IVA lato server per i nuovi negozi. Frase proposta per i Termini, art. 2 **[PROPOSTA] [DA VALIDARE]:** «Sconti Roma è riservato a imprese e professionisti con Partita IVA: per registrare un negozio devi indicare una Partita IVA valida.»
+6. **Il testo da mandare al consulente (preventivo e pacchetto):** messo da parte, lo guarda il titolare più avanti. `RICHIESTA_PREVENTIVO.md` non viene toccata ulteriormente.
