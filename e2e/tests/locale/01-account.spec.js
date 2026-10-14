@@ -145,6 +145,10 @@ test('PIN tolto: nessun PIN né in accesso né nella registrazione, vecchio link
 test('accesso: "Usa un altro account" dimentica l\'ultimo account e si entra con un altro', async ({ page, request }) => {
   const vecchio = await registra(request, 'client');
   const nuovo = await registra(request, 'client');
+  // Face ID automatico: all'apertura il sito lo prova da solo e, se non riesce, passa a «email e password» togliendo
+  // il pulsante «Usa un altro account». Qui la richiesta resta in attesa (come il riquadro di Face ID aperto sul telefono):
+  // il test non dipende dalla velocità della macchina (su CI lenta il passaggio avveniva prima del clic).
+  await page.route('**/api/webauthn/login/begin', () => {});
   // Sul telefono è rimasto l'ultimo account usato (quello nuovo)
   await page.goto('/login');
   await page.evaluate((e) => localStorage.setItem('last_email', e), nuovo.email);

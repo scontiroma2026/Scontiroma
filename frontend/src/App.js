@@ -37,7 +37,10 @@ import MapView from "@/pages/MapView";
 import SetupSecurity from "@/pages/SetupSecurity";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import ConfermaEmail from "@/pages/ConfermaEmail";
 import QRVerify from "@/pages/QRVerify";
+import ListaAttesaConferma from "@/pages/ListaAttesaConferma";
+import ListaAttesaAnnulla from "@/pages/ListaAttesaAnnulla";
 import "@/App.css";
 
 function App() {
@@ -72,6 +75,9 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/forgot-pin" element={<Navigate to="/forgot-password" replace />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/conferma-email" element={<ConfermaEmail />} />
+            <Route path="/lista-attesa/conferma" element={<ListaAttesaConferma />} />
+            <Route path="/lista-attesa/annulla" element={<ListaAttesaAnnulla />} />
             <Route path="/qr/:token" element={<QRVerify />} />
             <Route path="/qr" element={<QRVerify />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
