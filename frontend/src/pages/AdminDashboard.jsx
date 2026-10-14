@@ -191,7 +191,7 @@ export default function AdminDashboard() {
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}
       {tab === "pending" && <AdminPending pending={pending} hdrs={hdrs} onRefresh={loadData} />}
       {tab === "listaattesa" && <AdminListaAttesa hdrs={hdrs} />}
-      {tab === "nextmonth" &&<AdminNextMonth hdrs={hdrs} />}
+      {tab === "nextmonth" && <AdminNextMonth hdrs={hdrs} />}
       {tab === "merchants" && (
         <AdminMerchantsTable
           merchants={merchants}
