@@ -38,12 +38,14 @@ Regola: un numero di iscritti, negozi o utenti si dice in pubblico **solo se è 
 ## 4. Tono
 Caldo e vicino, **romano ma non macchiettistico**: parole di tutti i giorni («sotto casa», «al bar», «a fine mese», «quattro passi»), frasi corte, nessun «daje», nessun dialetto forzato, nessuna parolaccia. **Persuasivo ma onesto**: si punta su curiosità, appartenenza al quartiere, semplicità, utilità; mai su scarsità inventata, paura di perdere un'occasione che non esiste o numeri finti. Una battuta ogni tanto va bene; il sarcasmo sui concorrenti no. Emoji: poche e solo dove aiutano, mai al posto delle parole.
 
+**Tono del lancio: neutro.** Nessun tema Halloween né altri temi stagionali: colori e stile dell'app, come per tutto l'anno.
+
 ## 5. Pilastri dei contenuti
 | # | Pilastro | A cosa serve | Formati |
 |---|---|---|---|
 | 1 | **Stiamo arrivando** | Curiosità e lista d'attesa | post, storie, reel animato |
 | 2 | **Come funziona in 3 passi** | Togliere i dubbi: zona, offerta, QR | carosello, reel animato |
-| 3 | **Persone vere** | Fiducia e simpatia: volti, conversazioni vere | reel con due amici, commerciante, titolare |
+| 3 | **Persone vere** | Fiducia e simpatia: conversazioni vere, mani che usano l'app | reel con due amici, commerciante; il «dietro le quinte» è fatto di sole mani |
 | 4 | **Il negozio sotto casa** | Orgoglio locale, voglia di scoprire | domande in storia, sondaggi |
 | 5 | **Dietro le quinte** | Trasparenza: chi siamo e perché | storie, reel del titolare |
 | 6 | **Per i negozi** | Iscrizioni e prime offerte | post dedicati, messaggi diretti |
@@ -69,15 +71,15 @@ Orari consigliati (indicativi, da correggere con le statistiche di Instagram dop
 |---|---|---|---|---|
 | **Dom 18/10** | Fine dei materiali per i negozi (video, guida, sito). Il titolare sceglie quali video girare e trova le persone che si fanno riprendere | — | — | Titolare, Claude |
 | **Lun 19/10** | **Parte il contatto con i negozi**: primi 3 messaggi diretti (uno alla volta, versione base di `CONTENUTI_SOCIAL.md` §9). Richiesta di permesso ai primi 2 gruppi | DM, telefono, email | 10:00–12:00 | Titolare (Claude prepara i testi) |
-| **Mar 20/10** | Altri 3 contatti ai negozi. Riprese: V4 «dietro le quinte» (titolare) | iPhone | luce di mattina | Titolare |
+| **Mar 20/10** | Altri 3 contatti ai negozi. Riprese: **V4 solo mani** (primo video; 8 clip, circa 30 minuti) | iPhone | luce di mattina | Titolare |
 | **Mer 21/10** | Altri 3 contatti. Riprese: V1 «due amici» (colazione). Claude prepara sottotitoli e animazioni V5/V6; prova della schermata lista d'attesa da iPhone | iPhone | — | Titolare, Claude |
 | **Gio 22/10** | **Inizio campagna.** Post P1 «Stiamo arrivando» + storia S1 (5 schermate). Commento fissato | IG, FB | 18:30 | Titolare pubblica, Claude testi **[LISTA]** |
-| **Ven 23/10** | Reel V6 «Il negozio sotto casa sta per arrivare» (animazione). Storia sondaggio S2 | IG, FB | 12:30 | Titolare **[LISTA]** |
+| **Ven 23/10** | **Reel V4 «Dietro le quinte», solo mani con musica e scritte** (primo video). Storia sondaggio S2 | IG, FB | 12:30 | Titolare **[LISTA]** |
 | **Sab 24/10** | Reel V1 «Due amici» (se liberatorie ok). Risposte ai commenti | IG, FB | 11:00 | Titolare **[LIBERATORIA] [LISTA]** |
 | **Dom 25/10** | Carosello P3 «Come funziona in 3 passi». Primo post nei gruppi **solo dove c'è il «sì»** | IG, FB, gruppi | 11:00 | Titolare **[PERMESSO]** |
-| **Lun 26/10** | Post P4 «Hai un negozio?» (versione senza prezzo). Reel V4 «Dietro le quinte» (versione clienti) | FB, IG | 18:30 | Titolare |
+| **Lun 26/10** | Post P4 «Hai un negozio?» (versione senza prezzo). Reel V6 «Il negozio sotto casa sta per arrivare» (animazione) | FB, IG | 18:30 | Titolare |
 | **Mar 27/10** | Reel V5 «Come funziona» (animazione). Storia box domande S3 | IG, FB | 12:30 | Titolare **[LISTA]** |
-| **Mer 28/10** | **Controllo go/no-go** (§8). Storia «Dietro le quinte» S4. Se «go»: avvisare in privato i negozi con offerta pronta che il giorno è vicino (senza data pubblica) | storie, DM | controllo 9:00; storia 12:30 | Titolare decide, Claude prepara il rapporto |
+| **Mer 28/10** | **Controllo go/no-go** (§8). Storia «Dietro le quinte» S4 (clip di sole mani). Se «go»: avvisare in privato i negozi con offerta pronta che il giorno è vicino (senza data pubblica) | storie, DM | controllo 9:00; storia 12:30 | Titolare decide, Claude prepara il rapporto |
 | **Gio 29/10** | Post P6 «Che negozio vorresti trovare?» (domanda aperta). Se «go»: P7 «Ci siamo quasi» | IG, FB | 18:30 | Titolare |
 | **Ven 30/10** | Se «go»: post P8 «Domani» **solo se il lancio è garantito** (altrimenti un altro post di attesa). Prove finali: link, QR, lista | IG, FB, storie | 18:30 | Titolare |
 | **Sab 31/10 (data interna)** | **Lancio** (§8): 9:00 «Approva tutte»; 10:00 avviso alla lista; 10:30 post di lancio; storie; reel V3 con offerta vera **[DAL LANCIO]**; 19:00 ringraziamento | tutti | vedi §8 | Titolare, Claude |
@@ -126,11 +128,11 @@ Contatto negozi: **3 al giorno al massimo**, uno alla volta, orari tranquilli, c
 3. **Prudenza legale**: esistono limiti di legge alla pubblicità delle bevande alcoliche; da far confermare al consulente se in futuro un negozio volesse promuovere alcolici.
 4. **Coerenza**: il tono è familiare e quotidiano. Nei video usiamo caffè e cornetto, colazione, pizza al taglio, gelato, aperitivo analcolico.
 
-## 11. Pubblicità a pagamento: non attiva
-Niente «Promuovi», «Boost» o inserzioni senza l'OK esplicito del titolare (le funzioni a pagamento restano spente, come in `docs/comunicazione/social/01_PROFILI.md`). Se il titolare volesse provare dopo il lancio, la **proposta** (cifre da decidere, non ho dati reali di costo) è una prova piccola e a tetto fisso: obiettivo «visite al sito/lista», pubblico 18+ di Roma e dintorni, un solo contenuto che ha già funzionato in modo spontaneo, durata 7 giorni, tetto giornaliero e totale scritti prima, da fermare al primo segnale strano. Serve prima l'OK del consulente su pubblicità e targeting.
+## 11. Pubblicità a pagamento: ESCLUSA (decisione del titolare, 14/10)
+Nessuna inserzione, nessun «Promuovi» o «Boost», nessun budget pubblicitario, nessuna prova a pagamento, né prima né dopo il lancio. Le funzioni a pagamento delle piattaforme restano spente (come in `docs/comunicazione/social/01_PROFILI.md`). La crescita passa solo da contenuti organici, messaggi diretti ai negozi, gruppi con permesso e passaparola.
 
 ## 12. Gruppi e pagine di quartiere
-Solo con il permesso scritto degli amministratori, un post per gruppo, regole lette, nel testo pubblico nessun nome di quartiere né «zona pilota» (si dice «Roma e dintorni»). Il nome del gruppo compare solo nel messaggio privato di richiesta. Elenco privato dei permessi fuori dal repository. Il file `07_GRUPPI_TROVATI.md` (ramo `claude/gruppi-quartiere`) è la base da verificare. Per tracciare i risultati senza nomi: ogni gruppo ha un codice (`gruppo-01`, `gruppo-02`…) nel link `?fonte=`; la tabella codice-gruppo sta solo nell'elenco privato.
+Solo con il permesso scritto degli amministratori, un post per gruppo, regole lette, nel testo pubblico nessun nome di quartiere né «zona pilota» (si dice «Roma e dintorni»). Il nome del gruppo compare solo nel messaggio privato di richiesta. Elenco privato dei permessi fuori dal repository. La ricerca è in `GRUPPI_DA_CONTATTARE.md` (con le priorità e i primi due da chiedere il 19/10); il file `07_GRUPPI_TROVATI.md` (ramo `claude/gruppi-quartiere`) resta una base ancora da verificare. Per tracciare i risultati senza nomi: ogni gruppo ha un codice (`gruppo-01`, `gruppo-02`…) nel link `?fonte=`; la tabella codice-gruppo sta solo nell'elenco privato.
 
 ## 13. Rischi e cosa fare
 | Rischio | Cosa fare |
@@ -143,10 +145,11 @@ Solo con il permesso scritto degli amministratori, un post per gruppo, regole le
 | Un amministratore dice no o tace | Valgono come no: non insistere |
 
 ## 14. Decisioni che servono al titolare
-1. **Quali video girare per primi** (consiglio: V1 «due amici», V4 «dietro le quinte», poi V2 «commerciante col QR»).
-2. **Liberatoria**: usare la bozza di `COPIONI_VIDEO.md` e farla vedere al consulente prima di far firmare.
-3. **Gruppi**: quali chiedere per primi (non più di 2 il 19/10).
-4. **Pubblicità a pagamento**: sì/no e, se sì, tetto massimo.
-5. **Schermata lista d'attesa**: data di pronto, per allineare il 22/10.
-6. Usare o no il tema Halloween (lancio il 31/10; le locandine esistono) o restare neutri.
-7. Chi, tra amici e conoscenti, è disponibile a farsi riprendere (maggiorenni, senza marchi in vista).
+1. **Ordine dei video (deciso):** primo V4 solo mani, poi V1 due amici, poi gli altri (V6, V5, V2, V3).
+2. **Liberatoria** (per V1, V2, V3): bozza in `COPIONI_VIDEO.md`, da far vedere al consulente prima di far firmare.
+3. **Gruppi**: confermare i primi due da chiedere il 19/10 dopo averli controllati dal proprio account (`GRUPPI_DA_CONTATTARE.md`).
+4. **Schermata lista d'attesa**: la prepara un altro sub-agente; serve la data di pronto, per allineare il 22/10.
+5. **Musica** dei video: scegliere una delle opzioni di `COPIONI_VIDEO.md` §11 dopo aver verificato i termini di licenza.
+6. Chi, tra amici e conoscenti, è disponibile a farsi riprendere per V1 (maggiorenni, senza marchi in vista).
+
+**Già deciso il 14/10:** niente pubblicità a pagamento; lancio con tono neutro, senza tema Halloween; V4 «dietro le quinte» in versione solo mani con musica e scritte (niente volto, niente voce); le liberatorie servono solo per V1, V2 e V3.

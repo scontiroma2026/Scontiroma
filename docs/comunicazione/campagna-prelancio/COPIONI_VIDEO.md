@@ -6,13 +6,13 @@
 | ID | Titolo | Chi appare | Pubblico | Durata | Semaforo | Quando girare | Quando pubblicare |
 |---|---|---|---|---|---|---|---|
 | V1 | Due amici a colazione | 2 persone vere | Clienti | ~30 s | [LIBERATORIA] [LISTA] | mer 21/10 | sab 24/10 |
-| V4 | Dietro le quinte | Titolare (o solo mani e voce) | Clienti; negozi dopo validazione | ~30 s | [LIBERATORIA del titolare] [LISTA]; versione negozi [TERMINI] | mar 20/10 | lun 26/10 |
+| V4 | Dietro le quinte, **solo mani** + musica + scritte | Solo mani (nessun volto, nessuna voce) | Clienti | ~32 s | [LISTA] + musica con licenza verificata; scheda per i negozi [TERMINI] | mar 20/10 | ven 23/10 |
 | V2 | Il commerciante col QR | Commerciante vero | Clienti (versione A); negozi (versione B) | ~25 s | [PERMESSO negozio] [LIBERATORIA]; versione B [TERMINI] | dopo l'adesione di un negozio | A: da 26/10; B: dopo validazione |
 | V3 | Il cliente alla cassa | Cliente + commerciante | Clienti | ~18 s | [DAL LANCIO] [LIBERATORIA] [PERMESSO] | ven 30/10 + schermata sab 31/10 | sab 31/10 13:00 |
 | V5 | Come funziona (animazione) | Nessuno | Clienti | ~22 s | [LISTA] | Claude, dopo l'OK | mar 27/10 |
 | V6 | Il negozio sotto casa sta per arrivare (animazione) | Nessuno | Clienti | ~15 s | [LISTA] | Claude, dopo l'OK | ven 23/10 |
 
-**Consiglio sui primi video da girare:** V4 (il più semplice, il titolare è già disponibile e dà fiducia), poi V1 (il più condivisibile). V2 e V3 dipendono da un negozio vero che dia il permesso.
+**Ordine deciso dal titolare (14/10):** primo **V4 solo mani**, poi **V1 due amici**, poi V6, V5, V2 e V3. V2 e V3 dipendono da un negozio vero che dia il permesso. La liberatoria serve solo per V1, V2 e V3.
 
 ## 1. Regole comuni a tutti i video
 1. **Scena di esempio**: V1, V2 e (se pre-lancio) V3 sono scene ricostruite con persone vere. In sovraimpressione compare sempre **«Scena di esempio»** e, dove serve, **«Le offerte vere arrivano al lancio»**. Non sono testimonianze: nessuno dice «io ho risparmiato». Niente battute che promettono un risparmio che non esiste ancora: si parla al condizionale («se il bar pubblica un'offerta, magari…»).
@@ -23,7 +23,7 @@
 6. **Persone vere, voci vere.** Mai voci o volti generati con IA. Se manca una voce, la registra una persona vera con l'iPhone.
 7. **Sottotitoli sempre** (molti guardano senza audio): bianco su banda scura, massimo 2 righe, 32 caratteri circa per riga, nessuna parola tagliata dal bordo.
 8. **Testo a schermo** in alto o al centro, mai nell'ultima fascia in basso (coperta dall'interfaccia di Instagram) né nella fascia più alta.
-9. **Musica**: solo brani con **licenza scritta che permette l'uso commerciale sui social** (o nessuna musica). Non usare brani famosi. La licenza si conserva fuori dal repository e il nome del brano compare in un elenco privato.
+9. **Musica**: solo con licenza per uso commerciale verificata (vedi §11). Mai brani famosi o popolari.
 10. **Finale con chiamata all'azione**: lista d'attesa (CTA A) o «Seguici qui» (CTA B), sempre con «Gratuita nella fase di lancio. Roma e dintorni. 18+».
 11. **Luoghi**: bar, negozio o altri luoghi privati solo con il **permesso scritto** del titolare del luogo (modulo breve nel §9). Nessun nome del luogo nei testi senza permesso.
 12. **Nessun dato**: niente indirizzi, targhe, schermate con nomi, numeri o email visibili.
@@ -100,26 +100,39 @@
 - **Pubblicabile solo se:** l'offerta è visibile nell'app quel giorno e il negozio ha dato permesso scritto a nominarsi.
 - **Fino al lancio:** si può girare con un'offerta di prova etichettata **«esempio»**, ma in quel caso non si pubblica come offerta vera.
 
-## 5. V4 – «Dietro le quinte»
-- **Obiettivo:** creare fiducia (chi c'è dietro l'app) e curiosità.
-- **Pubblico:** clienti (versione base); negozi (versione B, **[TERMINI: bloccato fino a validazione]**).
-- **Durata:** circa 30 secondi.
-- **Luogo:** la scrivania o il tavolo di lavoro del titolare, o un caffè fuori; luce di finestra.
-- **Persona:** il titolare, con la propria liberatoria (anche se è il titolare dell'attività). Se preferisce non mostrare il volto: **solo mani, schermo del computer sfocato e voce**. Nei testi e nei sottotitoli niente nome personale e niente prima persona singolare («noi»).
-- **Accessori:** computer o telefono con le schermate di prova (nessun dato reale), un quaderno con appunti (senza nomi di negozi o persone leggibili), una tazza liscia, un adesivo o una locandina Sconti Roma.
-- **Battute (base, clienti):**
-  - «Questa è la scrivania di Sconti Roma: un computer, un telefono e tanti messaggi ai negozi, uno alla volta.»
-  - «Abbiamo fatto questa app perché i negozi di quartiere hanno offerte che nessuno vede.»
-  - «Ora stiamo parlando con i primi negozi e a breve partiamo.»
-  - «Se vuoi sapere quando, iscriviti alla lista d'attesa. Link in bio.»
-  - «Gratuita nella fase di lancio, per maggiorenni.»
-- **Versione B (negozi) [TERMINI: bloccato]:** si aggiunge: «Se hai un negozio, ti spieghiamo tutto in 5 minuti. La prova è di circa due mesi.»
-- **Inquadrature:** (1) 0–6 s: piano medio, titolare seduto; (2) 6–18 s: dettaglio mani e schermo (sfocato); (3) 18–30 s: piano medio in camera.
-- **Testo a schermo:** «Dietro le quinte», «Un negozio alla volta», «Lista d'attesa → link in bio», «Roma e dintorni · 18+».
-- **Sottotitoli:** le battute.
+## 5. V4 – «Dietro le quinte»: solo mani, musica e scritte (primo video)
+- **Obiettivo:** spiegare in 30 secondi che cos'è l'app e come si usa, con un video semplice da girare e senza persone riconoscibili.
+- **Pubblico:** clienti. Una scheda finale per i negozi è possibile solo dopo la validazione dei Termini **[TERMINI]**.
+- **Durata:** circa 32 secondi (8 clip da 4 secondi).
+- **Chi appare:** solo le **mani** del titolare. **Niente volto, niente voce.** Niente parlato: il video funziona con musica di sottofondo e **scritte a schermo**. Nessuna prima persona singolare, nessun nome.
+- **Chi gira:** il titolare, con l'iPhone, in circa 30 minuti (2–3 take per clip). Il montaggio con musica e scritte lo prepara Claude dopo l'OK, senza servizi a pagamento.
+- **Luogo:** un tavolo vicino a una finestra e, per le clip 1 e 6, la porta e il banco di un negozio **con il permesso del titolare del luogo** (modulo §9.2) oppure una porta/banco di casa senza insegne.
+- **Accessori:** iPhone con l'app aperta nelle schermate indicate sotto (prese dall'ambiente di prova, dati finti, mai dati reali); un secondo telefono (o un tablet) per far inquadrare il QR; una tazzina liscia senza logo con un cornetto su un piattino bianco; un cartoncino bianco con scritto a mano «Stiamo arrivando» in pennarello fucsia o viola; nastro di carta per coprire loghi; **niente anelli vistosi, orologi o braccialetti con logo**, unghie e maniche senza marchi; cover del telefono senza logo.
+- **Cosa deve comparire sullo schermo dell'iPhone (solo schermate dell'app pubblica già esistenti, dati finti):**
+  - clip 2: la **schermata iniziale** con il nome «Sconti Roma» e la scelta della zona;
+  - clip 3: l'**elenco o la scelta delle zone** che scorre;
+  - clip 4: la **scheda di un'offerta di prova** con testo del tipo «Colazione + cornetto» e l'etichetta «esempio». **Prima di registrare, controllare che non compaiano percentuali né prezzi veri: se compaiono, cambiare il dato di prova o ritagliare/coprire quella parte in montaggio**;
+  - clip 6: la schermata con il **QR** di prova (un QR stilizzato o quello dell'ambiente di prova, mai quello di un negozio vero senza permesso).
+
+### Inquadrature (8 clip, in verticale)
+| # | Durata | Cosa si vede (mani) | Come girarla con l'iPhone | Testo a schermo |
+|---|---|---|---|---|
+| 1 | 4 s | Una mano **apre la porta di un negozio** (spinge la maniglia, si vede solo l'interno anonimo) | Telefono all'altezza della vita, dietro la mano, luce di giorno | «Il negozio sotto casa…» |
+| 2 | 4 s | Due mani **tengono l'iPhone** con la schermata iniziale dell'app | Telefono su appoggio, mani in primo piano, schermo ben leggibile (luminosità alta) | «…ha la sua app: Sconti Roma» (cos'è) |
+| 3 | 4 s | Un dito **scorre e sceglie la zona** nell'app | Dall'alto, inquadrando mani e schermo; scorrimento lento | «1 · Scegli la tua zona» |
+| 4 | 4 s | Un dito **tocca la scheda di un'offerta di prova** | Dall'alto, schermo fermo per 2 secondi | «2 · Guarda l'offerta del mese: una per negozio» + piccola etichetta «esempio» |
+| 5 | 4 s | Due mani **con una tazzina di caffè e un cornetto** sul tavolo, il telefono accanto | Piano medio ravvicinato, luce di finestra; niente marchi su tazzina, piattino e tovagliolo | «Vai nel tuo negozio di quartiere» |
+| 6 | 4 s | Una mano **mostra il QR** sul telefono a un secondo telefono che lo inquadra | Dall'alto, i due schermi ben visibili, QR centrato e fermo | «3 · Mostra il QR in cassa» |
+| 7 | 4 s | Due mani **tengono il cartoncino** scritto a mano «Stiamo arrivando» | Fondo neutro, cartoncino dritto e a fuoco | «Stiamo arrivando a Roma e dintorni» |
+| 8 | 4 s | Fondo bianco con il logo (grafica in montaggio, nessuna ripresa) | Nessuna ripresa | «Lista d'attesa: link in bio» · «Gratuita nella fase di lancio» · «Roma e dintorni · 18+» |
+
+- **Regole sulle scritte:** frasi brevi (massimo 6–7 parole), carattere dell'app (Manrope), bianco su banda scura o colori dell'app, lontane dal bordo basso. Nessun prezzo di abbonamento, nessuna percentuale, nessuna promessa di sconti specifici, nessuna data.
+- **Sottotitoli:** le scritte a schermo sono già il testo; non serve altro parlato.
+- **Musica:** una traccia con licenza verificata (§11), volume piacevole e costante, con un leggero stacco sulla chiusura. Se non c'è una musica verificata, il video si pubblica senza musica.
 - **Didascalia:** R4 in `CONTENUTI_SOCIAL.md`.
-- **Finale:** logo e «Stiamo arrivando».
-- **Attenzione:** non dire quanti negozi hanno aderito se non è un numero vero e approvato; non dire date.
+- **Finale:** clip 8 con la chiamata alla lista d'attesa (CTA A) o «Seguici, stiamo arrivando» (CTA B).
+- **Scheda per i negozi [TERMINI: bloccata]:** una clip 9 con «Hai un negozio? Scrivici» e il testo sulla prova è possibile solo dopo la validazione dei Termini (#116). Non nominare il prezzo dell'abbonamento prima di allora.
+- **Non servono liberatorie:** non appare nessuna persona riconoscibile. Se in una clip si vedono per caso volti o insegne, si rigira o si sfoca.
 
 ## 6. V5 – «Come funziona» (animazione, senza persone)
 - **Obiettivo:** spiegare l'uso in tre passi, chiaro anche senza audio.
@@ -216,7 +229,21 @@
 6. **Loghi di terzi**: se resta anche un solo logo, sfoca o copri (anche sul telefono, sulla tazza, sulla maglietta).
 7. **Etichette obbligatorie**: «Scena di esempio» dove serve, «esempio» sulle schermate di prova, «Gratuita nella fase di lancio · Roma e dintorni · 18+» nel finale.
 8. **Controllo QR**: il QR mostrato è o quello del negozio con permesso o uno stilizzato; mai un QR copiato di un altro negozio.
-9. **Musica**: solo con licenza scritta; volume al 15–20% sotto la voce.
+9. **Musica**: solo con licenza per uso commerciale verificata (§11); se c'è la voce, volume al 15–20% sotto la voce.
 10. **Esporta** in verticale 1080×1920, MP4, massimo 90 secondi (Instagram Reel), meno di 100 MB.
 11. **Revisione**: guarda il video su iPhone **senza audio** (si capisce?) e **con audio** (si sente?), poi il controllo con `CHECK_REGOLE.md`, poi l'OK del titolare. Solo allora si pubblica.
 12. **Archivio**: conserva il file master e il file firmato della liberatoria fuori dal repository.
+
+## 11. Musica dei video
+**Perché serve attenzione.** Instagram e Facebook limitano la musica popolare sugli account professionali (aziendali): i brani famosi sono concessi in licenza per uso personale, non commerciale, e su un account di Sconti Roma possono essere silenziati, bloccati o far rimuovere il video. Sconti Roma è un uso commerciale, quindi serve musica **con licenza per uso commerciale**. Non si scarica e non si inserisce nessun brano finché il titolare non ha verificato i termini.
+
+**Opzioni da verificare (i termini vanno letti dal titolare sul sito del servizio e salvati come schermata fuori dal repository; qui non do per sicuro nessun dettaglio):**
+| # | Opzione | Cosa verificare prima di usarla |
+|---|---|---|
+| 1 | **Libreria di tracce per account professionali di Meta** (la raccolta di brani messi a disposizione da Meta per le attività, dentro Instagram/Facebook) | Che l'account di Sconti Roma sia «professionale/Pagina» e veda quella raccolta; che la licenza valga per i contenuti delle attività; **che il brano valga solo dentro la piattaforma** e non per il file esportato e ripubblicato altrove |
+| 2 | **Librerie di musica royalty-free con licenza commerciale** (abbonamento o acquisto a brano) | Che la licenza dica espressamente «uso commerciale sui social»; durata della licenza (se il video resta online dopo la scadenza dell'abbonamento); costo (**non attivare nulla a pagamento senza l'OK del titolare**) |
+| 3 | **Librerie gratuite con licenza libera** (brani con licenza che consente l'uso commerciale, a volte con obbligo di citare l'autore) | Brano per brano: l'uso commerciale è consentito? Serve citare l'autore nella didascalia? Il brano ha rivendicazioni di copyright sulle piattaforme? |
+| 4 | **Musica generata con strumenti di IA con licenza commerciale dichiarata** (solo strumenti, senza voci umane o imitazioni di cantanti) | Che i termini del piano consentano l'uso commerciale e che la licenza valga anche dopo l'eventuale fine dell'abbonamento; nessuna voce che imiti persone vere; **non si spendono crediti senza OK del titolare** |
+| 5 | **Nessuna musica** (solo scritte e suoni ambientali del video) | Nessuna verifica; è l'opzione di riserva |
+
+**Come procedere:** il titolare sceglie una delle opzioni, legge i termini, salva una schermata della licenza e dice a Claude il nome del brano e quale opzione ha usato. Claude lo registra nell'elenco privato dei brani (fuori dal repository) e prepara il montaggio. Se il termine non è chiaro, si passa all'opzione 5.

@@ -123,8 +123,8 @@ Una sequenza per giorno, massimo 5–6 schermate. Ogni schermata ha il testo a s
 1. «Hai una domanda su Sconti Roma? Scrivila qui.»
 2. Risposte (nei giorni dopo) con i testi di §7; mai dati personali delle persone che hanno scritto.
 
-### S4 – Dietro le quinte (mer 28/10, con video titolare V4 in versione corta)
-1. «Dietro le quinte di Sconti Roma» (clip del titolare, con liberatoria propria)
+### S4 – Dietro le quinte (mer 28/10, con clip di V4 solo mani)
+1. «Dietro le quinte di Sconti Roma» (clip di sole mani: telefono, app, caffè; niente volto e niente voce)
 2. «Cosa stiamo facendo questa settimana: parliamo con i negozi, uno alla volta.» (vero solo se vero)
 3. «Se hai un negozio, ci trovi qui.» (link)
 4. «Clienti: lista d'attesa → link»
@@ -148,10 +148,11 @@ Aggiungere sempre «Gratuita nella fase di lancio. Roma e dintorni. 18+. Sconti 
 - **R3 – V3 «Alla cassa»** (dal lancio, con offerta vera) **[DAL LANCIO]**
   - A: `Eccola, l'offerta di [NEGOZIO, solo con permesso scritto]: trovata nell'app, mostrata alla cassa. Roma e dintorni.`
   - B: `Dalla vetrina alla cassa in tre tocchi.`
-- **R4 – V4 «Dietro le quinte»** (26/10 versione clienti)
-  - A: `Perché abbiamo fatto Sconti Roma? Lo raccontiamo in 30 secondi. Stiamo arrivando.`
-  - B: `Un'app nata per i negozi di quartiere. Ecco da dove siamo partiti. Lista d'attesa: link in bio.`
-  - Versione negozi **[TERMINI]** per P4 con prova/prezzo: bloccata.
+- **R4 – V4 «Dietro le quinte», solo mani con musica e scritte** (primo video, ven 23/10)
+  - A: `Cos'è Sconti Roma? Guarda in 30 secondi. Stiamo arrivando.`
+  - B: `Zona, offerta, QR. Tre gesti e sei in negozio. Lista d'attesa: link in bio.`
+  - C: `Dalla porta del negozio alla cassa con un QR. Stiamo arrivando a Roma e dintorni.`
+  - Una scheda finale per i negozi con prova/prezzo è **[TERMINI]: bloccata**.
 - **R5 – V5 «Come funziona»** (27/10)
   - A: `Tre tocchi. Zona, offerta, QR. Stiamo arrivando.`
   - B: `Più facile di così? Dicci nei commenti. Lista d'attesa: link in bio.`
@@ -186,6 +187,8 @@ Rispondere entro 2 giorni, brevi, mai dati personali. Firma «Sconti Roma». Est
 - **Insulto o spam:** nascondere/segnalare, nessuna risposta.
 
 ## 8. Gruppi e pagine di quartiere
+Elenco, priorità e primi due da chiedere il 19/10: `GRUPPI_DA_CONTATTARE.md`.
+
 **Mai pubblicare senza il «sì» scritto degli amministratori.** Nessun nome di quartiere nel testo pubblico.
 
 ### 8.1 Richiesta di permesso (messaggio privato, un gruppo per volta; il nome del gruppo compare solo qui)
@@ -302,5 +305,5 @@ Principali: `#ScontiRoma #Roma #RomaEDintorni #NegoziDiQuartiere #OfferteRoma`. 
 ## 14. Test delle varianti (senza spendere nulla)
 - Una variante per post, a rotazione (A il primo giorno, B il secondo, C il terzo).
 - Dopo 48 ore si confrontano: salvataggi, condivisioni, commenti utili, visite per `?fonte=`, iscrizioni in lista.
-- La variante migliore diventa quella del post successivo e dell'eventuale prova a pagamento (solo con OK del titolare).
+- La variante migliore diventa quella del post successivo. Nessuna pubblicità a pagamento: è esclusa (decisione del 14/10).
 - Non si tracciano persone: solo numeri aggregati.

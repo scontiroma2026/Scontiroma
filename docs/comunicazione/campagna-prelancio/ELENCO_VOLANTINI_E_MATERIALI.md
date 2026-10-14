@@ -5,7 +5,7 @@
 ## 1. Cosa esiste già (da riusare)
 | Materiale | Dove | Note |
 |---|---|---|
-| **Locandina A4/A5 per i negozi aderenti**, 10 stili grafici (PNG 1588×2246) | `docs/comunicazione/locandine/png/` e `locandina.html` (generatore, `render.js`) | Testo: «Qui trovi un'offerta con Sconti Roma», 3 passi, QR personale del negozio (≥ 8×8 cm). Stile base `app-chiara` (poco inchiostro). Stili Halloween adatti a fine ottobre: `halloween-app`, `halloween-arancio-blu`, `halloween-viola-giallo`, `halloween-rosso-blu-bianco` |
+| **Locandina A4/A5 per i negozi aderenti**, 10 stili grafici (PNG 1588×2246) | `docs/comunicazione/locandine/png/` e `locandina.html` (generatore, `render.js`) | Testo: «Qui trovi un'offerta con Sconti Roma», 3 passi, QR personale del negozio (≥ 8×8 cm). Per questa campagna (tono neutro) si usano solo `app-chiara` (base, poco inchiostro) e, se serve un tono più giocoso, `mattoncini`. Gli altri stili stagionali non si usano |
 | Testi pronti: locandina A4/A5/versione corta, post per gruppi, didascalie, «Stiamo arrivando» per zona | `docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md` | Riga «Gratuita per i clienti nella fase di lancio» ancora **da far vedere al consulente** |
 | Messaggi ai negozi (SMS/WhatsApp, Instagram/Facebook, email, post per gruppi, telefonata) | `docs/comunicazione/MESSAGGI_COMMERCIANTI.md`, `COPIONE_TELEFONATA.md` | Versione di questa campagna in `CONTENUTI_SOCIAL.md` §9 |
 | Profili, 12 post, calendario, gruppi, risposte, punti per il consulente | PR #103, ramo `claude/social`, `docs/comunicazione/social/` | Ripresi e adattati al pre-lancio |
@@ -20,7 +20,7 @@
 | M1 | **Immagine P1 «Stiamo arrivando»** (1080×1080) | Clienti | Nuova, stile #119 | 1 + 2 varianti per il test | [LISTA] | Claude |
 | M2 | **Carosello P3 «Come funziona»** (5 immagini) | Clienti | Nuovo, schermate di prova «esempio» | 5 | [LISTA] | Claude |
 | M3 | **Storie S1–S5** (1080×1920) | Clienti | Nuove | ~15 schermate | [LISTA] (S5 dal lancio) | Claude |
-| M4 | **Video V1–V6** + file dei sottotitoli | Clienti (V2/V4 anche negozi) | Vedi `COPIONI_VIDEO.md` | 6 | vedi copioni | Titolare (riprese), Claude (montaggio) |
+| M4 | **Video V1–V6** + file dei sottotitoli. Ordine: V4 solo mani, V1, poi gli altri | Clienti (V2 anche negozi) | Vedi `COPIONI_VIDEO.md` | 6 | vedi copioni | Titolare (riprese), Claude (montaggio) |
 | M5 | **Cartolina «Stiamo arrivando»** per clienti, A6 (testo in §3) | Clienti | Nuova, QR verso `?fonte=volantino-clienti` | 50–100 | [LISTA] | Claude (grafica), titolare (stampa) |
 | M6 | **Cartolina «Hai un negozio?»**, A6 (testo in §3) | Negozi | Nuova, QR verso `?fonte=volantino-negozi` | 30–50 | Senza prezzo né prova: [OK-TITOLARE]. Con prova/prezzo: [TERMINI] | Claude, titolare |
 | M7 | **Adesivo/cartoncino da banco «Stiamo arrivando»** per i negozi aderenti | Clienti nei negozi | Opzionale, A6 con QR lista | 1 per negozio aderente | [LISTA] + [PERMESSO] | Claude, titolare |
@@ -34,7 +34,7 @@
 
 **Attenzione a M8:** le locandine esistenti dicono «Guarda l'offerta del mese». Se esposte prima del lancio, il cliente inquadra il QR e non trova l'offerta (pubblicità ingannevole e delusione). Quindi: si stampano e si consegnano al negozio quando serve, ma **si espongono solo dal giorno in cui l'offerta è visibile nell'app**. Se il lancio slitta, i negozi tengono la locandina nel cassetto.
 
-**Tema Halloween (decisione del titolare):** gli stili Halloween (colori arancio/viola ecc.) funzionano fino a 2/11 circa. Se il lancio slitta di una settimana si passa a `app-chiara` o `mattoncini`. Controllare che i quattro stili Halloween non contengano elementi riconducibili a marchi di terzi (verifica visiva prima di stampare).
+**Tono neutro (decisione del titolare, 14/10):** nessun tema stagionale. Se il lancio slitta di una settimana non cambia nulla nei materiali.
 
 ## 3. Testi delle due cartoline (nuove)
 ### M5 – Cartolina clienti (A6 verticale)
@@ -76,6 +76,6 @@
 
 ## 6. Cosa serve da te
 1. Dire quali materiali stampare e quanti (budget).
-2. Dire se usare Halloween o restare neutri.
+2. (Deciso) tono neutro, solo `app-chiara` e `mattoncini`.
 3. Approvare i testi delle due cartoline (M5, M6).
 4. Far vedere al consulente: cartolina clienti, riga «Gratuita nella fase di lancio», liberatoria.

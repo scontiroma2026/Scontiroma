@@ -31,7 +31,7 @@ Uso: prima di chiedere l'OK del titolare su un contenuto, si controlla la sua ri
 | S1 | Storie «Stiamo arrivando» | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | [LISTA] |
 | S2 | Storie sondaggio | Sì | Sì | n.a. | n.a. | Sì | Sì (risultati solo aggregati e veri) | Sì | Sì | Sì | OK-TITOLARE |
 | S3 | Box domande | Sì | Sì | n.a. | n.a. | Sì (nessun dato in pubblico) | Sì | Sì | Sì | Sì | OK-TITOLARE |
-| S4 | Dietro le quinte | Sì | Sì | Sì | Sì | Sì | Sì (frasi vere) | Sì | Sì | Sì (liberatoria titolare) | [LIBERATORIA] |
+| S4 | Dietro le quinte (clip di sole mani) | Sì | Sì | Sì | Sì | Sì | Sì (frasi vere) | Sì | Sì | Sì | [LISTA] |
 | S5 | Giorno del lancio | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Dal lancio |
 | R1–R6 | Caption dei reel | Sì | Sì | Sì | Sì | Sì | Sì | Sì («Scena di esempio») | Sì | Sì | Come il video relativo |
 | Pin | Commenti fissati | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | OK-TITOLARE |
@@ -53,8 +53,8 @@ Uso: prima di chiedere l'OK del titolare su un contenuto, si controlla la sua ri
 | V2 A | Commerciante col QR (clienti) | Sì | Sì | Sì (non nomina costi) | Sì | Sì (nome del negozio solo con permesso) | Sì (nessuna promessa di clienti) | Sì | Sì | Liberatoria + permesso | [PERMESSO] [LIBERATORIA] |
 | V2 B | Commerciante col QR (negozi) | Sì | Sì | Sì («gratuita nella fase di lancio», «circa due mesi di prova») | Sì | Sì | Sì | Sì | Sì | Liberatoria + permesso | **Blocco [TERMINI]: non pubblicabile fino a validazione** |
 | V3 | Il cliente alla cassa | Sì | Sì (solo testo dell'offerta approvato) | Sì | Sì | Sì (nome negozio con permesso scritto) | **Sì solo con offerta vera visibile** | Sì | Sì | Liberatoria + permesso | [DAL LANCIO] |
-| V4 | Dietro le quinte (clienti) | Sì | Sì | Sì | Sì | Sì (niente nome del titolare) | Sì (nessuna data, nessun numero non vero) | Sì | Sì | Liberatoria del titolare | [LIBERATORIA] [LISTA] |
-| V4 B | Dietro le quinte (negozi) | Sì | Sì | Sì (prova «circa due mesi») | Sì | Sì | Sì | Sì | Sì | Liberatoria | **Blocco [TERMINI]** |
+| V4 | Dietro le quinte, solo mani + musica + scritte (clienti) | Sì (mani senza orologi o anelli con logo; cover senza logo) | Sì (nessuna cifra, schermate «esempio») | Sì | Sì | Sì (niente volto, niente voce, niente nome) | Sì (nessuna data, nessuna offerta promessa) | Sì (nessuna persona o voce IA) | Sì (caffè e cornetto) | Nessuna persona riconoscibile; **musica con licenza commerciale verificata** (§11 dei copioni) | [LISTA] + musica |
+| V4 B | Scheda finale per i negozi (prova «circa due mesi») | Sì | Sì | Sì | Sì | Sì | Sì | Sì | Sì | n.a. | **Blocco [TERMINI]** |
 | V5 | Come funziona (animazione) | Sì | Sì (schermate «esempio», senza cifre) | Sì | Sì | Sì (dati di prova, niente dati reali) | Sì | Sì (nessuna persona, nessuna voce IA) | Sì | n.a. | [LISTA] |
 | V6 | Il negozio sotto casa… (animazione) | Sì | Sì | Sì | Sì | Sì | Sì (nessuna data né offerta reale) | Sì | Sì | n.a. | [LISTA] |
 
@@ -82,5 +82,7 @@ Ricerca di testo nei cinque file di `docs/comunicazione/campagna-prelancio/`:
 2. Raccolta email per la lista d'attesa: informativa, consenso, un solo avviso al lancio (testo L2).
 3. Liberatoria e permesso del luogo; scena ricostruita vs. testimonianza.
 4. Messaggi ai negozi (consenso/STOP, WhatsApp solo a chi ha risposto) e gruppi (permesso degli amministratori).
-5. Eventuale pubblicità a pagamento (targeting 18+, regole delle piattaforme) e contenuti sull'alcol, se in futuro un negozio volesse promuoverli.
+5. Contenuti sull'alcol, se in futuro un negozio volesse promuoverli. (Pubblicità a pagamento: esclusa dal titolare il 14/10, nessun controllo necessario.)
 6. Termini (PR #116): finché non sono validati restano bloccati tutti i contenuti [TERMINI].
+7. `GRUPPI_DA_CONTATTARE.md`: nessun nome di gruppo, persona o amministratore; solo categorie e parole di ricerca; tutte le voci «non verificato».
+8. Musica dei video (`COPIONI_VIDEO.md` §11): nessun brano scelto; il titolare verifica i termini di licenza per uso commerciale prima di usarne uno.
