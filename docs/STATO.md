@@ -181,3 +181,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 14/10 — Ricerca comparativa su come far validare i testi legali (generatori e consulenza online): `docs/legale/CONFRONTO_SERVIZI_LEGALI.md`. Raccomandazione ibrida; prezzi da riconfermare sui siti (pagine non raggiungibili dall ambiente). Nessun testo legale toccato. Ramo `claude/confronto-servizi-legali`.
 - 14/10 — Pulizia dell'app vera: il titolare ha cancellato tutti i clienti di prova; segnata come fatta nella lista di lancio.
 - 14/10 — Bozza della richiesta di preventivo a un legale (email, versione breve, pacchetto da allegare, tabella di confronto): `docs/legale/RICHIESTA_PREVENTIVO.md`. Non inviata; la invia il titolare.
+- 14/10 — Termini (correzione richiesta dal titolare): «€4,99 al mese + IVA» al posto di «IVA inclusa» e tolto «Prezzo bloccato». Resta aperta la PR #116 con le altre correzioni proposte (da validare col consulente).
