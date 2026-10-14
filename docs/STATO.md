@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
+Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -74,6 +74,7 @@ Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | nuova | Conferma dell'email dei clienti (non dei commercianti): email con link «Conferma il tuo account» (48 ore, monouso, nel DB solo l'impronta), niente accesso finché non conferma, «Rimanda l'email» (3 ogni 10 minuti e 5 all'ora per dispositivo, solo in memoria), pagina `/conferma-email`, clienti già iscritti confermati con migrazione all'avvio, non confermati cancellati dopo 7 giorni (03:30 e all'avvio, via `_erase_user_data`). Interruttore `CLIENT_EMAIL_CONFIRMATION_REQUIRED` (predefinito acceso; spento in e2e e nei test). Ramo `claude/conferma-email-clienti` | Controllo da iPhone; decisioni nella PR (Privacy, Resend attivo prima di unire) |
 | nuova | Pre-lancio con lista d'attesa (14/10): interruttore `PRELAUNCH_MODE` (**predefinito spento**: unendo la PR il sito non cambia; lo accende il titolare su Render). Acceso: la home dice «Stiamo arrivando a Roma e dintorni» (niente data) con il modulo «Avvisami quando parte» e anche il catalogo vuoto mostra l'invito; negozi e area commerciante restano attivi. Lista: `POST /api/prelaunch/waitlist` (email + consenso esplicito + campo trappola + fonte da lista chiusa), doppio consenso con link a 48 ore (nel DB solo l'impronta), pagine `/lista-attesa/conferma` e `/lista-attesa/annulla`, limiti per dispositivo come #131 (solo in memoria), non confermati cancellati dopo 7 giorni (03:40 e all'avvio), nessun IP né cookie. Admin: scheda «Lista d'attesa» con conteggi per fonte, CSV delle sole confermate e «Invia l'avviso di lancio» (parola AVVISA, lotti con pausa, tetto giornaliero 80, idempotente). Bozze legali in `docs/legale/BOZZA_LISTA_ATTESA.md` (Privacy non modificata). Ramo `claude/prelancio-lista-attesa` | Controllo da iPhone; consulente sulla frase per la Privacy; decisioni nella PR (clienti in prelancio, conservazione, limite Resend) |
 | nuova | Materiale per i clienti, solo testo: locandina e post (`docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md`); i copioni video sono rimandati. Ramo `claude/materiale-clienti` | Il consulente deve vedere le righe marcate «da far vedere al consulente» |
+| nuova | Video V4 «solo mani» nella versione «dito animato» (decisione del titolare 14/10): app vera registrata in locale (dati inventati) dentro un iPhone disegnato, dito e illustrazioni in grafica vettoriale, scritte grandi in zone sicure, 34,5 s, 1080×1920, audio silenzioso (la musica la sceglie il titolare). Script e guida in `anteprima/video/progetto_v4_mani/` (`README_V4.md`). Ramo `claude/video-v4-mani` (bozza) | Il titolare guarda il video da iPhone e sceglie la musica dalla libreria consentita; i MP4 non sono nel repository |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
 
