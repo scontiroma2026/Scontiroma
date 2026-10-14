@@ -427,6 +427,27 @@ def test_avviso_tetto_giornaliero(_ambiente, monkeypatch):
     run(body)
 
 
+def test_avviso_tetto_predefinito_80(_ambiente, monkeypatch):
+    """Senza WAITLIST_DAILY_CAP il tetto è 80 al giorno (prova generale del 14/10): le altre vanno al giorno dopo."""
+    monkeypatch.delenv("WAITLIST_DAILY_CAP", raising=False)
+
+    async def body(c):
+        for i in range(85):
+            await iscrivi(c, f"p{i}@example.com")
+            await conferma(c, _ambiente, f"p{i}@example.com")
+        ah = await admin(c)
+        stato = (await c.get("/api/admin/lista-attesa", headers=ah)).json()
+        assert stato["avviso"]["tetto_giornaliero"] == 80 and stato["avviso"]["da_avvisare"] == 85
+        esito = await server._invia_avviso_lancio()
+        assert esito["inviati"] == 80 and esito["fermato_per"] == "tetto_giornaliero" and esito["restano"] == 5
+        assert len({m["to"] for m in _ambiente["avvisi"]}) == 80
+        # la parola sbagliata non fa partire nulla
+        r = await c.post("/api/admin/lista-attesa/invia-avviso", json={"conferma": "avvisa tutti"}, headers=ah)
+        assert r.status_code == 400
+        assert len(_ambiente["avvisi"]) == 80
+    run(body)
+
+
 def test_interruttore_spento_nulla_cambia(_ambiente, monkeypatch):
     monkeypatch.setenv("PRELAUNCH_MODE", "false")
 

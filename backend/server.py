@@ -7428,6 +7428,18 @@ async def origin_check_middleware(request: Request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def intestazioni_sicurezza(request: Request, call_next):
+    """Intestazioni di sicurezza su ogni risposta del server: il browser non indovina il tipo dei file
+    (nosniff), nessuna pagina del server può essere incorniciata in un altro sito (clickjacking) e
+    l'indirizzo completo non viene passato ai siti esterni. Non cambiano il funzionamento del sito."""
+    risposta = await call_next(request)
+    risposta.headers.setdefault("X-Content-Type-Options", "nosniff")
+    risposta.headers.setdefault("X-Frame-Options", "DENY")
+    risposta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return risposta
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
