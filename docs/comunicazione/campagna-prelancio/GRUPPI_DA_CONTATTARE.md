@@ -48,7 +48,34 @@ Non posso indicare due gruppi con nome, perché non li ho potuti verificare. Il 
 ## 5. Come chiedere il permesso
 Messaggio già pronto in `CONTENUTI_SOCIAL.md` §8.1 (varianti A e B), poi testo del post in §8.2 (clienti) o §8.3 (commercianti). Regole: un gruppo per volta, un solo post per gruppo, rispondere con gentilezza, togliere subito il post se richiesto. Dettagli: `docs/comunicazione/social/04_GRUPPI_E_PERMESSI.md` (PR #103).
 
-## 6. Cosa resta da verificare in `07_GRUPPI_TROVATI.md` (ramo `claude/gruppi-quartiere`)
+## 6. Seconda ricerca (14/10 pomeriggio), criteri e messaggi tipo per categoria
+**Risultato.** Una seconda serie di ricerche web (risparmio, studenti, famiglie, eventi, lavoratori, commercianti, regole dei gruppi) ha dato **solo fonti giornalistiche o commerciali, spesso datate**, e **nessuna scheda raggiungibile** di gruppi o pagine romane (Facebook e Instagram non si aprono dall'ambiente, i motori non indicizzano i gruppi). Quindi anche stavolta **nessun gruppo è «verificato»**. L'elenco nominativo con fonti, dimensioni dichiarate (dove un articolo le cita) e giudizi sta **fuori dal repository**, nell'elenco privato del titolare; qui restano criteri e messaggi.
+
+**Criteri per approvare un gruppo o una pagina** (tutti, dalla scheda pubblica, senza iscriversi):
+1. Pubblico **adulto** e di Roma e dintorni (non nazionale, non di soli minori); tema compatibile (vicinato, risparmio, famiglie, studenti adulti, eventi, commercio locale).
+2. **Attivo**: un post negli ultimi 30 giorni.
+3. **Regole lette**: promozione consentita o consentita con permesso; niente gruppi che vietano link esterni o auto-promozione.
+4. **Nessun tema escluso**: alcol, politica, sicurezza/movida, regali/baratto, minori.
+5. **Un contatto chiaro** per gli amministratori. Senza risposta in 7 giorni = no.
+6. Un gruppo per volta, **massimo due richieste al giorno**; il nome del gruppo sta solo nel messaggio privato; mai una menzione a pagamento (la pubblicità è esclusa).
+
+**Messaggi tipo** (invio privato dal titolare, un gruppo per volta; ogni messaggio ha il modo di dire no e non nomina quartieri; regole come `CONTENUTI_SOCIAL.md` §8). La categoria A (quartiere) usa §8.1 di `CONTENUTI_SOCIAL.md`.
+- **B – studenti (associazioni e community universitarie):**
+> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi vicino a te, a Roma e dintorni, per maggiorenni. Stiamo arrivando e pensiamo possa interessare a chi studia e vive la città. Possiamo condividere con [NOME GRUPPO] un solo post di presentazione, che vi mandiamo prima da approvare? È gratuita nella fase di lancio. Se preferite di no, nessun problema: non scriviamo più. Sconti Roma
+- **C – famiglie ed eventi:**
+> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi vicino a te, a Roma e dintorni (solo per maggiorenni, pensata per gli adulti). Stiamo arrivando. Vi farebbe piacere che ne parlassimo in un post di [NOME GRUPPO], o una menzione sulla vostra pagina, se rientra nelle vostre regole? Vi mandiamo il testo prima. È gratuita nella fase di lancio. Se non è il caso, nessun problema: non scriviamo più. Sconti Roma
+- **D – risparmio e offerte:**
+> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi vicino a te, a Roma e dintorni, per maggiorenni, gratuita nella fase di lancio. Abbiamo letto le regole di [NOME GRUPPO]: c'è uno spazio o un giorno in cui le attività possono presentarsi? Se sì, ci basta un solo post, che vi mandiamo prima. Se la risposta è no, va benissimo e non scriviamo più. Sconti Roma
+- **E – lavoratori e coworking:**
+> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi vicino a te, a Roma e dintorni (maggiorenni, gratuita nella fase di lancio). Pensiamo possa essere utile a chi lavora in zona e cerca un posto per la pausa pranzo. Potremmo lasciare una cartolina in sede o mandarvi un testo breve per la vostra community? Solo se vi fa piacere: se no, non scriviamo più. Sconti Roma
+- **F – associazioni di commercianti (per i negozi, senza prova né prezzo):**
+> Buongiorno, siamo Sconti Roma, un'app dove ogni negozio di Roma e dintorni pubblica una sola offerta al mese e i clienti la trovano mostrando un QR alla cassa. È gratuita nella fase di lancio e l'offerta resta in attesa fino al lancio. Possiamo presentarvi il progetto in 5 minuti, o inviarvi un testo per i vostri associati? Se non è di vostro interesse, nessun problema: non scriviamo più. Sconti Roma
+- **G – redazioni di quartiere o di città (solo comunicato gratuito):**
+> Buongiorno, siamo Sconti Roma, un'app con le offerte dei negozi vicino a te, a Roma e dintorni (maggiorenni). Stiamo arrivando e vi lasciamo una breve nota in allegato, se vi può interessare. Nessun obbligo di pubblicazione e nessuna inserzione a pagamento. Se non è il caso, non scriviamo più. Sconti Roma
+
+**Dopo il «sì»:** testo del post come §8.2 di `CONTENUTI_SOCIAL.md` con il link `?fonte=facebook-gruppo-NN` (codici in `FONTI_E_LISTA_ATTESA.md`); un solo post nel giorno e all'ora indicati; risposta ai commenti con §7; se chiedono di togliere, si toglie e si ringrazia. **Dopo un «no» o nessuna risposta: mai più.** Per le sezioni di studenti stranieri servirebbe un testo in inglese, **non ancora preparato** (da decidere).
+
+## 7. Cosa resta da verificare in `07_GRUPPI_TROVATI.md` (ramo `claude/gruppi-quartiere`)
 Il file ha un solo gruppo con prove pubbliche (datate e di oltre dieci anni fa) e il resto è «non verificato». Resta da fare, a cura del titolare:
 1. Controllare se il gruppo trovato esiste ancora, se è attivo, quanti membri visibili ha e cosa dicono le regole sulle promozioni.
 2. Cercare i gruppi per le altre due aree citate nel file (finora nessun gruppo di vicini trovato): non vuol dire che non esistano.
