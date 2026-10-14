@@ -11,9 +11,9 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 2. ⏳ **Utente:** avvocato a forfait per la parte negozi (soluzione ibrida). La richiesta di preventivo è pronta (`docs/legale/RICHIESTA_PREVENTIVO.md`): compilare i campi e inviarla a 2–3 studi, chiedendo una revisione veloce dei Termini negozi.
 3. ⬜ **Utente:** visura camerale (REA, capitale, PEC, civico «5/B»): serve anche al punto 2.
 4. ✅ **Posta:** `info@`, `privacy@`, `partner@` con inoltro alla Gmail, Reply-To, filtri Gmail (SR/info, SR/privacy, SR/partner) e notifiche sul telefono.
-5. ⬜ **Utente (la settimana del lancio):** Render su Starter, Atlas su Flex (con prova di ripristino) e Resend su Pro (20 $/mese: 50.000 email al mese, nessun limite giornaliero).
+5. ⬜ **Utente, domenica 18/10 (decisione del 14/10):** attivare tutti i piani a pagamento e fare gli upgrade dove serve: Render su Starter (~7 $/mese), Atlas su Flex (con prova di ripristino il giorno dopo), Resend su Pro (20 $/mese: 50.000 email al mese, nessun limite giornaliero). Guidato passo passo da Claude.
 6. ⏸️ **In sospeso (decisione del titolare, 14/10):** contratti sul trattamento dei dati (DPA), uno alla volta: 6a Render ⏳ · 6b MongoDB Atlas ⬜ · 6c Resend ✅ (DPA, SOC 2 e sub-fornitori scaricati; chiavi inutilizzate cancellate; resta la 2FA) · 6d Aruba (chiedere a dpo@aruba.com o dal pannello) ⬜ · 6e Google: il Gmail gratuito non ha un DPA ⬜. Documenti salvati solo nella cartella privata «DPA», non nel repository.
-7. ⬜ **Utente + Claude:** prova generale sul sito di prova (già aggiornato).
+7. ⬜ **Utente + Claude:** prova generale sul sito di prova (già aggiornato). Claude ha fatto la prova automatica completa (14/10, PR #151): checklist da iPhone e cosa accendere su Render in `docs/operazioni/PROVA_GENERALE.md`. Resta la prova dal telefono.
 8. ✅ **Pulizia dell'app vera:** clienti di prova cancellati, negozi a 0.
 9. ⏳ **Conferma email dei clienti:** unita e spenta sul sito vero (`CLIENT_EMAIL_CONFIRMATION_REQUIRED=false` su Render). Da provare sul sito di prova, poi accendere.
 10. ⬜ **Pre-lancio:** accendere `PRELAUNCH_MODE` su Render prima dei contenuti del 22/10, dopo la frase della Privacy per la lista d'attesa vista dal consulente (o in via provvisoria, scelta del titolare).

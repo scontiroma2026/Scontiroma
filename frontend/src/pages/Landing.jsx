@@ -210,7 +210,7 @@ export default function Landing() {
             <div className="space-y-3">
               {g.voci.map((f) => (
                 <details key={f.q} className="group rounded-2xl border border-border bg-muted backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
-                  <summary className="flex cursor-pointer items-center justify-between text-foreground font-semibold">
+                  <summary className="flex min-h-11 cursor-pointer items-center justify-between text-foreground font-semibold">
                     <span className="font-serif text-lg">{f.q}</span>
                     <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>
                   </summary>
