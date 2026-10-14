@@ -702,6 +702,53 @@ Per non riceverne più: apri <a href="{APP_URL}/discounts?vista=preferiti" style
     return await _send(to, oggetto, _shell(inner))
 
 
+async def send_admin_riepilogo_settimanale(to: str, r: dict) -> Optional[str]:
+    """Riepilogo del lunedì per l'admin: tabella semplice (leggibile da iPhone), variazioni ↑↓ e al massimo
+    tre «cose da guardare». Solo conteggi: nessun dato personale. `r` = risultato di `_riepilogo_settimanale`."""
+    def riga(etichetta: str, valore, prima=None, freccia: str = "") -> str:
+        conf = f' <span style="color:#a1a1aa">{freccia} (prima {prima})</span>' if prima is not None else ""
+        return (f'<tr><td style="padding:6px 0;color:#d4d4d8">{_esc(etichetta)}</td>'
+                f'<td style="padding:6px 0;text-align:right;color:#fff;font-weight:700;white-space:nowrap">{valore}{conf}</td></tr>')
+
+    def titolo(testo: str) -> str:
+        return f'<h3 style="margin:20px 0 6px;color:#fff;font-size:16px">{_esc(testo)}</h3>'
+
+    def tabella(righe: str) -> str:
+        return f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">{righe}</table>'
+
+    s = r["situazione"]
+    metriche = "".join(riga(m["etichetta"], m["questa"], m["precedente"], m["freccia"]) for m in r["metriche"])
+    fonti = "".join(riga(f["fonte"], f["questa"], f["precedente"], f["freccia"]) for f in r["fonti"]) \
+        or '<tr><td style="color:#a1a1aa">Nessuna iscrizione con una fonte ancora.</td></tr>'
+    zone = "".join(riga(z["zona"], z["voti"]) for z in r["interesse_zone"][:8]) \
+        or '<tr><td style="color:#a1a1aa">Nessun voto ancora.</td></tr>'
+    ora = (riga("Offerte in attesa", s["offerte_in_attesa"])
+           + riga("… di cui da più di 3 giorni", s["offerte_in_attesa_oltre_3_giorni"])
+           + riga("Negozi senza offerta", s["negozi_senza_offerta"])
+           + riga("Segnalazioni aperte", s["segnalazioni_aperte"])
+           + riga("Reclami aperti", s["reclami_aperti"]))
+    pagamenti = ""
+    if r.get("pagamenti"):
+        nomi = {"in_prova": "In prova", "attivo": "Attivi", "scaduto": "Scaduti", "sospeso": "Sospesi"}
+        pagamenti = titolo("Pagamenti dei negozi") + tabella(
+            "".join(riga(nomi.get(k, k), v) for k, v in r["pagamenti"]["per_stato"].items()))
+    guardare = "".join(f"<li style='margin:0 0 6px'>{_esc(v)}</li>" for v in r["da_guardare"]) \
+        or "<li>Niente di urgente questa settimana.</li>"
+    inner = f"""
+<h2 style="margin:0 0 4px;font-family:Georgia,serif;font-size:24px;color:#fff">La settimana di Sconti Roma</h2>
+<p style="margin:0 0 8px;color:#a1a1aa">{_esc(r['periodo']['etichetta'])} · ↑ ↓ = rispetto alla settimana prima</p>
+{titolo("Da guardare")}
+<ol style="margin:0;padding-left:20px;color:#d4d4d8">{guardare}</ol>
+{titolo("I numeri della settimana")}{tabella(metriche)}
+{titolo("Iscrizioni per fonte")}{tabella(fonti)}
+{titolo("Ora")}{tabella(ora)}
+{titolo("Zone che aspettano (voti totali)")}{tabella(zone)}
+{pagamenti}
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/admin" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Apri il pannello admin</a>
+</div>
+"""
+    return await _send(to, f"La settimana di Sconti Roma — {r['periodo']['etichetta']}", _shell(inner))
 # ---------- Lista d'attesa pre-lancio ----------
 def _link_disiscrizione(uid: str, utoken: str) -> str:
     return f"{APP_URL}/lista-attesa/annulla?i={uid}&t={utoken}"
