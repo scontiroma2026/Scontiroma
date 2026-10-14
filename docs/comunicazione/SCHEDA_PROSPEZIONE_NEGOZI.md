@@ -73,7 +73,7 @@ Il kit completo è in `KIT_MESSAGGI_NEGOZI.md`.
 |---|---|
 | «Non ho tempo» | «Capisco. Vi lasciamo la guida di una pagina: a leggerla ci vuole un minuto.» |
 | «Quanto costa?» | «Nella fase di lancio è gratuita, con circa due mesi di prova dalla prima offerta. Dopo è un abbonamento mensile semplice, 4,99 € al mese + IVA; vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.» |
-| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» (frase decisa dal titolare; il consulente deve vedere «disdici quando vuoi») |
+| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» (frase decisa dal titolare; il consulente deve vedere «disdici quando vuoi») |
 | «Ho già Instagram / Facebook» | «Benissimo, non lo sostituisce: è un posto in più dove vi trova chi abita vicino. Non dovete fare post.» |
 | «Non ho clienti che usano le app» | «Capiamo. È una prova gratuita di circa due mesi: se non porta nessuno, non avete perso nulla.» *(non promettere clienti né risultati)* |
 | «Non faccio sconti» | «Nessun problema: l'offerta è libera. Potete scegliere un servizio o un prodotto e decidere voi giorni e quante volte al mese.» |

@@ -2,7 +2,7 @@
 
 **Nessuna voce generata, nessun credito speso, nessuno strumento ElevenLabs usato.** Questi sono solo i testi pronti da incollare quando il titolare dà il permesso e sceglie la voce (Fernando o Enea, PR #120). Regole: `comunicazione-marchio` (Roma e dintorni, «gratuita nella fase di lancio», «circa due mesi di prova», niente percentuali, «gratis per sempre», «nessuna commissione», «prezzo bloccato»).
 
-> **Disdetta (frase decisa dal titolare, da far comunque vedere al consulente):** «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» Compare come riga 8b (video) e 9b (guida): è una riga a parte, così se ne registra una sola e si inserisce nel montaggio.
+> **Disdetta (frase decisa dal titolare, da far comunque vedere al consulente):** «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» Compare come riga 8b (video) e 9b (guida): è una riga a parte, così se ne registra una sola e si inserisce nel montaggio.
 
 ## Come incollare il testo (consigli di pronuncia, da provare con un'anteprima gratuita)
 - Registrare **frase per frase** (ogni riga numerata = un file): se ne cambia una, si rifà solo quella.
@@ -30,7 +30,7 @@ Base: testo di `montaggio/testo_voce.txt` della PR #120 (1.282 caratteri), con q
 | 6 | Esempio (**cambiata**) | Facciamo un esempio: un ristorante ha il menù di pesce e decide di scontarlo il mercoledì e il venerdì. Il cliente lo paga meno, e il ristorante riempie i giorni più tranquilli. |
 | 7 | QR e banco | Il cliente ti mostra il codice QR sul telefono, tu lo inquadri, oppure scrivi il codice a quattro cifre del tuo negozio. |
 | 8 | Costi (**cambiata**) | E quanto costa? È gratuita nella fase di lancio, con circa due mesi di prova dalla prima offerta. Poi un abbonamento mensile semplice: quattro euro e novantanove al mese, più IVA, che attivi una volta sola con carta o PayPal. Nessuna sorpresa. |
-| 8b | Disdetta (**nuova**) | Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. |
+| 8b | Disdetta (**nuova**) | Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese. |
 | 9 | QR del negozio | Il QR del tuo negozio fa iscrivere i clienti. |
 | 10 | Chiusura (**cambiata**) | Scrivici a info chiocciola scontiroma punto it, e ti aiutiamo a partire. |
 
@@ -53,7 +53,7 @@ Testo da leggere insieme alla guida (`guida-negozi/guida-prima-offerta.html`), a
 | 7 | Passo 6 | Sei. Al banco, il cliente mostra il suo codice QR: tu lo inquadri con «Scansiona codice», scrivi il codice del negozio a quattro cifre e applichi lo sconto. |
 | 8 | Dashboard e locandina | Nella dashboard vedi gli sconti usati nel mese, i clienti nuovi e quelli che tornano, mai i loro nomi. E dalla scheda «Il tuo QR personale» puoi stampare la locandina da mettere in cassa. |
 | 9 | E dopo | La fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Dopo la prova c'è un abbonamento mensile semplice, quattro euro e novantanove al mese più IVA: ti avvisiamo prima e non addebitiamo nulla senza la tua conferma. |
-| 9b | Disdetta (**nuova**) | Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. |
+| 9b | Disdetta (**nuova**) | Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese. |
 | 10 | Chiusura | Hai bisogno di una mano? Scrivici a info chiocciola scontiroma punto it. |
 
 ---

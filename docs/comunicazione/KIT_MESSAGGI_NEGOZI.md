@@ -2,7 +2,7 @@
 
 **Stato: pronto per l'uso solo dopo l'OK del titolare e il colpo d'occhio del consulente.** Nessun messaggio è stato inviato. Sostituisce `MESSAGGI_COMMERCIANTI.md` (versione vecchia, con «Garbatella, San Paolo e Marconi» e «gratis») e il kit della PR #41; il copione parlato resta `COPIONE_TELEFONATA.md` (da allineare con le frasi qui sotto).
 
-> **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» Si usa solo così, parola per parola, a voce e per iscritto, senza altre formule (niente «puoi smettere quando vuoi», niente «nessun vincolo»). **Il consulente deve vedere «disdici quando vuoi».**
+> **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» Si usa solo così, parola per parola, a voce e per iscritto, senza altre formule (niente «puoi smettere quando vuoi», niente «nessun vincolo»). **Il consulente deve vedere «disdici quando vuoi».**
 
 ## Regole del marchio (controllo prima di ogni invio)
 - Firma **«Sconti Roma»**, plurale («siamo», «vi scriviamo»), nessun nome di persona, nessun numero o email personale.
@@ -83,7 +83,7 @@ Oggetto: **Un'idea per portare nuovi clienti a [NOME NEGOZIO]**
 | Domanda o obiezione | Risposta |
 |---|---|
 | «Quanto costa?» | «Nella fase di lancio è gratuita, con circa due mesi di prova dalla prima offerta. Dopo è un abbonamento mensile semplice, 4,99 € al mese + IVA; vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.» *(Il prezzo si dice solo se lo chiedono.)* |
-| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» (frase decisa dal titolare; da far comunque vedere al consulente) |
+| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» (frase decisa dal titolare; da far comunque vedere al consulente) |
 | «Non ho tempo» | «Capisco. Pochi minuti per iniziare e poi una sola offerta al mese. Quando vi va meglio?» |
 | «Ho già Instagram» | «Benissimo, non lo sostituisce: è un posto in più dove chi abita vicino vi trova. Non serve fare post.» |
 | «Sono i dati dei miei clienti?» | «No. Il cliente si registra da solo nell'app. A voi arriva, alla scansione, solo il nome con l'iniziale del cognome, l'ora, l'offerta e se è nuovo o di ritorno.» |
