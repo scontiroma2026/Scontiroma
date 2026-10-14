@@ -31,6 +31,10 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [ ] **Utente:** locandine stampabili ancora in Fraunces: decidere se passare a Manrope.
 - [ ] **Utente:** file `roma.pmtiles` della mappa (guida `docs/guide/MAPPE.md`); foto del negozio nel profilo (da decidere).
 - [x] **Claude:** correzioni di testo (13/10): «+ IVA» e niente «prezzo bloccato» nel kit (#41) e nel piano (#81); «Roma e dintorni» al posto dei tre quartieri nel kit, nei Termini (#116) e nella home; segnaposto del modulo offerta già corretto. I dati demo stanno solo nei test (`e2e/seed_demo.py`), mai in produzione.
+- [ ] **Idee per dopo il lancio** (valutate il 14/10, nessuna prima del lancio):
+  - **Coupon Flash** (priorità 1): sconti a tempo breve (per esempio 2 ore) per riempire i momenti vuoti o smaltire il fresco. Nel codice c'è già quasi tutto (offerte, giorni, utilizzi, QR): servono una durata in ore e una scadenza. **Da decidere:** oggi ogni offerta si approva a mano; un Flash non può aspettare, quindi andrebbe consentito solo ai negozi già approvati, con regole fisse.
+  - **Notifiche vicino a un negozio** (da rimandare): richiedono la posizione dell'utente anche ad app chiusa; per il GDPR servono consenso esplicito, Privacy e Cookie riscritte e il consulente; su iPhone una web app non segue la posizione in background (servirebbe un'app negli store).
+  - **Punti e raccolte a premio** (no, per ora): contraddice la regola «uno sconto al mese», complica i conti dei negozi e può avere regole proprie (operazioni a premio): solo se i clienti lo chiedono, con il consulente.
 - [ ] **Utente:** revocare `EMERGENT_LLM_KEY`; avvisi di UptimeRobot sull'email di Sconti Roma e sull'app del telefono.
 
 ## Fatto
