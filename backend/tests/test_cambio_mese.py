@@ -544,3 +544,43 @@ def test_pagamento_in_ritardo_vale_dal_mese_dopo_a_cavallo_d_anno():
     assert pp.stato_pagamento(f, pagamenti, date(2026, 12, 21), 5)["fase"] == "da_pagare"
     assert pp.stato_pagamento(f, pagamenti, date(2027, 1, 1), 5)["fase"] == "pagato"    # vale per gennaio
     assert pp.stato_pagamento(f, pagamenti, date(2027, 1, 20), 5)["fase"] == "pagato"   # per tutto gennaio
+
+
+# ============================================================
+# Codice creato a fine mese: vale solo durante il 1° giorno del mese dopo (ora di Roma)
+# ============================================================
+
+@pytest.mark.parametrize("creato,quando,valido", [
+    ("2026-10", ("2026-10-31", 23, 59), True),    # ancora il mese di creazione
+    ("2026-10", ("2026-11-01", 0, 1), True),      # 1° giorno del mese dopo
+    ("2026-10", ("2026-11-01", 23, 59), True),    # fino alla fine del 1° giorno
+    ("2026-10", ("2026-11-02", 0, 0), False),     # dal 2 scade
+    ("2026-10", ("2026-12-01", 10, 0), False),    # il 1° ma di due mesi dopo: scade
+    ("2026-12", ("2027-01-01", 12, 0), True),     # cambio d'anno
+    ("2026-12", ("2027-01-02", 0, 0), False),
+    ("2028-02", ("2028-03-01", 12, 0), True),     # febbraio bisestile
+    ("2028-02", ("2028-03-02", 0, 0), False),
+])
+def test_codice_di_fine_mese(orologio, posta, creato, quando, valido):
+    async def body(c):
+        n = await negozio("A", creato)
+        d = await server.db.discounts.find_one({"merchant_id": n["id"]})
+        cid = str(uuid.uuid4())
+        await server.db.users.insert_one({"id": cid, "email": f"c{cid[:6]}@example.com", "name": "Giulia Prova", "role": "client"})
+        await server.db.redemptions.insert_one({
+            "id": str(uuid.uuid4()), "code": "ABCD2345", "user_id": cid, "discount_id": d["id"], "merchant_id": n["id"],
+            "status": "pending", "month_key": creato, "use_number": 1, "max_uses_per_month": 1,
+            "created_at": "2026-01-01T00:00:00+00:00", "redeemed_at": None})
+        orologio(quando[0], quando[1], quando[2])
+        slot = server.current_slot()
+        token = f"ABCD2345.{slot}.{server._rotating_hmac('ABCD2345', slot)}"
+        r = (await c.get("/api/qr/verify", params={"token": token})).json()
+        assert r["valid"] is valido, r
+        if not valido:
+            assert "mese scorso" in r["reason"]
+        v = await c.post("/api/redemptions/verify", json={"code": "ABCD2345"}, headers=n["h"])
+        assert (v.status_code == 200) is valido, v.text
+        if valido:
+            # l'uso conta per il mese di creazione
+            assert (await server.db.redemptions.find_one({"code": "ABCD2345"}))["month_key"] == creato
+    run(body)

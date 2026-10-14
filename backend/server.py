@@ -3980,6 +3980,18 @@ def _qr_permit_claims(permit: Optional[str], r: dict) -> Optional[dict]:
     return p
 
 
+def _codice_di_mese_scaduto(r: dict) -> bool:
+    """Un codice non ancora usato, creato in un mese passato, vale solo durante il 1° giorno del mese dopo
+    (ora di Roma); poi scade. L'uso conta comunque per il mese di creazione (`month_key`)."""
+    mk = r.get("month_key")
+    if r.get("status") != "pending" or not mk or mk == current_month_key():
+        return False
+    return not (pp.mese_dopo(mk) == current_month_key() and _rome_now().day == 1)
+
+
+MSG_CODICE_MESE_SCADUTO = "Codice scaduto: era del mese scorso, il cliente ne chiede uno nuovo"
+
+
 async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     """Controlla il QR (formato, finestra di 20 s, firma, esistenza). Ritorna (redemption, None) oppure (None, motivo).
     Con `ignora_finestra` (permesso breve valido) salta solo il controllo dei 20 secondi: la firma resta."""
@@ -3997,6 +4009,9 @@ async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     if not r:
         await _log_scan(False, "Codice non trovato")
         return None, "Codice non trovato"
+    if _codice_di_mese_scaduto(r):
+        await _log_scan(False, "Codice del mese scorso scaduto", r)
+        return None, MSG_CODICE_MESE_SCADUTO
     return r, None
 
 
@@ -4148,6 +4163,8 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
         raise HTTPException(404, "Codice non trovato")
     if r["status"] == "redeemed":
         raise HTTPException(400, "Codice già utilizzato")
+    if _codice_di_mese_scaduto(r):
+        raise HTTPException(400, MSG_CODICE_MESE_SCADUTO)
     # LIMITE GIORNALIERO anche sulla verifica manuale del commerciante
     prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
     if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():

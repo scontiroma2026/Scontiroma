@@ -1,19 +1,26 @@
 # Prova Android in emulazione (14/10/2026)
 
-> **È un'emulazione con Chromium su un computer, NON un telefono Android vero.** Sito compilato in locale, server di prova con database finto, nessuna chiamata verso la produzione. Schermate fuori dal repository.
+> **È un'emulazione con Chromium su un computer, NON un telefono Android vero.** Sito compilato in locale, server di prova con database finto, nessuna chiamata verso la produzione. Schermate (prima e dopo) fuori dal repository, nella cartella privata della sessione (`.../scratchpad/android/prima` e `.../android/dopo`).
 
-Profili: Pixel 7 (412 px), Android economico 360×640 (DPR 2), Android molto piccolo 320×534. Percorsi: home (anche col banner cookie), sconti, mappa, scheda offerta, scheda negozio da QR, «Per i commercianti», Termini e Privacy, iscrizione cliente (con tastiera simulata riducendo l'altezza al 55%), accesso, area cliente, area commerciante (dashboard, offerta, archivio, scansione), PWA.
+Profili: Pixel 7 (412 px), Android economico 360×640 (DPR 2), Android molto piccolo 320×534. Percorsi: home (anche col banner cookie), sconti, mappa, scheda offerta, scheda negozio da QR, «Per i commercianti», Termini e Privacy, iscrizione cliente (tastiera simulata riducendo l'altezza al 55%), accesso, area cliente, area commerciante, PWA.
 
-## Risultati
-- **Nessuno scroll orizzontale** in nessuna pagina e su nessun profilo; nessun errore JavaScript.
-- **Tastiera:** con l'altezza ridotta i campi email e password restano visibili e senza essere coperti (tipo `email`, `autocomplete` corretti).
-- **Aree toccabili sotto i 44 px** (da migliorare, non bloccanti): domande frequenti della home (altezza 32 px), «Diventa partner» (22 px), link Privacy/Cookie/Termini del piè di pagina (larghezza ~40 px), link «Iscriviti per usare lo sconto» e «Guarda gli altri sconti» nella scheda negozio (20-22 px), casella delle condizioni nel modulo di iscrizione (16 px, l'etichetta può essere più grande), caselle dei giorni degli orari e un pulsante da 56×32 px nell'area commerciante, link dentro i testi legali.
-- **Testi piccoli:** alcune etichette a 11 px («ROMA È TUA», «Nuovo su Sconti Roma», «RISPARMI €…», etichette dei mesi).
-- **Testo tagliato:** la riga «Roma e dintorni – Dal centro alla periferia» nella home è più larga del suo riquadro (426 px su 362) e viene scorsa/tagliata: da guardare nelle schermate (`02-home.png`).
-- **PWA:** nessun service worker; il manifest ha solo icone SVG (192 e 512) con «any maskable» insieme; `theme-color` della pagina (#FFFFFF) diverso da quello del manifest (#0A0A0A); la descrizione del manifest dice ancora «Garbatella, San Paolo e Marconi» (l'app è aperta a tutta Roma dall'08/10). Il banner di installazione non è comparso con l'evento simulato: da provare su un Android vero.
-- **Mappa:** i riquadri della mappa non si caricano (le richieste esterne sono bloccate): layout dei controlli verificato, mappa vera no.
+## Prima delle correzioni
+Nessuno scroll orizzontale, nessun errore JavaScript, tastiera senza campi coperti. Da sistemare: aree toccabili sotto i 44 px (~30 comandi distinti), 46 testi a 11 px o meno, icone/manifest PWA.
 
-Nessuna correzione al sito fatta in questa PR (i problemi sono di rifinitura e vanno scelti dal titolare).
+## Correzioni fatte (solo CSS/classi, nessun cambio di testi)
+- Domande frequenti della home: altezza minima 44 px.
+- Piè di pagina (Privacy, Cookie, Termini, Recesso, Assistenza…) e link dell'accesso («Password dimenticata?», «indietro»): almeno 44×44 px.
+- «Torna alla home» (pagine legali e assistenza), link «Guarda gli altri sconti» (scheda negozio), link del QR in dashboard: almeno 44 px di altezza.
+- Caselle di iscrizione (Termini, Privacy, comunicazioni) da 16 a 24 px; interruttore «Offerta attiva»: area toccabile estesa a 48 px.
+- Testi da 10-11 px portati a 12 px (menu «Roma è tua», badge «Nuovo», «Risparmi», area commerciante, mappa, indirizzi, galleria foto). Restano più piccoli solo i testi del pannello admin (uso da computer).
+- Test automatico: `e2e/tests/locale/34-android-aree-toccabili.spec.js` (360×640, tocco): niente scroll orizzontale, FAQ e piè di pagina ≥ 44 px, nessun testo sotto 12 px nelle pagine pubbliche e commerciante.
+- Dopo: testi sotto i 12 px da 46 a 0 nelle pagine controllate; scroll orizzontale sempre 0.
+
+## Non cambiato (spiegazione)
+- «Roma e dintorni – Dal centro alla periferia» nella home: **non era testo tagliato**. Lo strumento misurava una macchia sfocata decorativa; il testo va a capo correttamente (vedi schermate).
+- «Diventa partner», «Iscriviti per usare lo sconto»: sono link che contengono un pulsante già alto; il pulsante è toccabile.
+- Link dentro frasi (email, «Privacy Policy» nelle caselle, testi legali) e le scritte «Leaflet/OpenStreetMap» della mappa: restano piccoli (link in testo corrido, attribuzione obbligatoria).
+- `index.html` e `manifest.json` **non toccati** in questa PR (li modifica la PR #151): restano da fare lì o dopo la sua unione: `theme-color` (#FFFFFF nella pagina, #0A0A0A nel manifest), icone PNG 192/512 in aggiunta alle SVG, `purpose` separati («any» e «maskable»), descrizione che cita ancora tre quartieri, eventuale service worker.
 
 ## Da provare a mano su un Android vero
-Installazione sulla schermata Home da Chrome, tastiera vera (copertura dei campi, suggerimenti password), mappa con tasselli e posizione, fotocamera/scansione QR, Face ID/impronta (WebAuthn), condivisione WhatsApp, rotazione schermo, modalità risparmio dati, Samsung Internet e Firefox.
+Installazione sulla schermata Home da Chrome (banner e icona), tastiera vera (copertura dei campi, suggerimenti password), mappa con tasselli e posizione, scansione QR con la fotocamera, impronta/Face ID (WebAuthn), condivisione WhatsApp, rotazione dello schermo, risparmio dati, Samsung Internet e Firefox, dimensione carattere di sistema aumentata, tocchi veri su interruttore e caselle.

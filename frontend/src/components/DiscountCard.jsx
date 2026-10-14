@@ -55,7 +55,7 @@ export default function DiscountCard({ discount }) {
                 <span className="font-serif text-3xl text-fucsia">€{discount.discounted_price.toFixed(2)}</span>
                 <span className="text-sm text-muted-foreground line-through">€{discount.original_price.toFixed(2)}</span>
               </div>
-              <div className="text-[11px] uppercase tracking-wider text-neon">Risparmi €{savings}</div>
+              <div className="text-xs uppercase tracking-wider text-neon">Risparmi €{savings}</div>
             </div>
             <ArrowRight size={18} className="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-fucsia" />
           </div>

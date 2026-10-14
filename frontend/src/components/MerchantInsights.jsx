@@ -41,7 +41,7 @@ export default function MerchantInsights() {
             <div key={x.mese} className="flex flex-1 flex-col items-center gap-1">
               <div className="text-xs font-bold text-ac-ink">{x.utilizzi}</div>
               <div className="ac-grad w-full rounded-t-md" style={{ height: `${Math.max(4, (x.utilizzi / max) * 64)}px` }} />
-              <div className="text-[11px] font-semibold text-ac-mute">{x.mese.slice(0, 3)}</div>
+              <div className="text-xs font-semibold text-ac-mute">{x.mese.slice(0, 3)}</div>
             </div>
           ))}
         </div>
