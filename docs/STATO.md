@@ -178,3 +178,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 14/10 — Lista di lancio: aggiunte le idee per dopo il lancio (Coupon Flash, notifiche di prossimità, punti) con le note di valutazione.
 - 14/10 — Rapporto test email: aggiornati i punti già risolti (testo 2,99 € e `REPLY_TO_EMAIL`) e tolti i due indirizzi di prova con nome dal rapporto (repository pubblico).
 - 14/10 — Pulizia dell'app vera: il titolare ha cancellato tutti i clienti di prova; segnata come fatta nella lista di lancio.
+- 14/10 — Locandina del negozio (A5, `/locandina`): «quartiere» sostituito con «Roma e dintorni» e titoli da Fraunces a Manrope (scelta del 13/10), caricamento del carattere anche in stampa/PDF; e2e 18-qr-negozio esteso. Le 10 locandine A4 in `docs/comunicazione/locandine/` non sono toccate (usano ancora Fraunces per «Sconti Roma»: decide il titolare).

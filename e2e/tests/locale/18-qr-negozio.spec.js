@@ -47,4 +47,17 @@ test('locandina: QR verso la pagina del negozio, nome e testi nuovi', async ({ p
   expect(testo).toContain('Iscrizione gratuita');
   expect(testo.toLowerCase()).toContain("inquadra e scopri l'offerta di questo mese");   // il testo è in maiuscolo nella stampa
   expect(testo).not.toMatch(/affiliato|fase di lancio|30 secondi/i);
+  // «Roma e dintorni» al posto di «quartiere»; titoli in Manrope (scelta del titolare, 13/10)
+  expect(testo).toContain('Gli sconti di Roma e dintorni.');
+  expect(testo).toContain('negozi di Roma e dintorni');
+  expect(testo).not.toMatch(/quartier/i);
+  const caratteri = await page.locator('.flyer').evaluate((el) => [...el.querySelectorAll('*')].map((n) => getComputedStyle(n).fontFamily));
+  expect(caratteri.join('|')).not.toMatch(/fraunces/i);
+  await page.evaluate(() => document.fonts.ready);
+  expect(await page.evaluate(() => document.fonts.check('700 34pt Manrope'))).toBe(true);
+  // la stampa resta leggibile: stesso carattere anche con @media print
+  await page.emulateMedia({ media: 'print' });
+  const titolo = page.locator('.flyer div').filter({ hasText: /^Sconti Roma$/ }).first();
+  await expect(titolo).toBeVisible();
+  expect(await titolo.evaluate((n) => getComputedStyle(n).fontFamily)).toMatch(/Manrope/);
 });
