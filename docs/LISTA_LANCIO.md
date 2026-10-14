@@ -11,13 +11,13 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 2. ⏳ **Utente:** avvocato a forfait per la parte negozi (soluzione ibrida). La richiesta di preventivo è pronta (`docs/legale/RICHIESTA_PREVENTIVO.md`): compilare i campi e inviarla a 2–3 studi, chiedendo una revisione veloce dei Termini negozi.
 3. ⬜ **Utente:** visura camerale (REA, capitale, PEC, civico «5/B»): serve anche al punto 2.
 4. ✅ **Posta:** `info@`, `privacy@`, `partner@` con inoltro alla Gmail, Reply-To, filtri Gmail (SR/info, SR/privacy, SR/partner) e notifiche sul telefono.
-5. ⬜ **Utente (il giorno prima):** Render su Starter e Atlas su Flex, con prova di ripristino.
-6. ⏳ **Utente:** contratti sul trattamento dei dati (DPA), uno alla volta: 6a Render ⏳ · 6b MongoDB Atlas ⬜ · 6c Resend ⬜ · 6d Aruba (chiedere a dpo@aruba.com o dal pannello) ⬜ · 6e Google: il Gmail gratuito non ha un DPA ⬜. Documenti salvati solo nella cartella privata «DPA», non nel repository.
+5. ⬜ **Utente (la settimana del lancio):** Render su Starter, Atlas su Flex (con prova di ripristino) e Resend su Pro (20 $/mese: 50.000 email al mese, nessun limite giornaliero).
+6. ⏳ **Utente:** contratti sul trattamento dei dati (DPA), uno alla volta: 6a Render ⏳ · 6b MongoDB Atlas ⬜ · 6c Resend ✅ (DPA, SOC 2 e sub-fornitori scaricati; chiavi inutilizzate cancellate; resta la 2FA) · 6d Aruba (chiedere a dpo@aruba.com o dal pannello) ⬜ · 6e Google: il Gmail gratuito non ha un DPA ⬜. Documenti salvati solo nella cartella privata «DPA», non nel repository.
 7. ⬜ **Utente + Claude:** prova generale sul sito di prova (già aggiornato).
 8. ✅ **Pulizia dell'app vera:** clienti di prova cancellati, negozi a 0.
 9. ⏳ **Conferma email dei clienti:** unita e spenta sul sito vero (`CLIENT_EMAIL_CONFIRMATION_REQUIRED=false` su Render). Da provare sul sito di prova, poi accendere.
 10. ⬜ **Pre-lancio:** accendere `PRELAUNCH_MODE` su Render prima dei contenuti del 22/10, dopo la frase della Privacy per la lista d'attesa vista dal consulente (o in via provvisoria, scelta del titolare).
-11. ⬜ **Utente:** controllare il limite di 100 email al giorno di Resend (avviso di lancio alla lista d'attesa).
+11. ✅ Limite Resend verificato (gratuito: 3.000 al mese, 100 al giorno): per l'avviso di lancio alla lista d'attesa serve il Pro del punto 5.
 12. ⏳ **Materiali per i negozi:** video v14 (voce da generare, guida da inserire), guida di una pagina #128 (aspetta la frase sulla disdetta), sito pronto.
 13. ⏳ **Contatto con i negozi:** dal 19/10, uno alla volta, con il manuale e con modo per dire no, dopo che il consulente ha visto i testi.
 14. ⏳ **Campagna social:** piano e copioni uniti (#140). Da fare: due gruppi per il 19/10 (ricerca del titolare), musica, video con persone, copertine nuove su WhatsApp e Facebook.
