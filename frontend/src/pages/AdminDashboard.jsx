@@ -13,6 +13,7 @@ import GeocodeIssuesWidget from "@/components/admin/GeocodeIssuesWidget";
 import MerchantDiscountsDialog from "@/components/admin/MerchantDiscountsDialog";
 import AdminGate from "@/components/admin/AdminGate";
 import AdminLaunch from "@/components/admin/AdminLaunch";
+import AdminListaAttesa from "@/components/admin/AdminListaAttesa";
 import AdminProvaTolleranza from "@/components/admin/AdminProvaTolleranza";
 import AdminPayments from "@/components/admin/AdminPayments";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
@@ -127,6 +128,7 @@ export default function AdminDashboard() {
     ["subscribers", "Abbonati"],
     ["referrals", "Referral QR"],
     ["pending", `Offerte in attesa (${pending.length})`],
+    ["listaattesa", "Lista d'attesa"],
     ["nextmonth", "Prossimo Mese"],
     ["merchants", `Negozi (${merchants.length})`],
     ["fraud", "Registro Frodi"],
@@ -185,7 +187,8 @@ export default function AdminDashboard() {
       {tab === "subscribers" && subscriptionRequired && <AdminSubscribers hdrs={hdrs} />}
       {tab === "referrals" && <AdminReferralsByMerchant hdrs={hdrs} />}
       {tab === "pending" && <AdminPending pending={pending} hdrs={hdrs} onRefresh={loadData} />}
-      {tab === "nextmonth" && <AdminNextMonth hdrs={hdrs} />}
+      {tab === "listaattesa" && <AdminListaAttesa hdrs={hdrs} />}
+      {tab === "nextmonth" &&<AdminNextMonth hdrs={hdrs} />}
       {tab === "merchants" && (
         <AdminMerchantsTable
           merchants={merchants}

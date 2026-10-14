@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
 import { useEffect } from "react";
 import BrandMark from "@/components/BrandMark";
+import PrelaunchHome from "@/components/PrelaunchHome";
+import { useAppConfig } from "@/context/ConfigContext";
 
 // Rome landmark imagery (Unsplash direct URLs)
 const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80"; // Colosseo
@@ -12,11 +14,24 @@ const ROMA_TREVI = "https://images.unsplash.com/photo-1531572753322-ad063cecc140
 
 export default function Landing() {
   const [params] = useSearchParams();
+  const config = useAppConfig();
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
     salvaReferral(params.get("ref"));
     salvaFonte(params.get("fonte"));
   }, [params]);
+
+  // Modalità pre-lancio (spenta di norma): al posto della home c'è «Stiamo arrivando» con la lista d'attesa.
+  // Finché il server non ha risposto non si mostra la home vera, per non far vedere a chi arriva prima del lancio
+  // un invito a registrarsi che non deve ancora esserci.
+  if (!config.loaded) {
+    return (
+      <main data-testid="landing-caricamento" className="min-h-screen bg-background" aria-busy="true">
+        <h1 className="sr-only">Sconti Roma</h1>
+      </main>
+    );
+  }
+  if (config.prelaunch) return <PrelaunchHome />;
 
   return (
     <main data-testid="landing-page" className="min-h-screen bg-background text-foreground overflow-hidden">
