@@ -78,7 +78,7 @@ Si cambia da Render → servizio `scontiroma-api-xqib` → Environment. Ogni mod
 | Cosa | Valore | Perché | Rischio se lo dimentichi o sbagli |
 |---|---|---|---|
 | `PRELAUNCH_MODE` | `true` | La home dice «Stiamo arrivando a Roma e dintorni» (senza data) con la lista d'attesa a doppio consenso, 18+. I negozi si registrano e caricano offerte come sempre. | Spenta: i post della campagna portano a una home «normale» e nessuna email viene raccolta. Accesa per errore il giorno del lancio: i clienti vedono «stiamo arrivando». |
-| `CLIENT_EMAIL_CONFIRMATION_REQUIRED` | `true` (già il predefinito) | I clienti entrano solo dopo aver toccato il link. | Se `false`: chiunque si iscrive con l'email di un altro. |
+| `CLIENT_EMAIL_CONFIRMATION_REQUIRED` | `true` (è il predefinito; **oggi su Render è `false`**, lista di lancio punto 9: accenderla dopo la prova) | I clienti entrano solo dopo aver toccato il link. | Se `false`: chiunque si iscrive con l'email di un altro. |
 | `RESEND_API_KEY` + `SENDER_EMAIL` (dominio verificato) | già impostate | Senza non parte nessuna email: **nessun cliente può confermare l'account**, nessuno conferma la lista d'attesa. | Alto: facile da non notare (il sito dice «ti abbiamo mandato un'email» comunque). Fai la prova con una tua email vera prima del 19/10. |
 | `REPLY_TO_EMAIL` | `info@` del dominio, **solo con la casella già funzionante** (lista di lancio punto 3) | Le risposte dei clienti arrivano a te. | Casella inesistente: le risposte si perdono. |
 | `ADMIN_NOTIFY_EMAIL` | la tua Gmail | Avvisi di nuovi negozi/offerte e riepilogo del lunedì (il primo: lunedì 19/10 alle 8:00, se il server è sveglio). | Non arriva nulla. |
