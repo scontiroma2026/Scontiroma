@@ -38,6 +38,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 - [ ] **Utente:** revocare `EMERGENT_LLM_KEY`; avvisi di UptimeRobot sull'email di Sconti Roma e sull'app del telefono.
 
 ## Fatto
+- [x] Pulizia dell'app vera (14/10): cancellati tutti i clienti iscritti nei giorni di prova (il titolare); negozi già a 0.
 - [x] Social (13/10): Pagina Facebook e Instagram `sconti.roma` creati e collegati, primo post pubblicato; Composio collegato (pubblico solo dopo il tuo OK).
 - [x] Titoli del sito in Manrope (#122, 13/10); segnalazioni, reclami e scheda admin «Clienti» (#113, 13/10).
 - [x] Controllo online (UptimeRobot) su sito e server (10/10).
