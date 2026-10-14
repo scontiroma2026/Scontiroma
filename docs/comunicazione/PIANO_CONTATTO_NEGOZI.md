@@ -9,9 +9,9 @@ Lo stato dei controlli (CI) non è leggibile dall'ambiente (nessuno stato riport
 |---|---|---|---|
 | **#41** Kit messaggi (`docs/commercianti/MESSAGGI.md`) | WhatsApp, Instagram, Facebook, email, telefonata, SMS | **SCARTARE** (chiudere senza unire) | Sostituita da `KIT_MESSAGGI_NEGOZI.md`. Ha ancora «quartiere», «disdici quando vuoi», «preavviso di 30 giorni», «senza vincoli» (non decisi) e il prezzo nel primo messaggio. Le «Regole d'uso» sono state riprese qui |
 | **#62** Video v13 | Cartella `progetto_v13`, riprese con app vecchia, 32 file | **SCARTARE** | Superata dal v14 (app nuova, niente quartieri). Il titolare ha comunque già deciso i tre punti di voce; nessun valore da riprendere |
-| **#120** Video v14 (bozza) | Copione, riprese, montaggio; video fuori dal repository | **AGGIORNARE, poi unire** (dopo la scelta della voce) | È il video buono. Da cambiare nel `COPIONE_v14.md`: tolta la frase sulla disdetta (segnaposto), esempio senza prezzi, «+ IVA» già a posto. Il copione parlato aggiornato è in `COPIONI_VOCE_ELEVENLABS.md`. **Video non pubblicabile** finché i Termini (#116) non sono validati. Il COPIONE contiene due versioni dello stesso stato (muto / con voci Fernando ed Enea): chiarire nel testo quale è l'ultima |
+| **#120** Video v14 (bozza) | Copione, riprese, montaggio; video fuori dal repository | **AGGIORNARE, poi unire** (dopo la scelta della voce) | È il video buono. Da cambiare nel `COPIONE_v14.md`: frase sulla disdetta decisa dal titolare (riga a parte), esempio senza prezzi, «+ IVA» già a posto. Il copione parlato aggiornato è in `COPIONI_VOCE_ELEVENLABS.md`. **Video non pubblicabile** finché i Termini (#116) non sono validati. Il COPIONE contiene due versioni dello stesso stato (muto / con voci Fernando ed Enea): chiarire nel testo quale è l'ultima |
 | **#127** Manuali operativi (bozza) | Criteri di approvazione, risposte info/partner, social | **TENERE IN BOZZA** (non unire ora) | Ha testi con rilievo legale ([DA VALIDARE]); serve per le risposte dopo i primi contatti. Unire dopo il consulente |
-| **#128** Guida negozi, costi, emergenze (bozza, in conflitto) | Guida A4, `COSTI_MENSILI.md`, `EMERGENZE_E_ACCESSI.md` | **DIVIDERE**: guida **scartata da #128** (la versione finale è in questa PR, con «Come disdire» a segnaposto); `COSTI_MENSILI` ed `EMERGENZE_E_ACCESSI` **da unire a parte** dopo il rebase (il ramo ha conflitti) | La guida di #128 dice «Puoi disdire quando vuoi» e rimanda al pulsante «Disdici»: frase non decisa. Per evitare un conflitto tra file uguali, la nuova guida sta in `docs/comunicazione/guida-negozi/` (non in `docs/commercianti/guida/`) |
+| **#128** Guida negozi, costi, emergenze (bozza, in conflitto) | Guida A4, `COSTI_MENSILI.md`, `EMERGENZE_E_ACCESSI.md` | **DIVIDERE**: guida **scartata da #128** (la versione finale è in questa PR, con la frase decisa sulla disdetta); `COSTI_MENSILI` ed `EMERGENZE_E_ACCESSI` **da unire a parte** dopo il rebase (il ramo ha conflitti) | La guida di #128 dice «Puoi disdire quando vuoi» e rimanda al pulsante «Disdici»: non è la frase decisa. Per evitare un conflitto tra file uguali, la nuova guida sta in `docs/comunicazione/guida-negozi/` (non in `docs/commercianti/guida/`) |
 | **#139** Locandina negozio: «Roma e dintorni» + Manrope | Codice `Locandina.jsx` + test e2e | **UNIRE** (dopo rebase e controlli verdi) | Piccola, corregge «quartiere» e il carattere; i test e2e sono già stati eseguiti dall'autore. Serve per la locandina che i negozi stampano dall'app |
 | (fuori elenco) 10 locandine A4 in `docs/comunicazione/locandine/` | Ancora in Fraunces e con temi stagionali | **Decidere**: passare a Manrope e usare solo `app-chiara` | Lo chiede già #139. Non è un blocco per il 19/10 |
 
@@ -21,15 +21,15 @@ Lo stato dei controlli (CI) non è leggibile dall'ambiente (nessuno stato riport
 | Materiale | File | Novità |
 |---|---|---|
 | Kit messaggi | `KIT_MESSAGGI_NEGOZI.md` | In negozio, WhatsApp (e promemoria), Instagram, email; risposte alle domande; modo gentile per dire no in ogni messaggio; regole d'uso; controllo prima dell'invio |
-| Guida di una pagina (A4 orizzontale) | `guida-negozi/guida-prima-offerta.{html,pdf,png}` | Testi da #128, «Roma e dintorni», «gratuita nella fase di lancio», «circa due mesi di prova», 18+; **«Come disdire» = 🟡 [DA DECIDERE: frase sulla disdetta]** evidenziato |
+| Guida di una pagina (A4 orizzontale) | `guida-negozi/guida-prima-offerta.{html,pdf,png}` | Testi da #128, «Roma e dintorni», «gratuita nella fase di lancio», «circa due mesi di prova», 18+; **«Come disdire»** con la frase decisa dal titolare |
 | Copioni da leggere | `COPIONI_VOCE_ELEVENLABS.md` | Video v14 e guida, riga per riga, senza generare nulla |
 | Scheda di prospezione | `SCHEDA_PROSPEZIONE_NEGOZI.md` | Criteri, ricerca, orari, script, obiezioni, tracciamento |
 | Modello del foglio | `modello_tracciamento_negozi.csv` | Solo intestazione, nessun dato |
 
 Regole rispettate: nessuna percentuale, nessun «gratis per sempre», «nessuna commissione», «prezzo bloccato», «nessun vincolo», «disdici quando vuoi»; nessun nome di persona né contatto personale; nessun elenco di attività reali nel repository (il file con i nomi è privato).
 
-## 3. Cosa deve decidere il titolare
-1. **Frase sulla disdetta** (oggi segnaposto nel kit, nella guida, nel copione). Le decisioni già prese dicono: disdetta a fine mese, sconto da rispettare fino a quel giorno, mese pagato non rimborsabile. Va deciso **quanto dirne** nel materiale e con quali parole; poi va riletta dal consulente.
+## 3. Cosa deve decidere il titolare (la disdetta è già decisa)
+1. **Frase sulla disdetta: DECISA dal titolare** e inserita ovunque (kit, guida, copioni, scheda): «Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto.» Resta **comunque da far vedere al consulente** prima dell'uso. Non si usano varianti come «puoi smettere quando vuoi», «disdici quando vuoi», «nessun vincolo».
 2. **Il prezzo (4,99 € + IVA)** nei messaggi: la proposta è non scriverlo nel primo contatto (solo a richiesta e nella guida). Va bene?
 3. **Quando si può usare «circa due mesi di prova»** nei messaggi e nel video: dopo il consulente e i Termini (#116).
 4. **Voce del video** (Fernando o Enea) e permesso ai crediti ElevenLabs per le righe cambiate.
@@ -39,7 +39,7 @@ Regole rispettate: nessuna percentuale, nessun «gratis per sempre», «nessuna 
 
 ## 4. Checklist per il 19/10 (cosa serve al titolare)
 **Prima del giro (entro sabato 17/10)**
-- [ ] Decisione sulla frase della disdetta e OK del consulente ai testi (kit e guida) — senza non si parte con «prova» e prezzo
+- [ ] OK del consulente ai testi (kit e guida), compresa la frase sulla disdetta già decisa — senza non si parte con «prova» e prezzo
 - [ ] **Stampare la guida di una pagina** (PDF in `guida-negozi/`, A4 orizzontale, a colori, 40 copie per i primi 30 negozi + scorta)
 - [ ] **QR dei negozi:** controllare che il link con `?fonte=volantino-negozi` si apra da due telefoni diversi; un QR nero su bianco, grande almeno 2 cm per la card
 - [ ] **Card da lasciare** (formato biglietto o A6): nome «Sconti Roma», scontiroma.it, QR, 18+; 40-60 pezzi. (Testo della cartolina: `campagna-prelancio/ELENCO_VOLANTINI_E_MATERIALI.md`, M6)

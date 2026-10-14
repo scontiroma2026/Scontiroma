@@ -2,7 +2,7 @@
 
 **Nessuna voce generata, nessun credito speso, nessuno strumento ElevenLabs usato.** Questi sono solo i testi pronti da incollare quando il titolare dà il permesso e sceglie la voce (Fernando o Enea, PR #120). Regole: `comunicazione-marchio` (Roma e dintorni, «gratuita nella fase di lancio», «circa due mesi di prova», niente percentuali, «gratis per sempre», «nessuna commissione», «prezzo bloccato»).
 
-> **Segnaposto evidenziato:** la frase sulla disdetta non è decisa. Nei due copioni compare **🟡 [DA DECIDERE: frase sulla disdetta]** come riga a parte, **da non incollare in ElevenLabs**. Quando il titolare decide, si registra solo quella frase (una riga sola, pochi caratteri) e si inserisce nel montaggio.
+> **Disdetta (frase decisa dal titolare, da far comunque vedere al consulente):** «Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto.» Compare come riga 8b (video) e 9b (guida): è una riga a parte, così se ne registra una sola e si inserisce nel montaggio.
 
 ## Come incollare il testo (consigli di pronuncia, da provare con un'anteprima gratuita)
 - Registrare **frase per frase** (ogni riga numerata = un file): se ne cambia una, si rifà solo quella.
@@ -16,7 +16,7 @@
 ## 1. Video v14 per i commercianti (circa 1.180 caratteri, spazi inclusi)
 Base: testo di `montaggio/testo_voce.txt` della PR #120 (1.282 caratteri), con questi cambi proposti:
 - **Riga 6:** tolti i prezzi dell'esempio («cinquanta euro → trenta euro», che fanno intuire una percentuale): «Il cliente lo paga meno». Lo schermo mostra già «€50 / €30»: se si vuole togliere anche lì, si rifà la clip (decisione del titolare).
-- **Riga 8:** tolta la frase di disdetta («Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto»), che è ancora da decidere.
+- **Riga 8:** la frase di disdetta (decisa dal titolare) è ora una riga a parte, la 8b; nel testo già registrato era dentro la scena dei costi, quindi la 8b va aggiunta o rifatta.
 - **Riga 10:** indirizzo letto per esteso.
 - Le altre righe sono **uguali** al testo già registrato: se le voci di Fernando/Enea sono già state generate sul testo vecchio, solo le righe 6, 8 e 10 vanno rifatte (e la scena 7 del montaggio va accorciata).
 
@@ -30,7 +30,7 @@ Base: testo di `montaggio/testo_voce.txt` della PR #120 (1.282 caratteri), con q
 | 6 | Esempio (**cambiata**) | Facciamo un esempio: un ristorante ha il menù di pesce e decide di scontarlo il mercoledì e il venerdì. Il cliente lo paga meno, e il ristorante riempie i giorni più tranquilli. |
 | 7 | QR e banco | Il cliente ti mostra il codice QR sul telefono, tu lo inquadri, oppure scrivi il codice a quattro cifre del tuo negozio. |
 | 8 | Costi (**cambiata**) | E quanto costa? È gratuita nella fase di lancio, con circa due mesi di prova dalla prima offerta. Poi un abbonamento mensile semplice: quattro euro e novantanove al mese, più IVA, che attivi una volta sola con carta o PayPal. Nessuna sorpresa. |
-| 8b | Disdetta | 🟡 **[DA DECIDERE: frase sulla disdetta]** (non registrare finché non decide il titolare) |
+| 8b | Disdetta (**nuova**) | Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto. |
 | 9 | QR del negozio | Il QR del tuo negozio fa iscrivere i clienti. |
 | 10 | Chiusura (**cambiata**) | Scrivici a info chiocciola scontiroma punto it, e ti aiutiamo a partire. |
 
@@ -53,7 +53,7 @@ Testo da leggere insieme alla guida (`guida-negozi/guida-prima-offerta.html`), a
 | 7 | Passo 6 | Sei. Al banco, il cliente mostra il suo codice QR: tu lo inquadri con «Scansiona codice», scrivi il codice del negozio a quattro cifre e applichi lo sconto. |
 | 8 | Dashboard e locandina | Nella dashboard vedi gli sconti usati nel mese, i clienti nuovi e quelli che tornano, mai i loro nomi. E dalla scheda «Il tuo QR personale» puoi stampare la locandina da mettere in cassa. |
 | 9 | E dopo | La fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Dopo la prova c'è un abbonamento mensile semplice, quattro euro e novantanove al mese più IVA: ti avvisiamo prima e non addebitiamo nulla senza la tua conferma. |
-| 9b | Disdetta | 🟡 **[DA DECIDERE: frase sulla disdetta]** (non registrare) |
+| 9b | Disdetta (**nuova**) | Se vuoi smettere, la disdetta vale dalla fine del mese: fino a quel giorno mantieni lo sconto. |
 | 10 | Chiusura | Hai bisogno di una mano? Scrivici a info chiocciola scontiroma punto it. |
 
 ---
@@ -61,5 +61,5 @@ Testo da leggere insieme alla guida (`guida-negozi/guida-prima-offerta.html`), a
 ## 3. Cosa serve per registrare (quando il titolare dà l'ok)
 1. Permesso esplicito ai crediti ElevenLabs e scelta della voce (Fernando o Enea, PR #120; i crediti risultavano finiti il 13/10, rinnovo da verificare).
 2. Un'anteprima breve (riga 1) per sentire pronuncia di «QR» e «IVA» prima di registrare tutto.
-3. Registrare solo le righe cambiate (v14: 6, 8, 10) e, per la guida, tutte le righe tranne 9b.
+3. Registrare solo le righe cambiate (v14: 6, 8, 8b, 10) e, per la guida, tutte le righe, compresa la 9b.
 4. Il testo delle frasi cambiate va riletto dal titolare prima di spendere crediti.
