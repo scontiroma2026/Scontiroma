@@ -73,13 +73,7 @@ export default function Termini() {
             nell'area del Commerciante.
           </li>
           <li>
-            <strong>Dopo la fase di lancio</strong>: €4,99 al mese, IVA
-            inclusa.
-          </li>
-          <li>
-            <strong>Prezzo bloccato</strong> per i Commercianti che aderiscono
-            durante la fase di lancio, finché restano iscritti senza
-            interruzioni.
+            <strong>Dopo la fase di lancio</strong>: €4,99 al mese + IVA.
           </li>
           <li>
             <strong>Preavviso di 30 giorni</strong> prima della fine della fase
