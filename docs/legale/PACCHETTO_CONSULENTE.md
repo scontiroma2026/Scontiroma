@@ -384,3 +384,30 @@ Nessuna di queste PR è stata chiusa o toccata: prima le vede il titolare.
 4. **Gmail gratuito:** per ora resta (annotato; nessun DPA finché non c'è Workspace; il consulente valuta il rischio nel frattempo).
 5. **Negozi senza Partita IVA: NO, solo con Partita IVA.** Verifica: il modulo la chiede (campo obbligatorio) ma **il server la accetta vuota** (`server.py` righe 980-983) e **nessun testo** (Termini, Privacy, Recesso) dice che serve. Istruzione per la PR di codice: rendere obbligatoria la Partita IVA lato server per i nuovi negozi. Frase proposta per i Termini, art. 2 **[PROPOSTA] [DA VALIDARE]:** «Sconti Roma è riservato a imprese e professionisti con Partita IVA: per registrare un negozio devi indicare una Partita IVA valida.»
 6. **Il testo da mandare al consulente (preventivo e pacchetto):** messo da parte, lo guarda il titolare più avanti. `RICHIESTA_PREVENTIVO.md` non viene toccata ulteriormente.
+
+---
+
+## 13. Da verificare: percentuale di sconto (−NN%) e «prezzo precedente» [DOMANDA NUOVA]
+
+**Fatto (codice):** il negozio inserisce prezzo pieno e prezzo scontato; l'app calcola e mostra «−NN%» (`percent_off`, es. `AdminPending.jsx`, `DiscountCard.jsx`). Nessun controllo su quale sia il prezzo pieno. **Decisione del titolare (15/10):** la percentuale resta nell'app e nel video dimostrativo (negozio fittizio).
+
+**Norma (trovata con ricerca web, fonti secondarie):** art. 17-bis del Codice del Consumo (D.Lgs. 206/2005), introdotto dal D.Lgs. 26/2023 che recepisce la Direttiva Omnibus (UE) 2019/2161. Chi annuncia una riduzione di prezzo deve indicare il «prezzo precedente», cioè il più basso applicato alla generalità dei consumatori nei 30 giorni prima. Eccezioni citate: alimentari e agricoli deperibili, vendite sottocosto, prodotti in vendita da meno di 30 giorni (si indica il periodo). La sentenza della Corte UE 26/09/2024, causa C-330/23 (Aldi), dice che vale anche per le riduzioni annunciate in percentuale. Le FAQ del MIMIT dicono che un annuncio ingannevole fuori dall'art. 17-bis può essere comunque una pratica scorretta (artt. 20-22 Codice del Consumo).
+
+| Cosa | Stato |
+|---|---|
+| Art. 17-bis, D.Lgs. 26/2023, direttiva 2019/2161, 30 giorni | Trovato su più fonti, **testo di legge non letto: da verificare** |
+| Sentenza C-330/23 e percentuali | Trovata su una fonte: **da verificare** |
+| Eccezioni (deperibili, sottocosto) e numeri degli articoli | **Da verificare** |
+| Se vale per **la piattaforma** e/o **per i negozi** | **Non confermato** |
+
+**Domande per il consulente** 🟠
+1. Chi è tenuto: il **negozio** (che annuncia la riduzione)? Anche **Sconti Roma**, che mostra il badge calcolato e pubblica l'offerta, o solo come intermediario? Vale per sconti «solo con l'app» di un negozio fisico?
+2. Quando il negozio mette un prezzo pieno e uno scontato, quale prezzo pieno è corretto (il più basso dei 30 giorni prima)? Per le offerte nuove di un negozio che apre, o con prezzi che cambiano ogni mese?
+3. Serve un avviso nel **modulo offerta** e nei **Termini**? Vale per sconti espressi in percentuale, in euro e per prodotti deperibili (pizza, caffè)?
+4. Basta una frase di garanzia del negozio, o servono controlli (la piattaforma approva a mano ogni offerta)?
+
+**Frase proposta per i Termini negozi, art. 5 [PROPOSTA] [DA VALIDARE]:** «Il Commerciante garantisce che il prezzo pieno indicato è il prezzo più basso da lui applicato alla generalità dei consumatori nei 30 giorni precedenti l'offerta (o, se vende il prodotto da meno di 30 giorni, che indica il periodo), e che lo sconto mostrato è reale. Se non puoi garantirlo, indica solo il prezzo scontato.» *(la bozza 04 di #92, art. 5.3, ha già una versione simile)*
+
+**Avviso nel modulo offerta [PROPOSTA]:** sotto il campo «Prezzo pieno»: «Inserisci il prezzo più basso a cui hai venduto questo prodotto negli ultimi 30 giorni. Se è un prodotto nuovo, indicalo nella descrizione.»
+
+**Per il video dimostrativo:** negozio e prezzi fittizi, quindi nessun annuncio reale; in ogni caso conviene scriverlo («esempio dimostrativo»), da far vedere al consulente.
