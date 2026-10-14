@@ -292,7 +292,7 @@ export default function Register() {
                 checked={acceptedLegal}
                 onChange={(e) => setAcceptedLegal(e.target.checked)}
                 required
-                className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
+                className="mt-1 h-6 w-6 shrink-0 accent-fucsia cursor-pointer"
               />
               <span className="text-xs text-foreground/80 leading-relaxed">
                 <span className="text-fucsia">*</span> Dichiaro di avere almeno 18 anni, accetto i{" "}
@@ -311,7 +311,7 @@ export default function Register() {
                   type="checkbox"
                   checked={acceptedSpecific}
                   onChange={(e) => setAcceptedSpecific(e.target.checked)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-fucsia cursor-pointer"
+                  className="mt-1 h-6 w-6 shrink-0 accent-fucsia cursor-pointer"
                 />
                 <span className="text-xs text-foreground/80 leading-relaxed">
                   <span className="text-fucsia">*</span> Ai sensi degli artt. 1341 e 1342 c.c. approvo specificamente le clausole dei{" "}
@@ -327,7 +327,7 @@ export default function Register() {
                 type="checkbox"
                 checked={marketingOptIn}
                 onChange={(e) => setMarketingOptIn(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 accent-terracotta cursor-pointer"
+                className="mt-1 h-6 w-6 shrink-0 accent-terracotta cursor-pointer"
               />
               <span className="text-xs text-muted-foreground leading-relaxed">
                 Voglio ricevere <strong>comunicazioni promozionali</strong> via email su nuovi sconti e offerte esclusive del mese. <span className="text-muted-foreground">(facoltativo, puoi disdire quando vuoi)</span>
@@ -342,7 +342,7 @@ export default function Register() {
               type="checkbox"
               checked={rememberCreds}
               onChange={(e) => setRememberCreds(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-ciano cursor-pointer"
+              className="mt-0.5 h-6 w-6 shrink-0 accent-ciano cursor-pointer"
             />
             <span className="text-xs text-foreground/80 leading-relaxed">
               💾 <strong className="text-ciano">Salva queste credenziali su questo dispositivo</strong> per il prossimo accesso.

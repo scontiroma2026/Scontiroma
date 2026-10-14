@@ -82,7 +82,7 @@ export default function NegozioQR() {
             </Button>
           </Link>
           <p className="mt-3 text-center text-xs text-muted-foreground">Iscrizione gratuita. Bastano email e password.</p>
-          <Link to="/discounts" className="mt-4 block text-center text-sm text-ciano underline underline-offset-2">Guarda gli altri sconti</Link>
+          <Link to="/discounts" className="mt-4 block py-3 text-center text-sm text-ciano underline underline-offset-2">Guarda gli altri sconti</Link>
         </>
       )}
     </main>

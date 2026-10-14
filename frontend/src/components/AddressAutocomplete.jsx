@@ -134,7 +134,7 @@ export default function AddressAutocomplete({
           data-testid={`${testId}-dropdown`}
           className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-2xl overflow-hidden animate-in fade-in-0 slide-in-from-top-1"
         >
-          <div className="text-[10px] uppercase tracking-wider text-fucsia px-3 py-2 border-b border-border bg-muted flex items-center justify-between">
+          <div className="text-xs uppercase tracking-wider text-fucsia px-3 py-2 border-b border-border bg-muted flex items-center justify-between">
             <span>{suggestions.length === 1 ? "1 indirizzo trovato" : `${suggestions.length} indirizzi trovati`} — clicca per selezionare</span>
             {(() => {
               const q = (value || "").trim();
@@ -174,7 +174,7 @@ export default function AddressAutocomplete({
                         )}
                       </div>
                       {s.full_display_name && s.full_display_name !== s.display && (
-                        <div className="text-[11px] text-muted-foreground line-clamp-2 break-words">
+                        <div className="text-xs text-muted-foreground line-clamp-2 break-words">
                           {s.full_display_name}
                         </div>
                       )}
@@ -184,19 +184,19 @@ export default function AddressAutocomplete({
               </li>
             ))}
           </ul>
-          <div className="text-[10px] text-muted-foreground px-3 py-1.5 border-t border-border bg-muted">
+          <div className="text-xs text-muted-foreground px-3 py-1.5 border-t border-border bg-muted">
             💡 <strong className="text-muted-foreground">Tip:</strong> per suggerimenti col numero civico digita "Via, numero, città" (es. <em className="text-fucsia/80">Via del Corso 100 Roma</em>)
           </div>
         </div>
       )}
 
       {picked && (
-        <div className="mt-1 text-[10px] text-emerald-700 flex items-center gap-1">
+        <div className="mt-1 text-xs text-emerald-700 flex items-center gap-1">
           <Check size={10} /> Indirizzo verificato — comparirà sulla mappa
         </div>
       )}
       {picked && civicoTenuto && (
-        <div data-testid={`${testId}-civico-tenuto`} className="mt-1 text-[11px] text-muted-foreground">
+        <div data-testid={`${testId}-civico-tenuto`} className="mt-1 text-xs text-muted-foreground">
           Abbiamo tenuto il civico {civicoTenuto} che hai scritto: controlla la posizione sulla mappa.
         </div>
       )}

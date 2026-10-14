@@ -31,7 +31,7 @@ export default function MerchantScan() {
     <main data-testid="merchant-scan-page" className="text-ac-ink">
       <section className="bg-ac-rosaSoft">
         <div className="mx-auto max-w-xl px-4 pb-6 pt-8 text-center sm:px-6">
-          <div className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-ac-viola">Verifica codice</div>
+          <div className="text-xs font-extrabold uppercase tracking-[0.12em] text-ac-viola">Verifica codice</div>
           <h1 className="mt-2 text-[32px] leading-[1.1] sm:text-5xl">Scansiona lo sconto</h1>
           <p className="mt-2 text-base font-medium text-ac-soft">Inserisci il codice del cliente per applicare lo sconto.</p>
         </div>

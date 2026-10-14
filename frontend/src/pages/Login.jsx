@@ -175,7 +175,7 @@ export default function Login() {
 
         {step === "password" && (
           <>
-            <button onClick={() => setStep("email")} className="mb-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+            <button onClick={() => setStep("email")} className="mb-4 flex min-h-11 items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
               <ArrowLeft size={12} /> indietro
             </button>
             <h1 className="font-serif text-4xl text-foreground">Email e password</h1>
