@@ -1768,9 +1768,18 @@ def _is_new_offer(published_at, now: Optional[datetime] = None) -> bool:
     return timedelta(0) <= now - dt < timedelta(hours=NEW_OFFER_HOURS)
 
 
+def _mese_roma_estremi(chiave: str) -> tuple:
+    """(inizio, fine escluso) del mese «AAAA-MM» all'ora di Roma, come testo ISO in UTC (le date nel database
+    sono in UTC): il 1° alle 00:30 di Roma è già il mese nuovo, anche se in UTC è ancora il 31."""
+    anno, mese = (int(x) for x in chiave.split("-"))
+    dopo = (anno + 1, 1) if mese == 12 else (anno, mese + 1)
+    inizio = datetime(anno, mese, 1, tzinfo=ZoneInfo("Europe/Rome")).astimezone(timezone.utc)
+    fine = datetime(dopo[0], dopo[1], 1, tzinfo=ZoneInfo("Europe/Rome")).astimezone(timezone.utc)
+    return inizio.isoformat(), fine.isoformat()
+
+
 def _month_start_iso() -> str:
-    now = datetime.now(timezone.utc)
-    return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    return _mese_roma_estremi(current_month_key())[0]
 
 
 # ---------- Geocoding via Nominatim (OpenStreetMap, gratuito) ----------
@@ -2610,8 +2619,12 @@ async def merchant_archive(user: dict = Depends(require_merchant)):
         mese = d.get("locked_month") or d.get("target_month") or ""
         utilizzi = 0
         if mese:
-            utilizzi = await db.redemptions.count_documents({
-                "discount_id": d.get("id"), "status": "redeemed", "redeemed_at": {"$regex": f"^{mese}"}})
+            try:
+                inizio, fine = _mese_roma_estremi(mese)
+                utilizzi = await db.redemptions.count_documents({
+                    "discount_id": d.get("id"), "status": "redeemed", "redeemed_at": {"$gte": inizio, "$lt": fine}})
+            except ValueError:
+                utilizzi = 0
         out.append({
             "archivio_id": d["archivio_id"], "title": d.get("title") or "",
             "original_price": d.get("original_price"), "discounted_price": d.get("discounted_price"),
@@ -5527,11 +5540,25 @@ async def _run_month_rollover(force: bool = False) -> dict:
     Idempotente via `rollover_runs` (bypass con force=True)."""
     # Mese di Roma: con l'UTC il passaggio delle 00:05 del 1° veniva saltato.
     month = current_month_key()
-    if not force and await db.rollover_runs.find_one({"month": month}):
-        return {"skipped": True, "month": month}
     now_iso = datetime.now(timezone.utc).isoformat()
-    await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
+    if force:
+        await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
+    else:
+        # Il mese si «prenota» in un colpo solo (atomico): il job delle 00:05 e il recupero all'avvio, o due
+        # copie del server accese insieme, non possono passare entrambi (niente offerte archiviate o email doppie).
+        claim = await db.rollover_runs.update_one(
+            {"month": month}, {"$setOnInsert": {"month": month, "ran_at": now_iso}}, upsert=True)
+        if claim.upserted_id is None:
+            return {"skipped": True, "month": month}
+    try:
+        return await _esegui_rollover(month, now_iso)
+    except Exception:
+        if not force:
+            await db.rollover_runs.delete_one({"month": month})  # si potrà ritentare (al riavvio o col job)
+        raise
 
+
+async def _esegui_rollover(month: str, now_iso: str) -> dict:
     async def _archive(old: dict, reason: str):
         await _archivia(old, reason)
 
@@ -5624,6 +5651,14 @@ async def _run_next_offer_reminders() -> dict:
             stages.append("apertura")  # promemoria unico della versione precedente
         if stage in stages:
             continue
+        # «Prenotazione» atomica prima dell'invio: due copie del server accese insieme (per esempio durante un
+        # aggiornamento) o due passaggi in parallelo non mandano la stessa email due volte.
+        prenota = await db.reminder_claims.update_one(
+            {"key": f"offerta_{nm}_{mid}_{stage}"},
+            {"$setOnInsert": {"key": f"offerta_{nm}_{mid}_{stage}",
+                              "expires_at": datetime.now(timezone.utc) + timedelta(days=60)}}, upsert=True)
+        if prenota.upserted_id is None:
+            continue
         try:
             await send_next_offer_reminder(m["email"], m.get("name") or "",
                                            m.get("shop_name") or "il tuo negozio",
@@ -5634,6 +5669,7 @@ async def _run_next_offer_reminders() -> dict:
                 "next_offer_reminder_month": nm}})
             sent += 1
         except Exception as e:
+            await db.reminder_claims.delete_one({"key": f"offerta_{nm}_{mid}_{stage}"})  # si potrà ritentare
             logging.error(f"[next-offer-reminder] send failed merchant={mid[:8]}: {e}")
     admin_summary = await _send_admin_month_summary(nm, window["next_month_label"], days_left, actives)
     return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm,
@@ -5670,10 +5706,15 @@ async def _send_admin_month_summary(nm: str, label: str, days_left: int, actives
             continue
         m = await db.users.find_one({"id": mid}, {"no_renew_month": 1})
         (no_renew if (m or {}).get("no_renew_month") == nm else missing).append(await shop(mid))
+    # Prenotazione atomica prima dell'invio (due passaggi insieme non mandano due email).
+    claim = await db.settings.update_one({"key": key}, {"$setOnInsert": {"key": key}}, upsert=True)
+    if claim.upserted_id is None:
+        return False
     try:
         await send_admin_month_summary(to, label, pending, rejected, missing, no_renew)
     except Exception as e:
         logging.error(f"[admin-summary] send failed: {e}")
+        await db.settings.delete_one({"key": key})  # si potrà ritentare
         return False
     await db.settings.update_one({"key": key}, {"$set": {"sent_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     return True
@@ -5687,21 +5728,21 @@ def _start_scheduler() -> None:
     # Ogni giorno alle 10:00 ora italiana
     _scheduler.add_job(
         _run_grace_reminders,
-        CronTrigger(hour=10, minute=0),
+        CronTrigger(hour=10, minute=0, timezone="Europe/Rome"),
         id="grace_reminders_daily",
         replace_existing=True,
     )
     # Promemoria "carica offerta mese prossimo" — ogni giorno 09:30 (invia solo in finestra, idempotente)
     _scheduler.add_job(
         _run_next_offer_reminders,
-        CronTrigger(hour=9, minute=30),
+        CronTrigger(hour=9, minute=30, timezone="Europe/Rome"),
         id="next_offer_reminders_daily",
         replace_existing=True,
     )
     # Promemoria di fine prova ai negozi (10 e 3 giorni prima) — ogni giorno 09:45, solo con pagamenti negozi accesi
     _scheduler.add_job(
         _run_trial_reminders,
-        CronTrigger(hour=9, minute=45),
+        CronTrigger(hour=9, minute=45, timezone="Europe/Rome"),
         id="trial_reminders_daily",
         replace_existing=True,
     )
@@ -5717,21 +5758,23 @@ def _start_scheduler() -> None:
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
     _scheduler.add_job(
         _run_month_rollover,
-        CronTrigger(day=1, hour=0, minute=5),
+        CronTrigger(day=1, hour=0, minute=5, timezone="Europe/Rome"),
         id="month_rollover",
         replace_existing=True,
+        misfire_grace_time=6 * 3600,  # se il server è occupato o riparte dopo le 00:05 il passaggio parte comunque
+        coalesce=True,
     )
     # Account cliente non confermati da 7 giorni: ogni giorno alle 03:30 (e anche all'avvio)
     _scheduler.add_job(
         _run_unconfirmed_cleanup,
-        CronTrigger(hour=3, minute=30),
+        CronTrigger(hour=3, minute=30, timezone="Europe/Rome"),
         id="unconfirmed_cleanup_daily",
         replace_existing=True,
     )
     # Lista d'attesa: iscrizioni mai confermate da 7 giorni, ogni giorno alle 03:40 (e anche all'avvio)
     _scheduler.add_job(
         _run_waitlist_cleanup,
-        CronTrigger(hour=3, minute=40),
+        CronTrigger(hour=3, minute=40, timezone="Europe/Rome"),
         id="waitlist_cleanup_daily",
         replace_existing=True,
     )
@@ -5766,6 +5809,8 @@ async def on_startup():
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
     await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
+    await db.reminder_claims.create_index("key", unique=True)
+    await db.reminder_claims.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     await db.users.create_index("email_confirm_token_hash", sparse=True)

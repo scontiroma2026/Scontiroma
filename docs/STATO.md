@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
+Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -186,3 +186,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 14/10 — Campagna pre-lancio, aggiornamento: pubblicità a pagamento esclusa, tono neutro (niente Halloween), V4 «dietro le quinte» solo mani con musica e scritte (primo video), opzioni di musica con licenza da verificare, ricerca gruppi in `GRUPPI_DA_CONTATTARE.md` (Facebook/Instagram non raggiungibili dall'ambiente: nessun gruppo verificato, solo categorie e scheda di controllo). Ramo `claude/campagna-prelancio`.
 - 14/10 — Termini (correzione richiesta dal titolare): «€4,99 al mese + IVA» al posto di «IVA inclusa» e tolto «Prezzo bloccato». Resta aperta la PR #116 con le altre correzioni proposte (da validare col consulente).
 - 14/10 — Unite le PR #130–#143 della giornata (riepilogo settimanale, lista d'attesa pre-lancio con interruttore spento, Termini 4,99 € + IVA, campagna social pre-lancio). Decisioni registrate nella lista di lancio: prova ripetuta rimandata; un abbonamento per commerciante a prescindere dai punti vendita.
+- 14/10 — **Punto 17** (ramo `claude/punto-17`): prova del cambio mese con orologio finto (`test_cambio_mese.py`, 38 test): corretti il fuso dei lavori pianificati (giravano in UTC, passaggio del mese 1-2 ore dopo mezzanotte), conteggi mensili all'ora di Roma, passaggio mese e promemoria senza doppi invii; ricerche in `docs/operazioni/MARCHIO.md`, `CODICE_ATECO.md`, `TEST_ANDROID.md` (emulazione, non telefono vero). Nessun deposito, nessun testo legale toccato.
