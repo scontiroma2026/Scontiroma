@@ -35,13 +35,15 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       return { ok: true, user: data.user };
     } catch (e) {
-      return { ok: false, error: formatApiError(e) };
+      return { ok: false, error: formatApiError(e), code: e?.response?.data?.detail?.code };
     }
   };
 
   const register = async (payload) => {
     try {
       const { data } = await api.post("/auth/register", payload);
+      // Cliente da confermare: il server non lo fa entrare, prima deve toccare il link ricevuto per email.
+      if (data.confirmation_required) return { ok: true, confirmationRequired: true, email: data.email, message: data.message };
       // Cookie httpOnly già impostati dal backend, niente localStorage.
       setUser(data.user);
       return { ok: true, user: data.user };

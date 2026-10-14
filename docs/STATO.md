@@ -1,6 +1,6 @@
 # Stato del progetto Sconti Roma
 
-Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
+Aggiornato: 13/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 
 > Repository pubblico: qui mai password, chiavi, ID di recupero, email o nomi di persone reali.
 > Solo nomi di variabili ed esiti delle verifiche.
@@ -71,6 +71,7 @@ Aggiornato: 08/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 | #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
 | #73 | Ambiente di prova: variabile facoltativa `EMAIL_ALLOWED_RECIPIENTS` (indirizzi o `@dominio`): se impostata le email partono solo verso quelli, gli altri sono scartati con riga `[email:bloccata-prova]` (solo dominio). Non impostata = produzione invariata. Guida: sezione «Email nell'ambiente di prova». Ramo `claude/email-prova-allowlist` | 09/10 (in attesa di unione) |
+| nuova | Conferma dell'email dei clienti (non dei commercianti): email con link «Conferma il tuo account» (48 ore, monouso, nel DB solo l'impronta), niente accesso finché non conferma, «Rimanda l'email» (3 ogni 10 minuti e 5 all'ora per dispositivo, solo in memoria), pagina `/conferma-email`, clienti già iscritti confermati con migrazione all'avvio, non confermati cancellati dopo 7 giorni (03:30 e all'avvio, via `_erase_user_data`). Interruttore `CLIENT_EMAIL_CONFIRMATION_REQUIRED` (predefinito acceso; spento in e2e e nei test). Ramo `claude/conferma-email-clienti` | Controllo da iPhone; decisioni nella PR (Privacy, Resend attivo prima di unire) |
 | nuova | Materiale per i clienti, solo testo: locandina e post (`docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md`); i copioni video sono rimandati. Ramo `claude/materiale-clienti` | Il consulente deve vedere le righe marcate «da far vedere al consulente» |
 
 Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta.
@@ -124,6 +125,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 8. Pulizie: fatte in #65 (Archivo Black, `health-check`, righe vecchie). Restano: **revoca di `EMERGENT_LLM_KEY`** (vedi «Pulizie tecniche», non urgente) e locandine già stampate con il QR vecchio da ristampare se esistono.
 9. **Controllo online** (UptimeRobot, gratuito): **fatto il 10/10** (controlli su sito e server, avvisi alla email personale: da spostare su quella di Sconti Roma quando c'è; falso allarme normale nel risveglio di Render). Guida in `docs/guide/CONTROLLO_ONLINE.md`. Prima del lancio, server Render a «Starter». Lista completa di cosa manca al lancio ufficiale: `docs/LISTA_LANCIO.md`.
 10. Foto del negozio nel profilo o passo foto all'iscrizione (da decidere); pagina «Per i commercianti» con il video.
+
+- Conferma dell'email dei clienti (13/10, decisione del titolare): solo i clienti, non i commercianti (hanno Partita IVA e approvazione manuale). Accedono solo dopo aver toccato il link; chi era già iscritto è confermato. Account non confermati cancellati dopo 7 giorni. Chi reimposta la password con il link ricevuto per email risulta confermato. Con `CLIENT_EMAIL_CONFIRMATION_REQUIRED=false` si torna a entrare subito. Nessun accesso con Google o altri provider nel codice: solo email e password e Face ID.
 
 ## Pulizie tecniche (#65, 08/10)
 - Tolti i file del carattere Archivo Black (due `.woff2`, licenza, regole in `fonts.css`): nessun CSS o JS li usava. Restano solo Fraunces e Manrope; il test e2e 19 controlla solo quelli.
