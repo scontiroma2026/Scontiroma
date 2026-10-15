@@ -5,7 +5,7 @@ import { Scheda, Pillola, CLASSE_BASE_SECONDARIO, CLASSE_BORDO, CLASSE_PRIMARIO 
 /** Card "Offerta mese prossimo" per la MerchantDashboard. `data` è la risposta di /merchants/me/next-discount (la carica la dashboard, che la usa anche per «Da fare»). */
 export const NextOfferCard = ({ data }) => {
   if (!data) return null;
-  const { next_discount: nd, window: win } = data;
+  const { next_discount: nd, window: win, no_renew: noRenew } = data;
   const label = win?.next_month_label || "il mese prossimo";
 
   const statusBadge = () => {
@@ -31,6 +31,10 @@ export const NextOfferCard = ({ data }) => {
           <div className="font-serif text-xl leading-tight">{nd.title}</div>
           <div className="mt-2">{statusBadge()}</div>
         </div>
+      ) : noRenew ? (
+        <p data-testid="next-offer-no-renew" className="text-sm leading-relaxed text-ac-soft">
+          Hai scelto di <strong className="text-ac-ink">non rinnovare</strong>: non serve caricare l'offerta di {label}. Se cambi idea, annulla la scelta dal riquadro in alto.
+        </p>
       ) : win?.open ? (
         <p className="text-sm leading-relaxed text-ac-soft">
           La finestra è <strong className="text-ac-teal">aperta</strong>: carica ora l'offerta di {label}. Se non la carichi, dal 1° il negozio resterà senza offerta attiva.
@@ -41,6 +45,15 @@ export const NextOfferCard = ({ data }) => {
           <span>La finestra di caricamento apre il <strong className="text-ac-ink">{win?.opens_on}</strong> (ultimi 7 giorni del mese).</span>
         </p>
       )}
+      {noRenew && !nd ? (
+        <span
+          data-testid="next-offer-cta"
+          aria-disabled="true"
+          className="mt-4 inline-flex min-h-[46px] w-full cursor-not-allowed items-center justify-center rounded-2xl bg-ac-tint px-5 text-sm font-extrabold text-ac-soft"
+        >
+          Carica offerta di {label}
+        </span>
+      ) : (
       <Link
         to="/merchant/discount?tab=next"
         data-testid="next-offer-cta"
@@ -48,6 +61,7 @@ export const NextOfferCard = ({ data }) => {
       >
         {nd ? "Modifica offerta" : win?.open ? `Carica offerta di ${label}` : "Vedi dettagli"}
       </Link>
+      )}
     </Scheda>
   );
 };

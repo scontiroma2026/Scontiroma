@@ -7,7 +7,7 @@ import { AlertTriangle, CalendarX, CheckCircle2, Clock } from "lucide-react";
 
 /** Banner di scadenza dell'offerta nella dashboard del commerciante.
  *  Nessun rinnovo automatico: senza l'offerta del mese dopo, quella attuale scade il 1°. */
-export default function RenewalBanner() {
+export default function RenewalBanner({ onChange }) {
   const [st, setSt] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -30,6 +30,7 @@ export default function RenewalBanner() {
       const hadNext = Boolean(st.next_status);
       const r = await api.post("/merchants/me/no-renew", { no_renew: value });
       setSt(r.data);
+      if (onChange) onChange();
       toast.success(value ? "Fatto: la tua offerta non verrà rinnovata." : "Va bene: ricordati di caricare l'offerta del mese prossimo.");
       if (value && hadNext) window.location.reload();
     } catch (e) {
