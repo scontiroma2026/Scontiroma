@@ -659,7 +659,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
 <p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese + IVA</strong>. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma.</p>
-<p style="{_P}"><strong>Nessun vincolo:</strong> l'offerta vale per il mese in corso e non si rinnova da sola. Se non vuoi continuare, scegli «Non rinnovo».</p>
+<p style="{_P}"><strong>Disdetta:</strong> disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Per non continuare, scegli «Non rinnovo».</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
 """
     return await _send(to, f"Benvenuto in {BRAND}: crea la tua prima offerta", _shell(inner))
