@@ -53,7 +53,7 @@ function WhatsAppIcon() {
   );
 }
 
-const CONTACT_BTN = "flex min-h-[64px] items-center justify-center gap-2 rounded-2xl px-6 py-4 text-lg font-bold shadow-lg hover:scale-[1.02] hover:brightness-110 transition";
+const CONTACT_BTN = "flex min-h-[64px] items-center justify-center gap-2 rounded-2xl px-6 py-4 text-lg font-bold shadow-lg transition [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:brightness-110";
 
 export default function DiscountDetail() {
   const { id } = useParams();
@@ -407,7 +407,7 @@ export default function DiscountDetail() {
                   <a
                     href={p.telHref}
                     data-testid="btn-call-merchant"
-                    className={`${CONTACT_BTN} bg-[#4FC3F7] text-slate-900 shadow-sky-400/40`}
+                    className={`${CONTACT_BTN} bg-gradient-to-b from-[#2CC4D9] to-[#00A3BA] text-slate-900 shadow-cyan-600/30`}
                   >
                     <Phone size={22} className="shrink-0" />
                     Chiama per prenotare
@@ -417,7 +417,7 @@ export default function DiscountDetail() {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="btn-whatsapp-merchant"
-                    className={`${CONTACT_BTN} bg-[#25D366] text-slate-900 shadow-emerald-500/30`}
+                    className={`${CONTACT_BTN} bg-gradient-to-b from-[#61FD7D] to-[#25CF43] text-slate-900 shadow-emerald-500/30`}
                   >
                     <WhatsAppIcon />
                     Scrivi su WhatsApp
