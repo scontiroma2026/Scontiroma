@@ -210,3 +210,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: approvazione offerte: foto per foto (ingrandisci, approva/scarta con motivo; il motivo va nell'email al commerciante) (PR foto scartate)
 - 15/10: controllo foto per foto anche in «Prossimo Mese» (componente condiviso) (PR foto prossimo mese)
 - 15/10: admin → Negozi: statistiche per negozio sempre visibili all'admin (solo numeri); il commerciante resta con la soglia dei 3 clienti (PR statistiche admin)
+- 15/10 (sera): LISTA_LANCIO aggiornata: prova generale 13/19, PR #167/#168/#169 in bozza da vedere, video v17 in lavorazione, punti 39-40 nuovi
