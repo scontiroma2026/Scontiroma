@@ -83,6 +83,29 @@ def test_statistiche_clienti_nuovi_e_di_ritorno():
     run(body)
 
 
+def test_admin_vede_sempre_i_numeri_il_commerciante_no(monkeypatch):
+    """Con 1 solo cliente il commerciante non vede i dettagli sui clienti; l'admin sì, sempre, ma solo numeri."""
+    monkeypatch.setenv("ADMIN_MASTER_PASSWORD", "master-test-123456")
+
+    async def body(c):
+        mid, mh = await utente("merchant", shop_name="Osteria")
+        cid, ch = await utente("client")
+        await uso(mid, cid, datetime.now(timezone.utc))
+        dm = (await c.get("/api/merchants/me/insights", headers=mh)).json()
+        assert dm["dati_sufficienti"] is False and "clienti_mese" not in dm and "clienti_nuovi" not in dm
+
+        aid, ah = await utente("admin")
+        m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
+        ah = {**ah, "X-Admin-Master": m.json()["token"]}
+        da = (await c.get(f"/api/admin/merchants/{mid}/insights", headers=ah)).json()
+        assert da["dati_sufficienti"] is True
+        assert (da["clienti_mese"], da["clienti_nuovi"], da["clienti_di_ritorno"]) == (1, 1, 0)
+        assert "user_id" not in str(da) and "@" not in str(da)
+        assert (await c.get("/api/admin/merchants/non-esiste/insights", headers=ah)).status_code == 404
+        assert (await c.get(f"/api/admin/merchants/{mid}/insights", headers=mh)).status_code in (401, 403)  # non per il commerciante
+    run(body)
+
+
 def test_statistiche_solo_commercianti():
     async def body(c):
         _, h = await utente("client")
