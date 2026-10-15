@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
+import FotoControllo from "@/components/admin/FotoControllo";
 import { renderBold } from "@/lib/renderBold";
 
 const STATUS_BADGE = {
@@ -40,9 +41,9 @@ export default function AdminNextMonth({ hdrs }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const approve = async (id) => {
+  const approve = async (id, fotoScartate = []) => {
     try {
-      await api.post(`/admin/next-offers/${id}/approve`, {}, hdrs());
+      await api.post(`/admin/next-offers/${id}/approve`, fotoScartate.length ? { foto_scartate: fotoScartate } : {}, hdrs());
       toast.success("Offerta mese prossimo approvata ✓ — attiva dal 1°");
       load();
     } catch (err) { toast.error(formatApiError(err)); }
@@ -185,7 +186,7 @@ export default function AdminNextMonth({ hdrs }) {
                   row={r}
                   nd={nd}
                   monthLabel={win.next_month_label}
-                  onApprove={() => approve(nd.id)}
+                  onApprove={(scartate) => approve(nd.id, scartate)}
                   onReject={() => setDaRifiutare({ id: nd.id, titolo: nd.title })}
                   onEdit={() => setEditRow(r)}
                 />
@@ -211,6 +212,7 @@ export default function AdminNextMonth({ hdrs }) {
 /** Dettaglio completo: dati commerciante PRIMA, poi tutta l'offerta, poi i pulsanti di revisione. */
 function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
   const m = row.merchant || {};
+  const [scartate, setScartate] = useState([]);
   const images = Array.isArray(nd.image_urls) && nd.image_urls.length ? nd.image_urls : (nd.image_url ? [nd.image_url] : []);
   const InfoBlock = ({ title, text }) => text ? (
     <div>
@@ -252,7 +254,10 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
       {/* 2 — Offerta completa */}
       <div>
         <div className="text-xs uppercase tracking-wider text-ciano">Offerta completa di {monthLabel}</div>
-        {images.length > 0 && (
+        {nd.approval_status !== "approved" && images.length > 0 && (
+          <FotoControllo id={nd.id} urls={images} onChange={setScartate} />
+        )}
+        {nd.approval_status === "approved" && images.length > 0 && (
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {images.map((url, i) => (
               <img key={`${url.slice(0, 40)}-${i}`} src={url} alt="" className="h-24 w-36 shrink-0 rounded-lg object-cover border border-border" />
@@ -292,7 +297,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
           </Button>
         )}
         {nd.approval_status !== "approved" && (
-          <Button data-testid={`nextoffer-approve-${nd.id}`} size="sm" onClick={onApprove} className="grad-fucsia-viola text-white rounded-full">
+          <Button data-testid={`nextoffer-approve-${nd.id}`} size="sm" onClick={() => onApprove(scartate)} className="grad-fucsia-viola text-white rounded-full">
             <Check size={13} className="mr-1" /> Approva
           </Button>
         )}

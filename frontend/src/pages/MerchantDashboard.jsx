@@ -74,7 +74,7 @@ export default function MerchantDashboard() {
             Ti avviseremo prima e non ti addebiteremo nulla senza la tua conferma.
           </div>
         )}
-        <RenewalBanner />
+        <RenewalBanner onChange={() => api.get("/merchants/me/next-discount").then((r) => setNext(r.data)).catch(() => {})} />
         <PagamentoNegozio />
 
         {stato === "errore" && (
