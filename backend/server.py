@@ -7299,10 +7299,14 @@ async def _pag_righe_commercianti() -> list:
         if not v or (p.get("data_pagamento") or "", p.get("creato_il") or "") > (v.get("data_pagamento") or "", v.get("creato_il") or ""):
             ultimi[p["merchant_id"]] = p
     out = []
+    negozi = {m["id"]: m for m in await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "first_published_at": 1}).to_list(None)}
     for mid, nome in nomi.items():
         raw = piani.get(mid) or {}
+        # Fine prova: data scritta a mano dall'admin; altrimenti calcolata dalla prima pubblicazione
+        # (stessa regola dei promemoria); altrimenti la data predefinita dell'ambiente.
+        calcolata = pp.trial_end_date(await _prima_pubblicazione(negozi[mid])) if mid in negozi else None
         piano = {
-            "prova_fino_al": raw.get("prova_fino_al") or (prova_def.isoformat() if prova_def else None),
+            "prova_fino_al": raw.get("prova_fino_al") or (calcolata.isoformat() if calcolata else None) or (prova_def.isoformat() if prova_def else None),
             "prossimo_rinnovo": raw.get("prossimo_rinnovo"),
             "stato_manuale": raw.get("stato_manuale"),
         }
