@@ -204,6 +204,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: pulsante WhatsApp verde ufficiale con logo, «Chiama» azzurro (PR pulsanti)
 - 15/10: pulsanti: WhatsApp verde icona con sfumatura, Chiama turchese dell'app (PR colori)
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
+- 15/10 — Marchio (punto 17): scheda di verifica per il consulente `docs/operazioni/MARCHIO_SCHEDA_VERIFICA.md` (debolezza del nome, banche dati e classi, domande, passi legati al punto 37); tasse non verificate (siti ufficiali non raggiungibili); nessun deposito.
 - 15/10: tolte 104 foto (40 con volti o marchi + 64 dubbie, su richiesta del titolare) dalla libreria (318 rimaste); da sostituire con altre senza volti/marchi
 - 15/10: schermata admin «Pagamenti»: fine prova calcolata dalla prima pubblicazione se non scritta a mano
 - 15/10: dopo «Non rinnovo» il caricamento dell'offerta del mese dopo si spegne (grigio) e si riaccende con «Annulla» (PR non-rinnovo)
@@ -212,3 +213,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: admin → Negozi: statistiche per negozio sempre visibili all'admin (solo numeri); il commerciante resta con la soglia dei 3 clienti (PR statistiche admin)
 - 15/10 (sera): LISTA_LANCIO aggiornata: prova generale 13/19, PR #167/#168/#169 in bozza da vedere, video v17 in lavorazione, punti 39-40 nuovi
 - 15/10 (sera): DOMANDE_PER_IL_CONSULENTE.md: tutte le domande per il consulente in un solo file (34 domande)
+- 15/10 (sera): regola della lista rettificata dal titolare: i punti chiusi si cancellano e la lista si rinumera; LISTA_LANCIO ora ha 32 punti
