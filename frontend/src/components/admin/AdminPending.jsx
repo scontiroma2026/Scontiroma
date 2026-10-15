@@ -2,6 +2,7 @@ import { useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
@@ -14,9 +15,27 @@ import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 export default function AdminPending({ pending, hdrs, onRefresh }) {
   const [q, setQ] = useState("");
   const [daRifiutare, setDaRifiutare] = useState(null);
+  // Controllo foto: per ogni offerta, per ogni foto: «ok» (approvata) oppure il motivo dello scarto
+  const [scelte, setScelte] = useState({});
+  const [ingrandita, setIngrandita] = useState(null);
+  const setScelta = (id, url, valore) =>
+    setScelte((s) => {
+      const per = { ...(s[id] || {}) };
+      if (valore === null) delete per[url]; else per[url] = valore;
+      return { ...s, [id]: per };
+    });
+  const scarta = (id, url) => {
+    const motivo = (window.prompt("Perché scarti questa foto? (la legge il commerciante nell'email di pubblicazione, almeno 10 caratteri)", "") || "").trim();
+    if (!motivo) return;
+    if (motivo.length < 10) { toast.error("Serve un motivo di almeno 10 caratteri"); return; }
+    setScelta(id, url, { scartata: motivo });
+  };
   const approve = async (id) => {
     try {
-      await api.post(`/admin/discounts/${id}/approve`, {}, hdrs());
+      const foto_scartate = Object.entries(scelte[id] || {})
+        .filter(([, v]) => v && v.scartata)
+        .map(([url, v]) => ({ url, motivo: v.scartata }));
+      await api.post(`/admin/discounts/${id}/approve`, foto_scartate.length ? { foto_scartate } : {}, hdrs());
       toast.success("Offerta approvata ✓");
       onRefresh();
     } catch (err) {
@@ -130,6 +149,45 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                   )}
                 </div>
                 {d.terms && <div className="mt-2 text-xs text-muted-foreground">Termini: {d.terms}</div>}
+                {(d.image_urls || []).length > 0 && (
+                  <div className="mt-3" data-testid={`foto-controllo-${d.id}`}>
+                    <div className="text-xs font-semibold text-muted-foreground">
+                      Foto dell'offerta ({d.image_urls.length}): tocca per ingrandire, poi approva o scarta ogni foto
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {d.image_urls.map((url, i) => {
+                        const scelta = (scelte[d.id] || {})[url];
+                        const scartata = scelta && scelta.scartata;
+                        const ok = scelta && scelta.ok;
+                        return (
+                          <div key={url} data-testid={`foto-${d.id}-${i}`} className="flex flex-col gap-1.5">
+                            <button type="button" onClick={() => setIngrandita(url)} aria-label={`Ingrandisci la foto ${i + 1}`}
+                              className={`overflow-hidden rounded-lg border-2 ${scartata ? "border-destructive/60 opacity-50" : ok ? "border-green-600" : "border-border"}`}>
+                              <img src={url} alt={`Foto ${i + 1}`} className="aspect-video w-full object-cover" loading="lazy" />
+                            </button>
+                            {scartata ? (
+                              <>
+                                <p className="text-xs text-destructive" data-testid={`foto-scartata-${d.id}-${i}`}>Scartata: {scelta.scartata}</p>
+                                <Button type="button" size="sm" variant="outline" className="min-h-11 rounded-full" onClick={() => setScelta(d.id, url, null)}>Ripristina</Button>
+                              </>
+                            ) : (
+                              <div className="flex flex-col gap-1.5">
+                                <Button type="button" size="sm" data-testid={`foto-approva-${d.id}-${i}`} variant={ok ? "default" : "outline"}
+                                  className="min-h-11 w-full rounded-full" onClick={() => setScelta(d.id, url, { ok: true })}>
+                                  <Check size={14} className="mr-1" /> Approva
+                                </Button>
+                                <Button type="button" size="sm" data-testid={`foto-scarta-${d.id}-${i}`} variant="outline"
+                                  className="min-h-11 w-full rounded-full border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => scarta(d.id, url)}>
+                                  <X size={14} className="mr-1" /> Scarta
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-2 md:justify-center">
                 <Button
@@ -154,6 +212,15 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
           ))}
         </div>
       )}
+      <Dialog open={!!ingrandita} onOpenChange={(o) => { if (!o) setIngrandita(null); }}>
+        <DialogContent data-testid="foto-ingrandita" className="max-w-3xl bg-white p-3 text-ac-ink">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Foto ingrandita</DialogTitle>
+            <DialogDescription className="sr-only">Controlla la foto prima di approvarla o scartarla</DialogDescription>
+          </DialogHeader>
+          {ingrandita && <img src={ingrandita} alt="Foto ingrandita" className="max-h-[80vh] w-full rounded-lg object-contain" />}
+        </DialogContent>
+      </Dialog>
       <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={reject} />
     </Card>
   );
