@@ -21,28 +21,27 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 12. ⬜ **27/10:** controllo della soglia di negozi e decisione sul 31/10.
 13. ⬜ **Utente:** accessi con verifica a due passaggi, codici di recupero su carta, persona di fiducia.
 14. ⏳ **Prove e pratiche:** prova del cambio mese ✅ (test automatici e orari di Roma, #149) · test su un Android vero ⬜ (finora solo emulazione) · marchio «Sconti Roma» ⏳ (scheda di verifica per il consulente: PR #167 in bozza, da vedere; `docs/operazioni/MARCHIO.md`) · codice ATECO ⬜ (`docs/operazioni/CODICE_ATECO.md`) · promemoria in `PROMEMORIA_DA_RIPRENDERE.md`.
-15. ⏳ **Logo e nome (richiesta del titolare, 15/10):** decidere se tenere il nome «Sconti Roma» (debole perché descrittivo) con un logo/marchio figurativo oppure un nome più distintivo; poi depositare il marchio (vedi punto 14 e `docs/operazioni/MARCHIO.md`). Il logo serve anche a profili social, video e guide. Tre proposte pronte nella PR #168 (A «Tre archi», B «Bottega», C «Sampietrino»), consigliata la B: da scegliere.
-16. ⏳ **Stile della pagina (richiesta del titolare, 15/10):** definire l'aspetto del sito e dei materiali (carattere, colori, tono delle immagini) in modo coerente con logo e nome; da vedere insieme prima del lancio (proposte A/B/C nella PR #168).
-17. ⬜ **Libreria foto:** il 15/10 tolte 104 foto con volti, marchi o dubbie (#166): restano 318 (Meccanici 11, Padel 13, Calcetto 19). Da sostituire con altre senza volti né marchi, scelte su Unsplash dal titolare (da qui Unsplash non è raggiungibile); non bloccante per il lancio.
-18. ⬜ **«Approva tutte» e foto:** il giorno del lancio «Approva tutte» (`LANCIA`) approva anche le foto di tutte le offerte senza controllo foto per foto: prima guardare le foto una per una nelle schede «Offerte in attesa» e «Prossimo Mese».
+15. ⬜ **Logo e nome (decisione del titolare, 15/10):** si tiene l'aspetto attuale del sito e il nome «Sconti Roma»; le tre proposte di stile (PR #168) non sono piaciute e la PR è chiusa. Resta aperta solo la tutela del nome: vedi il punto del marchio (scheda in `docs/operazioni/MARCHIO_SCHEDA_VERIFICA.md`). Il logo attuale va bene per profili social, video e guide.
+16. ⬜ **Libreria foto:** il 15/10 tolte 104 foto con volti, marchi o dubbie (#166): restano 318 (Meccanici 11, Padel 13, Calcetto 19). Da sostituire con altre senza volti né marchi, scelte su Unsplash dal titolare (da qui Unsplash non è raggiungibile); non bloccante per il lancio.
+17. ⬜ **«Approva tutte» e foto:** il giorno del lancio «Approva tutte» (`LANCIA`) approva anche le foto di tutte le offerte senza controllo foto per foto: prima guardare le foto una per una nelle schede «Offerte in attesa» e «Prossimo Mese».
 
 ## B. Dopo il lancio, prima del primo addebito (circa due mesi dopo)
-19. ⬜ Chiavi di prova Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; prova con soldi finti.
-20. ⬜ Conti Stripe e PayPal Business dell'azienda; chiavi vere sul server vero solo il giorno dell'accensione.
-21. ⬜ **Commercialista:** IVA al 22%, fattura elettronica (SdI), PEC.
-22. ⏳ **Claude:** altre email al commerciante (giorno 30 della prova, promemoria prima del 1°, mancato pagamento, ricevuta): pronte e spente, PR #169 in bozza da vedere (interruttore `MERCHANT_TRIAL_EMAILS`; 4 scelte da fare).
-23. ⬜ **Consulente:** testi della schermata di pagamento e dei Termini sui pagamenti.
-24. ⬜ **Utente:** conferma esplicita prima di accendere i pagamenti; i pagamenti dei clienti restano spenti.
-25. ⬜ Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e chiave su Render.
+18. ⬜ Chiavi di prova Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; prova con soldi finti.
+19. ⬜ Conti Stripe e PayPal Business dell'azienda; chiavi vere sul server vero solo il giorno dell'accensione.
+20. ⬜ **Commercialista:** IVA al 22%, fattura elettronica (SdI), PEC.
+21. ⏳ **Claude:** altre email al commerciante (giorno 30 della prova, promemoria prima del 1°, mancato pagamento, ricevuta): pronte e spente, PR #169 in bozza da vedere (interruttore `MERCHANT_TRIAL_EMAILS`; 4 scelte da fare).
+22. ⬜ **Consulente:** testi della schermata di pagamento e dei Termini sui pagamenti.
+23. ⬜ **Utente:** conferma esplicita prima di accendere i pagamenti; i pagamenti dei clienti restano spenti.
+24. ⬜ Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e chiave su Render.
 
 ## C. Dopo il lancio, con calma
-26. ⬜ **Un abbonamento per commerciante**, anche con più punti vendita (serve gestire più punti vendita in un account; adattare i Termini).
-27. ⬜ **Prova gratuita ripetuta** e Partita IVA con più punti vendita (impronta anti-abuso, segnalazioni in admin).
-28. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità, punti e raccolte a premio.
-29. ⬜ Locandine A4 e volantini: passare a Manrope e togliere «quartiere» (PR #139, 4 scelte).
-30. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
-31. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
-32. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); serve il permesso a cancellare. Le PR superate restano da decidere una alla volta: #103, #81, #100, #101.
+25. ⬜ **Un abbonamento per commerciante**, anche con più punti vendita (serve gestire più punti vendita in un account; adattare i Termini).
+26. ⬜ **Prova gratuita ripetuta** e Partita IVA con più punti vendita (impronta anti-abuso, segnalazioni in admin).
+27. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità, punti e raccolte a premio.
+28. ⬜ Locandine A4 e volantini: passare a Manrope e togliere «quartiere» (PR #139, 4 scelte).
+29. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
+30. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
+31. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); serve il permesso a cancellare. Le PR superate restano da decidere una alla volta: #103, #81, #100, #101.
 
 ## Decisioni del titolare (riferimento)
 Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.
