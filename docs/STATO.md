@@ -217,3 +217,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (sera): il titolare scarta le tre proposte di stile e logo (#168 chiusa): si tiene l'aspetto attuale e il nome; lista a 31 punti
 - 15/10 (sera): video v17 approvato dal titolare; scheda d'uso VIDEO_V17_COME_USARLO.md (negozi + social); non pubblicabile fino a Termini validati e musica con licenza
 - 15/10: email al commerciante (punto 21), tutte spente: giorno 30 e promemoria primo pagamento con `MERCHANT_TRIAL_EMAILS`; mancato pagamento e ricevuta solo con `MERCHANT_PAYMENT_REQUIRED` (PR email commerciante prova).
+- 15/10: quinta email al commerciante (decisione del titolare, scelta B): promemoria mensile 3 giorni prima di ogni addebito per i negozi abbonati, spento e solo con `MERCHANT_PAYMENT_REQUIRED` (PR #169).

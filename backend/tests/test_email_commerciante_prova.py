@@ -185,3 +185,53 @@ def test_ricevuta_solo_con_pagamenti_accesi_e_una_volta(inviate, monkeypatch):
         assert len(inviate) == 2
 
     run(body, False)
+
+
+async def abbonato(server, mid, stato="active"):
+    await server.db.merchant_subscriptions.insert_one({"merchant_id": mid, "provider": "stripe", "status": stato})
+
+
+def test_promemoria_addebito_spento_con_pagamenti_spenti(inviate):
+    import server
+
+    async def body(c):
+        await negozio(server)
+        await abbonato(server, "m1")
+        r = await server._run_monthly_charge_reminders(date(2027, 1, 29))
+        assert r["skipped"] == "pagamenti_negozi_spenti" and inviate == []
+
+    run(body, False)
+
+
+def test_promemoria_addebito_contenuto_e_uno_al_mese(inviate, monkeypatch):
+    import server
+    monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
+
+    async def body(c):
+        await negozio(server, "m1")                                  # abbonato
+        await negozio(server, "m2")                                  # non abbonato
+        await negozio(server, "m3", no_renew_month="2027-02")        # abbonato ma ha disdetto
+        await negozio(server, "m4")                                  # abbonamento chiuso
+        await negozio(server, "m5", PUBBLICATA_TARDI)                # abbonato, ma il 1 gennaio è il primo pagamento
+        for mid in ("m1", "m3", "m5"):
+            await abbonato(server, mid)
+        await abbonato(server, "m4", "cancelled")
+        assert (await server._run_monthly_charge_reminders(date(2026, 12, 27)))["skipped"] == "non_ancora_il_momento"
+        # 29 dicembre (3 giorni prima): il 1 gennaio è il primo pagamento di m5 (esclusa); m1 riceve
+        assert (await server._run_monthly_charge_reminders(date(2026, 12, 29)))["sent"] == 1
+        assert (await server._run_monthly_charge_reminders(date(2026, 12, 29)))["sent"] == 0
+        assert (await server._run_monthly_charge_reminders(date(2026, 12, 30)))["sent"] == 0
+        assert [e["to"] for e in inviate] == ["m1@example.com"]
+        e = inviate[0]
+        assert "3 giorni" in e["subject"] and "1 gennaio 2027" in e["html"] and "4,99 €" in e["html"]
+        assert "dashboard" in e["html"]
+        assert "Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Per non continuare, scegli «Non rinnovo»." in e["html"]
+        regole_comuni(e["html"])
+        # febbraio 2027 ha 28 giorni: il promemoria del 1 marzo è il 26; m5 ora è a regime
+        assert (await server._run_monthly_charge_reminders(date(2027, 2, 25)))["skipped"] == "non_ancora_il_momento"
+        assert (await server._run_monthly_charge_reminders(date(2027, 2, 26)))["sent"] == 2
+        # già pagato il mese dopo: niente
+        await server.db.merchant_payments.insert_one({"merchant_id": "m1", "month_key": "2027-04", "paid_at": "2027-03-31T10:00:00+00:00"})
+        assert (await server._run_monthly_charge_reminders(date(2027, 3, 29)))["sent"] == 1  # solo m5
+
+    run(body, False)

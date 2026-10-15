@@ -720,6 +720,24 @@ async def send_merchant_first_payment_reminder(to: str, name: str, shop_name: st
     return await _send(to, f"Il primo pagamento su {BRAND} è tra {giorni}", _shell(inner))
 
 
+async def send_merchant_monthly_charge_reminder(to: str, name: str, shop_name: str, charge_label: str, days_left: int = 3,
+                                                price_cent: int = 499) -> Optional[str]:
+    """Promemoria mensile, pochi giorni prima di ogni addebito, per i negozi già abbonati. Non è il promemoria
+    del primo pagamento (durante la prova) né la ricevuta."""
+    name, shop_name = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio")
+    charge_label = _esc(charge_label)
+    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il prossimo pagamento è tra {giorni}</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">il pagamento mensile di <strong>{shop_name}</strong> su {BRAND} è previsto il <strong style="color:#00E5FF">{charge_label}</strong>.</p>
+<p style="{_P}"><strong>Prezzo:</strong> {_eur(price_cent / 100)} + IVA al mese. Il pagamento si fa sempre il 1° del mese, con una tolleranza fino al giorno 5.</p>
+{_blocco_disdetta_negozio()}
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai alla dashboard</a></div>
+"""
+    return await _send(to, f"Il prossimo pagamento su {BRAND} è tra {giorni}", _shell(inner))
+
+
 async def send_merchant_payment_missed(to: str, name: str, shop_name: str, month_label: str,
                                        tolerance_days: int = 5) -> Optional[str]:
     """Mancato pagamento del mese, dopo i giorni di tolleranza."""

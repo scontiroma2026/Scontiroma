@@ -51,6 +51,7 @@ from email_service import (
     send_merchant_trial_day30,
     send_merchant_first_payment_reminder,
     send_merchant_payment_missed,
+    send_merchant_monthly_charge_reminder,
     send_merchant_payment_receipt,
     send_next_offer_reminder,
     send_offer_expired,
@@ -5754,6 +5755,46 @@ async def _run_trial_emails(oggi=None) -> dict:
     return {"checked": len(negozi), "sent": sent}
 
 
+PROMEMORIA_ADDEBITO_GIORNI = 3  # giorni prima del 1° del mese dell'addebito
+
+
+async def _run_monthly_charge_reminders(oggi=None) -> dict:
+    """Promemoria mensile 3 giorni prima di OGNI addebito, solo ai negozi con abbonamento attivo (carta o conto
+    online) che non hanno scelto «Non rinnovo». Una volta per mese (prenotazione atomica; se il server dorme si
+    recupera fino al giorno prima). Parte solo con MERCHANT_PAYMENT_REQUIRED acceso. Non è il promemoria del primo
+    pagamento (durante la prova, MERCHANT_TRIAL_EMAILS) né la ricevuta."""
+    if not merchant_payment_required():
+        return {"checked": 0, "sent": 0, "skipped": "pagamenti_negozi_spenti"}
+    oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
+    addebito = pp.primo_del_mese_dopo(oggi)
+    mancano = (addebito - oggi).days
+    if mancano > PROMEMORIA_ADDEBITO_GIORNI:
+        return {"checked": 0, "sent": 0, "skipped": "non_ancora_il_momento"}
+    mk = pp.chiave_mese(addebito)
+    abbonati = await db.merchant_subscriptions.distinct("merchant_id", {"status": "active"})
+    sent = 0
+    for mid in abbonati:
+        m = await db.users.find_one({"id": mid, "role": "merchant"})
+        if not m or not m.get("email") or m.get("no_renew_month"):
+            continue
+        inizio = pp.billing_start_date(await _prima_pubblicazione(m))
+        if inizio and addebito <= inizio:
+            continue  # è il primo pagamento: c'è già il suo promemoria
+        if mk in await _pagamenti_negozio(mid):
+            continue
+        key = f"addebito_{mk}_{mid}"
+        if not await _prenota_email(key, 90):
+            continue
+        try:
+            await send_merchant_monthly_charge_reminder(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                                                        _etichetta_data(addebito), mancano, MERCHANT_PRICE_CENTS)
+            sent += 1
+        except Exception as e:
+            await db.reminder_claims.delete_one({"key": key})
+            logging.error(f"[promemoria-addebito] invio non riuscito per negozio={str(mid)[:8]}: {e}")
+    return {"checked": len(abbonati), "sent": sent}
+
+
 async def _run_payment_missed(oggi=None) -> dict:
     """Mancato pagamento: dopo i giorni di tolleranza (1-5 del mese) scrive ai negozi che hanno finito la prova
     e non hanno nessun pagamento registrato per il mese. Una sola volta per negozio e per mese. Parte solo con
@@ -6071,6 +6112,12 @@ def _start_scheduler() -> None:
         _run_payment_missed,
         CronTrigger(hour=10, minute=15, timezone="Europe/Rome"),
         id="payment_missed_daily",
+        replace_existing=True,
+    )
+    _scheduler.add_job(
+        _run_monthly_charge_reminders,
+        CronTrigger(hour=10, minute=25, timezone="Europe/Rome"),
+        id="monthly_charge_reminders_daily",
         replace_existing=True,
     )
     # Avviso di lancio alla lista d'attesa: riprende ogni giorno alle 10:00 (Roma) solo dopo che l'admin ha premuto AVVISA
