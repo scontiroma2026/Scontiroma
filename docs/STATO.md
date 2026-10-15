@@ -214,3 +214,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (sera): LISTA_LANCIO aggiornata: prova generale 13/19, PR #167/#168/#169 in bozza da vedere, video v17 in lavorazione, punti 39-40 nuovi
 - 15/10 (sera): DOMANDE_PER_IL_CONSULENTE.md: tutte le domande per il consulente in un solo file (34 domande)
 - 15/10 (sera): regola della lista rettificata dal titolare: i punti chiusi si cancellano e la lista si rinumera; LISTA_LANCIO ora ha 32 punti
+- 15/10 (sera): il titolare scarta le tre proposte di stile e logo (#168 chiusa): si tiene l'aspetto attuale e il nome; lista a 31 punti
