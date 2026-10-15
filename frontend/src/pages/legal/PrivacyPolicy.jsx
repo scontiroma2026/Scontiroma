@@ -104,6 +104,28 @@ export default function PrivacyPolicy() {
             casuale non collegato al tuo account (vedi{" "}
             <a href="/cookies" className="text-fucsia hover:underline">Cookie Policy</a>).
           </li>
+          <li data-testid="privacy-lista-attesa">
+            <mark className="bg-yellow-200 text-black px-1 rounded-sm">[PROPOSTA - DA VALIDARE]</mark>{" "}
+            <mark className="bg-yellow-200 text-black px-1 rounded-sm">
+              <strong>Lista d'attesa «Avvisami quando parte»</strong>. Se lasci
+              la tua email nel modulo della lista d'attesa e spunti la casella,
+              la usiamo solo per mandarti un'email per confermare l'iscrizione
+              e, quando Sconti Roma è online, un solo avviso di lancio. Base
+              giuridica: il tuo consenso (art. 6, par. 1, lett. a, GDPR), che
+              confermi toccando il link ricevuto per email (doppio consenso) e
+              che puoi revocare in ogni momento, senza conseguenze, con il link
+              «Annulla l'iscrizione» presente in ogni email. Nel nostro database
+              conserviamo l'indirizzo email, la data e la versione del testo del
+              consenso, lo stato dell'iscrizione (da confermare, confermata,
+              annullata), una provenienza generica scelta da un elenco fisso
+              (per esempio «volantino» o «Instagram») e gli orari delle ultime
+              richieste, solo per evitare invii in raffica. Non salviamo il tuo
+              indirizzo IP e il modulo non usa cookie. Le iscrizioni non
+              confermate sono cancellate dopo 7 giorni. Il servizio è riservato
+              ai maggiorenni (18+). Le email partono tramite Resend (vedi il
+              punto 4); per i tempi di conservazione vedi il punto 6.
+            </mark>
+          </li>
           <li>
             <strong>Log tecnici</strong>: indirizzo IP, tipo di browser, sistema
             operativo, timestamp delle richieste — utilizzati esclusivamente per
@@ -152,6 +174,14 @@ export default function PrivacyPolicy() {
                 <td className="border border-border p-2">Avvisi via email quando un negozio preferito pubblica l'offerta del mese (al massimo uno per negozio al mese)</td>
                 <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), revocabile dall'app con «Non avvisarmi più»</td>
               </tr>
+              <tr data-testid="privacy-lista-attesa-base">
+                <td className="border border-border p-2">
+                  <mark className="bg-yellow-200 text-black px-1 rounded-sm">[PROPOSTA - DA VALIDARE] Lista d'attesa «Avvisami quando parte»: email di conferma e un solo avviso di lancio</mark>
+                </td>
+                <td className="border border-border p-2">
+                  <mark className="bg-yellow-200 text-black px-1 rounded-sm">Consenso (art. 6.1.a GDPR), confermato dal link ricevuto per email e revocabile con «Annulla l'iscrizione»</mark>
+                </td>
+              </tr>
               <tr>
                 <td className="border border-border p-2">Statistiche anonime di visita</td>
                 <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), tramite banner cookie</td>
@@ -184,7 +214,9 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong>Resend Inc.</strong> (USA, region EU-West) — Invio email
-            transazionali. I server di invio si trovano in Irlanda (eu-west-1).
+            transazionali
+            <mark className="bg-yellow-200 text-black px-1 rounded-sm"> e delle email della lista d'attesa [PROPOSTA - DA VALIDARE; DA VERIFICARE: contratto sul trattamento dei dati (DPA)]</mark>
+            . I server di invio si trovano in Irlanda (eu-west-1).
           </li>
           <li>
             <strong>MongoDB Atlas</strong> (region EU) — Archiviazione dati
@@ -230,10 +262,30 @@ export default function PrivacyPolicy() {
           riceve il tuo indirizzo IP.
         </p>
 
+        <p data-testid="privacy-locationiq">
+          <mark className="bg-yellow-200 text-black px-1 rounded-sm">[PROPOSTA - DA VALIDARE]</mark>{" "}
+          <mark className="bg-yellow-200 text-black px-1 rounded-sm">
+            Per trasformare l'indirizzo di un negozio in suggerimenti e in
+            coordinate sulla mappa usiamo, quando è attivo, il servizio{" "}
+            <strong>LocationIQ</strong> [DA VERIFICARE: ragione sociale e sede
+            del fornitore, contratto sul trattamento dei dati (DPA) e se agisce
+            come nostro responsabile]. Il testo dell'indirizzo che il
+            commerciante scrive nel campo «Indirizzo attività» (registrazione e
+            modifica dell'indirizzo) viene inviato dai nostri server, non dal
+            tuo browser: LocationIQ non riceve il tuo indirizzo IP né altri dati
+            del tuo account, ma può ricevere l'indirizzo scritto, che per un
+            commerciante individuale può coincidere con un indirizzo di persona.
+            Per i clienti non viene inviato nulla: la tua posizione resta sul
+            tuo telefono. Se LocationIQ non è attivo o non risponde, la ricerca
+            ripiega su Nominatim (sopra). [DA VERIFICARE: per quanto tempo
+            LocationIQ conserva le richieste.]
+          </mark>
+        </p>
+
         <h2 className="font-serif text-2xl text-foreground mt-8">5. Trasferimenti extra-UE</h2>
         <p>
           Alcuni fornitori (Stripe, PayPal, Resend, Render, Google, OpenStreetMap
-          Foundation) possono elaborare dati
+          Foundation<mark className="bg-yellow-200 text-black px-1 rounded-sm">, LocationIQ [PROPOSTA - DA VERIFICARE]</mark>) possono elaborare dati
           anche al di fuori dell'UE. In tal caso il trasferimento è protetto
           dalle Clausole Contrattuali Standard approvate dalla Commissione
           Europea (SCC) o da decisioni di adeguatezza. Puoi richiedere copia
@@ -254,6 +306,17 @@ export default function PrivacyPolicy() {
           </li>
           <li><strong>Dati contabili / fatture</strong>: 10 anni (obbligo di legge), in forma non più collegata al tuo account.</li>
           <li><strong>Log di sicurezza</strong>: 12 mesi.</li>
+          <li data-testid="privacy-lista-attesa-conservazione">
+            <mark className="bg-yellow-200 text-black px-1 rounded-sm">[PROPOSTA - DA VALIDARE]</mark>{" "}
+            <mark className="bg-yellow-200 text-black px-1 rounded-sm">
+              <strong>Lista d'attesa</strong>: iscrizioni non confermate, 7
+              giorni; iscrizioni confermate, 12 mesi dalla data dell'iscrizione;
+              iscrizioni annullate, 12 mesi dall'annullamento (l'indirizzo serve
+              solo a non riscriverti per errore). La cancellazione è automatica,
+              ogni notte. Per cancellare i tuoi dati subito scrivi a
+              privacy@scontiroma.it.
+            </mark>
+          </li>
         </ul>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">7. I tuoi diritti (art. 15-22 GDPR)</h2>

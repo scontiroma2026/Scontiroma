@@ -23,6 +23,31 @@ test('privacy: fornitori della mappa e dati visti dal commerciante', async ({ pa
   await expect(p).toContainText("nome e l'iniziale del cognome");
 });
 
+test('privacy [PROPOSTA]: lista d\'attesa e LocationIQ, evidenziati e senza IP né cookie', async ({ page }) => {
+  await page.goto('/privacy');
+  const lista = page.getByTestId('privacy-lista-attesa');
+  await expect(lista).toContainText("Avvisami quando parte");
+  await expect(lista).toContainText('art. 6, par. 1, lett. a, GDPR');
+  await expect(lista).toContainText('doppio consenso');
+  await expect(lista).toContainText("Annulla l'iscrizione");
+  await expect(lista).toContainText('Non salviamo il tuo indirizzo IP');
+  await expect(lista).toContainText('non usa cookie');
+  await expect(lista).toContainText('Resend');
+  await expect(lista).toContainText('18+');
+  await expect(lista).toContainText('cancellate dopo 7 giorni');
+  await expect(page.getByTestId('privacy-lista-attesa-base')).toContainText('Consenso (art. 6.1.a GDPR)');
+  const cons = page.getByTestId('privacy-lista-attesa-conservazione');
+  await expect(cons).toContainText('12 mesi dalla data dell\'iscrizione');
+  await expect(cons).toContainText('12 mesi dall\'annullamento');
+  await expect(cons).toContainText('ogni notte');
+  const liq = page.getByTestId('privacy-locationiq');
+  await expect(liq).toContainText('LocationIQ');
+  await expect(liq).toContainText('non riceve il tuo indirizzo IP');
+  await expect(liq).toContainText('[DA VERIFICARE');
+  // le modifiche sono evidenziate finché il consulente non dà l'OK
+  expect(await page.getByTestId('privacy-policy-page').locator('mark').count()).toBeGreaterThanOrEqual(8);
+});
+
 test('termini: costi per i commercianti dopo la fase di lancio', async ({ page }) => {
   await page.goto('/termini');
   const t = page.getByTestId('termini-page');
