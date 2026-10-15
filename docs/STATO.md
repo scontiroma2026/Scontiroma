@@ -204,3 +204,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: pulsante WhatsApp verde ufficiale con logo, «Chiama» azzurro (PR pulsanti)
 - 15/10: pulsanti: WhatsApp verde icona con sfumatura, Chiama turchese dell'app (PR colori)
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
+- 15/10: email al commerciante (punto 21), tutte spente: giorno 30 e promemoria primo pagamento con `MERCHANT_TRIAL_EMAILS`; mancato pagamento e ricevuta solo con `MERCHANT_PAYMENT_REQUIRED` (PR email commerciante prova).
