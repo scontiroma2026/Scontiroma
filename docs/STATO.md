@@ -216,3 +216,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (sera): regola della lista rettificata dal titolare: i punti chiusi si cancellano e la lista si rinumera; LISTA_LANCIO ora ha 32 punti
 - 15/10 (sera): il titolare scarta le tre proposte di stile e logo (#168 chiusa): si tiene l'aspetto attuale e il nome; lista a 31 punti
 - 15/10 (sera): video v17 approvato dal titolare; scheda d'uso VIDEO_V17_COME_USARLO.md (negozi + social); non pubblicabile fino a Termini validati e musica con licenza
+- 15/10 (sera): schermata di pagamento del negozio: frase «Non viene addebitato niente subito…» (visibile solo con i pagamenti accesi); domanda aggiunta per il consulente
