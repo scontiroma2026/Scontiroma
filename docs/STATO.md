@@ -200,3 +200,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 — Email di benvenuto ai commercianti: tolto «Nessun vincolo», ora «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese» (decisione del titolare)
 - 15/10 — Lista di lancio aggiornata: P.IVA e 12 mesi (#156), email disdetta (#158), Termini allineati (#157), video v16, PR chiuse, pulizia branch rimandata
 - 15/10 — Lista di lancio: aggiunti punti 37 (logo e nome) e 38 (stile della pagina) su richiesta del titolare
+- 15/10 — Lista d'attesa: la fonte accetta anche `facebook-<codice>` e `gruppo-<codice>` (minuscole, numeri, trattino, max 20 caratteri; altro testo = «altro»), così la scheda admin e l'export CSV distinguono i gruppi; nessun dato in più.
