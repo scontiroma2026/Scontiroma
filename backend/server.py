@@ -1431,6 +1431,8 @@ WAITLIST_CONSENT_VERSION = "2026-10-v1"  # cambia insieme al testo del consenso 
 WAITLIST_CONFERMA_ORE = 48
 WAITLIST_NON_CONFERMATI_GIORNI = 7
 WAITLIST_FONTI = ("instagram", "facebook", "volantino", "passaparola")  # lista chiusa; poi «diretto» e «altro»
+WAITLIST_FONTI_GRUPPO = ("facebook", "gruppo")  # con codice: «facebook-garbatella», «gruppo-eur»
+WAITLIST_FONTI_GRUPPO = ("facebook", "gruppo")  # con codice: «facebook-garbatella», «gruppo-eur»
 WAITLIST_STATI = ("da_confermare", "confermata", "disiscritta")
 MSG_LISTA_RICHIESTA = ("Ti abbiamo mandato un'email: tocca il link per confermare l'iscrizione. "
                        "Se non la trovi, controlla lo spam.")
@@ -1442,6 +1444,12 @@ def _waitlist_fonte(valore) -> str:
     v = (valore or "").strip().lower()
     if not v:
         return "diretto"
+    # gruppi: «facebook-<codice>» e «gruppo-<codice>» restano interi (codice = minuscole, numeri, trattino, max 20)
+    for pre in WAITLIST_FONTI_GRUPPO:
+        if v.startswith(pre + "-") and re.fullmatch(r"[a-z0-9-]{1,20}", v[len(pre) + 1:]):
+            return v
+    if any(v.startswith(pre + "-") for pre in WAITLIST_FONTI_GRUPPO):
+        return v if re.fullmatch(r"(facebook|gruppo)-[a-z0-9-]{1,20}", v) else "altro"  # codice non valido = «altro»
     for f in WAITLIST_FONTI:
         if v == f or v.startswith(f + "-"):
             return f

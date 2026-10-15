@@ -203,7 +203,7 @@ test('catalogo vuoto in prelancio: stesso invito, non una pagina vuota', async (
 
 test('admin: conteggi per fonte, esportazione delle sole confermate e avviso di lancio idempotente', async ({ page, request }) => {
   const conf = unico('conf'); const nonConf = unico('nonconf'); const dis = unico('dis');
-  for (const [e, src] of [[conf, 'volantino'], [nonConf, 'facebook'], [dis, 'passaparola']]) {
+  for (const [e, src] of [[conf, 'volantino'], [nonConf, 'facebook-garbatella'], [dis, 'passaparola']]) {
     await chiama(request, 'POST', '/prelaunch/waitlist', { body: { email: e, consenso: true, src } });
   }
   for (const e of [conf, dis]) {
@@ -225,6 +225,7 @@ test('admin: conteggi per fonte, esportazione delle sole confermate e avviso di 
   await expect(page.getByTestId('attesa-confermate')).toHaveText(String(c.confermate));
   await expect(page.getByTestId('attesa-disiscritte')).toHaveText(String(c.disiscritte));
   await expect(page.getByTestId('attesa-fonte-riga').filter({ hasText: 'Volantino' })).toHaveCount(1);
+  await expect(page.getByTestId('attesa-fonte-riga').filter({ hasText: 'facebook-garbatella' })).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   const pic = await page.evaluate(misura, '[data-testid="admin-lista-attesa"]');
   expect(pic.piccoli).toEqual([]);
