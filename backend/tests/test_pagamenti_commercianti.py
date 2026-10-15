@@ -291,3 +291,16 @@ def test_esporta_csv_senza_dati_sensibili():
         for vietato in ("IT60", "1234567", "Segreta", "@example.com", "Prova"):
             assert vietato not in testo
     run(body)
+
+
+def test_fine_prova_calcolata_dalla_prima_pubblicazione():
+    """Senza data scritta a mano la fine prova si calcola dalla prima pubblicazione (stessa regola dei
+    promemoria): approvato il 5/10 (entro l'11) → fino al 30/11; la data a mano ha la precedenza."""
+    async def body(c):
+        h = await admin(c)
+        mid, _ = await utente("merchant", shop_name="Osteria", first_published_at="2026-10-05T09:00:00+00:00")
+        r = await riga(c, h, mid)
+        assert r["prova_fino_al"] == "2026-11-30" and r["stato"] == "in_prova"
+        await c.patch(f"{BASE}/commercianti/{mid}", json={"prova_fino_al": "2027-01-31"}, headers=h)
+        assert (await riga(c, h, mid))["prova_fino_al"] == "2027-01-31"
+    run(body)

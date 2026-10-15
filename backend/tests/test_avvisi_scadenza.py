@@ -194,15 +194,24 @@ def test_non_rinnovo_ritira_e_archivia_offerta_caricata(monkeypatch, posta):
     assert posta["scaduta"] == [(posta["scaduta"][0][0], True)]
 
 
-def test_caricare_offerta_annulla_non_rinnovo(monkeypatch, posta):
+def test_con_non_rinnovo_non_si_carica_finche_non_si_annulla(monkeypatch, posta):
+    """Decisione del titolare (15/10): con «Non rinnovo» il caricamento del mese dopo è spento;
+    si riaccende solo annullando la scelta."""
     giorno(monkeypatch, 2026, 10, 28)
+    corpo = {"title": "Offerta di novembre", "description": "Una descrizione dell'offerta",
+             "original_price": 20, "discounted_price": 12}
 
     async def body(c):
         m = await commerciante()
         await c.post("/api/merchants/me/no-renew", json={"no_renew": True}, headers=m["h"])
-        r = await c.post("/api/merchants/me/next-discount", headers=m["h"], json={
-            "title": "Offerta di novembre", "description": "Una descrizione dell'offerta",
-            "original_price": 20, "discounted_price": 12})
+        r = await c.post("/api/merchants/me/next-discount", headers=m["h"], json=corpo)
+        assert r.status_code == 409 and "Non rinnovo" in r.json()["detail"]
+        assert await server.db.next_discounts.count_documents({"merchant_id": m["id"]}) == 0
+        st = (await c.get("/api/merchants/me/renewal-status", headers=m["h"])).json()
+        assert st["no_renew"] is True and st["next_status"] is None
+
+        await c.post("/api/merchants/me/no-renew", json={"no_renew": False}, headers=m["h"])
+        r = await c.post("/api/merchants/me/next-discount", headers=m["h"], json=corpo)
         assert r.status_code == 200, r.text
         st = (await c.get("/api/merchants/me/renewal-status", headers=m["h"])).json()
         assert st["no_renew"] is False and st["next_status"] == "pending"
