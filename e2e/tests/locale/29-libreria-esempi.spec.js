@@ -21,6 +21,9 @@ test('il catalogo Esempi usa solo foto del sito e la scelta entra in galleria', 
   const totale = await page.getByTestId('default-images-total').textContent();
   expect(parseInt(totale.replace(/\D/g, ''), 10)).toBeGreaterThanOrEqual(100);
 
+  // Su iPhone le categorie stanno su una sola riga: la prima foto si vede nella metà alta dello schermo
+  const box = await page.getByTestId('lib-img-0').boundingBox();
+  expect(box.y).toBeLessThan(400);
   const prima = page.getByTestId('lib-img-0').locator('img');
   await expect(prima).toHaveAttribute('src', /\/esempi\/mini\/[0-9a-f-]+\.jpg$/);
   await expect.poll(() => prima.evaluate((i) => i.complete && i.naturalWidth)).toBe(400);
