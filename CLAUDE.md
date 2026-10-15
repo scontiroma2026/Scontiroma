@@ -8,4 +8,4 @@
 - Non scrivere mai sul database di produzione; i test usano solo database locali.
 - Privacy, Cookie, Termini e Recesso: solo modifiche proposte ed evidenziate in PR, da far vedere al consulente prima dell'unione.
 - Stripe e PayPal restano nel codice ma spenti (`CLIENT_SUBSCRIPTION_REQUIRED=false`); nessun addebito ai commercianti senza loro conferma esplicita.
-- La lista: quando il titolare chiede «la lista», rispondi con la lista numerata di `docs/LISTA_LANCIO.md` (✅ fatto, ⏳ in corso, ⬜ da fare), controllando prima lo stato reale delle PR; se si aggiungono punti o cambiano, aggiorna quel file e rettifica la lista (decisione del titolare del 14/10).
+- La lista: quando il titolare chiede «la lista», rispondi con la lista numerata di `docs/LISTA_LANCIO.md` (⏳ in corso, ⬜ da fare, ⏸️ in sospeso), controllando prima lo stato reale delle PR. I punti chiusi (✅) si **cancellano** dalla lista e la lista si **rinumera** (decisione del titolare del 15/10); la storia di ciò che è fatto resta in `docs/STATO.md`. Se si aggiungono punti o cambiano, aggiorna quel file e rettifica la lista (decisione del titolare del 14/10).
