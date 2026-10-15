@@ -43,6 +43,21 @@ test('registrazione commerciante dal sito', async ({ page, request }) => {
   expect(r.data.user.consents.legal_version).toBeTruthy();
 });
 
+test('registrazione commerciante senza Partita IVA: il server rifiuta e il modulo la chiede', async ({ page, request }) => {
+  const corpo = { email: unico('senzapiva'), password: PASSWORD, name: 'Luca', role: 'merchant', legal_accepted: true,
+    legal_specific_accepted: true, shop_name: 'Negozio senza IVA', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000' };
+  const senza = await chiama(request, 'POST', '/auth/register', { body: corpo });
+  expect(senza.status).toBe(422);
+  expect(senza.data.detail).toContain('La Partita IVA è obbligatoria');
+  const sbagliata = await chiama(request, 'POST', '/auth/register', { body: { ...corpo, partita_iva: '12345678900' } });
+  expect(sbagliata.status).toBe(422);
+  expect(sbagliata.data.detail).toContain('non risulta corretta');
+  await page.goto('/register?role=merchant');
+  const campo = page.getByTestId('reg-partita-iva');
+  await expect(campo).toHaveAttribute('required', '');
+  await expect(page.getByText('obbligatoria, 11 cifre')).toBeVisible();
+});
+
 test('registrazione senza accettare i Termini: il server rifiuta', async ({ request }) => {
   const r = await chiama(request, 'POST', '/auth/register', { body: { email: unico('noterms'), password: PASSWORD, name: 'X', role: 'client' } });
   expect(r.status).toBe(400);

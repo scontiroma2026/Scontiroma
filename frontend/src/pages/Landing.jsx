@@ -8,9 +8,18 @@ import BrandMark from "@/components/BrandMark";
 import PrelaunchHome from "@/components/PrelaunchHome";
 import { useAppConfig } from "@/context/ConfigContext";
 
-// Rome landmark imagery (Unsplash direct URLs)
-const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80"; // Colosseo
-const ROMA_TREVI = "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&q=80"; // Trevi
+// Foto di Roma copiate sul nostro sito (frontend/public/foto): nessun servizio esterno
+// riceve l'IP dei visitatori. Crediti in docs/comunicazione/CREDITI_FOTO.md.
+const ROMA_HERO = {
+  src: "/foto/roma-colosseo-1280.webp",
+  srcSet: "/foto/roma-colosseo-640.webp 640w, /foto/roma-colosseo-1280.webp 1280w, /foto/roma-colosseo-1920.webp 1920w",
+  width: 1280, height: 933,
+}; // Colosseo
+const ROMA_TREVI = {
+  src: "/foto/roma-piazza-640.webp",
+  srcSet: "/foto/roma-piazza-480.webp 480w, /foto/roma-piazza-640.webp 640w",
+  width: 640, height: 800,
+}; // Piazza San Pietro dall'alto (riquadro 4:5)
 
 export default function Landing() {
   const [params] = useSearchParams();
@@ -39,7 +48,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         {/* Background Rome image with heavy overlay */}
         <div className="absolute inset-0">
-          <img src={ROMA_HERO} className="h-full w-full object-cover opacity-40" alt="Roma" />
+          <img {...ROMA_HERO} sizes="100vw" className="h-full w-full object-cover opacity-40" alt="Roma" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
@@ -81,7 +90,7 @@ export default function Landing() {
             {/* Right: Rome collage */}
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
-                <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Roma" />
+                <img {...ROMA_TREVI} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
                   <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>

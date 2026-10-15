@@ -9,8 +9,7 @@ test('caratteri: serviti dal nostro sito, nessuna richiesta a domini esterni', a
   page.on('request', (r) => {
     const u = new URL(r.url());
     if (!['http:', 'https:'].includes(u.protocol)) return; // data:, blob:
-    // Le foto dimostrative degli sconti arrivano da Unsplash: non sono caratteri e restano fuori da questo test
-    if (u.hostname !== host && u.hostname !== 'images.unsplash.com') esterne.push(r.url());
+    if (u.hostname !== host) esterne.push(r.url());
   });
   page.on('response', (r) => {
     if (new URL(r.url()).pathname.startsWith('/fonts/') && r.url().endsWith('.woff2')) {

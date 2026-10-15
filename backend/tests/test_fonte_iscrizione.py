@@ -41,7 +41,7 @@ def test_fonte_ignorata_per_i_negozi():
     async def body(c):
         r = await c.post("/api/auth/register", json=_reg(
             "negozio1@example.com", role="merchant", shop_name="Negozio di prova", zone="Garbatella",
-            category="Ristorante", phone="3331112222", legal_specific_accepted=True, fonte="volantino-garbatella"))
+            category="Ristorante", phone="3331112222", partita_iva="12345678903", legal_specific_accepted=True, fonte="volantino-garbatella"))
         assert r.status_code == 200, r.text
         u = await server.db.users.find_one({"email": "negozio1@example.com"})
         assert "fonte_iscrizione" not in u
