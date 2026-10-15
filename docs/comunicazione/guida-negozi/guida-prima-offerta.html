@@ -12,7 +12,7 @@
 :root{--ink:#1a1530;--soft:#5b5470;--rosa:#d6197a;--viola:#6d3df5;--teal:#0b7a8a;--tint:#f6f4fb;--line:#e4e0ee}
 html,body{background:#fff}
 body{font-family:'Manrope',system-ui,sans-serif;color:var(--ink);font-size:9.6pt;line-height:1.3}
-.pagina{width:297mm;height:210mm;margin:0 auto;padding:6mm;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1.22fr 1.22fr 1fr;gap:3mm;overflow:hidden}
+.pagina{width:297mm;height:210mm;margin:0 auto;padding:6mm;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1.1fr 1.1fr 1.3fr;gap:3mm;overflow:hidden}
 .cella{border:.3mm solid var(--line);border-radius:3mm;padding:3mm;background:#fff;display:flex;flex-direction:column;gap:1.6mm;min-height:0;min-width:0}
 .cella h2{font-weight:800;font-size:12pt;line-height:1.15;letter-spacing:-.01em}
 .n{display:inline-flex;width:6.4mm;height:6.4mm;border-radius:50%;background:linear-gradient(135deg,var(--rosa),var(--viola));color:#fff;font-weight:800;font-size:10pt;align-items:center;justify-content:center;margin-right:1.5mm;vertical-align:1px}
@@ -34,6 +34,8 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em;margin-
 .largo h3,.largo p{grid-column:1}
 .largo .foto{grid-column:2;grid-row:1 / span 3}
 .sub{margin-top:0}
+.piccolo li,.piccolo p{font-size:8.2pt;line-height:1.25}
+.piccolo ul{display:flex;flex-direction:column;gap:.8mm}
 .contatto{font-weight:800;color:var(--rosa);font-size:11.5pt}
 </style>
 </head>
@@ -87,7 +89,7 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em;margin-
     <div class="foto"><img src="img/6-codice.jpg" alt="Scheda Codice del negozio"></div>
   </article>
 
-  <article class="cella box t">
+  <article class="cella box t piccolo">
     <h3>Guarda come vanno le cose</h3>
     <p>Nella <strong>Dashboard</strong> vedi sconti usati nel mese, clienti nuovi e che tornano, giorno con più sconti e ultimi sei mesi. Mai i nomi dei clienti.</p>
     <div class="foto"><img src="img/7-dashboard.jpg" alt="Dashboard del commerciante: sconti usati e clienti del mese"></div>
@@ -99,18 +101,18 @@ h1{font-weight:800;font-size:21pt;line-height:1.05;letter-spacing:-.02em;margin-
     <div class="foto"><img src="img/8-locandina.jpg" alt="Scheda Il tuo QR personale con il pulsante Stampa la mia locandina"></div>
   </article>
 
-  <article class="cella box">
+  <article class="cella box piccolo">
     <h3>E dopo?</h3>
     <ul>
       <li>Dopo l'approvazione i clienti vedono l'offerta e ti mostrano il QR alla cassa.</li>
-      <li>La fase di lancio è <strong>gratuita</strong>, con circa due mesi di prova dalla prima pubblicazione dell'offerta.</li>
+      <li>La fase di lancio è <strong>gratuita</strong>, con circa due mesi di prova dalla prima pubblicazione dell'offerta. <strong>Esempio:</strong> prima pubblicazione il 10/11, prova fino al 31/12, primo pagamento l'1/1. Regola: pubblicazione entro l'11, prova fino a fine mese successivo; dal 12, fino a fine del secondo mese successivo.</li>
       <li>Dopo la prova: abbonamento mensile semplice, <strong>4,99 € al mese + IVA</strong>. Ti avvisiamo prima e non addebitiamo nulla senza la tua conferma.</li>
     </ul>
   </article>
 
   <article class="cella box t">
     <h3>Come disdire</h3>
-    <p>Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese. Per qualsiasi dubbio scrivici, rispondiamo noi.</p>
+    <p>Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Il mese già pagato non è rimborsabile. Per qualsiasi dubbio scrivici, rispondiamo noi.</p>
     <h3 class="sub" style="color:var(--rosa);font-size:11pt">Hai bisogno di una mano?</h3>
     <p>Scrivici: <span class="contatto">info@scontiroma.it</span>. Oppure usa la pagina <strong>Assistenza</strong> del sito.</p>
   </article>

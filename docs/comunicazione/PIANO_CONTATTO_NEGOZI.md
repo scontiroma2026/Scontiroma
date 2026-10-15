@@ -29,7 +29,7 @@ Lo stato dei controlli (CI) non è leggibile dall'ambiente (nessuno stato riport
 Regole rispettate: nessuna percentuale, nessun «gratis per sempre», «nessuna commissione», «prezzo bloccato», «nessun vincolo»; nessun nome di persona né contatto personale; nessun elenco di attività reali nel repository (il file con i nomi è privato).
 
 ## 3. Cosa deve decidere il titolare (la disdetta è già decisa)
-1. **Frase sulla disdetta: DECISA dal titolare** e inserita ovunque (kit, guida, copioni, scheda): «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» (decisione esplicita del titolare, che ha sostituito la formula precedente). **«Disdici quando vuoi» va fatto vedere al consulente** prima dell'uso: finora la evitavamo, ora è ammessa solo in questa frase intera. Non si usano altre formule («puoi smettere quando vuoi», «nessun vincolo»).
+1. **Frase sulla disdetta: DECISA dal titolare** e inserita ovunque (kit, guida, copioni, scheda): «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» (decisione esplicita del titolare, che ha sostituito la formula precedente). **«Disdici quando vuoi» va fatto vedere al consulente** prima dell'uso: finora la evitavamo, ora è ammessa solo in questa frase intera. Non si usano altre formule («puoi smettere quando vuoi», «nessun vincolo»).
 2. **Il prezzo (4,99 € + IVA)** nei messaggi: la proposta è non scriverlo nel primo contatto (solo a richiesta e nella guida). Va bene?
 3. **Quando si può usare «circa due mesi di prova»** nei messaggi e nel video: dopo il consulente e i Termini (#116).
 4. **Voce del video** (Fernando o Enea) e permesso ai crediti ElevenLabs per le righe cambiate.

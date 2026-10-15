@@ -2,12 +2,12 @@
 
 **Stato: pronto per l'uso solo dopo l'OK del titolare e il colpo d'occhio del consulente.** Nessun messaggio è stato inviato. Sostituisce `MESSAGGI_COMMERCIANTI.md` (versione vecchia, con «Garbatella, San Paolo e Marconi» e «gratis») e il kit della PR #41; il copione parlato resta `COPIONE_TELEFONATA.md` (da allineare con le frasi qui sotto).
 
-> **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» Si usa solo così, parola per parola, a voce e per iscritto, senza altre formule (niente «puoi smettere quando vuoi», niente «nessun vincolo»). **Il consulente deve vedere «disdici quando vuoi».**
+> **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» Si usa solo così, parola per parola, a voce e per iscritto, senza altre formule (niente «puoi smettere quando vuoi», niente «nessun vincolo»). **Il consulente deve vedere «disdici quando vuoi».**
 
 ## Regole del marchio (controllo prima di ogni invio)
 - Firma **«Sconti Roma»**, plurale («siamo», «vi scriviamo»), nessun nome di persona, nessun numero o email personale.
 - **«Roma e dintorni»** (mai «quartiere», mai l'elenco delle zone pilota nei testi ai negozi). Dentro l'app si dice **18+**.
-- **«Gratuita nella fase di lancio»** e **«circa due mesi di prova dalla prima offerta»**. Mai: percentuali, «gratis per sempre», «nessuna commissione», «0 €», «prezzo bloccato», «nessun vincolo», «puoi smettere quando vuoi», promesse (la disdetta si dice solo con la frase decisa, vedi in alto) di clienti o incassi.
+- **«Gratuita nella fase di lancio»** e **«circa due mesi di prova dalla prima pubblicazione dell'offerta»**. Mai: percentuali, «gratis per sempre», «nessuna commissione», «0 €», «prezzo bloccato», «nessun vincolo», «puoi smettere quando vuoi», promesse (la disdetta si dice solo con la frase decisa, vedi in alto) di clienti o incassi.
 - Il prezzo (4,99 € al mese + IVA) **non si scrive nel primo messaggio**: si dice solo se il negozio lo chiede o nella guida. Dopo la prova: «vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma».
 - Ogni messaggio ha un **modo gentile per dire no** e il no si rispetta subito (vedi «Cosa fare dopo un no»).
 - Si usa il «voi» nei messaggi ai negozi; la guida e il video usano il «tu» (come l'app).
@@ -45,7 +45,7 @@ Poi: consegnare la **guida di una pagina** e la card con il QR. Non chiedere il 
 ## B. WhatsApp (solo a chi ha risposto o ha dato il numero)
 **B1. Primo messaggio**
 > Buongiorno, siamo Sconti Roma, l'app degli sconti nei negozi di Roma e dintorni. Come richiesto, ecco il video di un minuto: [LINK]
-> Ogni mese [NOME NEGOZIO] pubblica un'offerta, i clienti la trovano nell'app e mostrano un QR alla cassa che voi inquadrate. La fase di lancio è gratuita, con circa due mesi di prova dalla prima offerta.
+> Ogni mese [NOME NEGOZIO] pubblica un'offerta, i clienti la trovano nell'app e mostrano un QR alla cassa che voi inquadrate. La fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta.
 > Se non fa per voi, rispondete «NO» e non vi scriviamo più.
 
 *(Se il numero è stato dato a voce: aprire con «Come concordato, ecco il video».)*
@@ -59,7 +59,7 @@ Dopo B2 senza risposta: Esito = «Nessuna risposta» e basta. Niente terzo messa
 ## C. Instagram (messaggio diretto dal profilo dell'attività)
 > Ciao! Siamo **Sconti Roma**, un'app che porta nuovi clienti ai negozi di Roma e dintorni.
 > Per [NOME NEGOZIO] funzionerebbe così: pubblicate un'offerta al mese, il cliente la trova nell'app e mostra un QR alla cassa; voi lo inquadrate e lo sconto è fatto.
-> Siamo nella fase di lancio: gratuita, con circa due mesi di prova dalla prima offerta. Video di un minuto: [LINK]
+> Siamo nella fase di lancio: gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Video di un minuto: [LINK]
 > Se non vi interessa basta scrivere «no» e non vi disturbiamo più 🙂
 
 ## D. Email (all'indirizzo pubblico dell'attività)
@@ -71,7 +71,7 @@ Oggetto: **Un'idea per portare nuovi clienti a [NOME NEGOZIO]**
 >
 > Ogni mese pubblicate un'offerta, la controlliamo noi e i clienti la trovano nell'app. Alla cassa mostrano un QR che voi inquadrate con il telefono.
 >
-> La fase di lancio è gratuita, con circa due mesi di prova dalla prima offerta. Dopo la prova vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.
+> La fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Dopo la prova vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.
 >
 > Video di un minuto: [LINK]. Guida di una pagina in allegato. Iscrizione: scontiroma.it
 >
@@ -82,8 +82,9 @@ Oggetto: **Un'idea per portare nuovi clienti a [NOME NEGOZIO]**
 ## E. Se chiedono (risposte brevi, per qualsiasi canale)
 | Domanda o obiezione | Risposta |
 |---|---|
-| «Quanto costa?» | «Nella fase di lancio è gratuita, con circa due mesi di prova dalla prima offerta. Dopo è un abbonamento mensile semplice, 4,99 € al mese + IVA; vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.» *(Il prezzo si dice solo se lo chiedono.)* |
-| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta in corso fino a fine mese.» (frase decisa dal titolare; da far comunque vedere al consulente) |
+| «Quanto costa?» | «Nella fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Dopo è un abbonamento mensile semplice, 4,99 € al mese + IVA; vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.» *(Il prezzo si dice solo se lo chiedono.)* |
+| «Come si disdice?» | «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» (frase decisa dal titolare; da far comunque vedere al consulente) |
+| «Quando finisce la prova? / Il mese pagato si rimborsa?» | «Dipende da quando pubblichi la prima offerta: se la pubblichi entro l'11 la prova arriva a fine mese successivo, dal 12 a fine del secondo mese successivo. Esempio: prima pubblicazione il 10/11, prova fino al 31/12, primo pagamento l'1/1. Il mese già pagato non è rimborsabile.» (come nei Termini proposti, PR #157; da validare) |
 | «Non ho tempo» | «Capisco. Pochi minuti per iniziare e poi una sola offerta al mese. Quando vi va meglio?» |
 | «Ho già Instagram» | «Benissimo, non lo sostituisce: è un posto in più dove chi abita vicino vi trova. Non serve fare post.» |
 | «Sono i dati dei miei clienti?» | «No. Il cliente si registra da solo nell'app. A voi arriva, alla scansione, solo il nome con l'iniziale del cognome, l'ora, l'offerta e se è nuovo o di ritorno.» |
