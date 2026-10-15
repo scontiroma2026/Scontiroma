@@ -204,6 +204,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: pulsante WhatsApp verde ufficiale con logo, «Chiama» azzurro (PR pulsanti)
 - 15/10: pulsanti: WhatsApp verde icona con sfumatura, Chiama turchese dell'app (PR colori)
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
+- 15/10 — Marchio (punto 17): scheda di verifica per il consulente `docs/operazioni/MARCHIO_SCHEDA_VERIFICA.md` (debolezza del nome, banche dati e classi, domande, passi legati al punto 37); tasse non verificate (siti ufficiali non raggiungibili); nessun deposito.
 - 15/10: tolte 104 foto (40 con volti o marchi + 64 dubbie, su richiesta del titolare) dalla libreria (318 rimaste); da sostituire con altre senza volti/marchi
 - 15/10: schermata admin «Pagamenti»: fine prova calcolata dalla prima pubblicazione se non scritta a mano
 - 15/10: dopo «Non rinnovo» il caricamento dell'offerta del mese dopo si spegne (grigio) e si riaccende con «Annulla» (PR non-rinnovo)
