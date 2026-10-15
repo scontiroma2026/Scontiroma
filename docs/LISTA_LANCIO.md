@@ -1,4 +1,4 @@
-# Lista «pronto al lancio» di Sconti Roma (aggiornata il 15/10)
+# Lista «pronto al lancio» di Sconti Roma (aggiornata il 15/10, sera)
 
 **Regola del titolare (14/10):** quando chiede «la lista», si risponde con questa lista **numerata**, aggiornata a ogni passo; i punti nuovi si aggiungono, quelli cambiati si rettificano. Questo file è la fonte: va tenuto allineato.
 
@@ -24,6 +24,8 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 15. ⬜ **27/10:** controllo della soglia di negozi e decisione sul 31/10.
 16. ⬜ **Utente:** accessi con verifica a due passaggi, codici di recupero su carta, persona di fiducia.
 17. ⏳ **Prove e pratiche:** prova del cambio mese ✅ (test automatici e orari di Roma, #149) · test su un Android vero ⬜ (finora solo emulazione) · marchio «Sconti Roma» ⬜ (`docs/operazioni/MARCHIO.md`) · codice ATECO ⬜ (`docs/operazioni/CODICE_ATECO.md`) · promemoria in `PROMEMORIA_DA_RIPRENDERE.md`.
+37. ⬜ **Logo e nome (richiesta del titolare, 15/10):** decidere se tenere il nome «Sconti Roma» (debole perché descrittivo) con un logo/marchio figurativo oppure un nome più distintivo; poi depositare il marchio (vedi punto 17 e `docs/operazioni/MARCHIO.md`). Il logo serve anche a profili social, video e guide.
+38. ⬜ **Stile della pagina (richiesta del titolare, 15/10):** definire l'aspetto del sito e dei materiali (carattere, colori, tono delle immagini) in modo coerente con logo e nome; da vedere insieme prima del lancio.
 
 ## B. Dopo il lancio, prima del primo addebito (circa due mesi dopo)
 18. ⬜ Chiavi di prova Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; prova con soldi finti.
