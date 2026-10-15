@@ -29,7 +29,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 18. ⬜ Chiavi di prova Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; prova con soldi finti.
 19. ⬜ Conti Stripe e PayPal Business dell'azienda; chiavi vere sul server vero solo il giorno dell'accensione.
 20. ⬜ **Commercialista:** IVA al 22%, fattura elettronica (SdI), PEC.
-21. ⏳ **Claude:** altre email al commerciante (giorno 30 della prova, promemoria prima del 1°, mancato pagamento, ricevuta): pronte e spente, PR #169 in bozza da vedere (interruttore `MERCHANT_TRIAL_EMAILS`; 4 scelte da fare).
+21. ⏳ **Claude:** altre email al commerciante (giorno 30 della prova, promemoria prima del 1°, promemoria mensile 3 giorni prima di ogni addebito, mancato pagamento, ricevuta): pronte e spente, PR #169 in bozza da vedere (interruttore `MERCHANT_TRIAL_EMAILS`; 4 scelte da fare).
 22. ⬜ **Consulente:** testi della schermata di pagamento e dei Termini sui pagamenti.
 23. ⬜ **Utente:** conferma esplicita prima di accendere i pagamenti; i pagamenti dei clienti restano spenti.
 24. ⬜ Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e chiave su Render.
