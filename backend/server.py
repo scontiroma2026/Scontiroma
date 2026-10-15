@@ -2729,8 +2729,12 @@ async def merchant_insights(user: dict = Depends(require_merchant)):
     """Statistiche aggregate per il commerciante: utilizzi del mese, clienti nuovi e di
     ritorno, giorni preferiti, andamento degli ultimi 6 mesi. Solo numeri, mai nomi; sotto
     i 3 clienti nel mese i dettagli non vengono mostrati ("dati insufficienti")."""
+    return await _insights_negozio(user["id"], applica_soglia=True)
+
+
+async def _insights_negozio(merchant_id: str, applica_soglia: bool) -> dict:
     used = await db.redemptions.find(
-        {"merchant_id": user["id"], "status": "redeemed"},
+        {"merchant_id": merchant_id, "status": "redeemed"},
         {"_id": 0, "user_id": 1, "redeemed_at": 1}).to_list(None)
     mese = current_month_key()
     def mese_di(r):
@@ -2751,7 +2755,8 @@ async def merchant_insights(user: dict = Depends(require_merchant)):
         key = f"{y}-{m:02d}"
         serie.append({"mese": f"{MESI_IT[m - 1]} {y}", "utilizzi": sum(1 for r in used if mese_di(r) == key)})
     out = {"mese": month_label_it(mese), "utilizzi_mese": len(del_mese), "utilizzi_totali": len(used),
-           "ultimi_6_mesi": serie, "dati_sufficienti": len(clienti) >= INSIGHTS_MIN_CLIENTI}
+           "ultimi_6_mesi": serie,
+           "dati_sufficienti": (len(clienti) >= INSIGHTS_MIN_CLIENTI) or not applica_soglia}
     if out["dati_sufficienti"]:
         giorni = [0] * 7
         for r in del_mese:
@@ -4843,6 +4848,14 @@ def _motivo_rifiuto(payload: "RejectIn") -> str:
     if len(motivo) < MOTIVO_RIFIUTO_MIN:
         raise HTTPException(422, f"Scrivi il motivo del rifiuto (almeno {MOTIVO_RIFIUTO_MIN} caratteri): il commerciante lo legge per correggere l'offerta.")
     return motivo
+
+
+@api.get("/admin/merchants/{merchant_id}/insights")
+async def admin_merchant_insights(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Le stesse statistiche, per l'admin, SEMPRE complete (senza soglia dei 3 clienti): solo numeri, mai nomi."""
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"_id": 1}):
+        raise HTTPException(404, "Negozio non trovato")
+    return await _insights_negozio(merchant_id, applica_soglia=False)
 
 
 @api.get("/admin/discounts/pending")
