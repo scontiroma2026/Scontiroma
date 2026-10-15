@@ -204,3 +204,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: pulsante WhatsApp verde ufficiale con logo, «Chiama» azzurro (PR pulsanti)
 - 15/10: pulsanti: WhatsApp verde icona con sfumatura, Chiama turchese dell'app (PR colori)
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
+- 15/10 — Punti 37 e 38: 3 proposte di stile e marchio (A, B, C) con anteprime telefono in `docs/operazioni/stile/`; PR in bozza, nessuna scelta fatta, nomi non verificati (serve verifica di anteriorità)

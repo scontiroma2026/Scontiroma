@@ -1,0 +1,42 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=390"><title>Anteprima stile B - home</title><style>@font-face{font-family:'Manrope';font-weight:200 800;src:url(../../../frontend/public/fonts/manrope-latin-wght-normal.woff2) format('woff2')}
+@font-face{font-family:'Fraunces';font-weight:100 900;src:url(../../../frontend/public/fonts/fraunces-latin-opsz-normal.woff2) format('woff2')}:root{--bg:#FAF4E8;--ink:#2B1D14;--soft:#6A5846;--brand:#A23B1C;--brand-ink:#A23B1C;--on-brand:#FFFFFF;--hot:#A23B1C;--second:#2F4F3A;--second-ink:#2F4F3A;--line:#E3D3B5;--card:#FFFDF8;--tint:#EADBC0;--hdr:#FAF4E8;--hdr-ink:#2B1D14;--hero:#EADBC0;--hero-ink:#2B1D14;--hero-sub:#4F3E2E;--fh:Fraunces,serif;--fb:Manrope,sans-serif;--fhw:600;--fhls:-.01em;--r:8px;--rc:10px;--tagbg:#DCE8DF;--tagink:#2F4F3A;--shoptt:none;--c1:#A23B1C;--c2:#EADBC0;--c3:#2F4F3A;--c4:#D9A441}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{width:390px;font-family:var(--fb);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.fh{font-family:var(--fh);font-weight:var(--fhw);letter-spacing:var(--fhls);line-height:1.12}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--hdr);color:var(--hdr-ink)}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--fh);font-weight:var(--fhw);font-size:19px;letter-spacing:var(--fhls)}
+.burger{width:38px;height:38px;border-radius:var(--r);border:1.5px solid currentColor;display:grid;place-items:center;font-size:18px}
+.hero{padding:22px 16px 20px;background:var(--hero);color:var(--hero-ink)}
+.hero h1{font-size:30px;margin-bottom:8px}
+.hero p{color:var(--hero-sub);font-size:15px;margin-bottom:16px}
+.search{display:flex;align-items:center;gap:8px;background:#fff;color:#4a4a5a;border-radius:var(--r);padding:13px 14px;font-size:15px;border:1.5px solid var(--line)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;padding:14px 16px 4px}
+.chip{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:600;color:var(--ink)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.sec{padding:16px 16px 6px;font-size:19px}
+.card{margin:10px 16px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--rc);overflow:hidden}
+.card .img{display:block;height:104px}
+.card .body{padding:12px 14px 14px}
+.card .shop{font-size:12.5px;font-weight:700;color:var(--second-ink);text-transform:var(--shoptt);letter-spacing:.04em}
+.card h3{font-size:18px;margin:3px 0 6px}
+.card .meta{font-size:13px;color:var(--soft)}
+.tag{display:inline-block;background:var(--tagbg);color:var(--tagink);font-weight:700;font-size:12.5px;border-radius:var(--r);padding:3px 9px;margin-top:8px}
+.nav{display:flex;justify-content:space-around;background:var(--card);border-top:1.5px solid var(--line);padding:10px 8px 14px;font-size:12px;font-weight:600;color:var(--soft);margin-top:14px}
+.nav b{display:block;text-align:center;font-size:19px;color:var(--brand)}
+.nav div{text-align:center}
+.foot{padding:6px 16px 4px;font-size:12px;color:var(--soft)}
+.btn{display:block;text-align:center;border-radius:var(--r);padding:14px;font-weight:800;font-size:16px;font-family:var(--fb)}
+.btn.p{background:var(--brand);color:var(--on-brand)}
+.btn.s{background:transparent;border:2px solid var(--brand);color:var(--brand-ink)}
+.det{padding:0 16px}
+.det h1{font-size:28px;margin:4px 0 8px}
+.row{display:flex;gap:10px;margin:14px 0}
+.row .btn{flex:1}
+.info{background:var(--tint);border-radius:var(--rc);padding:14px;margin:14px 0;font-size:14.5px}
+.info dt{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--second-ink);margin-top:8px}
+.info dt:first-child{margin-top:0}
+.back{padding:12px 16px;font-weight:700;color:var(--brand-ink);font-size:14px}
+</style></head><body><header><span class="brand"><svg width="34" height="34" viewBox="0 0 40 40"><path d="M6 37V19C6 9 12 3 20 3s14 6 14 16v18z" fill="var(--brand)"/><path d="M13 37V21c0-5 3-8 7-8s7 3 7 8v16z" fill="var(--bg)"/><circle cx="20" cy="9.5" r="2.6" fill="var(--bg)"/><rect x="4" y="36" width="32" height="2.4" rx="1.2" fill="var(--second)"/></svg><span>Sconti Roma</span></span><span class="burger">☰</span></header><section class="hero"><h1>Le offerte della bottega all’angolo</h1><p>Roma e dintorni. Gratuita nella fase di lancio.</p><div class="search">🔍&nbsp; Cerca un negozio o un’offerta</div></section>
+<div class="chips"><span class="chip on">Garbatella</span><span class="chip">San Paolo</span><span class="chip">Marconi</span><span class="chip">Bar</span><span class="chip">Libri</span></div>
+<h2 class="sec">Vicino a te</h2><div class="card"><svg class="img" width="390" height="104" viewBox="0 0 390 120" preserveAspectRatio="xMidYMid slice" style="height:104px;width:100%"><rect width="390" height="120" fill="var(--c1)"/><circle cx="90" cy="70" r="46" fill="var(--c2)"/><path d="M190 120V70a42 42 0 0 1 84 0v50z" fill="var(--c3)"/><rect x="300" y="42" width="60" height="78" rx="8" fill="var(--c4)"/></svg><div class="body"><div class="shop">Bar Esempio</div><h3>Colazione con dolce incluso</h3><div class="meta">Garbatella · valida fino al 30 novembre</div><span class="tag">Offerta di esempio</span></div></div><div class="card"><svg class="img" width="390" height="104" viewBox="0 0 390 120" preserveAspectRatio="xMidYMid slice" style="height:104px;width:100%"><rect width="390" height="120" fill="var(--c2)"/><path d="M30 120V62a38 38 0 0 1 76 0v58z" fill="var(--c1)"/><path d="M130 120V50a38 38 0 0 1 76 0v70z" fill="var(--c4)"/><path d="M230 120V74a38 38 0 0 1 76 0v46z" fill="var(--c3)"/><circle cx="350" cy="24" r="12" fill="var(--c3)"/></svg><div class="body"><div class="shop">Libreria Esempio</div><h3>Un segnalibro in regalo con ogni libro</h3><div class="meta">San Paolo · valida fino al 15 novembre</div><span class="tag">Offerta di esempio</span></div></div><div class="card"><svg class="img" width="390" height="104" viewBox="0 0 390 120" preserveAspectRatio="xMidYMid slice" style="height:104px;width:100%"><rect width="390" height="120" fill="var(--c3)"/><rect x="30" y="30" width="120" height="70" rx="10" fill="var(--c1)"/><rect x="170" y="52" width="90" height="48" rx="10" fill="var(--c2)"/><circle cx="318" cy="64" r="36" fill="var(--c4)"/></svg><div class="body"><div class="shop">Bottega Esempio</div><h3>Assaggio di stagione al banco</h3><div class="meta">Marconi · valida fino al 20 novembre</div><span class="tag">Offerta di esempio</span></div></div><p class="foot">Servizio per maggiorenni (18+).</p><div class="nav"><div><b>●</b>Offerte</div><div><b>◐</b>Mappa</div><div><b>♡</b>Salvate</div><div><b>○</b>Profilo</div></div></body></html>
