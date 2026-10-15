@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, MessageCircle, Store, Share2 } from "lucide-react";
+import { MapPin, Clock, ArrowLeft, Shield, ChevronLeft, ChevronRight, Phone, Store, Share2 } from "lucide-react";
 import MiniMap from "@/components/MiniMap";
 import { FotoOfferta } from "@/components/NoPhoto";
 import { renderBold } from "@/lib/renderBold";
@@ -45,7 +45,15 @@ function normalizePhone(raw) {
 }
 
 // Pulsanti per contattare il negozio: identici per tutti i commercianti, cambia solo il colore.
-const CONTACT_BTN = "flex min-h-[64px] items-center justify-center gap-2 rounded-2xl px-6 py-4 text-lg font-bold text-white shadow-lg hover:scale-[1.02] hover:brightness-110 transition";
+function WhatsAppIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="shrink-0">
+      <path d="M12.04 2a9.9 9.9 0 0 0-8.4 15.1L2 22l5.05-1.6A9.9 9.9 0 1 0 12.04 2Zm0 1.8a8.1 8.1 0 1 1-4.3 15l-.3-.2-3 .95.98-2.9-.2-.3A8.1 8.1 0 0 1 12.04 3.8Zm-3.3 4.1c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3 2.4 1 2.9.8 3.4.7.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4l-.5-.3-1.8-.9c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.9-.4-1.8-1-2.6-2a8 8 0 0 1-1.1-1.7c-.1-.2 0-.4.1-.5l.4-.5.3-.4v-.5l-.8-2c-.2-.5-.4-.4-.6-.4Z"/>
+    </svg>
+  );
+}
+
+const CONTACT_BTN = "flex min-h-[64px] items-center justify-center gap-2 rounded-2xl px-6 py-4 text-lg font-bold shadow-lg hover:scale-[1.02] hover:brightness-110 transition";
 
 export default function DiscountDetail() {
   const { id } = useParams();
@@ -399,7 +407,7 @@ export default function DiscountDetail() {
                   <a
                     href={p.telHref}
                     data-testid="btn-call-merchant"
-                    className={`${CONTACT_BTN} bg-[#2563EB] shadow-blue-600/30`}
+                    className={`${CONTACT_BTN} bg-[#4FC3F7] text-slate-900 shadow-sky-400/40`}
                   >
                     <Phone size={22} className="shrink-0" />
                     Chiama per prenotare
@@ -409,9 +417,9 @@ export default function DiscountDetail() {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="btn-whatsapp-merchant"
-                    className={`${CONTACT_BTN} bg-ac-verde shadow-emerald-500/30`}
+                    className={`${CONTACT_BTN} bg-[#25D366] text-slate-900 shadow-emerald-500/30`}
                   >
-                    <MessageCircle size={22} className="shrink-0" />
+                    <WhatsAppIcon />
                     Scrivi su WhatsApp
                   </a>
                 </div>
