@@ -80,8 +80,10 @@ for (const f of ['v', 'vc', 'q']) {
     .ch{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}.ch span{font:700 44px/1 'Manrope',sans-serif;padding:20px 26px;border-radius:26px;border:3px solid #d9d4e6;color:#8c86a0}
     .ch span.on{background:${FUCSIA};border-color:${FUCSIA};color:#fff}
     .cr{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}.cr span{font:700 44px/1 'Manrope',sans-serif;padding:20px 28px;border-radius:26px;background:#efeaff;color:${VIOLA}}
+    .pc{display:inline-block;margin-top:6px;font:800 84px/1 'Manrope',sans-serif;color:#fff;background:${FUCSIA};padding:14px 30px;border-radius:30px}
+    .tag{background:#fff;border:5px solid #e4dff0;border-radius:36px;padding:24px 34px;text-align:center;box-shadow:0 8px 26px rgba(40,30,70,.16)}
     .gi{font:800 54px/1.2 'Manrope',sans-serif;padding:26px 40px;border-radius:30px;border:4px solid ${TEAL};color:${TEAL}}
-    .esn{position:absolute;right:${Q ? 78 : 110}px;top:${Q ? 306 : 540}px;font:800 30px/1 'Manrope',sans-serif;color:${SOFT};letter-spacing:.06em;text-transform:uppercase}`;
+    .esn{position:absolute;right:${Q ? 78 : 110}px;bottom:${Q ? 58 : 172}px;font:800 30px/1 'Manrope',sans-serif;color:${SOFT};letter-spacing:.06em;text-transform:uppercase}`;
   const ristor = (n) => {
     let h = `<div>${piatto}</div><div class="lab">RISTORANTE</div>`;
     if (n >= 1) h += `<div class="tit">Menù di carne</div>`;
@@ -91,8 +93,11 @@ for (const f of ['v', 'vc', 'q']) {
     if (n >= 3) h += `<div style="display:flex;gap:40px;align-items:center"><div class="vec">€50</div><div class="pr" style="color:${FUCSIA}">€30</div></div>`;
     return h;
   };
+  const bottigliaPrezzo = (n) => `<div style="position:relative;width:560px;height:560px;margin:0 auto">
+      <svg width="300" height="540" viewBox="0 0 120 220" style="position:absolute;left:30px;top:10px" fill="none"><path d="M46 0h28v52q34 16 34 62v92a10 10 0 0 1-10 10H22a10 10 0 0 1-10-10v-92q0-46 34-62z" fill="#5e0f27"/><rect x="46" y="0" width="28" height="18" rx="5" fill="${INK}"/><path d="M30 120v76" stroke="#fff" stroke-opacity=".28" stroke-width="7" stroke-linecap="round"/></svg>
+      <div class="tag tx" style="position:absolute;left:250px;top:150px"><div class="vec" style="font-size:80px">${n >= 1 ? '€30' : ''}</div><div class="pr" style="color:${n >= 1 ? FUCSIA : INK};font-size:130px">${n >= 1 ? '€15' : '€30'}</div>${n >= 1 ? `<div class="pc">−50%</div>` : ''}</div></div>`;
   const eno = n => {
-    let h = `<div>${bottiglie}</div><div class="lab">ENOTECA</div><div class="tit">Vini che girano poco</div>`;
+    let h = `<div class="lab">ENOTECA</div><div class="tit">Vini che girano poco</div>${bottigliaPrezzo(n >= 1 ? 1 : 0)}`;
     if (n >= 1) h += `<div class="cr"><span>di quanto</span><span>in quali giorni</span><span>quante volte al mese</span></div>`;
     if (n >= 2) h += `<div class="gi">Smaltisci la giacenza</div>`;
     return h;
@@ -104,28 +109,30 @@ for (const f of ['v', 'vc', 'q']) {
   G[f + '_rist_1'] = esempio(ristor(2), tmap.rist_1); G[f + '_rist_2'] = esempio(ristor(3), tmap.rist_2); G[f + '_rist_3'] = esempio(ristor(3), tmap.rist_3);
   G[f + '_eno_0'] = esempio(eno(0), tmap.eno_0); G[f + '_eno_1'] = esempio(eno(1), tmap.eno_1); G[f + '_eno_2'] = esempio(eno(2), tmap.eno_2);
 
-  // ---- chiusura con la guida (8 schermate della guida per i negozi, dati d'esempio)
-  const gTit = ['Registrati', 'Scegli offerta e sconto', 'Aggiungi una foto', 'Giorni e utilizzi', 'Approvazione', 'Codice a 4 cifre', 'Dashboard', 'Stampa la locandina'];
-  const cols = Q ? 4 : 2, cw = Q ? 238 : 440, ch = Q ? 142 : 220, gx = Q ? 12 : 20, gy = Q ? 56 : 50;
-  const chius = n => {
-    const x0 = (1080 - (cols * cw + (cols - 1) * gx)) / 2, y0 = Q ? 205 : 380;
-    let tiles = '';
-    for (let i = 0; i < 8; i++) {
-      const x = x0 + (i % cols) * (cw + gx), y = y0 + Math.floor(i / cols) * (ch + gy);
-      tiles += `<div style="position:absolute;left:${x}px;top:${y}px;width:${cw}px;visibility:${n === 'fin' || n > i ? 'visible' : 'hidden'}"><div style="width:${cw}px;height:${ch}px;border-radius:${Q ? 12 : 18}px;overflow:hidden;border:2px solid #d9d4e6;background:#fff"><img src="file://${GUIDA}${i + 1}-${['registrazione', 'offerta', 'foto', 'giorni-utilizzi', 'approvazione', 'codice', 'dashboard', 'locandina'][i]}.jpg" style="width:100%;height:100%;object-fit:cover;object-position:left top"></div><div class="tx" style="font:800 ${Q ? 19 : 28}px/1.2 'Manrope',sans-serif;margin-top:${Q ? 6 : 8}px"><span style="color:${FUCSIA}">${i + 1}</span> ${gTit[i]}</div></div>`;
-    }
-    const ey = Q ? 710 : 1500;
-    return pag(f, `.m{position:absolute;left:30px;right:30px;bottom:${Q ? 40 : 110}px;text-align:center;font:700 ${Q ? 26 : 34}px/1.4 'Manrope',sans-serif;color:#6a6580}`,
-      `<div style="position:absolute;top:${Q ? 24 : 110}px;left:0;right:0">${logo(Q ? 0.62 : 0.9)}</div>
-       <div class="tx" style="position:absolute;top:${Q ? 112 : 250}px;left:40px;right:40px;text-align:center;font:800 ${Q ? 42 : 56}px/1.15 'Manrope',sans-serif">Guida in una pagina per i negozi</div>
-       <div class="tx" style="position:absolute;top:${Q ? 160 : 322}px;left:40px;right:40px;text-align:center;font:600 ${Q ? 24 : 32}px/1.2 'Manrope',sans-serif;color:${SOFT}">Schermate di esempio, dati inventati</div>
-       ${tiles}
-       <div class="tx" style="position:absolute;left:30px;right:30px;top:${ey}px;text-align:center;font:800 ${Q ? 64 : 76}px/1.1 'Manrope',sans-serif;color:${FUCSIA}">info@scontiroma.it</div>
-       <div class="tx" style="position:absolute;left:60px;right:60px;top:${ey + (Q ? 90 : 120)}px;text-align:center;font:800 ${Q ? 46 : 60}px/1.2 'Manrope',sans-serif;visibility:${n === 'fin' ? 'visible' : 'hidden'}">e ti aiutiamo a partire.</div>
-       <div class="m tx">Per maggiorenni (18+) · Roma e dintorni · Sconti Roma</div>`);
-  };
-  for (let i = 0; i <= 8; i++) G[f + '_chiusura_' + i] = chius(i);
-  G[f + '_chiusura_fin'] = chius('fin');
+  // ---- chiusura (come nella v14): logo, email, «e ti aiutiamo a partire.», 18+
+  const chius = n => pag(f, Q ? `.l{position:absolute;top:90px;left:0;right:0}.q{position:absolute;left:60px;right:60px;top:330px;text-align:center;font:700 52px/1.2 'Manrope',sans-serif;color:${SOFT}}
+      .e{position:absolute;left:30px;right:30px;top:410px;text-align:center;font:800 76px/1.1 'Manrope',sans-serif}
+      .s{position:absolute;left:60px;right:60px;top:600px;text-align:center;font:800 56px/1.2 'Manrope',sans-serif;visibility:${n >= 2 ? 'visible' : 'hidden'}}
+      .m{position:absolute;left:30px;right:30px;bottom:50px;text-align:center;font:700 28px/1.4 'Manrope',sans-serif;color:#6a6580}`
+    : `.l{position:absolute;top:240px;left:0;right:0}.q{position:absolute;left:80px;right:80px;top:700px;text-align:center;font:700 60px/1.2 'Manrope',sans-serif;color:${SOFT}}
+      .e{position:absolute;left:40px;right:40px;top:800px;text-align:center;font:800 80px/1.1 'Manrope',sans-serif}
+      .s{position:absolute;left:80px;right:80px;top:1010px;text-align:center;font:800 64px/1.2 'Manrope',sans-serif;visibility:${n >= 2 ? 'visible' : 'hidden'}}
+      .m{position:absolute;left:40px;right:40px;bottom:130px;text-align:center;font:700 34px/1.4 'Manrope',sans-serif;color:#6a6580}`,
+    `<div class="l">${logo()}</div><div class="q tx">Scrivici a</div><div class="e tx"><b>info@scontiroma.it</b></div><div class="s tx">e ti aiutiamo a partire.</div><div class="m tx">Per maggiorenni (18+) · Roma e dintorni · Sconti Roma</div>`);
+  G[f + '_chiusura_1'] = chius(1); G[f + '_chiusura_2'] = chius(2);
+  // ---- percentuale in evidenza (decisione esplicita del titolare per questo video) e didascalie della guida
+  const pill = t => pag(f, `.p{position:absolute;left:0;right:0;top:${Q ? 965 : 1700}px;display:flex;justify-content:center}.p div{font:800 ${Q ? 84 : 130}px/1 'Manrope',sans-serif;color:#fff;background:${FUCSIA};padding:${Q ? '14px 34px' : '22px 54px'};border-radius:${Q ? 30 : 46}px;box-shadow:0 10px 30px rgba(40,30,70,.3)}`, `<div class="p tx"><div>${t}</div></div>`, 'transparent');
+  G[f + '_pill40'] = pill('−40%');
+  const gg = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+  G[f + '_giorni'] = pag(f, `.p{position:absolute;left:0;right:0;top:${Q ? 880 : 1590}px;display:flex;justify-content:center;gap:${Q ? 8 : 12}px}
+    .p span{font:800 ${Q ? 28 : 44}px/1 'Manrope',sans-serif;padding:${Q ? '12px 14px' : '18px 20px'};border-radius:${Q ? 16 : 24}px;background:#fff;color:#8c86a0;border:3px solid #d9d4e6;box-shadow:0 6px 18px rgba(40,30,70,.18)}
+    .p span.on{background:${FUCSIA};border-color:${FUCSIA};color:#fff}`,
+    `<div class="p tx">${gg.map(d => `<span class="${d === 'Mar' || d === 'Gio' ? 'on' : ''}">${d}</span>`).join('')}</div>`, 'transparent');
+  const gcap = (t, s) => pag(f, `.c{position:absolute;left:40px;right:40px;top:${Q ? 18 : 60}px;text-align:center;background:rgba(255,255,255,.94);border-radius:${Q ? 24 : 36}px;padding:${Q ? '14px 20px' : '26px 30px'};box-shadow:0 6px 22px rgba(40,30,70,.2);font:800 ${Q ? 38 : 56}px/1.15 'Manrope',sans-serif}.c small{display:block;font:600 ${Q ? 24 : 34}px/1.2 'Manrope',sans-serif;color:${SOFT};margin-top:6px}`, `<div class="c tx">${t}${s ? `<small>${s}</small>` : ''}</div>`, 'transparent');
+  G[f + '_gcap_0'] = gcap('Guida in una pagina', 'Schermate di esempio, dati inventati');
+  G[f + '_gcap_1'] = gcap('<b>1</b> · Registrati', 'Con la Partita IVA');
+  G[f + '_gcap_2'] = gcap('<b>2</b> · Scegli cosa offri e lo sconto', '');
+  G[f + '_gcap_3'] = gcap('<b>3</b> · Aggiungi una foto', '');
 }
 
 (async () => {
@@ -136,8 +143,8 @@ for (const f of ['v', 'vc', 'q']) {
     await p.goto('file://' + tmp); await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(120);
     await p.screenshot({ path: OUT + nome + '.png', omitBackground: trasp }); fs.unlinkSync(tmp); await p.close();
   };
-  for (const [k, h] of Object.entries(G)) await salva(k, h, k.split('_')[0]);
-  for (const f of ['v', 'q']) for (const parte of cop.parti) for (let i = 0; i < parte.segmenti.length; i++) {
+  for (const [k, h] of Object.entries(G)) await salva(k, h, k.split('_')[0], /_(pill40|giorni|gcap_\d)$/.test(k));
+  for (const f of ['v', 'q']) for (const parte of cop.parti) for (let i = 0; i < (parte.segmenti || []).length; i++) {
     const s = parte.segmenti[i]; if (s.t && !parte.grafica) await salva(`${f}_sub_${parte.id}_${i}`, sottotitolo(f, s.t), f, true);
   }
   await b.close();
