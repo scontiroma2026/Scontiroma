@@ -2581,6 +2581,8 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     window = await next_offer_window()
     if not window["open"]:
         raise HTTPException(423, f"La finestra per caricare l'offerta di {window['next_month_label']} si apre il {window['opens_on']} (ultimi 7 giorni del mese).")
+    if user.get("no_renew_month") == window["next_month"]:
+        raise HTTPException(409, f"Hai scelto «Non rinnovo»: per caricare l'offerta di {window['next_month_label']} annulla prima la scelta.")
     data = payload.cleaned()
     if not data.get("title") or not data.get("description"):
         raise HTTPException(422, "Titolo e descrizione sono obbligatori")
@@ -2598,8 +2600,6 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
                      "target_month": window["next_month"], "created_at": now_iso})
         await db.next_discounts.insert_one(data)
         nd = data
-    # Caricare l'offerta del mese dopo annulla un'eventuale scelta "Non rinnovo".
-    await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
     return {"next_discount": _enrich_next(nd), "window": window}
 
 
