@@ -28,7 +28,7 @@ Esito: nessun elemento che la licenza Unsplash escluda. **Da decidere col consul
 
 ## Foto di esempio per le offerte (cartella `esempi/`)
 
-Vedi `frontend/public/esempi/LICENZA.txt` (già copiate sul sito, nome file = identificativo Unsplash). Autori e controllo volti/loghi di queste foto: **da verificare** caso per caso (non rifatto in questa modifica).
+Vedi `frontend/public/esempi/LICENZA.txt` (già copiate sul sito, nome file = identificativo Unsplash). Controllo volti/marchi fatto il 15/10 sulle miniature: tolte 40 foto (11 con volti, 31 con marchi, 2 in entrambe); 64 dubbie in revisione col titolare. Autori: **da verificare**.
 
 ## Altro servizio di terzi rimasto
 

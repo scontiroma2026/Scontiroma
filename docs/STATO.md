@@ -203,3 +203,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 — Lista d'attesa: la fonte accetta anche `facebook-<codice>` e `gruppo-<codice>` (minuscole, numeri, trattino, max 20 caratteri; altro testo = «altro»), così la scheda admin e l'export CSV distinguono i gruppi; nessun dato in più.
 - 15/10: pulsante WhatsApp verde ufficiale con logo, «Chiama» azzurro (PR pulsanti)
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
+- 15/10: tolte 40 foto con volti o marchi dalla libreria (382 rimaste); da sostituire con altre senza volti/marchi; 64 dubbie da rivedere col titolare
