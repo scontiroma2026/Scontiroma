@@ -205,3 +205,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: pulsanti: WhatsApp verde icona con sfumatura, Chiama turchese dell'app (PR colori)
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
 - 15/10: tolte 104 foto (40 con volti o marchi + 64 dubbie, su richiesta del titolare) dalla libreria (318 rimaste); da sostituire con altre senza volti/marchi
+- 15/10: schermata admin «Pagamenti»: fine prova calcolata dalla prima pubblicazione se non scritta a mano
