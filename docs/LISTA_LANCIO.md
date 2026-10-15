@@ -1,4 +1,4 @@
-# Lista «pronto al lancio» di Sconti Roma (aggiornata il 14/10)
+# Lista «pronto al lancio» di Sconti Roma (aggiornata il 15/10)
 
 **Regola del titolare (14/10):** quando chiede «la lista», si risponde con questa lista **numerata**, aggiornata a ogni passo; i punti nuovi si aggiungono, quelli cambiati si rettificano. Questo file è la fonte: va tenuto allineato.
 
@@ -7,7 +7,7 @@ Legenda: ✅ fatto · ⏳ in corso · ⬜ da fare. Chi: **Utente** = titolare; *
 Repository pubblico: qui mai password, chiavi, ID di recupero né dati di persone reali.
 
 ## A. Prima del lancio
-1. ⬜ **Consulente:** valida i testi legali (Privacy, Cookie, Termini, Recesso): PR #92, #95, #100, #101, #102, #114, #116, #83, #76, #80, #40. Già corretto in app: «€4,99 al mese + IVA», senza «prezzo bloccato» (#142).
+1. ⬜ **Consulente:** valida i testi legali (Privacy, Cookie, Termini, Recesso): PR #92, #95, #100, #101, #102, #114, #116, #76, #80, #40 e **#157 (Termini allineati alle decisioni: prova «circa due mesi» con esempio, disdetta, mese non rimborsabile; sostituisce la #83, chiusa)**. Già corretto in app: «€4,99 al mese + IVA», senza «prezzo bloccato» (#142) e l'email di benvenuto ai negozi con la frase di disdetta (#158).
 2. ⏳ **Utente:** avvocato a forfait per la parte negozi (soluzione ibrida). La richiesta di preventivo è pronta (`docs/legale/RICHIESTA_PREVENTIVO.md`): compilare i campi e inviarla a 2–3 studi, chiedendo una revisione veloce dei Termini negozi.
 3. ⬜ **Utente:** visura camerale (REA, capitale, PEC, civico «5/B»): serve anche al punto 2.
 4. ✅ **Posta:** `info@`, `privacy@`, `partner@` con inoltro alla Gmail, Reply-To, filtri Gmail (SR/info, SR/privacy, SR/partner) e notifiche sul telefono.
@@ -16,14 +16,14 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 7. ⬜ **Utente + Claude:** prova generale sul sito di prova (già aggiornato). Claude ha fatto la prova automatica completa (14/10, PR #151): checklist da iPhone e cosa accendere su Render in `docs/operazioni/PROVA_GENERALE.md`. Resta la prova dal telefono.
 8. ✅ **Pulizia dell'app vera:** clienti di prova cancellati, negozi a 0.
 9. ⏳ **Conferma email dei clienti:** unita e spenta sul sito vero (`CLIENT_EMAIL_CONFIRMATION_REQUIRED=false` su Render). Da provare sul sito di prova, poi accendere.
-10. ⬜ **Pre-lancio:** accendere `PRELAUNCH_MODE` su Render prima dei contenuti del 22/10, dopo la frase della Privacy per la lista d'attesa vista dal consulente (o in via provvisoria, scelta del titolare).
+10. ⏸️ **Pre-lancio:** `PRELAUNCH_MODE` su Render non prima della sera del 21/10 e dopo la prova da iPhone. La frase provvisoria sulla lista d'attesa (#153) è ferma per decisione del titolare (14/10); si riprende con «unisci». Registrazione dei clienti già chiusa in pre-lancio (#151).
 11. ✅ Limite Resend verificato (gratuito: 3.000 al mese, 100 al giorno): per l'avviso di lancio alla lista d'attesa serve il Pro del punto 5.
-12. ⏳ **Materiali per i negozi:** video v14 (voce da generare, guida da inserire), guida di una pagina #128 (aspetta la frase sulla disdetta), sito pronto.
+12. ⏳ **Materiali per i negozi:** video v16 per i commercianti (PR #155, bozza: base del video dell'8/10, voce femminile scelta, esempi ristorante «Menù di carne» ed enoteca con negozi finti, guida dentro il video); materiali scritti #146 in allineamento ai Termini (disdetta, «circa due mesi dalla prima pubblicazione», mese non rimborsabile); sito pronto. La percentuale nel video è ammessa (decisione del titolare, negozio fittizio): da verificare con il consulente.
 13. ⏳ **Contatto con i negozi:** dal 19/10, uno alla volta, con il manuale e con modo per dire no, dopo che il consulente ha visto i testi.
 14. ⏳ **Campagna social:** piano e copioni uniti (#140). Da fare: due gruppi per il 19/10 (ricerca del titolare), musica, video con persone, copertine nuove su WhatsApp e Facebook.
 15. ⬜ **27/10:** controllo della soglia di negozi e decisione sul 31/10.
 16. ⬜ **Utente:** accessi con verifica a due passaggi, codici di recupero su carta, persona di fiducia.
-17. ⬜ **Utente:** prova del cambio mese (1° novembre), test su Android, marchio «Sconti Roma», codice ATECO.
+17. ⏳ **Prove e pratiche:** prova del cambio mese ✅ (test automatici e orari di Roma, #149) · test su un Android vero ⬜ (finora solo emulazione) · marchio «Sconti Roma» ⬜ (`docs/operazioni/MARCHIO.md`) · codice ATECO ⬜ (`docs/operazioni/CODICE_ATECO.md`) · promemoria in `PROMEMORIA_DA_RIPRENDERE.md`.
 
 ## B. Dopo il lancio, prima del primo addebito (circa due mesi dopo)
 18. ⬜ Chiavi di prova Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; prova con soldi finti.
@@ -47,6 +47,8 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 32. ✅ Etichette e filtri Gmail con notifica; unione di 14 PR il 14/10 (riepilogo settimanale, lista d'attesa pre-lancio, conferma email, limiti anti-abuso, motivo del rifiuto, campagna social, confronto legale, richiesta di preventivo, Termini).
 33. ✅ WhatsApp Business (profilo, link diretto, risposte rapide), pulsante WhatsApp sulla Pagina Facebook, Instagram `sconti.roma` separato dal personale e con bio.
 34. ✅ Titoli del sito in Manrope; segnalazioni, reclami e scheda admin «Clienti»; Termini e prezzo allineati.
+35. ✅ **15/10:** Partita IVA obbligatoria alla registrazione dei negozi e cancellazione automatica della lista d'attesa dopo 12 mesi (#156); email di benvenuto ai negozi con la frase di disdetta (#158); chiuse come superate #83, #41, #62 (branch tenuti).
+36. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); serve il permesso a cancellare. Le PR superate restano da decidere una alla volta: #103, #81, #100, #101.
 
 ## Decisioni del titolare (riferimento)
 Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.
