@@ -165,13 +165,17 @@ async def send_master_reset(to: str, token: str) -> Optional[str]:
     return await _send(to, "Reset Master Password — Sconti Roma", _shell(inner))
 
 
-async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str) -> Optional[str]:
+async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str, foto_scartate: Optional[list] = None) -> Optional[str]:
     name, shop_name, discount_title = _esc(name), _esc(shop_name), _esc(discount_title)
+    scartate = ""
+    if foto_scartate:
+        righe = "".join(f"<li>Foto {int(n)}: {_esc(motivo)}</li>" for n, motivo in foto_scartate)
+        scartate = f'<p style="margin:0 0 8px;color:#d4d4d8"><strong>Foto non pubblicate:</strong> abbiamo scartato {"una foto" if len(foto_scartate) == 1 else "alcune foto"}. Il resto dell\'offerta è online.</p><ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">{righe}</ul><p style="margin:0 0 16px;color:#d4d4d8">Puoi caricare altre foto quando potrai modificare l\'offerta.</p>'
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
 <p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti i clienti di Sconti Roma.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
+{scartate}<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
 </div>

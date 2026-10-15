@@ -60,7 +60,7 @@ from email_service import (
     send_waitlist_launch_notice,
 )
 import paypal_service
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Body
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -5175,7 +5175,41 @@ async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool
     return {"ok": True, "fase": st["fase"], "motivo": ""}
 
 
-async def _approva_offerta(discount_id: str) -> Optional[dict]:
+class FotoScartataIn(BaseModel):
+    url: str = Field(max_length=2000)
+    motivo: str = Field(default="", max_length=500)
+
+
+class ApprovaIn(BaseModel):
+    foto_scartate: Optional[List[FotoScartataIn]] = None
+
+
+def _foto_dell_offerta(d: dict) -> list:
+    urls = [u for u in (d.get("image_urls") or []) if u]
+    if d.get("image_url") and d["image_url"] not in urls:
+        urls.insert(0, d["image_url"])
+    return urls
+
+
+def _prepara_foto_scartate(d: dict, scarti) -> tuple:
+    """Controlla le foto scartate dall'admin (motivo di almeno 10 caratteri, foto davvero dell'offerta, almeno
+    una foto che resta). Ritorna (foto che restano, [(numero della foto, motivo)])."""
+    foto = _foto_dell_offerta(d)
+    motivi = {}
+    for x in scarti or []:
+        motivo = (x.motivo or "").strip()
+        if x.url not in foto:
+            raise HTTPException(422, "Una foto scartata non fa parte dell'offerta: ricarica la pagina")
+        if len(motivo) < MOTIVO_RIFIUTO_MIN:
+            raise HTTPException(422, f"Scrivi il motivo per cui scarti la foto (almeno {MOTIVO_RIFIUTO_MIN} caratteri)")
+        motivi[x.url] = motivo
+    restano = [u for u in foto if u not in motivi]
+    if motivi and not restano:
+        raise HTTPException(422, "Se scarti tutte le foto, rifiuta l'offerta con un motivo")
+    return restano, [(i + 1, motivi[u]) for i, u in enumerate(foto) if u in motivi]
+
+
+async def _approva_offerta(discount_id: str, foto_scartate: Optional[list] = None) -> Optional[dict]:
     """Approva un'offerta: pubblica, segna la prima pubblicazione del negozio, avvisa il commerciante
     e i clienti interessati. Ritorna l'offerta aggiornata, o None se non esiste."""
     now = datetime.now(timezone.utc)
@@ -5195,7 +5229,7 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
     try:
         m = await db.users.find_one({"id": d.get("merchant_id")})
         if m and m.get("email"):
-            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "")
+            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", foto_scartate)
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
     if d.get("active", True):
@@ -5204,13 +5238,19 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
 
 
 @api.post("/admin/discounts/{discount_id}/approve")
-async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+async def admin_approve_discount(discount_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     d0 = await db.discounts.find_one({"id": discount_id})
     if d0:
         via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
-    d = await _approva_offerta(discount_id)
+    scartate = []
+    if d0 and payload and payload.foto_scartate:
+        restano, scartate = _prepara_foto_scartate(d0, payload.foto_scartate)
+        await db.discounts.update_one({"id": discount_id}, {"$set": {
+            "image_urls": restano, "image_url": restano[0],
+            "foto_scartate": [{"numero": n, "motivo": mt} for n, mt in scartate]}})
+    d = await _approva_offerta(discount_id, scartate)
     if d is None:
         raise HTTPException(404, "Sconto non trovato")
     return {"discount": await enrich_discount(d)}
@@ -5324,12 +5364,18 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
 
 
 @api.post("/admin/next-offers/{next_id}/approve")
-async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_admin_master)):
+async def admin_approve_next_offer(next_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     nd0 = await db.next_discounts.find_one({"id": next_id})
     if nd0:
         via = await _approvazione_consentita(await db.users.find_one({"id": nd0.get("merchant_id")}), per_mese_dopo=True)
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
+    scartate = []
+    if nd0 and payload and payload.foto_scartate:
+        restano, scartate = _prepara_foto_scartate(nd0, payload.foto_scartate)
+        await db.next_discounts.update_one({"id": next_id}, {"$set": {
+            "image_urls": restano, "image_url": restano[0],
+            "foto_scartate": [{"numero": n, "motivo": mt} for n, mt in scartate]}})
     now_iso = datetime.now(timezone.utc).isoformat()
     result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
         "approval_status": "approved", "approved_at": now_iso, "approval_note": ""}})
@@ -5340,7 +5386,7 @@ async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_ad
         m = await db.users.find_one({"id": nd.get("merchant_id")})
         if m and m.get("email"):
             await send_merchant_approved(m["email"], m.get("name") or "commerciante",
-                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "")
+                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "", scartate)
     except Exception as e:
         logging.warning(f"next-offer approve email failed: {e}")
     return {"next_discount": _enrich_next(nd)}

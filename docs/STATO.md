@@ -206,3 +206,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10: libreria foto da telefono: categorie su una riga, foto visibili (PR libreria)
 - 15/10: tolte 104 foto (40 con volti o marchi + 64 dubbie, su richiesta del titolare) dalla libreria (318 rimaste); da sostituire con altre senza volti/marchi
 - 15/10: dopo «Non rinnovo» il caricamento dell'offerta del mese dopo si spegne (grigio) e si riaccende con «Annulla» (PR non-rinnovo)
+- 15/10: approvazione offerte: foto per foto (ingrandisci, approva/scarta con motivo; il motivo va nell'email al commerciante) (PR foto scartate)
