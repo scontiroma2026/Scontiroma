@@ -63,7 +63,7 @@ async def iscrivi(c, role):
     body = {"email": f"{role}.{uuid.uuid4().hex[:8]}@example.com", "password": "Password-prova-123",
             "name": "Mario Rossi", "role": role, "legal_accepted": True}
     if role == "merchant":
-        body.update({"shop_name": "Osteria di prova", "zone": "Garbatella", "category": "Ristorante", "phone": "+39 06 0000000"})
+        body.update({"shop_name": "Osteria di prova", "zone": "Garbatella", "category": "Ristorante", "phone": "+39 06 0000000", "partita_iva": "12345678903"})
     r = await c.post("/api/auth/register", json=body)
     assert r.status_code == 200, r.text
     await asyncio.sleep(0.02)

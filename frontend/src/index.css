@@ -54,3 +54,16 @@
 @layer base {
   [data-debug-wrapper="true"] { display: contents !important; }
 }
+
+/* Aree toccabili di almeno 44 px (prova Android, 14/10): link e pulsanti piccoli del piè di pagina e dell accesso. */
+[data-testid="legal-footer"] nav a,
+[data-testid="legal-footer"] nav button,
+[data-testid="login-page"] form a,
+[data-testid="login-page"] button[type="button"],
+[data-testid="login-page"] p a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+}

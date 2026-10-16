@@ -95,6 +95,9 @@ export default function PagamentoNegozio() {
 
   return (
     <Scheda titolo="Attiva il pagamento" tono="rosa" className="mb-4" data-testid="pagamento-attiva">
+      <p data-testid="pagamento-nulla-subito" className="mb-3 rounded-xl bg-ac-tealBg p-3 text-sm font-semibold text-ac-ink">
+        Non viene addebitato niente subito: la prova resta gratuita fino al primo addebito. Il pagamento è solo autorizzato in anticipo.
+      </p>
       <ul className="space-y-1 text-sm text-ac-ink">
         <li><strong>Importo:</strong> {euro(st.importo_cent)} al mese + IVA{st.iva_percent ? ` (${st.iva_percent}%)` : ""}.</li>
         <li><strong>Primo addebito:</strong> il {dataIt(st.primo_addebito)}. Fino ad allora la prova è gratuita e non ti addebitiamo nulla.</li>

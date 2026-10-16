@@ -11,6 +11,8 @@ Da iPhone: apri il link, poi tocca il nome del file per leggerlo. Le PR non anco
 | Controllo online del sito | `docs/guide/CONTROLLO_ONLINE.md` |
 | Ambiente di prova | `docs/guide/AMBIENTE_DI_PROVA.md` |
 | Proposte di testi legali (base) | `docs/legale/PROPOSTE_TESTI_LEGALI.md` |
+| Confronto servizi per validare i testi legali | `docs/legale/CONFRONTO_SERVIZI_LEGALI.md` |
+| Lista d'attesa pre-lancio: consenso, frase per la Privacy, limiti di Resend | `docs/legale/BOZZA_LISTA_ATTESA.md` |
 | Locandine per i clienti (10 stili) | `docs/comunicazione/locandine/` |
 | Materiale clienti: locandina e post | `docs/comunicazione/CLIENTI_LOCANDINA_E_POST.md` |
 
@@ -38,6 +40,7 @@ Da iPhone: apri il link, poi tocca il nome del file per leggerlo. Le PR non anco
 |---|---|---|
 | Profili, 12 post, calendario, gruppi, risposte, punti per il consulente | #103 | ramo `claude/social`, `docs/comunicazione/social/` |
 | Gruppi di quartiere trovati (da verificare) | senza PR | ramo `claude/gruppi-quartiere`, `docs/comunicazione/social/07_GRUPPI_TROVATI.md` |
+| Campagna pre-lancio 19/10–31/10: piano, contenuti social, copioni video, materiali, controllo regole | ramo `claude/campagna-prelancio` | `docs/comunicazione/campagna-prelancio/` (inizia da `PIANO_CAMPAGNA.md`; gruppi in `GRUPPI_DA_CONTATTARE.md`) |
 
 ## Come aprire un ramo da iPhone
 `https://github.com/scontiroma2026/Scontiroma/tree/<nome-del-ramo>` (esempio: `.../tree/claude/pacchetto-legale/docs/legale/bozze`).

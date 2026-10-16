@@ -6,6 +6,7 @@ Se `RESEND_API_KEY` non è configurata o è un placeholder, le send diventano no
 e loggano soltanto (non blocca il flusso applicativo).
 """
 import os
+import re
 import asyncio
 import html
 import logging
@@ -57,6 +58,23 @@ def _domain_of(address: str) -> str:
     return addr.rsplit("@", 1)[1] if "@" in addr else "?"
 
 
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+
+
+def mask_email(address) -> str:
+    """Per i log: solo l'iniziale e il dominio («g***@gmail.com»). Mai l'indirizzo intero."""
+    addr = str(address or "").strip()
+    if "@" not in addr:
+        return "?"
+    nome, dominio = addr.rsplit("@", 1)
+    return f"{nome[:1]}***@{dominio.lower()}"
+
+
+def mask_emails_in_text(testo) -> str:
+    """Maschera ogni indirizzo email dentro un testo (per esempio un messaggio d'errore del fornitore)."""
+    return _EMAIL_RE.sub(lambda m: mask_email(m.group(0)), str(testo))
+
+
 async def _send(to, subject: str, html: str) -> Optional[str]:
     """`to` può essere un indirizzo o una lista. Con `EMAIL_ALLOWED_RECIPIENTS`
     impostata (solo ambiente di prova) i destinatari non consentiti sono scartati
@@ -73,7 +91,7 @@ async def _send(to, subject: str, html: str) -> Optional[str]:
         recipients = kept
         if not recipients:
             return None
-    label = ", ".join(recipients)
+    label = ", ".join(mask_email(r) for r in recipients)  # nei log mai l'indirizzo intero
     if not _configured:
         log.info(f"[email:mock] to={label} subject={subject!r} (RESEND_API_KEY not set)")
         return None
@@ -86,7 +104,7 @@ async def _send(to, subject: str, html: str) -> Optional[str]:
         log.info(f"[email:sent] to={label} id={eid}")
         return eid
     except Exception as e:
-        log.error(f"[email:error] to={label} subject={subject!r} err={e}")
+        log.error(f"[email:error] to={label} subject={subject!r} err={mask_emails_in_text(e)}")
         return None
 
 
@@ -147,13 +165,17 @@ async def send_master_reset(to: str, token: str) -> Optional[str]:
     return await _send(to, "Reset Master Password — Sconti Roma", _shell(inner))
 
 
-async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str) -> Optional[str]:
+async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str, foto_scartate: Optional[list] = None) -> Optional[str]:
     name, shop_name, discount_title = _esc(name), _esc(shop_name), _esc(discount_title)
+    scartate = ""
+    if foto_scartate:
+        righe = "".join(f"<li>Foto {int(n)}: {_esc(motivo)}</li>" for n, motivo in foto_scartate)
+        scartate = f'<p style="margin:0 0 8px;color:#d4d4d8"><strong>Foto non pubblicate:</strong> abbiamo scartato {"una foto" if len(foto_scartate) == 1 else "alcune foto"}. Il resto dell\'offerta è online.</p><ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">{righe}</ul><p style="margin:0 0 16px;color:#d4d4d8">Puoi caricare altre foto quando potrai modificare l\'offerta.</p>'
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
 <p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti i clienti di Sconti Roma.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
+{scartate}<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
 </div>
@@ -641,7 +663,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
 <p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese + IVA</strong>. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma.</p>
-<p style="{_P}"><strong>Nessun vincolo:</strong> l'offerta vale per il mese in corso e non si rinnova da sola. Se non vuoi continuare, scegli «Non rinnovo».</p>
+<p style="{_P}"><strong>Disdetta:</strong> disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Per non continuare, scegli «Non rinnovo».</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
 """
     return await _send(to, f"Benvenuto in {BRAND}: crea la tua prima offerta", _shell(inner))
@@ -700,3 +722,90 @@ async def send_preferito_nuova_offerta(to: str, name: str, shop_name: str, zone:
 Per non riceverne più: apri <a href="{APP_URL}/discounts?vista=preferiti" style="color:#a1a1aa">Sconti › Preferiti</a> e tocca «Non avvisarmi più».</p>
 """
     return await _send(to, oggetto, _shell(inner))
+
+
+async def send_admin_riepilogo_settimanale(to: str, r: dict) -> Optional[str]:
+    """Riepilogo del lunedì per l'admin: tabella semplice (leggibile da iPhone), variazioni ↑↓ e al massimo
+    tre «cose da guardare». Solo conteggi: nessun dato personale. `r` = risultato di `_riepilogo_settimanale`."""
+    def riga(etichetta: str, valore, prima=None, freccia: str = "") -> str:
+        conf = f' <span style="color:#a1a1aa">{freccia} (prima {prima})</span>' if prima is not None else ""
+        return (f'<tr><td style="padding:6px 0;color:#d4d4d8">{_esc(etichetta)}</td>'
+                f'<td style="padding:6px 0;text-align:right;color:#fff;font-weight:700;white-space:nowrap">{valore}{conf}</td></tr>')
+
+    def titolo(testo: str) -> str:
+        return f'<h3 style="margin:20px 0 6px;color:#fff;font-size:16px">{_esc(testo)}</h3>'
+
+    def tabella(righe: str) -> str:
+        return f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">{righe}</table>'
+
+    s = r["situazione"]
+    metriche = "".join(riga(m["etichetta"], m["questa"], m["precedente"], m["freccia"]) for m in r["metriche"])
+    fonti = "".join(riga(f["fonte"], f["questa"], f["precedente"], f["freccia"]) for f in r["fonti"]) \
+        or '<tr><td style="color:#a1a1aa">Nessuna iscrizione con una fonte ancora.</td></tr>'
+    zone = "".join(riga(z["zona"], z["voti"]) for z in r["interesse_zone"][:8]) \
+        or '<tr><td style="color:#a1a1aa">Nessun voto ancora.</td></tr>'
+    ora = (riga("Offerte in attesa", s["offerte_in_attesa"])
+           + riga("… di cui da più di 3 giorni", s["offerte_in_attesa_oltre_3_giorni"])
+           + riga("Negozi senza offerta", s["negozi_senza_offerta"])
+           + riga("Segnalazioni aperte", s["segnalazioni_aperte"])
+           + riga("Reclami aperti", s["reclami_aperti"]))
+    pagamenti = ""
+    if r.get("pagamenti"):
+        nomi = {"in_prova": "In prova", "attivo": "Attivi", "scaduto": "Scaduti", "sospeso": "Sospesi"}
+        pagamenti = titolo("Pagamenti dei negozi") + tabella(
+            "".join(riga(nomi.get(k, k), v) for k, v in r["pagamenti"]["per_stato"].items()))
+    guardare = "".join(f"<li style='margin:0 0 6px'>{_esc(v)}</li>" for v in r["da_guardare"]) \
+        or "<li>Niente di urgente questa settimana.</li>"
+    inner = f"""
+<h2 style="margin:0 0 4px;font-family:Georgia,serif;font-size:24px;color:#fff">La settimana di Sconti Roma</h2>
+<p style="margin:0 0 8px;color:#a1a1aa">{_esc(r['periodo']['etichetta'])} · ↑ ↓ = rispetto alla settimana prima</p>
+{titolo("Da guardare")}
+<ol style="margin:0;padding-left:20px;color:#d4d4d8">{guardare}</ol>
+{titolo("I numeri della settimana")}{tabella(metriche)}
+{titolo("Iscrizioni per fonte")}{tabella(fonti)}
+{titolo("Ora")}{tabella(ora)}
+{titolo("Zone che aspettano (voti totali)")}{tabella(zone)}
+{pagamenti}
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/admin" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Apri il pannello admin</a>
+</div>
+"""
+    return await _send(to, f"La settimana di Sconti Roma — {r['periodo']['etichetta']}", _shell(inner))
+# ---------- Lista d'attesa pre-lancio ----------
+def _link_disiscrizione(uid: str, utoken: str) -> str:
+    return f"{APP_URL}/lista-attesa/annulla?i={uid}&t={utoken}"
+
+
+def _piede_lista_attesa(uid: str, utoken: str) -> str:
+    """Ogni email della lista d'attesa porta il link per non riceverne più."""
+    link = _link_disiscrizione(uid, utoken)
+    return (f'<p style="margin:24px 0 0;color:#a1a1aa;font-size:13px">Non vuoi più ricevere email da {BRAND}? '
+            f'<a href="{link}" style="color:#a1a1aa">Annulla l\'iscrizione</a>.</p>')
+
+
+async def send_waitlist_confirmation(to: str, token: str, uid: str, utoken: str) -> Optional[str]:
+    """Doppio consenso della lista d'attesa: link valido 48 ore, monouso. Il token compare solo nel link."""
+    link = f"{APP_URL}/lista-attesa/conferma?token={token}"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Conferma la tua iscrizione</h2>
+<p style="{_P}">Ciao,</p>
+<p style="{_P}">hai chiesto di ricevere un'email quando {BRAND} è online. Per confermare tocca il pulsante qui sotto. Il link è valido per 48 ore.</p>
+<div style="text-align:center;margin:24px 0"><a href="{link}" style="{_BTN}">Conferma l'iscrizione</a></div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Se non sei stato tu, ignora questa email: senza conferma non ti scriveremo e il tuo indirizzo viene cancellato da solo.</p>
+<p style="margin:24px 0 0;color:#71717a;font-size:12px;word-break:break-all">Link diretto: {link}</p>
+{_piede_lista_attesa(uid, utoken)}
+"""
+    return await _send(to, f"Conferma la tua iscrizione — {BRAND}", _shell(inner))
+
+
+async def send_waitlist_launch_notice(to: str, uid: str, utoken: str) -> Optional[str]:
+    """Avviso di lancio. Caldo e neutro: niente prezzi, percentuali o date promesse."""
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">{BRAND} è online</h2>
+<p style="{_P}">Ciao,</p>
+<p style="{_P}">ci avevi chiesto di avvisarti: {BRAND} è online. Da oggi trovi le offerte dei negozi vicino a te, a Roma e dintorni. Scegli un'offerta, mostra il QR al banco e basta.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/discounts" style="{_BTN}">Guarda le offerte</a></div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">{BRAND} è per maggiorenni (18+). Grazie per l'attesa.</p>
+{_piede_lista_attesa(uid, utoken)}
+"""
+    return await _send(to, f"{BRAND} è online", _shell(inner))

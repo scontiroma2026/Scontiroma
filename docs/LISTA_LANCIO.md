@@ -1,55 +1,54 @@
-# Lista «pronto al lancio» di Sconti Roma (aggiornata il 13/10)
+# Lista «pronto al lancio» di Sconti Roma (aggiornata il 15/10, notte)
 
-Il sito è già online e funziona; il «lancio ufficiale» è il momento in cui lo presentiamo ai primi commercianti e ai primi clienti.
-Il lancio è **gratuito per circa due mesi**: i pagamenti non servono per partire, servono prima del primo addebito.
-Segna con `[x]` quando una voce è fatta. Chi: **Utente** = titolare; **Claude**; **Consulente** = legale/privacy; **Commercialista**.
+**Regola del titolare (14/10, rettificata il 15/10):** quando chiede «la lista», si risponde con questa lista **numerata** dopo aver controllato lo stato reale delle PR. I punti chiusi (✅) si **cancellano** dalla lista e la lista si **rinumera**; la storia di ciò che è stato fatto resta in `docs/STATO.md`. I punti nuovi si aggiungono, quelli cambiati si rettificano. Questo file è la fonte: va tenuto allineato.
 
+Lancio previsto il **31/10** (data **non** pubblica: al pubblico si dice «stiamo arrivando»). Prima i negozi, poi i clienti. Il giorno del lancio le offerte in attesa si approvano tutte insieme («Approva tutte»). Decisione sul lancio il **27/10**: minimo circa 10 negozi con un'offerta pronta, altrimenti si sposta di una settimana.
+Legenda: ✅ fatto · ⏳ in corso · ⬜ da fare. Chi: **Utente** = titolare; **Claude**; **Consulente** = legale/privacy; **Commercialista**.
 Repository pubblico: qui mai password, chiavi, ID di recupero né dati di persone reali.
 
-## A. Prima del lancio (7 voci aperte)
-1. [ ] **Consulente:** valida i testi legali (Privacy, Cookie, Termini, Recesso) e poi li pubblichiamo. Dentro ci sono: banner cookie senza «Marketing» (#95), LocationIQ e Stripe/PayPal come fornitori nella Privacy, durate di conservazione, cookie di attribuzione ridotti, eliminazione account dal 1° del mese dopo (#102), avviso di disdetta (#100), applicabilità di P2B e DSA (se servono, si costruiscono i moduli di segnalazione e reclamo). Il pacchetto è in #92, #101, #76, #80, #83, #40.
-2. [ ] **Utente:** visura camerale: REA, capitale sociale, PEC, conferma del civico «5/B» (#40).
-3. [ ] **Utente:** posta funzionante. Il dominio ha «Dominio con email» su Aruba (i record MX di `@` sono già quelli di Aruba). Serve creare la casella `info@` con l'account postmaster (password da sbloccare: assistenza Aruba o, in alternativa, inoltro con ImprovMX), poi inoltro di `info@`, `privacy@`, `partner@` verso la Gmail personale; non toccare i record `send`. Poi `REPLY_TO_EMAIL` (`info@`) e `ADMIN_NOTIFY_EMAIL` su Render. Il secondo account Google non si riesce a creare: per ora inoltro alla Gmail personale.
-4. [ ] **Utente (il giorno prima del lancio):** Render su «Starter» (circa 7 $ al mese, solo cambio di piano); Atlas dal piano Free al piano **Flex** (tetto 30 $ al mese) con backup, poi prova di ripristino. La riga «Indirizzi (LocationIQ)» è già verde (13/10).
-5. [ ] **Utente:** contratti sul trattamento dei dati (DPA) con Render, MongoDB Atlas, Resend e Google (Gmail gratuito non ne ha: si cambia quando c'è il secondo account Google).
-6. [ ] **Utente:** prova generale sul sito di prova: registrazione, Partita IVA, offerta, approvazione, QR, scansione. Poi eventualmente una prova sul sito vero con un negozio finto, da cancellare.
-7. [ ] **Utente:** alcuni negozi con offerte pubblicate a Roma e dintorni (le prime attività da cercare restano Garbatella, San Paolo e Marconi) e primo messaggio ai negozi (uno alla volta, con modo per dire no), dopo che il consulente ha visto i testi.
-8. [x] **Claude:** bozze legali allineate alle decisioni del 12/10 e del 13/10 (#92, 13/10). Termini e Recesso corretti in #116.
+## A. Prima del lancio
+1. ⬜ **Consulente:** tutte le domande sono in `docs/legale/DOMANDE_PER_IL_CONSULENTE.md` (35). Valida i testi legali (Privacy, Cookie, Termini, Recesso): PR #92, #95, #100, #101, #102, #114, #116, #76, #80, #40 e **#157 (Termini allineati alle decisioni: prova «circa due mesi» con esempio, disdetta, mese non rimborsabile; sostituisce la #83, chiusa)**. Già corretto in app: «€4,99 al mese + IVA», senza «prezzo bloccato» (#142) e l'email di benvenuto ai negozi con la frase di disdetta (#158).
+2. ⏳ **Utente:** avvocato a forfait per la parte negozi (soluzione ibrida). La richiesta di preventivo è pronta (`docs/legale/RICHIESTA_PREVENTIVO.md`): compilare i campi e inviarla a 2–3 studi, chiedendo una revisione veloce dei Termini negozi.
+3. ⬜ **Utente:** visura camerale (REA, capitale, PEC, civico «5/B»): serve anche al punto 2.
+4. ⬜ **Utente, domenica 18/10 (decisione del 14/10):** attivare tutti i piani a pagamento e fare gli upgrade dove serve: Render su Starter (~7 $/mese), Atlas su Flex (con prova di ripristino il giorno dopo), Resend su Pro (20 $/mese: 50.000 email al mese, nessun limite giornaliero). Guidato passo passo da Claude.
+5. ⏸️ **In sospeso (decisione del titolare, 14/10):** contratti sul trattamento dei dati (DPA), uno alla volta: 6a Render ⏳ · 6b MongoDB Atlas ⬜ · 6c Resend ✅ (DPA, SOC 2 e sub-fornitori scaricati; chiavi inutilizzate cancellate; resta la 2FA) · 6d Aruba (chiedere a dpo@aruba.com o dal pannello) ⬜ · 6e Google: il Gmail gratuito non ha un DPA ⬜. Documenti salvati solo nella cartella privata «DPA», non nel repository.
+6. ⏳ **Utente + Claude:** prova generale sul sito di prova (già aggiornato). **15/10: fatti 13 passi su 19** (tutto l'admin e tutto il commerciante); restano i 6 passi del cliente, in attesa delle 4 modifiche sul servizio API di prova su Render (pre-lancio spento, conferma email accesa, chiave email e destinatario solo titolare): iscrizione, email di conferma, accesso, cuore, segnalazione, eliminazione account), che richiedono pre-lancio spento e email attive sul sito di prova (rimandati per scelta del titolare). Durante la prova: pulsanti WhatsApp/Chiama (#163, #165), libreria foto da telefono (#164), «Non rinnovo» che spegne il caricamento del mese dopo (#170), fine prova calcolata nei pagamenti (#171), controllo foto per foto con motivo (#172, #173), statistiche per negozio nell'admin (#174). Claude ha fatto la prova automatica completa (14/10, PR #151): checklist da iPhone e cosa accendere su Render in `docs/operazioni/PROVA_GENERALE.md`. Resta la prova dal telefono.
+7. ⏳ **Conferma email dei clienti:** unita e spenta sul sito vero (`CLIENT_EMAIL_CONFIRMATION_REQUIRED=false` su Render). Da provare sul sito di prova (passi 1-2 del cliente del punto 6), poi accendere.
+8. ⏸️ **Pre-lancio:** `PRELAUNCH_MODE` su Render non prima della sera del 21/10 e dopo la prova da iPhone. La frase provvisoria sulla lista d'attesa (#153) è ferma per decisione del titolare (14/10); si riprende con «unisci». Registrazione dei clienti già chiusa in pre-lancio (#151).
+9. ⏳ **Materiali per i negozi:** video v16 per i commercianti (PR #155, bozza, superata dalla v17: da chiudere con l'OK del titolare; **v17 fatta e approvata dal titolare il 15/10** (PR #179 in bozza, da unire; foto reali della libreria, guida dopo «Al banco»; uso in `docs/comunicazione/VIDEO_V17_COME_USARLO.md`; non pubblicabile finché i Termini non sono validati e la musica non ha la licenza); base del video dell'8/10, voce femminile scelta, esempi ristorante «Menù di carne» ed enoteca con negozi finti, guida dentro il video); materiali scritti #146 in allineamento ai Termini (disdetta, «circa due mesi dalla prima pubblicazione», mese non rimborsabile); sito pronto. La percentuale nel video è ammessa (decisione del titolare, negozio fittizio): da verificare con il consulente.
+10. ⏳ **Contatto con i negozi:** dal 19/10 (con la versione leggera del video v17 nei messaggi), uno alla volta, con il manuale e con modo per dire no, dopo che il consulente ha visto i testi.
+11. ⏳ **Campagna social:** piano e copioni uniti (#140); il video v17 per i negozi va pubblicato anche sui social (formato master o quadrato) dopo la validazione dei Termini. Da fare: due gruppi per il 19/10 (ricerca del titolare), musica, video con persone, copertine nuove su WhatsApp e Facebook.
+12. ⬜ **27/10:** controllo della soglia di negozi e decisione sul 31/10.
+13. ⬜ **Utente:** accessi con verifica a due passaggi, codici di recupero su carta, persona di fiducia.
+14. ⏳ **Prove e pratiche:** prova del cambio mese ✅ (test automatici e orari di Roma, #149) · test su un Android vero ⬜ (finora solo emulazione) · marchio «Sconti Roma» ⏳ (scheda di verifica unita il 15/10 (#167): resta da portarla al consulente con le sue domande; `docs/operazioni/MARCHIO.md`) · codice ATECO ⬜ (`docs/operazioni/CODICE_ATECO.md`) · promemoria in `PROMEMORIA_DA_RIPRENDERE.md`.
+15. ⬜ **Libreria foto:** il 15/10 tolte 104 foto con volti, marchi o dubbie (#166): restano 318 (Meccanici 11, Padel 13, Calcetto 19). Da sostituire con altre senza volti né marchi, scelte su Unsplash dal titolare (da qui Unsplash non è raggiungibile); non bloccante per il lancio.
+16. ⬜ **«Approva tutte» e foto:** il giorno del lancio «Approva tutte» (`LANCIA`) approva anche le foto di tutte le offerte senza controllo foto per foto: prima guardare le foto una per una nelle schede «Offerte in attesa» e «Prossimo Mese».
 
 ## B. Dopo il lancio, prima del primo addebito (circa due mesi dopo)
-- [ ] **Utente:** chiavi sandbox di Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; **prova con soldi finti** insieme a Claude (carta, PayPal, mancato pagamento, disdetta).
-- [ ] **Utente:** conti Stripe e PayPal Business dell'azienda; chiavi vere sul server vero solo il giorno dell'accensione.
-- [ ] **Commercialista:** conferma IVA al 22%, chi emette la fattura elettronica (SdI), commissioni, PEC.
-- [ ] **Claude:** altre email al commerciante: giorno 30 della prova, promemoria prima del 1°, mancato pagamento, ricevuta; Partita IVA per i negozi già registrati.
-- [ ] **Consulente:** testi della schermata di pagamento e dei Termini sui pagamenti.
-- [ ] **Utente:** conferma esplicita prima di accendere i pagamenti veri; i pagamenti dei clienti restano spenti (`CLIENT_SUBSCRIPTION_REQUIRED=false`).
-- [ ] **Utente:** Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e avviso di spesa, chiave su Render.
+17. ⬜ Chiavi di prova Stripe e PayPal sul sito di prova e `MERCHANT_PAYMENT_REQUIRED=true` solo lì; prova con soldi finti.
+18. ⬜ Conti Stripe e PayPal Business dell'azienda; chiavi vere sul server vero solo il giorno dell'accensione.
+19. ⬜ **Commercialista:** IVA al 22%, fattura elettronica (SdI), PEC.
+20. ⏳ **Claude:** altre email al commerciante (giorno 30 della prova, promemoria prima del 1°, mancato pagamento, ricevuta): cinque email pronte e spente (giorno 30 della prova, promemoria 7 giorni prima del primo pagamento, promemoria 3 giorni prima di ogni addebito mensile, mancato pagamento, ricevuta), PR #169 in bozza da guardare e unire (interruttore `MERCHANT_TRIAL_EMAILS`); scelte del titolare fatte il 15/10: nuove email al posto dei promemoria a 10 e 3 giorni; 7 giorni prima del primo pagamento; 3 giorni prima di ogni addebito. Restano da validare col consulente le frasi «dopo il giorno 5 vale per il mese dopo» e «non è un documento fiscale».
+21. ⬜ **Consulente:** testi della schermata di pagamento (nuova frase «Non viene addebitato niente subito…», #181) e dei Termini sui pagamenti.
+22. ⬜ **Utente:** conferma esplicita prima di accendere i pagamenti; i pagamenti dei clienti restano spenti.
+23. ⬜ Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e chiave su Render.
 
 ## C. Dopo il lancio, con calma
-- [ ] **Utente:** profili social e WhatsApp Business (email e numero dedicati, nome e handle `scontiroma`), Google Business, gruppi di quartiere (permesso agli amministratori). Piano in #103.
-- [ ] **Utente:** video commercianti v14: scegliere la voce tra Fernando ed Enea (PR #120); video per i clienti pronto muto (PR #121), serve la voce (crediti ElevenLabs finiti: aspettare il rinnovo o registrare una persona). Non pubblicare i video finché Termini e Privacy non sono validati.
-- [ ] **Utente:** locandine stampabili ancora in Fraunces: decidere se passare a Manrope.
-- [ ] **Utente:** file `roma.pmtiles` della mappa (guida `docs/guide/MAPPE.md`); foto del negozio nel profilo (da decidere).
-- [x] **Claude:** correzioni di testo (13/10): «+ IVA» e niente «prezzo bloccato» nel kit (#41) e nel piano (#81); «Roma e dintorni» al posto dei tre quartieri nel kit, nei Termini (#116) e nella home; segnaposto del modulo offerta già corretto. I dati demo stanno solo nei test (`e2e/seed_demo.py`), mai in produzione.
-- [ ] **Idee per dopo il lancio** (valutate il 14/10, nessuna prima del lancio):
-  - **Coupon Flash** (priorità 1): sconti a tempo breve (per esempio 2 ore) per riempire i momenti vuoti o smaltire il fresco. Nel codice c'è già quasi tutto (offerte, giorni, utilizzi, QR): servono una durata in ore e una scadenza. **Da decidere:** oggi ogni offerta si approva a mano; un Flash non può aspettare, quindi andrebbe consentito solo ai negozi già approvati, con regole fisse.
-  - **Notifiche vicino a un negozio** (da rimandare): richiedono la posizione dell'utente anche ad app chiusa; per il GDPR servono consenso esplicito, Privacy e Cookie riscritte e il consulente; su iPhone una web app non segue la posizione in background (servirebbe un'app negli store).
-  - **Punti e raccolte a premio** (no, per ora): contraddice la regola «uno sconto al mese», complica i conti dei negozi e può avere regole proprie (operazioni a premio): solo se i clienti lo chiedono, con il consulente.
-- [ ] **Utente:** revocare `EMERGENT_LLM_KEY`; avvisi di UptimeRobot sull'email di Sconti Roma e sull'app del telefono.
-
-## Fatto
-- [x] Pulizia dell'app vera (14/10): cancellati tutti i clienti iscritti nei giorni di prova (il titolare); negozi già a 0.
-- [x] Social (13/10): Pagina Facebook e Instagram `sconti.roma` creati e collegati, primo post pubblicato; Composio collegato (pubblico solo dopo il tuo OK).
-- [x] Titoli del sito in Manrope (#122, 13/10); segnalazioni, reclami e scheda admin «Clienti» (#113, 13/10).
-- [x] Controllo online (UptimeRobot) su sito e server (10/10).
-- [x] Password dell'utente `prova` di Atlas cambiata (11/10).
-- [x] Controllo giornaliero automatico alle 8:00 con GitHub e Resend (12/10).
-- [x] Prova dei negozi, pre-lancio «Approva tutte», promemoria a 10 e 3 giorni, Stripe e PayPal per i negozi (spenti), prezzo 4,99 € + IVA, Partita IVA all'iscrizione, avvisi di disdetta.
+24. ⬜ **Un abbonamento per commerciante**, anche con più punti vendita (serve gestire più punti vendita in un account; adattare i Termini).
+25. ⬜ **Prova gratuita ripetuta** e Partita IVA con più punti vendita (impronta anti-abuso, segnalazioni in admin).
+26. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità, punti e raccolte a premio.
+27. ⬜ Locandine A4 e volantini: passare a Manrope e togliere «quartiere» (PR #139, 4 scelte).
+28. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
+29. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
+30. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); serve il permesso a cancellare. Le PR superate restano da decidere una alla volta: #103, #81, #100, #101.
 
 ## Decisioni del titolare (riferimento)
 Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.
 
+Altre decisioni del 14/10: prima i negozi, ai clienti niente data fissa («stiamo arrivando»); tono neutro (niente Halloween); nessuna pubblicità a pagamento; prova gratuita ripetuta rimandata; un abbonamento per commerciante a prescindere dai punti vendita; chiave anti-abuso «Partita IVA + indirizzo» da fare dopo la partenza.
+
 ## Giorno del lancio
 - [ ] Controlli verdi su `main`, nessuna PR aperta con testi legali non validati.
 - [ ] Tutte le voci di A segnate.
+- [ ] `PRELAUNCH_MODE` e avviso di lancio alla lista d'attesa; «Approva tutte» sulle offerte in attesa.
 - [ ] Controllo giornaliero attivo (dopo il lancio due volte al giorno).

@@ -32,6 +32,7 @@ import socket
 from urllib.parse import urlparse, urljoin
 import prova_pagamenti as pp
 from email_service import (
+    mask_email,
     send_password_reset,
     send_email_confirmation,
     send_preferito_nuova_offerta,
@@ -44,6 +45,7 @@ from email_service import (
     send_subscription_cancelled,
     send_master_reset,
     send_admin_segnalazione,
+    send_admin_riepilogo_settimanale,
     send_esito_segnalazione,
     send_merchant_trial_reminder,
     send_next_offer_reminder,
@@ -54,9 +56,11 @@ from email_service import (
     send_admin_new_merchant,
     send_admin_new_offer,
     send_account_deleted,
+    send_waitlist_confirmation,
+    send_waitlist_launch_notice,
 )
 import paypal_service
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Body
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -90,6 +94,13 @@ REFRESH_TTL_DAYS = 7
 # promemoria di pagamento spenti. Acceso ("true") = tutto torna come prima.
 def client_subscription_required() -> bool:
     return os.environ.get("CLIENT_SUBSCRIPTION_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+# Modalità pre-lancio: SPENTA per impostazione predefinita (il sito vero non cambia). La accende il titolare
+# su Render (PRELAUNCH_MODE=true) quando serve: la home e l'elenco offerte vuoto mostrano «Stiamo arrivando»
+# con la lista d'attesa. Le funzioni per i negozi restano sempre attive. Letta a ogni richiesta.
+def prelaunch_mode() -> bool:
+    return os.environ.get("PRELAUNCH_MODE", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 # Conferma dell'email per i soli CLIENTI (i commercianti hanno Partita IVA e approvazione manuale).
@@ -387,7 +398,7 @@ async def _cancel_expired_grace(user_id: str) -> None:
                 {"id": user_id},
                 {"$set": {"cancellation_email_sent": True, "cancellation_email_sent_at": now_iso}},
             )
-            logging.info(f"[grace-expired] email cancellazione inviata to={u['email']}")
+            logging.info(f"[grace-expired] email cancellazione inviata to={mask_email(u['email'])}")
     except Exception as e:
         logging.error(f"[grace-expired] email send failed: {e}")
 
@@ -916,6 +927,9 @@ async def register(payload: RegisterIn, response: Response, request: Request):
     # Gli account demo/admin creati all'avvio (seed_data) non passano da qui e non sono toccati.
     if not payload.legal_accepted:
         raise HTTPException(400, "Devi accettare Termini, Privacy e Cookie Policy per registrarti")
+    # Pre-lancio: i CLIENTI non si registrano ancora (lista d'attesa); commercianti e admin non cambiano.
+    if prelaunch_mode() and payload.role == "client":
+        raise HTTPException(403, "Stiamo arrivando: le iscrizioni dei clienti si aprono al lancio. Lascia la tua email nella lista d'attesa.")
     email = payload.email.lower().strip()
     if await db.users.find_one({"email": email}):
         raise HTTPException(400, "Email già registrata")
@@ -950,7 +964,7 @@ async def register(payload: RegisterIn, response: Response, request: Request):
     if referral_ok:
         doc["referred_by"] = payload.referred_by
         doc["referred_at"] = now_iso
-    fonte = _fonte_valida(payload.fonte) if payload.role == "client" else None
+    fonte = _fonte_valida(payload.fonte)  # clienti e negozi: serve a contare le iscrizioni per volantino/QR
     if fonte:
         doc["fonte_iscrizione"] = fonte
         doc["fonte_iscrizione_at"] = now_iso
@@ -967,14 +981,16 @@ async def register(payload: RegisterIn, response: Response, request: Request):
         phone = (payload.phone or "").strip()
         if not phone:
             raise HTTPException(422, "Il numero di telefono è obbligatorio per i commercianti")
-        partita_iva = None
-        if (payload.partita_iva or "").strip():
-            partita_iva = _partita_iva_valida(payload.partita_iva)
-            if not partita_iva:
-                solo_cifre = re.sub(r"[\s.]", "", str(payload.partita_iva or "")).upper().removeprefix("IT")
-                if re.fullmatch(r"\d{11}", solo_cifre):
-                    raise HTTPException(422, "La Partita IVA ha 11 cifre ma non risulta corretta: controlla le cifre, soprattutto l'ultima")
-                raise HTTPException(422, "La Partita IVA deve avere 11 numeri (solo cifre)")
+        # Partita IVA obbligatoria (decisione del titolare, 14/10): solo controllo formale, mai online.
+        # I negozi già registrati senza Partita IVA non sono toccati (questo controllo vale solo alla registrazione).
+        if not (payload.partita_iva or "").strip():
+            raise HTTPException(422, "La Partita IVA è obbligatoria per i commercianti (11 numeri)")
+        partita_iva = _partita_iva_valida(payload.partita_iva)
+        if not partita_iva:
+            solo_cifre = re.sub(r"[\s.]", "", str(payload.partita_iva or "")).upper().removeprefix("IT")
+            if re.fullmatch(r"\d{11}", solo_cifre):
+                raise HTTPException(422, "La Partita IVA ha 11 cifre ma non risulta corretta: controlla le cifre, soprattutto l'ultima")
+            raise HTTPException(422, "La Partita IVA deve avere 11 numeri (solo cifre)")
         doc.update({
             "shop_name": (payload.shop_name or payload.name or "").strip() or "Negozio",
             "zone": (payload.zone or "Centro storico").strip(),
@@ -984,8 +1000,7 @@ async def register(payload: RegisterIn, response: Response, request: Request):
             "image_url": "",
             "phone": phone,
         })
-        if partita_iva:
-            doc["partita_iva"] = partita_iva
+        doc["partita_iva"] = partita_iva
     await db.users.insert_one(doc)
 
     # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)
@@ -1407,6 +1422,226 @@ async def _interesse_per_zona() -> list:
                   key=lambda x: (-x["voti"], x["zona"]))
 
 
+# ---------- Lista d'attesa pre-lancio ----------
+# Collezione `waitlist`: email, data e versione del consenso, stato, fonte generica. Nessun IP, nessun cookie.
+# Doppio consenso: l'iscritto è «da_confermare» finché non tocca il link ricevuto per email (48 ore, nel DB solo
+# l'impronta del token). Le voci mai confermate si cancellano dopo 7 giorni. Il link per disiscriversi non si salva:
+# è una firma (HMAC) dell'id, così si può mettere in ogni email senza tenere altri segreti nel database.
+WAITLIST_CONSENT_VERSION = "2026-10-v1"  # cambia insieme al testo del consenso mostrato nel sito
+WAITLIST_CONFERMA_ORE = 48
+WAITLIST_NON_CONFERMATI_GIORNI = 7
+WAITLIST_FONTI = ("instagram", "facebook", "volantino", "passaparola")  # lista chiusa; poi «diretto» e «altro»
+WAITLIST_FONTI_GRUPPO = ("facebook", "gruppo")  # con codice: «facebook-garbatella», «gruppo-eur»
+WAITLIST_FONTI_GRUPPO = ("facebook", "gruppo")  # con codice: «facebook-garbatella», «gruppo-eur»
+WAITLIST_STATI = ("da_confermare", "confermata", "disiscritta")
+MSG_LISTA_RICHIESTA = ("Ti abbiamo mandato un'email: tocca il link per confermare l'iscrizione. "
+                       "Se non la trovi, controlla lo spam.")
+MSG_LISTA_LINK = "Questo link non è valido o è già stato usato."
+
+
+def _waitlist_fonte(valore) -> str:
+    """Fonte generica da una lista chiusa; qualsiasi altro testo diventa «altro», assente = «diretto»."""
+    v = (valore or "").strip().lower()
+    if not v:
+        return "diretto"
+    # gruppi: «facebook-<codice>» e «gruppo-<codice>» restano interi (codice = minuscole, numeri, trattino, max 20)
+    for pre in WAITLIST_FONTI_GRUPPO:
+        if v.startswith(pre + "-") and re.fullmatch(r"[a-z0-9-]{1,20}", v[len(pre) + 1:]):
+            return v
+    if any(v.startswith(pre + "-") for pre in WAITLIST_FONTI_GRUPPO):
+        return v if re.fullmatch(r"(facebook|gruppo)-[a-z0-9-]{1,20}", v) else "altro"  # codice non valido = «altro»
+    for f in WAITLIST_FONTI:
+        if v == f or v.startswith(f + "-"):
+            return f
+    return "altro"
+
+
+def _waitlist_unsub_token(uid: str) -> str:
+    return hmac_lib.new(JWT_SECRET.encode(), f"waitlist-unsub:{uid}".encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def _limite_lista_attesa_ok(request: Request) -> bool:
+    """Per dispositivo (impronta, solo in memoria): 3 iscrizioni ogni 10 minuti e 5 all'ora. 0 = spento (test)."""
+    return _limite_client_ok("lista-attesa", request,
+                             (_soglia_env("WAITLIST_MAX_PER_CLIENT_10MIN", 3), 600),
+                             (_soglia_env("WAITLIST_MAX_PER_CLIENT_ORA", 5), 3600))
+
+
+def _waitlist_rimando_ok(doc: dict) -> bool:
+    """Per indirizzo: almeno RESET_REQ_MIN_GAP_SEC secondi tra due email e al massimo RESET_REQ_MAX_PER_HOUR all'ora."""
+    adesso = datetime.now(timezone.utc)
+    recenti = []
+    for raw in (doc.get("req_log") or []):
+        try:
+            t = datetime.fromisoformat(raw)
+        except Exception:
+            continue
+        if (adesso - t).total_seconds() < 3600:
+            recenti.append(t)
+    recenti.sort()
+    if recenti and (adesso - recenti[-1]).total_seconds() < RESET_REQ_MIN_GAP_SEC:
+        return False
+    return len(recenti) < RESET_REQ_MAX_PER_HOUR
+
+
+class ListaAttesaIn(BaseModel):
+    email: EmailStr
+    consenso: bool = False
+    src: Optional[str] = None
+    sito_web: Optional[str] = ""  # campo trappola: un utente vero non lo vede e non lo compila
+
+
+class ListaAttesaTokenIn(BaseModel):
+    token: str
+
+
+class ListaAttesaAnnullaIn(BaseModel):
+    i: str
+    t: str
+
+
+@api.post("/prelaunch/waitlist")
+async def lista_attesa_iscrivi(payload: ListaAttesaIn, request: Request):
+    """Iscrizione alla lista d'attesa. Risposta identica per email nuova o già presente: non rivela nulla."""
+    if not prelaunch_mode():
+        raise HTTPException(404, "Non disponibile")
+    if not _limite_lista_attesa_ok(request):
+        raise HTTPException(429, MSG_TROPPE_RICHIESTE, headers={"Retry-After": "600"})
+    risposta = {"ok": True, "message": MSG_LISTA_RICHIESTA}
+    if (payload.sito_web or "").strip():  # trappola riempita: finta riuscita, non si salva nulla
+        return risposta
+    if not payload.consenso:
+        raise HTTPException(400, "Per iscriverti spunta la casella del consenso.")
+    email = payload.email.lower().strip()
+    ora = datetime.now(timezone.utc)
+    token = secrets.token_urlsafe(32)
+    campi = {
+        "status": "da_confermare",
+        "consent_at": ora.isoformat(),
+        "consent_version": WAITLIST_CONSENT_VERSION,
+        "src": _waitlist_fonte(payload.src),
+        "confirm_token_hash": _hash_token_conferma(token),
+        "confirm_expires": (ora + timedelta(hours=WAITLIST_CONFERMA_ORE)).isoformat(),
+    }
+    doc = await db.waitlist.find_one({"email": email})
+    if doc is None:
+        doc = {"id": str(uuid.uuid4()), "email": email, "created_at": ora.isoformat(),
+               "req_log": [ora.isoformat()], "notice_sent_at": None, **campi}
+        try:
+            await db.waitlist.insert_one(doc)
+        except Exception:  # due richieste insieme: vince la prima, l'altra non manda altro
+            return risposta
+    elif doc.get("status") == "confermata":
+        return risposta  # già dentro: niente da rifare, niente da rivelare
+    elif not _waitlist_rimando_ok(doc):
+        return risposta
+    else:
+        log = list(doc.get("req_log") or [])[-20:] + [ora.isoformat()]
+        await db.waitlist.update_one({"id": doc["id"]}, {"$set": {**campi, "req_log": log},
+                                                         "$unset": {"unsubscribed_at": ""}})
+    try:
+        await send_waitlist_confirmation(email, token, doc["id"], _waitlist_unsub_token(doc["id"]))
+    except Exception as e:
+        logging.warning(f"[lista-attesa] email di conferma non inviata: {e}")
+    return risposta
+
+
+@api.post("/prelaunch/waitlist/confirm")
+async def lista_attesa_conferma(payload: ListaAttesaTokenIn):
+    """Conferma con il token ricevuto per email. Monouso. Funziona anche a modalità pre-lancio spenta."""
+    token = (payload.token or "").strip()
+    doc = await db.waitlist.find_one({"confirm_token_hash": _hash_token_conferma(token)}) if token else None
+    if not doc or doc.get("status") != "da_confermare":
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LISTA_LINK})
+    try:
+        scaduto = datetime.fromisoformat(doc.get("confirm_expires", "")) < datetime.now(timezone.utc)
+    except Exception:
+        scaduto = True
+    if scaduto:
+        raise HTTPException(400, {"code": "link_scaduto", "msg": "Questo link è scaduto."})
+    res = await db.waitlist.update_one(
+        {"id": doc["id"], "confirm_token_hash": doc["confirm_token_hash"]},
+        {"$set": {"status": "confermata", "confirmed_at": datetime.now(timezone.utc).isoformat()},
+         "$unset": {"confirm_token_hash": "", "confirm_expires": ""}})
+    if res.modified_count != 1:
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LISTA_LINK})
+    return {"ok": True}
+
+
+@api.post("/prelaunch/waitlist/unsubscribe")
+async def lista_attesa_annulla(payload: ListaAttesaAnnullaIn):
+    """Disiscrizione dal link di ogni email. L'indirizzo resta segnato «disiscritta» per non riscriverti per errore."""
+    uid, tok = (payload.i or "").strip(), (payload.t or "").strip()
+    if not uid or not hmac_lib.compare_digest(_waitlist_unsub_token(uid).encode(), tok.encode()):
+        raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LISTA_LINK})
+    await db.waitlist.update_one(
+        {"id": uid, "status": {"$ne": "disiscritta"}},
+        {"$set": {"status": "disiscritta", "unsubscribed_at": datetime.now(timezone.utc).isoformat()},
+         "$unset": {"confirm_token_hash": "", "confirm_expires": ""}})
+    return {"ok": True}
+
+
+async def _run_waitlist_cleanup() -> dict:
+    """Cancella le iscrizioni mai confermate dopo WAITLIST_NON_CONFERMATI_GIORNI giorni (data del consenso)."""
+    limite = (datetime.now(timezone.utc) - timedelta(days=WAITLIST_NON_CONFERMATI_GIORNI)).isoformat()
+    r = await db.waitlist.delete_many({"status": "da_confermare", "consent_at": {"$lt": limite}})
+    return {"deleted": r.deleted_count}
+
+
+WAITLIST_CONSERVAZIONE_MESI = 12  # confermate e annullate (decisione del titolare, 14/10); le non confermate restano a 7 giorni
+
+
+def _data_iso(valore) -> Optional[datetime]:
+    try:
+        d = datetime.fromisoformat(str(valore))
+    except Exception:
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def _meno_mesi(d: datetime, mesi: int) -> datetime:
+    """Stessa data di `mesi` mesi fa (il 29/02 diventa 28/02 se l'anno prima non è bisestile)."""
+    tot = d.year * 12 + (d.month - 1) - mesi
+    anno, mese = divmod(tot, 12)
+    mese += 1
+    giorno = d.day
+    while True:
+        try:
+            return d.replace(year=anno, month=mese, day=giorno)
+        except ValueError:
+            giorno -= 1
+
+
+async def _run_waitlist_retention(adesso: Optional[datetime] = None) -> dict:
+    """Cancella le iscrizioni alla lista d'attesa più vecchie di 12 mesi. Vale sempre, anche con PRELAUNCH_MODE spento.
+    Data di riferimento: per le confermate la data di iscrizione (consent_at, rinnovata a ogni nuovo consenso); per le
+    annullate la data di annullamento (unsubscribed_at, altrimenti consent_at): l'indirizzo annullato serve a non
+    riscrivere per errore chi ha detto no, quindi i 12 mesi partono da quando ha detto no.
+    Il giorno si «prenota» in modo atomico: due copie del server o un riavvio non lo ripetono. Nei log nessun indirizzo intero."""
+    adesso = adesso or datetime.now(timezone.utc)
+    giorno = adesso.astimezone(ZoneInfo("Europe/Rome")).strftime("%Y-%m-%d")
+    chiave = f"waitlist_retention:{giorno}"
+    prenota = await db.job_claims.update_one({"key": chiave}, {"$setOnInsert": {"key": chiave, "ran_at": adesso.isoformat()}}, upsert=True)
+    if prenota.upserted_id is None:
+        return {"skipped": True, "deleted": 0}
+    limite = _meno_mesi(adesso, WAITLIST_CONSERVAZIONE_MESI)
+    cancellate = 0
+    try:
+        async for d in db.waitlist.find({"status": {"$in": ["confermata", "disiscritta"]}}):
+            campo = "unsubscribed_at" if d.get("status") == "disiscritta" else "consent_at"
+            rif = _data_iso(d.get(campo)) or _data_iso(d.get("consent_at")) or _data_iso(d.get("created_at"))
+            if rif is None or rif >= limite:
+                continue
+            r = await db.waitlist.delete_one({"id": d.get("id"), "status": d.get("status")})
+            if r.deleted_count:
+                cancellate += 1
+                logging.info(f"[lista-attesa] iscrizione {d.get('status')} oltre {WAITLIST_CONSERVAZIONE_MESI} mesi cancellata to={mask_email(d.get('email'))}")
+    except Exception:
+        await db.job_claims.delete_one({"key": chiave})  # si potrà ritentare
+        raise
+    return {"skipped": False, "deleted": cancellate}
+
+
 @api.get("/categories")
 async def categories():
     return {"categories": CATEGORIES}
@@ -1600,9 +1835,18 @@ def _is_new_offer(published_at, now: Optional[datetime] = None) -> bool:
     return timedelta(0) <= now - dt < timedelta(hours=NEW_OFFER_HOURS)
 
 
+def _mese_roma_estremi(chiave: str) -> tuple:
+    """(inizio, fine escluso) del mese «AAAA-MM» all'ora di Roma, come testo ISO in UTC (le date nel database
+    sono in UTC): il 1° alle 00:30 di Roma è già il mese nuovo, anche se in UTC è ancora il 31."""
+    anno, mese = (int(x) for x in chiave.split("-"))
+    dopo = (anno + 1, 1) if mese == 12 else (anno, mese + 1)
+    inizio = datetime(anno, mese, 1, tzinfo=ZoneInfo("Europe/Rome")).astimezone(timezone.utc)
+    fine = datetime(dopo[0], dopo[1], 1, tzinfo=ZoneInfo("Europe/Rome")).astimezone(timezone.utc)
+    return inizio.isoformat(), fine.isoformat()
+
+
 def _month_start_iso() -> str:
-    now = datetime.now(timezone.utc)
-    return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    return _mese_roma_estremi(current_month_key())[0]
 
 
 # ---------- Geocoding via Nominatim (OpenStreetMap, gratuito) ----------
@@ -2337,6 +2581,8 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     window = await next_offer_window()
     if not window["open"]:
         raise HTTPException(423, f"La finestra per caricare l'offerta di {window['next_month_label']} si apre il {window['opens_on']} (ultimi 7 giorni del mese).")
+    if user.get("no_renew_month") == window["next_month"]:
+        raise HTTPException(409, f"Hai scelto «Non rinnovo»: per caricare l'offerta di {window['next_month_label']} annulla prima la scelta.")
     data = payload.cleaned()
     if not data.get("title") or not data.get("description"):
         raise HTTPException(422, "Titolo e descrizione sono obbligatori")
@@ -2354,8 +2600,6 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
                      "target_month": window["next_month"], "created_at": now_iso})
         await db.next_discounts.insert_one(data)
         nd = data
-    # Caricare l'offerta del mese dopo annulla un'eventuale scelta "Non rinnovo".
-    await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
     return {"next_discount": _enrich_next(nd), "window": window}
 
 
@@ -2442,8 +2686,12 @@ async def merchant_archive(user: dict = Depends(require_merchant)):
         mese = d.get("locked_month") or d.get("target_month") or ""
         utilizzi = 0
         if mese:
-            utilizzi = await db.redemptions.count_documents({
-                "discount_id": d.get("id"), "status": "redeemed", "redeemed_at": {"$regex": f"^{mese}"}})
+            try:
+                inizio, fine = _mese_roma_estremi(mese)
+                utilizzi = await db.redemptions.count_documents({
+                    "discount_id": d.get("id"), "status": "redeemed", "redeemed_at": {"$gte": inizio, "$lt": fine}})
+            except ValueError:
+                utilizzi = 0
         out.append({
             "archivio_id": d["archivio_id"], "title": d.get("title") or "",
             "original_price": d.get("original_price"), "discounted_price": d.get("discounted_price"),
@@ -2481,8 +2729,12 @@ async def merchant_insights(user: dict = Depends(require_merchant)):
     """Statistiche aggregate per il commerciante: utilizzi del mese, clienti nuovi e di
     ritorno, giorni preferiti, andamento degli ultimi 6 mesi. Solo numeri, mai nomi; sotto
     i 3 clienti nel mese i dettagli non vengono mostrati ("dati insufficienti")."""
+    return await _insights_negozio(user["id"], applica_soglia=True)
+
+
+async def _insights_negozio(merchant_id: str, applica_soglia: bool) -> dict:
     used = await db.redemptions.find(
-        {"merchant_id": user["id"], "status": "redeemed"},
+        {"merchant_id": merchant_id, "status": "redeemed"},
         {"_id": 0, "user_id": 1, "redeemed_at": 1}).to_list(None)
     mese = current_month_key()
     def mese_di(r):
@@ -2503,7 +2755,8 @@ async def merchant_insights(user: dict = Depends(require_merchant)):
         key = f"{y}-{m:02d}"
         serie.append({"mese": f"{MESI_IT[m - 1]} {y}", "utilizzi": sum(1 for r in used if mese_di(r) == key)})
     out = {"mese": month_label_it(mese), "utilizzi_mese": len(del_mese), "utilizzi_totali": len(used),
-           "ultimi_6_mesi": serie, "dati_sufficienti": len(clienti) >= INSIGHTS_MIN_CLIENTI}
+           "ultimi_6_mesi": serie,
+           "dati_sufficienti": (len(clienti) >= INSIGHTS_MIN_CLIENTI) or not applica_soglia}
     if out["dati_sufficienti"]:
         giorni = [0] * 7
         for r in del_mese:
@@ -2588,6 +2841,7 @@ def _frontend_url() -> str:
 async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
     out = {"client_subscription_required": client_subscription_required(),
+           "prelaunch_mode": prelaunch_mode(),
            # «Migliora foto» compare solo se la chiave Gemini è impostata su Render
            "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip())}
     # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
@@ -2825,7 +3079,7 @@ async def suspend_subscription_on_payment_failed(
                 grace_expires_iso=grace_expires_iso,
                 provider=provider,
             )
-            logging.info(f"[payment-failed] email inviata to={u['email']}")
+            logging.info(f"[payment-failed] email inviata to={mask_email(u['email'])}")
     except Exception as e:
         logging.error(f"[payment-failed] email send failed: {e}")
 
@@ -2932,7 +3186,7 @@ async def extend_subscription_on_renewal(
             price_eur=price_eur,
             provider=provider,
         )
-        logging.info(f"[renewal] email inviata to={u['email']} id={email_id}")
+        logging.info(f"[renewal] email inviata to={mask_email(u['email'])} id={email_id}")
     except Exception as e:
         logging.error(f"[renewal] email send failed: {e}")
 
@@ -3798,6 +4052,19 @@ def _qr_permit_claims(permit: Optional[str], r: dict) -> Optional[dict]:
     return p
 
 
+def _codice_di_mese_scaduto(r: dict) -> bool:
+    """Un codice non ancora usato, creato in un mese passato, vale solo fino alle 02:00 (ora di Roma) del 1° giorno del mese dopo
+    (ora di Roma); poi scade. L'uso conta comunque per il mese di creazione (`month_key`)."""
+    mk = r.get("month_key")
+    if r.get("status") != "pending" or not mk or mk == current_month_key():
+        return False
+    ora = _rome_now()
+    return not (pp.mese_dopo(mk) == current_month_key() and ora.day == 1 and ora.hour < 2)
+
+
+MSG_CODICE_MESE_SCADUTO = "Codice scaduto: era del mese scorso, il cliente ne chiede uno nuovo"
+
+
 async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     """Controlla il QR (formato, finestra di 20 s, firma, esistenza). Ritorna (redemption, None) oppure (None, motivo).
     Con `ignora_finestra` (permesso breve valido) salta solo il controllo dei 20 secondi: la firma resta."""
@@ -3815,6 +4082,9 @@ async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     if not r:
         await _log_scan(False, "Codice non trovato")
         return None, "Codice non trovato"
+    if _codice_di_mese_scaduto(r):
+        await _log_scan(False, "Codice del mese scorso scaduto", r)
+        return None, MSG_CODICE_MESE_SCADUTO
     return r, None
 
 
@@ -3966,6 +4236,8 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
         raise HTTPException(404, "Codice non trovato")
     if r["status"] == "redeemed":
         raise HTTPException(400, "Codice già utilizzato")
+    if _codice_di_mese_scaduto(r):
+        raise HTTPException(400, MSG_CODICE_MESE_SCADUTO)
     # LIMITE GIORNALIERO anche sulla verifica manuale del commerciante
     prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
     if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
@@ -4233,6 +4505,181 @@ async def admin_session(request: Request, user: dict = Depends(require_admin)):
     return {"master_verified": verified, "biometric_available": bool((u or {}).get("webauthn_credentials"))}
 
 
+async def _negozi_senza_offerta() -> list:
+    """Nomi (dell'attività) dei negozi iscritti che non hanno ancora caricato nessuna offerta."""
+    con_offerta = set(await db.discounts.distinct("merchant_id"))
+    docs = await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1}).to_list(None)
+    return sorted((m.get("shop_name") or "senza nome") for m in docs if m["id"] not in con_offerta)
+# ---------- Lista d'attesa: area admin ----------
+WAITLIST_PAROLA_AVVISO = "AVVISA"
+_avviso_stato: dict = {"in_corso": False, "ultimo": None}
+_avviso_task: Optional[asyncio.Task] = None
+
+
+async def _pausa(secondi: float) -> None:
+    if secondi > 0:
+        await asyncio.sleep(secondi)
+
+
+def _env_float(nome: str, predefinito: float) -> float:
+    try:
+        return float(os.environ.get(nome, predefinito))
+    except (TypeError, ValueError):
+        return predefinito
+
+
+async def _waitlist_riepilogo() -> dict:
+    conteggi = {s: 0 for s in WAITLIST_STATI}
+    fonti: dict = {}
+    async for d in db.waitlist.find({}, {"_id": 0, "status": 1, "src": 1}):
+        st = d.get("status") if d.get("status") in conteggi else "da_confermare"
+        conteggi[st] += 1
+        nome = d.get("src") or "diretto"
+        f = fonti.setdefault(nome, {"fonte": nome, **{s: 0 for s in WAITLIST_STATI}})
+        f[st] += 1
+    oggi = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return {
+        "da_confermare": conteggi["da_confermare"], "confermate": conteggi["confermata"], "disiscritte": conteggi["disiscritta"],
+        "per_fonte": sorted(fonti.values(), key=lambda f: (-f["confermata"], f["fonte"])),
+        "avviso": {
+            "da_avvisare": await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None}),
+            "avvisate": await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": {"$ne": None}}),
+            "avvisate_oggi": await db.waitlist.count_documents({"notice_sent_at": {"$gte": oggi}}),
+            "tetto_giornaliero": _soglia_env("WAITLIST_DAILY_CAP", 80),
+            "in_corso": _avviso_stato["in_corso"], "ultimo": _avviso_stato["ultimo"],
+        },
+        "modalita_prelancio": prelaunch_mode(),
+    }
+
+
+@api.get("/admin/lista-attesa")
+async def admin_lista_attesa(user: dict = Depends(require_admin_master)):
+    return await _waitlist_riepilogo()
+
+
+@api.get("/admin/lista-attesa/esporta.csv")
+async def admin_lista_attesa_csv(user: dict = Depends(require_admin_master)):
+    """Solo le iscrizioni CONFERMATE (mai quelle da confermare o disiscritte)."""
+    righe = await db.waitlist.find({"status": "confermata"}, {"_id": 0}).to_list(None)
+    righe.sort(key=lambda d: (d.get("confirmed_at") or "", d.get("email") or ""))
+    linee = [";".join(_csv_cella(h) for h in ["Email", "Data del consenso", "Versione del testo", "Fonte", "Confermata il"])]
+    for d in righe:
+        linee.append(";".join(_csv_cella(v) for v in [d.get("email"), d.get("consent_at"), d.get("consent_version"),
+                                                       d.get("src"), d.get("confirmed_at")]))
+    return Response(content="﻿" + "\r\n".join(linee) + "\r\n", media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": 'attachment; filename="lista-attesa-confermate.csv"'})
+
+
+async def _invia_avviso_lancio() -> dict:
+    """Manda «Sconti Roma è online» alle iscrizioni confermate non ancora avvisate, a lotti con pause (limiti di Resend).
+    Idempotente: ogni persona viene «prenotata» con un'operazione atomica prima dell'invio, quindi non riceve mai due
+    avvisi, nemmeno rilanciando o con due richieste insieme. Se un invio fallisce la prenotazione viene tolta e potrà
+    essere riprovata. Si ferma dopo 3 errori di fila o al tetto giornaliero (WAITLIST_DAILY_CAP, 0 = nessun tetto)."""
+    lotto = max(1, _soglia_env("WAITLIST_LOTTO", 20))
+    pausa_msg, pausa_lotto = _env_float("WAITLIST_PAUSA_MESSAGGIO_SEC", 0.6), _env_float("WAITLIST_PAUSA_LOTTO_SEC", 3.0)
+    tetto = _soglia_env("WAITLIST_DAILY_CAP", 80)
+    oggi = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    gia_oggi = await db.waitlist.count_documents({"notice_sent_at": {"$gte": oggi}})
+    candidati = await db.waitlist.find({"status": "confermata", "notice_sent_at": None},
+                                       {"_id": 0, "id": 1, "email": 1}).to_list(None)
+    esito = {"inviati": 0, "non_inviati": 0, "lotti": 0, "fermato_per": None, "restano": len(candidati)}
+    errori_di_fila = 0
+    for i in range(0, len(candidati), lotto):
+        esito["lotti"] += 1
+        for c in candidati[i:i + lotto]:
+            if tetto > 0 and gia_oggi + esito["inviati"] >= tetto:
+                esito["fermato_per"] = "tetto_giornaliero"
+                break
+            preso = await db.waitlist.update_one({"id": c["id"], "status": "confermata", "notice_sent_at": None},
+                                                 {"$set": {"notice_sent_at": datetime.now(timezone.utc).isoformat()}})
+            if preso.modified_count != 1:
+                continue  # disiscritta nel frattempo o già avvisata da un altro giro
+            try:
+                eid = await send_waitlist_launch_notice(c["email"], c["id"], _waitlist_unsub_token(c["id"]))
+            except Exception as e:
+                logging.warning(f"[lista-attesa] avviso non inviato: {e}")
+                eid = None
+            if eid:
+                esito["inviati"] += 1
+                errori_di_fila = 0
+            else:
+                await db.waitlist.update_one({"id": c["id"]}, {"$set": {"notice_sent_at": None}})
+                esito["non_inviati"] += 1
+                errori_di_fila += 1
+                if errori_di_fila >= 3:
+                    esito["fermato_per"] = "errori"
+                    break
+            await _pausa(pausa_msg)
+        if esito["fermato_per"]:
+            break
+        await _pausa(pausa_lotto)
+    esito["restano"] = await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None})
+    return esito
+
+
+async def _avviso_in_background() -> None:
+    try:
+        esito = await _invia_avviso_lancio()
+    except Exception as e:
+        logging.error(f"[lista-attesa] avviso di lancio interrotto: {e}")
+        esito = {"fermato_per": "errore"}
+    _avviso_stato["ultimo"] = {**esito, "fine": datetime.now(timezone.utc).isoformat()}
+    _avviso_stato["in_corso"] = False
+
+
+class AvvisoLancioIn(BaseModel):
+    conferma: Optional[str] = ""
+
+
+@api.post("/admin/lista-attesa/invia-avviso")
+async def admin_lista_attesa_avviso(payload: AvvisoLancioIn, user: dict = Depends(require_admin_master)):
+    """«Invia l'avviso di lancio»: serve la parola AVVISA. Parte in background e si segue dai conteggi."""
+    global _avviso_task
+    if (payload.conferma or "").strip().upper() != WAITLIST_PAROLA_AVVISO:
+        raise HTTPException(400, f"Scrivi {WAITLIST_PAROLA_AVVISO} per confermare")
+    if _avviso_stato["in_corso"]:
+        raise HTTPException(409, "L'invio è già in corso")
+    da_inviare = await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None})
+    if da_inviare == 0:
+        return {"avviato": False, "da_inviare": 0}
+    _avviso_stato["in_corso"] = True
+    await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {
+        "key": "avviso_lancio_automatico", "attivo": True, "avviato_il": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    _avviso_task = asyncio.create_task(_avviso_in_background())
+    return {"avviato": True, "da_inviare": da_inviare}
+
+
+async def _avviso_giornaliero() -> dict:
+    """Ogni giorno alle 10:00 (Roma): se l'admin ha già avviato l'avviso con AVVISA e ci sono ancora iscritte da avvisare,
+    riprende da dove si era fermato, con lo stesso tetto giornaliero (WAITLIST_DAILY_CAP). Senza AVVISA non parte mai.
+    Il giorno viene «prenotato» nel database prima dell'invio (un riavvio o due server non lo ripetono) e ogni persona
+    è comunque prenotata con un'operazione atomica: nessun doppio invio."""
+    stato = await db.settings.find_one({"key": "avviso_lancio_automatico"})
+    if not stato or not stato.get("attivo"):
+        return {"inviati": 0, "saltato": "non_avviato"}
+    if _avviso_stato["in_corso"]:
+        return {"inviati": 0, "saltato": "in_corso"}
+    if await db.waitlist.count_documents({"status": "confermata", "notice_sent_at": None}) == 0:
+        await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {"attivo": False}})
+        return {"inviati": 0, "saltato": "finito"}
+    chiave = f"avviso_lancio_giorno_{_rome_now().date().isoformat()}"
+    res = await db.settings.update_one({"key": chiave}, {"$setOnInsert": {
+        "key": chiave, "claimed_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    if res.upserted_id is None:
+        return {"inviati": 0, "saltato": "gia_fatto_oggi"}
+    _avviso_stato["in_corso"] = True
+    try:
+        esito = await _invia_avviso_lancio()
+    except Exception as e:
+        logging.error(f"[lista-attesa] avviso giornaliero interrotto: {e}")
+        esito = {"inviati": 0, "fermato_per": "errore"}
+    _avviso_stato["ultimo"] = {**esito, "fine": datetime.now(timezone.utc).isoformat()}
+    _avviso_stato["in_corso"] = False
+    if esito.get("restano") == 0:
+        await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {"attivo": False}})
+    return esito
+
+
 @api.get("/admin/launch-summary")
 async def admin_launch_summary(user: dict = Depends(require_admin_master)):
     """Fase di lancio a colpo d'occhio: iscritti, negozi per quartiere, offerte da approvare,
@@ -4241,15 +4688,12 @@ async def admin_launch_summary(user: dict = Depends(require_admin_master)):
     merchants = await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "shop_name": 1, "zone": 1, "created_at": 1}).to_list(None)
     offerte = {d["merchant_id"]: d for d in await db.discounts.find({}, {"_id": 0, "merchant_id": 1, "approval_status": 1, "active": 1}).to_list(None)}
     zone: dict = {}
-    senza_offerta = []
     for m in merchants:
         z = zone.setdefault(m.get("zone") or "—", {"zona": m.get("zone") or "—", "negozi": 0, "online": 0})
         z["negozi"] += 1
         d = offerte.get(m["id"])
         if d and d.get("approval_status") == "approved" and d.get("active", True) and m["id"] not in sospesi:
             z["online"] += 1
-        if not d:
-            senza_offerta.append(m.get("shop_name") or "senza nome")
     sette = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     mese = current_month_key()
     return {
@@ -4261,7 +4705,7 @@ async def admin_launch_summary(user: dict = Depends(require_admin_master)):
         "zone": sorted(zone.values(), key=lambda z: -z["negozi"]),
         "offerte_da_approvare": await db.discounts.count_documents({"approval_status": "pending"})
             + await db.next_discounts.count_documents({"approval_status": "pending"}),
-        "negozi_senza_offerta": sorted(senza_offerta),
+        "negozi_senza_offerta": await _negozi_senza_offerta(),
         "utilizzi_mese": await db.redemptions.count_documents({"status": "redeemed", "month_key": mese}),
         "mese": month_label_it(mese),
         "interesse_zone": await _interesse_per_zona(),
@@ -4406,6 +4850,14 @@ def _motivo_rifiuto(payload: "RejectIn") -> str:
     return motivo
 
 
+@api.get("/admin/merchants/{merchant_id}/insights")
+async def admin_merchant_insights(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Le stesse statistiche, per l'admin, SEMPRE complete (senza soglia dei 3 clienti): solo numeri, mai nomi."""
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"_id": 1}):
+        raise HTTPException(404, "Negozio non trovato")
+    return await _insights_negozio(merchant_id, applica_soglia=False)
+
+
 @api.get("/admin/discounts/pending")
 async def admin_list_pending(user: dict = Depends(require_admin_master)):
     docs = await db.discounts.find({"approval_status": "pending"}).sort("updated_at", -1).to_list(200)
@@ -4527,11 +4979,12 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
 
 
 
-async def _iscrizioni_per_fonte() -> list:
-    """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale."""
+async def _iscrizioni_per_fonte(lo: Optional[str] = None, hi: Optional[str] = None, ruolo: str = "client") -> list:
+    """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale.
+    Con `lo`/`hi` (istanti ISO, hi escluso) aggiunge `nel_periodo` (usato dal riepilogo settimanale)."""
     da30 = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     conteggi: dict = {}
-    async for c in db.users.find({"role": "client", "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
+    async for c in db.users.find({"role": ruolo, "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
                                  {"_id": 0, "fonte_iscrizione": 1, "fonte_iscrizione_at": 1, "created_at": 1}):
         f = c["fonte_iscrizione"]
         quando = c.get("fonte_iscrizione_at") or c.get("created_at") or ""
@@ -4539,13 +4992,219 @@ async def _iscrizioni_per_fonte() -> list:
         r["totale"] += 1
         if quando >= da30:
             r["ultimi_30_giorni"] += 1
+        if lo and hi:
+            r["nel_periodo"] = r.get("nel_periodo", 0) + (1 if lo <= quando < hi else 0)
     return sorted(conteggi.values(), key=lambda r: (r["totale"], r["fonte"]), reverse=True)
+
+
+class FonteVisitaIn(BaseModel):
+    fonte: str = Field(max_length=60)
+    tipo: Literal["cliente", "negozio"]
+
+
+@api.post("/fonte/visita")
+async def fonte_visita(payload: FonteVisitaIn):
+    """Conta in modo anonimo una visita arrivata da un QR o un volantino (?fonte=...). Si salva solo la fonte, il tipo di
+    pagina (cliente o negozio) e il giorno: nessun indirizzo IP, nessun cookie, nessun dato personale."""
+    fonte = _fonte_valida(payload.fonte)
+    if not fonte:
+        return {"ok": False}
+    giorno = _rome_now().date().isoformat()
+    await db.fonte_visite.update_one({"fonte": fonte, "tipo": payload.tipo, "giorno": giorno},
+                                     {"$inc": {"visite": 1}}, upsert=True)
+    return {"ok": True}
+
+
+@api.get("/admin/fonti-qr")
+async def admin_fonti_qr(user: dict = Depends(require_admin_master)):
+    """Per ogni volantino o QR di campagna: visite (clienti e negozi) e iscrizioni (clienti e negozi). Solo numeri."""
+    da30 = (_rome_now().date() - timedelta(days=30)).isoformat()
+    righe: dict = {}
+
+    def riga(f):
+        return righe.setdefault(f, {"fonte": f, "visite_clienti": 0, "visite_negozi": 0, "visite_30_giorni": 0,
+                                    "clienti_iscritti": 0, "negozi_iscritti": 0})
+    async for v in db.fonte_visite.find({}, {"_id": 0}):
+        r = riga(v["fonte"])
+        r["visite_clienti" if v.get("tipo") == "cliente" else "visite_negozi"] += int(v.get("visite") or 0)
+        if v.get("giorno", "") >= da30:
+            r["visite_30_giorni"] += int(v.get("visite") or 0)
+    for x in await _iscrizioni_per_fonte(ruolo="client"):
+        riga(x["fonte"])["clienti_iscritti"] = x["totale"]
+    for x in await _iscrizioni_per_fonte(ruolo="merchant"):
+        riga(x["fonte"])["negozi_iscritti"] = x["totale"]
+    out = sorted(righe.values(), key=lambda r: (-(r["visite_clienti"] + r["visite_negozi"]), r["fonte"]))
+    return {"fonti": out}
 
 
 @api.get("/admin/iscrizioni-per-fonte")
 async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master)):
     """Quante iscrizioni arrivano da ogni volantino o QR di campagna (solo numeri)."""
     return {"fonti": await _iscrizioni_per_fonte()}
+
+
+# ---------- Riepilogo settimanale per l'admin (cosa funziona e cosa no) ----------
+# Solo conteggi aggregati: nessuna email, nessun nome di persona. Riusa i calcoli esistenti
+# (`_iscrizioni_per_fonte`, `_interesse_per_zona`, `_negozi_senza_offerta`, `_pag_righe_commercianti`).
+RIEPILOGO_ATTESA_GIORNI = 3
+
+
+def _settimana_conclusa(oggi: date) -> tuple:
+    """(lunedì, lunedì successivo escluso) della settimana di Roma appena conclusa."""
+    lunedi = oggi - timedelta(days=oggi.weekday())
+    return lunedi - timedelta(days=7), lunedi
+
+
+def _istante_roma(giorno: date) -> str:
+    """Mezzanotte di Roma di quel giorno, in UTC ISO (come le date salvate nel database)."""
+    return datetime(giorno.year, giorno.month, giorno.day, tzinfo=ROME_TZ).astimezone(timezone.utc).isoformat()
+
+
+def _etichetta_periodo(da: date, a: date) -> str:
+    ultimo = a - timedelta(days=1)
+    return f"{da.day} {MESI_IT[da.month - 1]} – {ultimo.day} {MESI_IT[ultimo.month - 1]}"
+
+
+def _variazione(questa: int, prima: int) -> dict:
+    return {"questa": questa, "precedente": prima, "delta": questa - prima,
+            "freccia": "↑" if questa > prima else "↓" if questa < prima else "="}
+
+
+async def _conteggi_settimana(da: date, a: date) -> dict:
+    """Conteggi di una settimana [da, a) (a escluso, date di Roma)."""
+    lo, hi = _istante_roma(da), _istante_roma(a)
+    intervallo = {"$gte": lo, "$lt": hi}
+    giorni = {"$gte": da.isoformat(), "$lt": a.isoformat()}
+    caricate = (await db.discounts.count_documents({"created_at": intervallo})
+                + await db.next_discounts.count_documents({"created_at": intervallo}))
+    approvate = (await db.discounts.count_documents({"approved_at": intervallo})
+                 + await db.next_discounts.count_documents({"approved_at": intervallo}))
+    scansioni = 0
+    async for d in db.scansioni_locandina.find({"giorno": giorni}, {"_id": 0, "conteggio": 1}):
+        scansioni += int(d.get("conteggio") or 0)
+    return {
+        "nuovi_clienti": await db.users.count_documents({"role": "client", "created_at": intervallo}),
+        "nuovi_commercianti": await db.users.count_documents({"role": "merchant", "created_at": intervallo}),
+        "offerte_caricate": caricate,
+        "offerte_approvate": approvate,
+        "sconti_usati": await db.redemptions.count_documents({"status": "redeemed", "redeemed_at": intervallo}),
+        "scansioni_qr": scansioni,
+        "iscrizioni_da_qr_negozi": await db.users.count_documents({"role": "client", "referred_at": intervallo}),
+        "nuove_segnalazioni": await db.segnalazioni.count_documents({"creata_il": intervallo}),
+        "fonti": {r["fonte"]: r["nel_periodo"] for r in await _iscrizioni_per_fonte(lo, hi)},
+    }
+
+
+METRICHE_RIEPILOGO = (
+    ("nuovi_clienti", "Nuovi clienti"),
+    ("nuovi_commercianti", "Nuovi commercianti"),
+    ("offerte_caricate", "Offerte caricate"),
+    ("offerte_approvate", "Offerte approvate"),
+    ("sconti_usati", "Sconti usati"),
+    ("scansioni_qr", "Scansioni dei QR dei negozi"),
+    ("iscrizioni_da_qr_negozi", "Iscrizioni dai QR dei negozi"),
+    ("nuove_segnalazioni", "Nuove segnalazioni e reclami"),
+)
+
+
+async def _riepilogo_settimanale(da: date, a: date, adesso: Optional[datetime] = None) -> dict:
+    """Riepilogo della settimana [da, a) (date di Roma, `a` escluso) con confronto con la settimana prima.
+    Solo conteggi: nessun dato personale."""
+    adesso = adesso or datetime.now(timezone.utc)
+    prima_da = da - (a - da)
+    ora, prima = await _conteggi_settimana(da, a), await _conteggi_settimana(prima_da, da)
+    metriche = [{"chiave": k, "etichetta": e, **_variazione(ora[k], prima[k])} for k, e in METRICHE_RIEPILOGO]
+
+    totali_fonte = {r["fonte"]: r["totale"] for r in await _iscrizioni_per_fonte()}
+    fonti = []
+    for f in sorted(totali_fonte, key=lambda f: (-totali_fonte[f], f)):
+        v = _variazione(ora["fonti"].get(f, 0), prima["fonti"].get(f, 0))
+        fonti.append({"fonte": f, "questa": v["questa"], "precedente": v["precedente"],
+                      "freccia": v["freccia"], "totale": totali_fonte[f]})
+
+    soglia = (adesso - timedelta(days=RIEPILOGO_ATTESA_GIORNI)).isoformat()
+    in_attesa = vecchie = 0
+    for coll in (db.discounts, db.next_discounts):
+        async for d in coll.find({"approval_status": "pending"}, {"_id": 0, "updated_at": 1, "created_at": 1}):
+            in_attesa += 1
+            if (d.get("updated_at") or d.get("created_at") or "") < soglia:
+                vecchie += 1
+    senza_offerta = await _negozi_senza_offerta()
+    aperte = [s async for s in db.segnalazioni.find({"stato": {"$in": ["ricevuta", "in_esame"]}}, {"_id": 0, "tipo": 1})]
+    reclami = sum(1 for s in aperte if s.get("tipo") == "reclamo_commerciante")
+
+    pagamenti = None
+    if merchant_payment_required():
+        per_stato = {s: 0 for s in PAG_STATI}
+        for r in await _pag_righe_commercianti():
+            per_stato[r["stato"]] += 1
+        pagamenti = {"per_stato": per_stato}
+
+    situazione = {
+        "offerte_in_attesa": in_attesa, "offerte_in_attesa_oltre_3_giorni": vecchie,
+        "negozi_senza_offerta": len(senza_offerta), "negozi_senza_offerta_nomi": senza_offerta,
+        "segnalazioni_aperte": len(aperte) - reclami, "reclami_aperti": reclami,
+    }
+    riepilogo = {
+        "periodo": {"da": da.isoformat(), "a": (a - timedelta(days=1)).isoformat(), "etichetta": _etichetta_periodo(da, a),
+                    "precedente": {"da": prima_da.isoformat(), "a": (da - timedelta(days=1)).isoformat()}},
+        "metriche": metriche, "fonti": fonti, "interesse_zone": await _interesse_per_zona(),
+        "situazione": situazione, "pagamenti": pagamenti,
+    }
+    riepilogo["da_guardare"] = _da_guardare(riepilogo)
+    return riepilogo
+
+
+def _da_guardare(r: dict) -> list:
+    """Al massimo 3 cose, scelte con regole semplici, dalla più urgente."""
+    s, voci = r["situazione"], []
+    aperte = s["segnalazioni_aperte"] + s["reclami_aperti"]
+    if aperte:
+        voci.append(f"{aperte} segnalazioni o reclami aperti: la risposta va data entro 5 giorni lavorativi.")
+    if s["offerte_in_attesa_oltre_3_giorni"]:
+        voci.append(f"{s['offerte_in_attesa_oltre_3_giorni']} offerte in attesa da più di {RIEPILOGO_ATTESA_GIORNI} giorni: da approvare o rifiutare.")
+    scaduti = ((r.get("pagamenti") or {}).get("per_stato") or {}).get("scaduto", 0)
+    if scaduti:
+        voci.append(f"{scaduti} negozi con il pagamento scaduto.")
+    ferme = [f["fonte"] for f in r["fonti"] if f["questa"] == 0 and f["totale"] > 0]
+    if ferme:
+        voci.append("Zero iscrizioni questa settimana da: " + ", ".join(ferme[:3]) + ".")
+    if s["negozi_senza_offerta"]:
+        voci.append(f"{s['negozi_senza_offerta']} negozi iscritti senza nessuna offerta: da contattare.")
+    nuovi = next((m for m in r["metriche"] if m["chiave"] == "nuovi_clienti"), None)
+    if nuovi and nuovi["questa"] == 0:
+        voci.append("Nessun nuovo cliente iscritto questa settimana.")
+    return voci[:3]
+
+
+@api.get("/admin/riepilogo-settimanale")
+async def admin_riepilogo_settimanale(user: dict = Depends(require_admin_master)):
+    """Riepilogo dell'ultima settimana conclusa (lunedì-domenica, ora di Roma) col confronto con quella prima."""
+    da, a = _settimana_conclusa(_rome_now().date())
+    return await _riepilogo_settimanale(da, a)
+
+
+async def _run_riepilogo_settimanale(oggi: Optional[date] = None) -> dict:
+    """Ogni lunedì: manda il riepilogo a `ADMIN_NOTIFY_EMAIL`. Una sola email a settimana: la settimana
+    viene «prenotata» nel database prima dell'invio, quindi un riavvio o un secondo avvio non la ripetono."""
+    to = os.environ.get("ADMIN_NOTIFY_EMAIL", "").strip()
+    if not to:
+        logging.info("[riepilogo-settimanale] ADMIN_NOTIFY_EMAIL non impostato: niente invio")
+        return {"sent": 0, "skipped": "nessun_destinatario"}
+    da, a = _settimana_conclusa(oggi or _rome_now().date())
+    chiave = f"riepilogo_settimanale_{da.isoformat()}"
+    res = await db.settings.update_one({"key": chiave}, {"$setOnInsert": {
+        "key": chiave, "claimed_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    if res.upserted_id is None:
+        return {"sent": 0, "skipped": "gia_inviato"}
+    try:
+        riepilogo = await _riepilogo_settimanale(da, a)
+        await send_admin_riepilogo_settimanale(to, riepilogo)
+    except Exception as e:
+        logging.error(f"[riepilogo-settimanale] invio non riuscito: {e}")
+        await db.settings.delete_one({"key": chiave})   # si potrà ritentare
+        return {"sent": 0, "skipped": "errore"}
+    return {"sent": 1, "settimana": da.isoformat()}
 
 
 async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool = False) -> dict:
@@ -4569,7 +5228,41 @@ async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool
     return {"ok": True, "fase": st["fase"], "motivo": ""}
 
 
-async def _approva_offerta(discount_id: str) -> Optional[dict]:
+class FotoScartataIn(BaseModel):
+    url: str = Field(max_length=2000)
+    motivo: str = Field(default="", max_length=500)
+
+
+class ApprovaIn(BaseModel):
+    foto_scartate: Optional[List[FotoScartataIn]] = None
+
+
+def _foto_dell_offerta(d: dict) -> list:
+    urls = [u for u in (d.get("image_urls") or []) if u]
+    if d.get("image_url") and d["image_url"] not in urls:
+        urls.insert(0, d["image_url"])
+    return urls
+
+
+def _prepara_foto_scartate(d: dict, scarti) -> tuple:
+    """Controlla le foto scartate dall'admin (motivo di almeno 10 caratteri, foto davvero dell'offerta, almeno
+    una foto che resta). Ritorna (foto che restano, [(numero della foto, motivo)])."""
+    foto = _foto_dell_offerta(d)
+    motivi = {}
+    for x in scarti or []:
+        motivo = (x.motivo or "").strip()
+        if x.url not in foto:
+            raise HTTPException(422, "Una foto scartata non fa parte dell'offerta: ricarica la pagina")
+        if len(motivo) < MOTIVO_RIFIUTO_MIN:
+            raise HTTPException(422, f"Scrivi il motivo per cui scarti la foto (almeno {MOTIVO_RIFIUTO_MIN} caratteri)")
+        motivi[x.url] = motivo
+    restano = [u for u in foto if u not in motivi]
+    if motivi and not restano:
+        raise HTTPException(422, "Se scarti tutte le foto, rifiuta l'offerta con un motivo")
+    return restano, [(i + 1, motivi[u]) for i, u in enumerate(foto) if u in motivi]
+
+
+async def _approva_offerta(discount_id: str, foto_scartate: Optional[list] = None) -> Optional[dict]:
     """Approva un'offerta: pubblica, segna la prima pubblicazione del negozio, avvisa il commerciante
     e i clienti interessati. Ritorna l'offerta aggiornata, o None se non esiste."""
     now = datetime.now(timezone.utc)
@@ -4589,7 +5282,7 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
     try:
         m = await db.users.find_one({"id": d.get("merchant_id")})
         if m and m.get("email"):
-            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "")
+            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", foto_scartate)
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
     if d.get("active", True):
@@ -4598,13 +5291,19 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
 
 
 @api.post("/admin/discounts/{discount_id}/approve")
-async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+async def admin_approve_discount(discount_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     d0 = await db.discounts.find_one({"id": discount_id})
     if d0:
         via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
-    d = await _approva_offerta(discount_id)
+    scartate = []
+    if d0 and payload and payload.foto_scartate:
+        restano, scartate = _prepara_foto_scartate(d0, payload.foto_scartate)
+        await db.discounts.update_one({"id": discount_id}, {"$set": {
+            "image_urls": restano, "image_url": restano[0],
+            "foto_scartate": [{"numero": n, "motivo": mt} for n, mt in scartate]}})
+    d = await _approva_offerta(discount_id, scartate)
     if d is None:
         raise HTTPException(404, "Sconto non trovato")
     return {"discount": await enrich_discount(d)}
@@ -4718,12 +5417,18 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
 
 
 @api.post("/admin/next-offers/{next_id}/approve")
-async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_admin_master)):
+async def admin_approve_next_offer(next_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     nd0 = await db.next_discounts.find_one({"id": next_id})
     if nd0:
         via = await _approvazione_consentita(await db.users.find_one({"id": nd0.get("merchant_id")}), per_mese_dopo=True)
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
+    scartate = []
+    if nd0 and payload and payload.foto_scartate:
+        restano, scartate = _prepara_foto_scartate(nd0, payload.foto_scartate)
+        await db.next_discounts.update_one({"id": next_id}, {"$set": {
+            "image_urls": restano, "image_url": restano[0],
+            "foto_scartate": [{"numero": n, "motivo": mt} for n, mt in scartate]}})
     now_iso = datetime.now(timezone.utc).isoformat()
     result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
         "approval_status": "approved", "approved_at": now_iso, "approval_note": ""}})
@@ -4734,7 +5439,7 @@ async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_ad
         m = await db.users.find_one({"id": nd.get("merchant_id")})
         if m and m.get("email"):
             await send_merchant_approved(m["email"], m.get("name") or "commerciante",
-                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "")
+                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "", scartate)
     except Exception as e:
         logging.warning(f"next-offer approve email failed: {e}")
     return {"next_discount": _enrich_next(nd)}
@@ -5033,7 +5738,7 @@ async def _run_grace_reminders() -> dict:
                 {"$set": {"grace_reminder_sent": True, "grace_reminder_sent_at": now.isoformat()}},
             )
             sent += 1
-            logging.info(f"[grace-reminder] email inviata to={u['email']} days_left={days_left}")
+            logging.info(f"[grace-reminder] email inviata to={mask_email(u['email'])} days_left={days_left}")
         except Exception as e:
             logging.error(f"[grace-reminder] send failed for user={user_id[:8]}: {e}")
     return {"checked": len(subs), "sent": sent}
@@ -5052,11 +5757,25 @@ async def _run_month_rollover(force: bool = False) -> dict:
     Idempotente via `rollover_runs` (bypass con force=True)."""
     # Mese di Roma: con l'UTC il passaggio delle 00:05 del 1° veniva saltato.
     month = current_month_key()
-    if not force and await db.rollover_runs.find_one({"month": month}):
-        return {"skipped": True, "month": month}
     now_iso = datetime.now(timezone.utc).isoformat()
-    await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
+    if force:
+        await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
+    else:
+        # Il mese si «prenota» in un colpo solo (atomico): il job delle 00:05 e il recupero all'avvio, o due
+        # copie del server accese insieme, non possono passare entrambi (niente offerte archiviate o email doppie).
+        claim = await db.rollover_runs.update_one(
+            {"month": month}, {"$setOnInsert": {"month": month, "ran_at": now_iso}}, upsert=True)
+        if claim.upserted_id is None:
+            return {"skipped": True, "month": month}
+    try:
+        return await _esegui_rollover(month, now_iso)
+    except Exception:
+        if not force:
+            await db.rollover_runs.delete_one({"month": month})  # si potrà ritentare (al riavvio o col job)
+        raise
 
+
+async def _esegui_rollover(month: str, now_iso: str) -> dict:
     async def _archive(old: dict, reason: str):
         await _archivia(old, reason)
 
@@ -5149,6 +5868,14 @@ async def _run_next_offer_reminders() -> dict:
             stages.append("apertura")  # promemoria unico della versione precedente
         if stage in stages:
             continue
+        # «Prenotazione» atomica prima dell'invio: due copie del server accese insieme (per esempio durante un
+        # aggiornamento) o due passaggi in parallelo non mandano la stessa email due volte.
+        prenota = await db.reminder_claims.update_one(
+            {"key": f"offerta_{nm}_{mid}_{stage}"},
+            {"$setOnInsert": {"key": f"offerta_{nm}_{mid}_{stage}",
+                              "expires_at": datetime.now(timezone.utc) + timedelta(days=60)}}, upsert=True)
+        if prenota.upserted_id is None:
+            continue
         try:
             await send_next_offer_reminder(m["email"], m.get("name") or "",
                                            m.get("shop_name") or "il tuo negozio",
@@ -5159,6 +5886,7 @@ async def _run_next_offer_reminders() -> dict:
                 "next_offer_reminder_month": nm}})
             sent += 1
         except Exception as e:
+            await db.reminder_claims.delete_one({"key": f"offerta_{nm}_{mid}_{stage}"})  # si potrà ritentare
             logging.error(f"[next-offer-reminder] send failed merchant={mid[:8]}: {e}")
     admin_summary = await _send_admin_month_summary(nm, window["next_month_label"], days_left, actives)
     return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm,
@@ -5195,10 +5923,15 @@ async def _send_admin_month_summary(nm: str, label: str, days_left: int, actives
             continue
         m = await db.users.find_one({"id": mid}, {"no_renew_month": 1})
         (no_renew if (m or {}).get("no_renew_month") == nm else missing).append(await shop(mid))
+    # Prenotazione atomica prima dell'invio (due passaggi insieme non mandano due email).
+    claim = await db.settings.update_one({"key": key}, {"$setOnInsert": {"key": key}}, upsert=True)
+    if claim.upserted_id is None:
+        return False
     try:
         await send_admin_month_summary(to, label, pending, rejected, missing, no_renew)
     except Exception as e:
         logging.error(f"[admin-summary] send failed: {e}")
+        await db.settings.delete_one({"key": key})  # si potrà ritentare
         return False
     await db.settings.update_one({"key": key}, {"$set": {"sent_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     return True
@@ -5212,36 +5945,70 @@ def _start_scheduler() -> None:
     # Ogni giorno alle 10:00 ora italiana
     _scheduler.add_job(
         _run_grace_reminders,
-        CronTrigger(hour=10, minute=0),
+        CronTrigger(hour=10, minute=0, timezone="Europe/Rome"),
         id="grace_reminders_daily",
         replace_existing=True,
     )
     # Promemoria "carica offerta mese prossimo" — ogni giorno 09:30 (invia solo in finestra, idempotente)
     _scheduler.add_job(
         _run_next_offer_reminders,
-        CronTrigger(hour=9, minute=30),
+        CronTrigger(hour=9, minute=30, timezone="Europe/Rome"),
         id="next_offer_reminders_daily",
         replace_existing=True,
     )
     # Promemoria di fine prova ai negozi (10 e 3 giorni prima) — ogni giorno 09:45, solo con pagamenti negozi accesi
     _scheduler.add_job(
         _run_trial_reminders,
-        CronTrigger(hour=9, minute=45),
+        CronTrigger(hour=9, minute=45, timezone="Europe/Rome"),
         id="trial_reminders_daily",
         replace_existing=True,
+    )
+    # Avviso di lancio alla lista d'attesa: riprende ogni giorno alle 10:00 (Roma) solo dopo che l'admin ha premuto AVVISA
+    _scheduler.add_job(
+        _avviso_giornaliero,
+        CronTrigger(hour=10, minute=0, timezone="Europe/Rome"),
+        id="avviso_lancio_giornaliero",
+        replace_existing=True,
+        misfire_grace_time=3 * 3600,
+        coalesce=True,
+    )
+    # Riepilogo settimanale all'admin — ogni lunedì alle 8:00 (idempotente; senza ADMIN_NOTIFY_EMAIL non fa nulla)
+    _scheduler.add_job(
+        _run_riepilogo_settimanale,
+        CronTrigger(day_of_week="mon", hour=8, minute=0, timezone="Europe/Rome"),
+        id="riepilogo_settimanale",
+        replace_existing=True,
+        misfire_grace_time=6 * 3600,
+        coalesce=True,
     )
     # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
     _scheduler.add_job(
         _run_month_rollover,
-        CronTrigger(day=1, hour=0, minute=5),
+        CronTrigger(day=1, hour=0, minute=5, timezone="Europe/Rome"),
         id="month_rollover",
         replace_existing=True,
+        misfire_grace_time=6 * 3600,  # se il server è occupato o riparte dopo le 00:05 il passaggio parte comunque
+        coalesce=True,
     )
     # Account cliente non confermati da 7 giorni: ogni giorno alle 03:30 (e anche all'avvio)
     _scheduler.add_job(
         _run_unconfirmed_cleanup,
-        CronTrigger(hour=3, minute=30),
+        CronTrigger(hour=3, minute=30, timezone="Europe/Rome"),
         id="unconfirmed_cleanup_daily",
+        replace_existing=True,
+    )
+    # Lista d'attesa: iscrizioni mai confermate da 7 giorni, ogni giorno alle 03:40 (e anche all'avvio)
+    _scheduler.add_job(
+        _run_waitlist_cleanup,
+        CronTrigger(hour=3, minute=40, timezone="Europe/Rome"),
+        id="waitlist_cleanup_daily",
+        replace_existing=True,
+    )
+    # Lista d'attesa: confermate e annullate oltre 12 mesi, ogni giorno alle 03:50 (e anche all'avvio)
+    _scheduler.add_job(
+        _run_waitlist_retention,
+        CronTrigger(hour=3, minute=50, timezone="Europe/Rome"),
+        id="waitlist_retention_daily",
         replace_existing=True,
     )
     _scheduler.start()
@@ -5275,9 +6042,14 @@ async def on_startup():
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
     await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
+    await db.reminder_claims.create_index("key", unique=True)
+    await db.reminder_claims.create_index("expires_at", expireAfterSeconds=0)
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     await db.users.create_index("email_confirm_token_hash", sparse=True)
+    await db.waitlist.create_index("email", unique=True)
+    await db.waitlist.create_index("id", unique=True)
+    await db.waitlist.create_index("confirm_token_hash", sparse=True)
     # Garantisce idempotenza reale dei webhook di rinnovo (Stripe/PayPal possono
     # ri-consegnare lo stesso evento più volte): l'indice unique fa fallire a
     # livello DB il secondo insert concorrente, anche se il check applicativo
@@ -5307,6 +6079,18 @@ async def on_startup():
             logging.info(f"[conferma-email] account non confermati cancellati all'avvio: {esito['deleted']}")
     except Exception as e:
         logging.error(f"[conferma-email] pulizia all'avvio fallita: {e}")
+    try:
+        esito = await _run_waitlist_cleanup()
+        if esito.get("deleted"):
+            logging.info(f"[lista-attesa] iscrizioni non confermate cancellate all'avvio: {esito['deleted']}")
+    except Exception as e:
+        logging.error(f"[lista-attesa] pulizia all'avvio fallita: {e}")
+    try:
+        esito = await _run_waitlist_retention()
+        if esito.get("deleted"):
+            logging.info(f"[lista-attesa] iscrizioni oltre 12 mesi cancellate all'avvio: {esito['deleted']}")
+    except Exception as e:
+        logging.error(f"[lista-attesa] pulizia 12 mesi all'avvio fallita: {e}")
     try:
         orfani = await _pulisci_dati_orfani()
         if any(orfani.values()):
@@ -6614,10 +7398,14 @@ async def _pag_righe_commercianti() -> list:
         if not v or (p.get("data_pagamento") or "", p.get("creato_il") or "") > (v.get("data_pagamento") or "", v.get("creato_il") or ""):
             ultimi[p["merchant_id"]] = p
     out = []
+    negozi = {m["id"]: m for m in await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "first_published_at": 1}).to_list(None)}
     for mid, nome in nomi.items():
         raw = piani.get(mid) or {}
+        # Fine prova: data scritta a mano dall'admin; altrimenti calcolata dalla prima pubblicazione
+        # (stessa regola dei promemoria); altrimenti la data predefinita dell'ambiente.
+        calcolata = pp.trial_end_date(await _prima_pubblicazione(negozi[mid])) if mid in negozi else None
         piano = {
-            "prova_fino_al": raw.get("prova_fino_al") or (prova_def.isoformat() if prova_def else None),
+            "prova_fino_al": raw.get("prova_fino_al") or (calcolata.isoformat() if calcolata else None) or (prova_def.isoformat() if prova_def else None),
             "prossimo_rinnovo": raw.get("prossimo_rinnovo"),
             "stato_manuale": raw.get("stato_manuale"),
         }
@@ -6926,6 +7714,18 @@ async def origin_check_middleware(request: Request, call_next):
                 if CSRF_ORIGIN_MODE == "enforce":
                     return JSONResponse({"detail": "Origine non consentita"}, status_code=403)
     return await call_next(request)
+
+
+@app.middleware("http")
+async def intestazioni_sicurezza(request: Request, call_next):
+    """Intestazioni di sicurezza su ogni risposta del server: il browser non indovina il tipo dei file
+    (nosniff), nessuna pagina del server può essere incorniciata in un altro sito (clickjacking) e
+    l'indirizzo completo non viene passato ai siti esterni. Non cambiano il funzionamento del sito."""
+    risposta = await call_next(request)
+    risposta.headers.setdefault("X-Content-Type-Options", "nosniff")
+    risposta.headers.setdefault("X-Frame-Options", "DENY")
+    risposta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return risposta
 
 
 app.add_middleware(

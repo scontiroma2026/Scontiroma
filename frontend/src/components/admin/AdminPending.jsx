@@ -6,6 +6,7 @@ import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
+import FotoControllo from "@/components/admin/FotoControllo";
 
 /**
  * Tab "Offerte in attesa": lista degli sconti pending con Approva / Rifiuta inline.
@@ -14,9 +15,12 @@ import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 export default function AdminPending({ pending, hdrs, onRefresh }) {
   const [q, setQ] = useState("");
   const [daRifiutare, setDaRifiutare] = useState(null);
+  // Foto scartate per ogni offerta, aggiornate da <FotoControllo>
+  const [scarti, setScarti] = useState({});
   const approve = async (id) => {
     try {
-      await api.post(`/admin/discounts/${id}/approve`, {}, hdrs());
+      const foto_scartate = scarti[id] || [];
+      await api.post(`/admin/discounts/${id}/approve`, foto_scartate.length ? { foto_scartate } : {}, hdrs());
       toast.success("Offerta approvata ✓");
       onRefresh();
     } catch (err) {
@@ -130,6 +134,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                   )}
                 </div>
                 {d.terms && <div className="mt-2 text-xs text-muted-foreground">Termini: {d.terms}</div>}
+                <FotoControllo id={d.id} urls={d.image_urls} onChange={(lista) => setScarti((x) => ({ ...x, [d.id]: lista }))} />
               </div>
               <div className="flex flex-col gap-2 md:justify-center">
                 <Button

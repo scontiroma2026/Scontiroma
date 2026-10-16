@@ -359,6 +359,7 @@ function MerchantRow({
       </div>
 
       {!editing && <AdminShopCode m={m} hdrs={hdrs} />}
+      {!editing && <AdminStatistiche m={m} hdrs={hdrs} />}
 
       {/* Negozio */}
       <div className="mt-3 flex flex-wrap gap-2">
@@ -377,6 +378,47 @@ function MerchantRow({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Statistiche del negozio per l'admin: sempre complete, senza la soglia dei 3 clienti che vale per il
+ * commerciante. Solo numeri, mai nomi; si caricano solo quando l'admin le apre.
+ */
+function AdminStatistiche({ m, hdrs }) {
+  const [d, setD] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const mostra = async () => {
+    setBusy(true);
+    try { const { data } = await api.get(`/admin/merchants/${m.id}/insights`, hdrs()); setD(data); }
+    catch (err) { toast.error(formatApiError(err)); }
+    finally { setBusy(false); }
+  };
+  const Num = ({ etichetta, valore, testid }) => (
+    <div className="rounded-lg border border-border bg-white p-2 text-center">
+      <div data-testid={testid} className="font-serif text-xl font-bold text-foreground">{valore}</div>
+      <div className="text-[11px] leading-tight text-muted-foreground">{etichetta}</div>
+    </div>
+  );
+  return (
+    <div data-testid={`admin-statistiche-${m.id}`} className="mt-3 rounded-xl border border-border bg-muted p-3">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Statistiche del negozio (solo numeri)</div>
+      {!d ? (
+        <div className="mt-2"><Azione testid={`stat-show-${m.id}`} onClick={mostra} icon={Eye} disabled={busy}>Mostra statistiche</Azione></div>
+      ) : (
+        <>
+          <p className="mt-1 text-xs text-muted-foreground">{d.mese}: tu le vedi sempre; il commerciante vede i dettagli sui clienti solo da 3 clienti diversi nel mese.</p>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Num etichetta="Sconti usati nel mese" valore={d.utilizzi_mese} testid={`stat-utilizzi-${m.id}`} />
+            <Num etichetta="Clienti nel mese" valore={d.clienti_mese ?? 0} testid={`stat-clienti-${m.id}`} />
+            <Num etichetta="Clienti nuovi" valore={d.clienti_nuovi ?? 0} testid={`stat-nuovi-${m.id}`} />
+            <Num etichetta="Tornati" valore={d.clienti_di_ritorno ?? 0} testid={`stat-ritorno-${m.id}`} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Ultimi 6 mesi: {d.ultimi_6_mesi.map((x) => `${x.mese.slice(0, 3)} ${x.utilizzi}`).join(" · ")}</p>
+          <div className="mt-2"><Azione testid={`stat-hide-${m.id}`} onClick={() => setD(null)} icon={EyeOff}>Nascondi</Azione></div>
+        </>
+      )}
     </div>
   );
 }

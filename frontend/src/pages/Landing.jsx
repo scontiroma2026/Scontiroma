@@ -1,22 +1,48 @@
-import { salvaReferral, salvaFonte } from "@/lib/referral";
+import api from "@/lib/api";
+import { salvaReferral, salvaFonte, registraVisitaFonte } from "@/lib/referral";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
 import { useEffect } from "react";
 import BrandMark from "@/components/BrandMark";
+import PrelaunchHome from "@/components/PrelaunchHome";
+import { useAppConfig } from "@/context/ConfigContext";
 
-// Rome landmark imagery (Unsplash direct URLs)
-const ROMA_HERO = "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1200&q=80"; // Colosseo
-const ROMA_TREVI = "https://images.unsplash.com/photo-1531572753322-ad063cecc140?w=800&q=80"; // Trevi
+// Foto di Roma copiate sul nostro sito (frontend/public/foto): nessun servizio esterno
+// riceve l'IP dei visitatori. Crediti in docs/comunicazione/CREDITI_FOTO.md.
+const ROMA_HERO = {
+  src: "/foto/roma-colosseo-1280.webp",
+  srcSet: "/foto/roma-colosseo-640.webp 640w, /foto/roma-colosseo-1280.webp 1280w, /foto/roma-colosseo-1920.webp 1920w",
+  width: 1280, height: 933,
+}; // Colosseo
+const ROMA_TREVI = {
+  src: "/foto/roma-piazza-640.webp",
+  srcSet: "/foto/roma-piazza-480.webp 480w, /foto/roma-piazza-640.webp 640w",
+  width: 640, height: 800,
+}; // Piazza San Pietro dall'alto (riquadro 4:5)
 
 export default function Landing() {
   const [params] = useSearchParams();
+  const config = useAppConfig();
   useEffect(() => {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
     salvaReferral(params.get("ref"));
     salvaFonte(params.get("fonte"));
+    registraVisitaFonte(params.get("fonte"), "cliente", (fonte, tipo) => api.post("/fonte/visita", { fonte, tipo }).catch(() => {}));
   }, [params]);
+
+  // Modalità pre-lancio (spenta di norma): al posto della home c'è «Stiamo arrivando» con la lista d'attesa.
+  // Finché il server non ha risposto non si mostra la home vera, per non far vedere a chi arriva prima del lancio
+  // un invito a registrarsi che non deve ancora esserci.
+  if (!config.loaded) {
+    return (
+      <main data-testid="landing-caricamento" className="min-h-screen bg-background" aria-busy="true">
+        <h1 className="sr-only">Sconti Roma</h1>
+      </main>
+    );
+  }
+  if (config.prelaunch) return <PrelaunchHome />;
 
   return (
     <main data-testid="landing-page" className="min-h-screen bg-background text-foreground overflow-hidden">
@@ -24,7 +50,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         {/* Background Rome image with heavy overlay */}
         <div className="absolute inset-0">
-          <img src={ROMA_HERO} className="h-full w-full object-cover opacity-40" alt="Roma" />
+          <img {...ROMA_HERO} sizes="100vw" className="h-full w-full object-cover opacity-40" alt="Roma" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
@@ -66,7 +92,7 @@ export default function Landing() {
             {/* Right: Rome collage */}
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
-                <img src={ROMA_TREVI} className="h-full w-full object-cover" alt="Roma" />
+                <img {...ROMA_TREVI} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
                   <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
@@ -186,7 +212,7 @@ export default function Landing() {
             <div className="space-y-3">
               {g.voci.map((f) => (
                 <details key={f.q} className="group rounded-2xl border border-border bg-muted backdrop-blur px-5 py-4 open:border-fucsia/40 transition">
-                  <summary className="flex cursor-pointer items-center justify-between text-foreground font-semibold">
+                  <summary className="flex min-h-11 cursor-pointer items-center justify-between text-foreground font-semibold">
                     <span className="font-serif text-lg">{f.q}</span>
                     <span className="text-fucsia text-2xl transition-transform group-open:rotate-45">+</span>
                   </summary>

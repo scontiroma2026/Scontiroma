@@ -59,10 +59,10 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           data-testid="default-images-dialog"
-          className="max-w-5xl max-h-[85vh] overflow-hidden bg-white border-ac-line text-ac-ink flex flex-col"
+          className="max-w-5xl max-h-[92dvh] overflow-hidden bg-white border-ac-line text-ac-ink flex flex-col"
         >
           <DialogHeader>
-            <DialogTitle className="font-serif text-3xl font-bold text-ac-ink">
+            <DialogTitle className="font-serif text-xl sm:text-3xl font-bold text-ac-ink">
               Libreria immagini{" "}
               {totale !== null && <span className="text-ac-rosa" data-testid="default-images-total">({totale} foto)</span>}
             </DialogTitle>
@@ -80,14 +80,14 @@ export default function DefaultImagePicker({ onSelect, selectedUrl }) {
           {library && (
             <div className="flex-1 flex flex-col min-h-0">
               {/* Tab categorie */}
-              <div className="flex flex-wrap gap-2 pb-4 border-b border-ac-line">
+              <div className="flex flex-nowrap gap-2 overflow-x-auto pb-3 border-b border-ac-line shrink-0" data-testid="cat-tabs">
                 {Object.keys(library).map((cat) => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setActiveCat(cat)}
                     data-testid={`cat-tab-${cat.replace(/\s+/g, "-").toLowerCase()}`}
-                    className={`min-h-11 text-xs font-extrabold uppercase tracking-wider px-4 rounded-full transition ${
+                    className={`min-h-11 shrink-0 whitespace-nowrap text-xs font-extrabold uppercase tracking-wider px-4 rounded-full transition ${
                       activeCat === cat
                         ? "bg-ac-rosa text-white"
                         : "bg-ac-tint text-ac-soft hover:bg-ac-violaBg hover:text-ac-ink"

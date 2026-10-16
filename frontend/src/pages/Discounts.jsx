@@ -8,6 +8,8 @@ import VistaPreferiti from "@/components/VistaPreferiti";
 import { usePreferiti } from "@/context/PreferitiContext";
 import ZoneOptions from "@/components/ZoneOptions";
 import SchedaZonaVuota from "@/components/SchedaZonaVuota";
+import ListaAttesaForm from "@/components/ListaAttesaForm";
+import { useAppConfig } from "@/context/ConfigContext";
 
 function haversineKm(a, b) {
   if (!a || !b) return Infinity;
@@ -22,6 +24,7 @@ function haversineKm(a, b) {
 export default function Discounts() {
   const [params, setParams] = useSearchParams();
   const { attivo: puoPreferiti, ids: preferiti } = usePreferiti();
+  const { prelaunch } = useAppConfig();
   const vistaPreferiti = puoPreferiti && params.get("vista") === "preferiti";
   const [discounts, setDiscounts] = useState([]);
   const [zones, setZones] = useState([]);
@@ -194,10 +197,20 @@ export default function Discounts() {
         </div>
       )}
 
-      {!loading && count === 0 && zone && !category && !q && (
+      {!loading && count === 0 && prelaunch && !category && !q && (
+        <section data-testid="catalogo-prelancio" aria-labelledby="catalogo-prelancio-titolo"
+          className="mb-8 rounded-2xl border border-border bg-muted p-6 sm:p-10">
+          <h2 id="catalogo-prelancio-titolo" className="font-serif text-3xl text-foreground">Stiamo arrivando a Roma e dintorni</h2>
+          <p className="mt-3 max-w-xl text-foreground/80">
+            Le offerte dei negozi non sono ancora online. Lasciaci la tua email e ti avvisiamo noi quando parte. Sconti Roma è per maggiorenni (18+).
+          </p>
+          <div className="mt-6 max-w-xl"><ListaAttesaForm testid="catalogo-attesa" /></div>
+        </section>
+      )}
+      {!loading && count === 0 && !prelaunch && zone && !category && !q && (
         <SchedaZonaVuota key={zone} zona={zone} onAltreZone={() => setZone("")} />
       )}
-      {!loading && count === 0 && !(zone && !category && !q) && (
+      {!loading && count === 0 && !(prelaunch && !category && !q) && !(zone && !category && !q) && (
         <div className="rounded-xl border border-warm bg-muted p-10 text-center text-muted-foreground">
           Nessuno sconto per i filtri selezionati.
         </div>
