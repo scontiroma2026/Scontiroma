@@ -22,7 +22,7 @@ Regola: un numero di iscritti, negozi o utenti si dice in pubblico **solo se è 
 
 ## 3. Messaggi chiave
 **Per i clienti**
-- «Il tuo quartiere sta per avere la sua app delle offerte.» (curiosità, appartenenza)
+- «La tua zona sta per avere la sua app delle offerte.» (curiosità, appartenenza)
 - «Le offerte dei negozi vicino a te, in un posto solo. Mostri il QR al banco e basta.» (semplicità)
 - «Stiamo arrivando. Lasciaci la tua email e ti avvisiamo noi quando parte.» (azione piccola, nessun rischio)
 - «Gratuita nella fase di lancio. Solo 18+. Roma e dintorni.» (sempre presente, mai altre formule sul costo)

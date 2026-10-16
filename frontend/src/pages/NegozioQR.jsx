@@ -45,7 +45,7 @@ export default function NegozioQR() {
     return (
       <main data-testid="negozio-qr-errore" className="mx-auto max-w-lg px-6 py-16 text-center">
         <h1 className="font-serif text-3xl">Negozio non trovato</h1>
-        <p className="mt-3 text-muted-foreground">Il link potrebbe non essere più valido. Puoi comunque scoprire gli sconti dei negozi del tuo quartiere.</p>
+        <p className="mt-3 text-muted-foreground">Il link potrebbe non essere più valido. Puoi comunque scoprire gli sconti dei negozi vicino a te.</p>
         <Link to="/discounts"><Button className="mt-6 rounded-full grad-fucsia-viola text-white">Guarda gli sconti</Button></Link>
       </main>
     );

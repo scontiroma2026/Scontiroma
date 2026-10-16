@@ -222,3 +222,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (notte): volantino per i clienti A5 (strada, università) per il lancio: QR con ?fonte=volantino-strada e riquadro «Hai un'attività?»; da stampare ora, da distribuire solo con offerte vere nell'app
 - 16/10: cartolina «Hai un negozio?» A6 per i negozi (QR con ?fonte=cartolina-negozi, senza prezzo né prova)
 - 16/10: conteggio dei QR dei volantini: visite (clienti e negozi, anonime) e iscrizioni per fonte nella scheda admin Riepilogo; salvataggio della fonte anche per i negozi
+- 16/10: tolta la parola «quartiere» dai testi pubblici (sito, email ai clienti, post, hashtag, messaggi ai negozi); restano fuori Termini e consenso email in Privacy (testi legali, da far vedere al consulente) e i testi interni dell'admin

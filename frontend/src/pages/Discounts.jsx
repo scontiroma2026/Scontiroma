@@ -106,7 +106,7 @@ export default function Discounts() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             data-testid="search-input"
-            placeholder="Cerca ristorante, offerta, quartiere…"
+            placeholder="Cerca ristorante, offerta, zona…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-9 bg-card border border-border"
