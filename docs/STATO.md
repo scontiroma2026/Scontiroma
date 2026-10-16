@@ -219,3 +219,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (sera): schermata di pagamento del negozio: frase «Non viene addebitato niente subito…» (visibile solo con i pagamenti accesi); domanda aggiunta per il consulente
 - 15/10 (notte): lista aggiornata a 30 punti (logo e nome deciso: via; scheda marchio unita; email commerciante a 5; domande consulente 35)
 - 15/10 (notte): volantino per i clienti A5 (strada, università) per il lancio: QR con ?fonte=volantino-strada e riquadro «Hai un'attività?»; da stampare ora, da distribuire solo con offerte vere nell'app
+- 16/10: cartolina «Hai un negozio?» A6 per i negozi (QR con ?fonte=cartolina-negozi, senza prezzo né prova)
