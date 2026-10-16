@@ -60,7 +60,7 @@ from email_service import (
     send_waitlist_launch_notice,
 )
 import paypal_service
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Body
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -1431,6 +1431,8 @@ WAITLIST_CONSENT_VERSION = "2026-10-v1"  # cambia insieme al testo del consenso 
 WAITLIST_CONFERMA_ORE = 48
 WAITLIST_NON_CONFERMATI_GIORNI = 7
 WAITLIST_FONTI = ("instagram", "facebook", "volantino", "passaparola")  # lista chiusa; poi «diretto» e «altro»
+WAITLIST_FONTI_GRUPPO = ("facebook", "gruppo")  # con codice: «facebook-garbatella», «gruppo-eur»
+WAITLIST_FONTI_GRUPPO = ("facebook", "gruppo")  # con codice: «facebook-garbatella», «gruppo-eur»
 WAITLIST_STATI = ("da_confermare", "confermata", "disiscritta")
 MSG_LISTA_RICHIESTA = ("Ti abbiamo mandato un'email: tocca il link per confermare l'iscrizione. "
                        "Se non la trovi, controlla lo spam.")
@@ -1442,6 +1444,12 @@ def _waitlist_fonte(valore) -> str:
     v = (valore or "").strip().lower()
     if not v:
         return "diretto"
+    # gruppi: «facebook-<codice>» e «gruppo-<codice>» restano interi (codice = minuscole, numeri, trattino, max 20)
+    for pre in WAITLIST_FONTI_GRUPPO:
+        if v.startswith(pre + "-") and re.fullmatch(r"[a-z0-9-]{1,20}", v[len(pre) + 1:]):
+            return v
+    if any(v.startswith(pre + "-") for pre in WAITLIST_FONTI_GRUPPO):
+        return v if re.fullmatch(r"(facebook|gruppo)-[a-z0-9-]{1,20}", v) else "altro"  # codice non valido = «altro»
     for f in WAITLIST_FONTI:
         if v == f or v.startswith(f + "-"):
             return f
@@ -2573,6 +2581,8 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     window = await next_offer_window()
     if not window["open"]:
         raise HTTPException(423, f"La finestra per caricare l'offerta di {window['next_month_label']} si apre il {window['opens_on']} (ultimi 7 giorni del mese).")
+    if user.get("no_renew_month") == window["next_month"]:
+        raise HTTPException(409, f"Hai scelto «Non rinnovo»: per caricare l'offerta di {window['next_month_label']} annulla prima la scelta.")
     data = payload.cleaned()
     if not data.get("title") or not data.get("description"):
         raise HTTPException(422, "Titolo e descrizione sono obbligatori")
@@ -2590,8 +2600,6 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
                      "target_month": window["next_month"], "created_at": now_iso})
         await db.next_discounts.insert_one(data)
         nd = data
-    # Caricare l'offerta del mese dopo annulla un'eventuale scelta "Non rinnovo".
-    await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
     return {"next_discount": _enrich_next(nd), "window": window}
 
 
@@ -2721,8 +2729,12 @@ async def merchant_insights(user: dict = Depends(require_merchant)):
     """Statistiche aggregate per il commerciante: utilizzi del mese, clienti nuovi e di
     ritorno, giorni preferiti, andamento degli ultimi 6 mesi. Solo numeri, mai nomi; sotto
     i 3 clienti nel mese i dettagli non vengono mostrati ("dati insufficienti")."""
+    return await _insights_negozio(user["id"], applica_soglia=True)
+
+
+async def _insights_negozio(merchant_id: str, applica_soglia: bool) -> dict:
     used = await db.redemptions.find(
-        {"merchant_id": user["id"], "status": "redeemed"},
+        {"merchant_id": merchant_id, "status": "redeemed"},
         {"_id": 0, "user_id": 1, "redeemed_at": 1}).to_list(None)
     mese = current_month_key()
     def mese_di(r):
@@ -2743,7 +2755,8 @@ async def merchant_insights(user: dict = Depends(require_merchant)):
         key = f"{y}-{m:02d}"
         serie.append({"mese": f"{MESI_IT[m - 1]} {y}", "utilizzi": sum(1 for r in used if mese_di(r) == key)})
     out = {"mese": month_label_it(mese), "utilizzi_mese": len(del_mese), "utilizzi_totali": len(used),
-           "ultimi_6_mesi": serie, "dati_sufficienti": len(clienti) >= INSIGHTS_MIN_CLIENTI}
+           "ultimi_6_mesi": serie,
+           "dati_sufficienti": (len(clienti) >= INSIGHTS_MIN_CLIENTI) or not applica_soglia}
     if out["dati_sufficienti"]:
         giorni = [0] * 7
         for r in del_mese:
@@ -4837,6 +4850,14 @@ def _motivo_rifiuto(payload: "RejectIn") -> str:
     return motivo
 
 
+@api.get("/admin/merchants/{merchant_id}/insights")
+async def admin_merchant_insights(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Le stesse statistiche, per l'admin, SEMPRE complete (senza soglia dei 3 clienti): solo numeri, mai nomi."""
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"_id": 1}):
+        raise HTTPException(404, "Negozio non trovato")
+    return await _insights_negozio(merchant_id, applica_soglia=False)
+
+
 @api.get("/admin/discounts/pending")
 async def admin_list_pending(user: dict = Depends(require_admin_master)):
     docs = await db.discounts.find({"approval_status": "pending"}).sort("updated_at", -1).to_list(200)
@@ -5167,7 +5188,41 @@ async def _approvazione_consentita(merchant: Optional[dict], per_mese_dopo: bool
     return {"ok": True, "fase": st["fase"], "motivo": ""}
 
 
-async def _approva_offerta(discount_id: str) -> Optional[dict]:
+class FotoScartataIn(BaseModel):
+    url: str = Field(max_length=2000)
+    motivo: str = Field(default="", max_length=500)
+
+
+class ApprovaIn(BaseModel):
+    foto_scartate: Optional[List[FotoScartataIn]] = None
+
+
+def _foto_dell_offerta(d: dict) -> list:
+    urls = [u for u in (d.get("image_urls") or []) if u]
+    if d.get("image_url") and d["image_url"] not in urls:
+        urls.insert(0, d["image_url"])
+    return urls
+
+
+def _prepara_foto_scartate(d: dict, scarti) -> tuple:
+    """Controlla le foto scartate dall'admin (motivo di almeno 10 caratteri, foto davvero dell'offerta, almeno
+    una foto che resta). Ritorna (foto che restano, [(numero della foto, motivo)])."""
+    foto = _foto_dell_offerta(d)
+    motivi = {}
+    for x in scarti or []:
+        motivo = (x.motivo or "").strip()
+        if x.url not in foto:
+            raise HTTPException(422, "Una foto scartata non fa parte dell'offerta: ricarica la pagina")
+        if len(motivo) < MOTIVO_RIFIUTO_MIN:
+            raise HTTPException(422, f"Scrivi il motivo per cui scarti la foto (almeno {MOTIVO_RIFIUTO_MIN} caratteri)")
+        motivi[x.url] = motivo
+    restano = [u for u in foto if u not in motivi]
+    if motivi and not restano:
+        raise HTTPException(422, "Se scarti tutte le foto, rifiuta l'offerta con un motivo")
+    return restano, [(i + 1, motivi[u]) for i, u in enumerate(foto) if u in motivi]
+
+
+async def _approva_offerta(discount_id: str, foto_scartate: Optional[list] = None) -> Optional[dict]:
     """Approva un'offerta: pubblica, segna la prima pubblicazione del negozio, avvisa il commerciante
     e i clienti interessati. Ritorna l'offerta aggiornata, o None se non esiste."""
     now = datetime.now(timezone.utc)
@@ -5187,7 +5242,7 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
     try:
         m = await db.users.find_one({"id": d.get("merchant_id")})
         if m and m.get("email"):
-            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "")
+            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", foto_scartate)
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
     if d.get("active", True):
@@ -5196,13 +5251,19 @@ async def _approva_offerta(discount_id: str) -> Optional[dict]:
 
 
 @api.post("/admin/discounts/{discount_id}/approve")
-async def admin_approve_discount(discount_id: str, user: dict = Depends(require_admin_master)):
+async def admin_approve_discount(discount_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     d0 = await db.discounts.find_one({"id": discount_id})
     if d0:
         via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
-    d = await _approva_offerta(discount_id)
+    scartate = []
+    if d0 and payload and payload.foto_scartate:
+        restano, scartate = _prepara_foto_scartate(d0, payload.foto_scartate)
+        await db.discounts.update_one({"id": discount_id}, {"$set": {
+            "image_urls": restano, "image_url": restano[0],
+            "foto_scartate": [{"numero": n, "motivo": mt} for n, mt in scartate]}})
+    d = await _approva_offerta(discount_id, scartate)
     if d is None:
         raise HTTPException(404, "Sconto non trovato")
     return {"discount": await enrich_discount(d)}
@@ -5316,12 +5377,18 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
 
 
 @api.post("/admin/next-offers/{next_id}/approve")
-async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_admin_master)):
+async def admin_approve_next_offer(next_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     nd0 = await db.next_discounts.find_one({"id": next_id})
     if nd0:
         via = await _approvazione_consentita(await db.users.find_one({"id": nd0.get("merchant_id")}), per_mese_dopo=True)
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
+    scartate = []
+    if nd0 and payload and payload.foto_scartate:
+        restano, scartate = _prepara_foto_scartate(nd0, payload.foto_scartate)
+        await db.next_discounts.update_one({"id": next_id}, {"$set": {
+            "image_urls": restano, "image_url": restano[0],
+            "foto_scartate": [{"numero": n, "motivo": mt} for n, mt in scartate]}})
     now_iso = datetime.now(timezone.utc).isoformat()
     result = await db.next_discounts.update_one({"id": next_id}, {"$set": {
         "approval_status": "approved", "approved_at": now_iso, "approval_note": ""}})
@@ -5332,7 +5399,7 @@ async def admin_approve_next_offer(next_id: str, user: dict = Depends(require_ad
         m = await db.users.find_one({"id": nd.get("merchant_id")})
         if m and m.get("email"):
             await send_merchant_approved(m["email"], m.get("name") or "commerciante",
-                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "")
+                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "", scartate)
     except Exception as e:
         logging.warning(f"next-offer approve email failed: {e}")
     return {"next_discount": _enrich_next(nd)}
@@ -7291,10 +7358,14 @@ async def _pag_righe_commercianti() -> list:
         if not v or (p.get("data_pagamento") or "", p.get("creato_il") or "") > (v.get("data_pagamento") or "", v.get("creato_il") or ""):
             ultimi[p["merchant_id"]] = p
     out = []
+    negozi = {m["id"]: m for m in await db.users.find({"role": "merchant"}, {"_id": 0, "id": 1, "first_published_at": 1}).to_list(None)}
     for mid, nome in nomi.items():
         raw = piani.get(mid) or {}
+        # Fine prova: data scritta a mano dall'admin; altrimenti calcolata dalla prima pubblicazione
+        # (stessa regola dei promemoria); altrimenti la data predefinita dell'ambiente.
+        calcolata = pp.trial_end_date(await _prima_pubblicazione(negozi[mid])) if mid in negozi else None
         piano = {
-            "prova_fino_al": raw.get("prova_fino_al") or (prova_def.isoformat() if prova_def else None),
+            "prova_fino_al": raw.get("prova_fino_al") or (calcolata.isoformat() if calcolata else None) or (prova_def.isoformat() if prova_def else None),
             "prossimo_rinnovo": raw.get("prossimo_rinnovo"),
             "stato_manuale": raw.get("stato_manuale"),
         }

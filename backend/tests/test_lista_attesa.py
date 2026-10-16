@@ -248,6 +248,32 @@ def test_fonte_da_lista_chiusa(_ambiente):
     run(body)
 
 
+def test_fonte_gruppi_con_codice(_ambiente):
+    f = server._waitlist_fonte
+    assert f("facebook-garbatella") == "facebook-garbatella" and f("Gruppo-EUR-2") == "gruppo-eur-2"
+    assert f("facebook-" + "a" * 20) == "facebook-" + "a" * 20
+    assert f("facebook-" + "a" * 21) == "altro" and f("gruppo-" + "a" * 21) == "altro"
+    for strano in ("facebook-Mario Rossi", "facebook-a@b.it", "gruppo-<b>", "facebook-a_b", "facebook-", "gruppo-è", "gruppo-a.b"):
+        assert f(strano) == "altro", strano
+    assert f("facebook") == "facebook" and f("volantino-xyz") == "volantino" and f("gruppox-1") == "altro"
+
+    async def body(c):
+        await iscrivi(c, "g1@example.com", src="facebook-garbatella")
+        await iscrivi(c, "g2@example.com", src="facebook-garbatella")
+        await iscrivi(c, "g3@example.com", src="gruppo-eur")
+        await iscrivi(c, "g4@example.com", src="facebook")
+        await iscrivi(c, "g5@example.com", src="facebook-" + "x" * 30)
+        for e in ("g1@example.com", "g2@example.com", "g3@example.com", "g4@example.com"):
+            await conferma(c, _ambiente, e)
+        ah = await admin(c)
+        per = {x["fonte"]: x for x in (await c.get("/api/admin/lista-attesa", headers=ah)).json()["per_fonte"]}
+        assert per["facebook-garbatella"]["confermata"] == 2 and per["gruppo-eur"]["confermata"] == 1
+        assert per["facebook"]["confermata"] == 1 and per["altro"]["da_confermare"] == 1
+        r = await c.get("/api/admin/lista-attesa/esporta.csv", headers=ah)
+        assert "facebook-garbatella" in r.text and "gruppo-eur" in r.text
+    run(body)
+
+
 def test_disiscrizione(_ambiente):
     async def body(c):
         await iscrivi(c, "u@example.com")

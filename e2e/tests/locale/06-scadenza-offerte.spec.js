@@ -25,8 +25,21 @@ test('banner di scadenza: "Non rinnovo" e annulla', async ({ page, request }) =>
     const st = await chiama(request, 'GET', '/merchants/me/renewal-status', { token: m.token });
     expect(st.data.no_renew).toBe(true);
 
+    // Con «Non rinnovo» il caricamento del mese dopo si spegne (scheda grigia, modulo bloccato)...
+    await expect(page.getByTestId('next-offer-no-renew')).toBeVisible();
+    await expect(page.getByTestId('next-offer-cta')).toHaveAttribute('aria-disabled', 'true');
+    await page.goto('/merchant/discount?tab=next');
+    await expect(page.getByTestId('banner-next-no-renew')).toBeVisible();
+    await expect(page.getByTestId('disc-submit')).toBeDisabled();
+
+    // ...e si riaccende se cambia idea
+    await page.goto('/merchant/dashboard');
     await page.getByTestId('renewal-undo-btn').click();
     await expect(banner).toHaveAttribute('data-state', 'expiring');
+    await expect(page.getByTestId('next-offer-cta')).not.toHaveAttribute('aria-disabled', 'true');
+    await page.goto('/merchant/discount?tab=next');
+    await expect(page.getByTestId('banner-next-new')).toBeVisible();
+    await expect(page.getByTestId('disc-submit')).toBeEnabled();
   } finally {
     await chiama(request, 'POST', '/admin/next-offers/window-override', { token: a.token, headers: a.headers, body: { open: null } });
   }
