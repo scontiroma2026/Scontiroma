@@ -30,17 +30,17 @@ export default function Locandina() {
       .catch(() => {});
   }, [ref]);
 
-  // Assicura che Fraunces (700+800) sia effettivamente caricato prima di stampare,
-  // altrimenti il browser ricade su serif di sistema e "Sconti Roma" cambia
+  // Assicura che Manrope (700+800, titoli scelti dal titolare il 13/10) sia effettivamente caricato prima di stampare,
+  // altrimenti il browser ricade sul carattere di sistema e "Sconti Roma" cambia
   // completamente aspetto (utente ha segnalato "non si legge neanche ROMA").
   const openPrint = async () => {
     trackClick("flyer_print");
     try {
       if (document?.fonts?.load) {
         await Promise.all([
-          document.fonts.load("700 34pt Fraunces"),
-          document.fonts.load("800 16pt Fraunces"),
-          document.fonts.load("600 13pt Fraunces"),
+          document.fonts.load("700 34pt Manrope"),
+          document.fonts.load("800 16pt Manrope"),
+          document.fonts.load("600 13pt Manrope"),
         ]);
         await document.fonts.ready;
       }
@@ -239,7 +239,7 @@ export default function Locandina() {
               </div>
               <div
                 style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontFamily: "'Manrope', system-ui, sans-serif",
                   fontWeight: 700,
                   fontSize: "34pt",
                   lineHeight: 1,
@@ -257,7 +257,7 @@ export default function Locandina() {
                   fontStyle: "italic",
                 }}
               >
-                Gli sconti del tuo quartiere.
+                Gli sconti di Roma e dintorni.
               </div>
             </div>
 
@@ -281,7 +281,7 @@ export default function Locandina() {
                 }}
               >
                 Con <strong style={{ color: "#FFD93D" }}>Sconti Roma</strong> hai gli sconti dei
-                <strong style={{ color: "#FF2E93" }}> negozi del tuo quartiere</strong>:
+                <strong style={{ color: "#FF2E93" }}> negozi di Roma e dintorni</strong>:
                 ristoranti, bar, parrucchieri, centri estetici, palestre e molto altro.
                 <br />
                 <span style={{ color: "rgba(244,244,245,0.65)", fontSize: "10pt" }}>
@@ -294,7 +294,7 @@ export default function Locandina() {
             <div style={{ marginTop: "3.5mm", flex: 1 }}>
               <div
                 style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontFamily: "'Manrope', system-ui, sans-serif",
                   fontSize: "13pt",
                   fontWeight: 600,
                   color: "#fff",
@@ -332,7 +332,7 @@ export default function Locandina() {
                       background: "linear-gradient(135deg, #FF2E93 0%, #7A5CFF 100%)",
                       color: "#fff",
                       fontWeight: 700,
-                      fontFamily: "'Fraunces', Georgia, serif",
+                      fontFamily: "'Manrope', system-ui, sans-serif",
                       fontSize: "12pt",
                       display: "flex",
                       alignItems: "center",
@@ -399,7 +399,7 @@ export default function Locandina() {
               <div
                 data-testid="affiliate-badge-text"
                 style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontFamily: "'Manrope', system-ui, sans-serif",
                   fontSize: "12pt",
                   fontWeight: 700,
                   color: "#fff",
@@ -460,7 +460,7 @@ export default function Locandina() {
                 </div>
                 <div
                   style={{
-                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontFamily: "'Manrope', system-ui, sans-serif",
                     fontSize: "16pt",
                     fontWeight: 700,
                     color: "#0A0A0F",
@@ -492,7 +492,7 @@ export default function Locandina() {
                 letterSpacing: "0.05em",
               }}
             >
-              Sconti Roma · <a href="mailto:info@scontiroma.it" style={{ color: "rgba(0,229,255,0.7)", textDecoration: "none" }}>info@scontiroma.it</a> · Gli sconti del tuo quartiere.
+              Sconti Roma · <a href="mailto:info@scontiroma.it" style={{ color: "rgba(0,229,255,0.7)", textDecoration: "none" }}>info@scontiroma.it</a> · Gli sconti di Roma e dintorni.
             </div>
           </div>
         </div>

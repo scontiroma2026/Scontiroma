@@ -1,4 +1,5 @@
-import { salvaReferral, salvaFonte } from "@/lib/referral";
+import api from "@/lib/api";
+import { salvaReferral, salvaFonte, registraVisitaFonte } from "@/lib/referral";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export default function Landing() {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
     salvaReferral(params.get("ref"));
     salvaFonte(params.get("fonte"));
+    registraVisitaFonte(params.get("fonte"), "cliente", (fonte, tipo) => api.post("/fonte/visita", { fonte, tipo }).catch(() => {}));
   }, [params]);
 
   // Modalità pre-lancio (spenta di norma): al posto della home c'è «Stiamo arrivando» con la lista d'attesa.

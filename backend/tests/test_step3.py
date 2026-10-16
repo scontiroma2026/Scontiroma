@@ -146,3 +146,29 @@ def test_data_fine_prova_solo_se_impostata(monkeypatch):
         monkeypatch.setenv("TRIAL_END_DATE", "30/11/2026")
         assert "trial_end_date" not in (await c.get("/api/config/public")).json()
     run(body)
+
+
+def test_visite_e_iscrizioni_per_fonte_clienti_e_negozi(monkeypatch):
+    """QR dei volantini: le visite (anonime) e le iscrizioni di clienti e negozi si contano per fonte, senza dati personali."""
+    monkeypatch.setenv("ADMIN_MASTER_PASSWORD", "master-test-123456")
+
+    async def body(c):
+        for tipo in ("cliente", "cliente", "negozio"):
+            r = await c.post("/api/fonte/visita", json={"fonte": "volantino-strada" if tipo == "cliente" else "volantino-negozi", "tipo": tipo})
+            assert r.status_code == 200 and r.json()["ok"] is True
+        r = await c.post("/api/fonte/visita", json={"fonte": "Non Valida!", "tipo": "cliente"})
+        assert r.status_code == 200 and r.json()["ok"] is False  # fonte non valida: ignorata
+        assert (await c.post("/api/fonte/visita", json={"fonte": "x", "tipo": "altro"})).status_code == 422
+        # iscrizioni: un cliente e un negozio con fonte
+        await utente("client", fonte_iscrizione="volantino-strada", fonte_iscrizione_at=datetime.now(timezone.utc).isoformat())
+        await utente("merchant", shop_name="Osteria", fonte_iscrizione="volantino-negozi", fonte_iscrizione_at=datetime.now(timezone.utc).isoformat())
+        aid, ah = await utente("admin")
+        m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
+        ah = {**ah, "X-Admin-Master": m.json()["token"]}
+        d = (await c.get("/api/admin/fonti-qr", headers=ah)).json()["fonti"]
+        riga = {r["fonte"]: r for r in d}
+        assert riga["volantino-strada"]["visite_clienti"] == 2 and riga["volantino-strada"]["clienti_iscritti"] == 1
+        assert riga["volantino-negozi"]["visite_negozi"] == 1 and riga["volantino-negozi"]["negozi_iscritti"] == 1
+        assert "@" not in str(d) and "user" not in str(d)
+        assert (await c.get("/api/admin/fonti-qr")).status_code in (401, 403)
+    run(body)

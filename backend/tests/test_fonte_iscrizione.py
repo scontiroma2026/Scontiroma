@@ -37,13 +37,14 @@ def test_fonte_valida_salvata_e_contata():
     run(body, False)
 
 
-def test_fonte_ignorata_per_i_negozi():
+def test_fonte_salvata_anche_per_i_negozi():
+    """Dal 16/10 la fonte si salva anche per i negozi (QR dei volantini per i commercianti), senza dati personali."""
     async def body(c):
         r = await c.post("/api/auth/register", json=_reg(
             "negozio1@example.com", role="merchant", shop_name="Negozio di prova", zone="Garbatella",
             category="Ristorante", phone="3331112222", partita_iva="12345678903", legal_specific_accepted=True, fonte="volantino-garbatella"))
         assert r.status_code == 200, r.text
         u = await server.db.users.find_one({"email": "negozio1@example.com"})
-        assert "fonte_iscrizione" not in u
+        assert u["fonte_iscrizione"] == "volantino-garbatella"
 
     run(body, False)
