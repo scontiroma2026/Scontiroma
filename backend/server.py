@@ -964,7 +964,7 @@ async def register(payload: RegisterIn, response: Response, request: Request):
     if referral_ok:
         doc["referred_by"] = payload.referred_by
         doc["referred_at"] = now_iso
-    fonte = _fonte_valida(payload.fonte) if payload.role == "client" else None
+    fonte = _fonte_valida(payload.fonte)  # clienti e negozi: serve a contare le iscrizioni per volantino/QR
     if fonte:
         doc["fonte_iscrizione"] = fonte
         doc["fonte_iscrizione_at"] = now_iso
@@ -4979,12 +4979,12 @@ async def admin_referrals_by_merchant(user: dict = Depends(require_admin_master)
 
 
 
-async def _iscrizioni_per_fonte(lo: Optional[str] = None, hi: Optional[str] = None) -> list:
+async def _iscrizioni_per_fonte(lo: Optional[str] = None, hi: Optional[str] = None, ruolo: str = "client") -> list:
     """Conteggio anonimo delle iscrizioni dei clienti per fonte di campagna (volantini). Nessun dato personale.
     Con `lo`/`hi` (istanti ISO, hi escluso) aggiunge `nel_periodo` (usato dal riepilogo settimanale)."""
     da30 = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     conteggi: dict = {}
-    async for c in db.users.find({"role": "client", "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
+    async for c in db.users.find({"role": ruolo, "fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
                                  {"_id": 0, "fonte_iscrizione": 1, "fonte_iscrizione_at": 1, "created_at": 1}):
         f = c["fonte_iscrizione"]
         quando = c.get("fonte_iscrizione_at") or c.get("created_at") or ""
@@ -4995,6 +4995,46 @@ async def _iscrizioni_per_fonte(lo: Optional[str] = None, hi: Optional[str] = No
         if lo and hi:
             r["nel_periodo"] = r.get("nel_periodo", 0) + (1 if lo <= quando < hi else 0)
     return sorted(conteggi.values(), key=lambda r: (r["totale"], r["fonte"]), reverse=True)
+
+
+class FonteVisitaIn(BaseModel):
+    fonte: str = Field(max_length=60)
+    tipo: Literal["cliente", "negozio"]
+
+
+@api.post("/fonte/visita")
+async def fonte_visita(payload: FonteVisitaIn):
+    """Conta in modo anonimo una visita arrivata da un QR o un volantino (?fonte=...). Si salva solo la fonte, il tipo di
+    pagina (cliente o negozio) e il giorno: nessun indirizzo IP, nessun cookie, nessun dato personale."""
+    fonte = _fonte_valida(payload.fonte)
+    if not fonte:
+        return {"ok": False}
+    giorno = _rome_now().date().isoformat()
+    await db.fonte_visite.update_one({"fonte": fonte, "tipo": payload.tipo, "giorno": giorno},
+                                     {"$inc": {"visite": 1}}, upsert=True)
+    return {"ok": True}
+
+
+@api.get("/admin/fonti-qr")
+async def admin_fonti_qr(user: dict = Depends(require_admin_master)):
+    """Per ogni volantino o QR di campagna: visite (clienti e negozi) e iscrizioni (clienti e negozi). Solo numeri."""
+    da30 = (_rome_now().date() - timedelta(days=30)).isoformat()
+    righe: dict = {}
+
+    def riga(f):
+        return righe.setdefault(f, {"fonte": f, "visite_clienti": 0, "visite_negozi": 0, "visite_30_giorni": 0,
+                                    "clienti_iscritti": 0, "negozi_iscritti": 0})
+    async for v in db.fonte_visite.find({}, {"_id": 0}):
+        r = riga(v["fonte"])
+        r["visite_clienti" if v.get("tipo") == "cliente" else "visite_negozi"] += int(v.get("visite") or 0)
+        if v.get("giorno", "") >= da30:
+            r["visite_30_giorni"] += int(v.get("visite") or 0)
+    for x in await _iscrizioni_per_fonte(ruolo="client"):
+        riga(x["fonte"])["clienti_iscritti"] = x["totale"]
+    for x in await _iscrizioni_per_fonte(ruolo="merchant"):
+        riga(x["fonte"])["negozi_iscritti"] = x["totale"]
+    out = sorted(righe.values(), key=lambda r: (-(r["visite_clienti"] + r["visite_negozi"]), r["fonte"]))
+    return {"fonti": out}
 
 
 @api.get("/admin/iscrizioni-per-fonte")
