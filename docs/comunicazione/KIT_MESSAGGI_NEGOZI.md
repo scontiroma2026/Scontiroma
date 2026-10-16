@@ -1,6 +1,6 @@
 # Kit messaggi per i negozi: versione finale (bozza da far vedere al consulente)
 
-**Stato: pronto per l'uso solo dopo l'OK del titolare e il colpo d'occhio del consulente.** Nessun messaggio è stato inviato. Sostituisce `MESSAGGI_COMMERCIANTI.md` (versione vecchia, con «Garbatella, San Paolo e Marconi» e «gratis») e il kit della PR #41; il copione parlato resta `COPIONE_TELEFONATA.md` (da allineare con le frasi qui sotto).
+**Stato: approvato dal titolare per l'uso dal 19/10 (decisione del 15/10); il consulente lo vedrà in parallelo.** Nessun messaggio è stato inviato. Sostituisce `MESSAGGI_COMMERCIANTI.md` (versione vecchia, con «Garbatella, San Paolo e Marconi» e «gratis») e il kit della PR #41; il copione parlato resta `COPIONE_TELEFONATA.md` (da allineare con le frasi qui sotto).
 
 > **Disdetta (decisa dal titolare, da far comunque vedere al consulente):** la frase è «Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese.» Si usa solo così, parola per parola, a voce e per iscritto, senza altre formule (niente «puoi smettere quando vuoi», niente «nessun vincolo»). **Il consulente deve vedere «disdici quando vuoi».**
 
@@ -18,7 +18,7 @@
 3. **WhatsApp e SMS solo** a chi ha già risposto o ha dato lui il numero per ricevere il video. Un numero pubblicato su Google o sul sito non è un consenso.
 4. Solo ragione/insegna e indirizzo pubblico dell'attività. Nessun dato di persone fisiche (nomi di titolari, numeri privati) nel foglio di tracciamento né nel repository.
 5. Chi dice no (o «stop») non si contatta più, su nessun canale: Esito = «Non ricontattare».
-6. Il video e i testi con «prova» e «prezzo» si usano **dopo** la validazione dei Termini (#116) e il via libera del consulente (LISTA_LANCIO, punto A.7).
+6. **Decisione del titolare (15/10): si parte il 19/10, prima della validazione del consulente.** Video e testi con «prova» e «prezzo» si usano da subito, ma **sempre** con la frase di disdetta esatta, il modo gentile per dire no e senza promesse oltre il testo. I testi restano comunque da far vedere al consulente (domande in `docs/legale/DOMANDE_PER_IL_CONSULENTE.md`); se chiede modifiche, si aggiornano subito. Sui **social** il video si pubblica solo dopo la validazione dei Termini (vedi `VIDEO_V17_COME_USARLO.md`).
 7. QR e link sempre verso il sito con `?fonte=` (es. `?fonte=volantino-negozi`).
 
 ## Quale messaggio per quale caso

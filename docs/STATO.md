@@ -221,3 +221,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (sera): video v17 approvato dal titolare; scheda d'uso VIDEO_V17_COME_USARLO.md (negozi + social); non pubblicabile fino a Termini validati e musica con licenza
 - 15/10 (sera): schermata di pagamento del negozio: frase «Non viene addebitato niente subito…» (visibile solo con i pagamenti accesi); domanda aggiunta per il consulente
 - 15/10 (notte): lista aggiornata a 30 punti (logo e nome deciso: via; scheda marchio unita; email commerciante a 5; domande consulente 35)
+- 15/10 (notte): kit messaggi negozi: il titolare decide di partire il 19/10 prima della validazione del consulente (video sui social solo dopo la validazione)
