@@ -4,7 +4,6 @@
 <!-- Generatore unico: lo stile si sceglie con ?s=NOME (vedi README.md). Formato A4 794x1123 px. -->
 <style>
 @font-face{font-family:'Manrope';font-weight:200 800;src:url('../../../frontend/public/fonts/manrope-latin-wght-normal.woff2') format('woff2')}
-@font-face{font-family:'Fraunces';font-weight:100 900;src:url('../../../frontend/public/fonts/fraunces-latin-opsz-normal.woff2') format('woff2')}
 @font-face{font-family:'Wet';src:url('fonts/RubikWet.ttf')}
 @font-face{font-family:'Swash';font-weight:800;src:url('fonts/Sansita_Swashed.ttf')}
 @font-face{font-family:'Bu';src:url('fonts/Bungee.ttf')}
@@ -17,7 +16,7 @@ body{width:794px;height:1123px;position:relative;overflow:hidden;font-family:'Ma
 .page{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:44px 56px 0}
 .brand{display:flex;align-items:center;gap:14px;flex:none}
 .brand img{width:54px;height:54px}
-.brand b{display:block;font-family:'Fraunces',serif;font-size:29px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.brand b{display:block;font-family:'Manrope',sans-serif;font-size:29px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
 .brand span{display:block;font-size:12px;letter-spacing:3px;font-weight:800;margin-top:2px}
 h1{flex:none;margin-top:26px;line-height:1.02}
 h1 .ln{display:block;white-space:nowrap}
@@ -35,11 +34,11 @@ li:nth-child(1) i{background:var(--n1)}li:nth-child(2) i{background:var(--n2)}li
 
 /* ===== 1. app-chiara ===== */
 .s-app-chiara{--n1:var(--fu);--n2:var(--vi);--n3:var(--te)}
-.s-app-chiara h1{font-family:'Fraunces',serif;font-weight:800;font-size:62px;letter-spacing:-1.5px;margin-top:40px}
+.s-app-chiara h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:62px;letter-spacing:-1.5px;margin-top:40px}
 .s-app-chiara h1 em{font-style:normal;background:linear-gradient(90deg,var(--fu),var(--vi));-webkit-background-clip:text;background-clip:text;color:transparent}
 .s-app-chiara .brand span{color:var(--te)}
 .s-app-chiara .sub{color:#3a3358}.s-app-chiara .sub strong{color:var(--fu)}
-.s-app-chiara .l{font-family:'Fraunces',serif}
+.s-app-chiara .l{font-family:'Manrope',sans-serif}
 .s-app-chiara .panel{border:2px solid #e6e1f6}
 .s-app-chiara .foot{background:linear-gradient(90deg,var(--fu),var(--vi));color:#fff}
 
@@ -117,10 +116,10 @@ li:nth-child(1) i{background:var(--n1)}li:nth-child(2) i{background:var(--n2)}li
 .s-pasqua{--n1:#e0589b;--n2:#8a6cf0;--n3:#2fa89a;background:#fffaf0}
 .s-pasqua .deco{background:linear-gradient(#fffaf0,#fff4fa 60%,#f1fbf3)}
 .s-pasqua .brand span{color:#2a8f82}
-.s-pasqua h1{font-family:'Fraunces',serif;font-weight:800;font-size:60px;letter-spacing:-1.2px;margin-top:34px;color:var(--ink)}
+.s-pasqua h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:60px;letter-spacing:-1.2px;margin-top:34px;color:var(--ink)}
 .s-pasqua h1 em{font-style:normal;color:#d9488e}
 .s-pasqua .sub{color:#463d63}.s-pasqua .sub strong{color:#d9488e}
-.s-pasqua .l{font-family:'Fraunces',serif;color:#6d4aff}
+.s-pasqua .l{font-family:'Manrope',sans-serif;color:#6d4aff}
 .s-pasqua .panel{border:3px solid #f6c3dc;box-shadow:0 8px 24px #d9488e22}
 .s-pasqua .foot{background:linear-gradient(90deg,#f6a6cb,#b9a6ff,#8fdcc9);color:#1A1530}
 
@@ -128,10 +127,10 @@ li:nth-child(1) i{background:var(--n1)}li:nth-child(2) i{background:var(--n2)}li
 .s-estate{--n1:#ff6a2b;--n2:#0aa3b5;--n3:#d81b72;background:#fff7e8}
 .s-estate .deco{background:linear-gradient(#fff3d6,#fffaf0 55%,#e7fbfb)}
 .s-estate .brand span{color:#0b8a9a}
-.s-estate h1{font-family:'Fraunces',serif;font-weight:800;font-size:62px;letter-spacing:-1.4px;margin-top:36px}
+.s-estate h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:62px;letter-spacing:-1.4px;margin-top:36px}
 .s-estate h1 em{font-style:normal;color:#ff6a2b}
 .s-estate .sub{color:#3d3552}.s-estate .sub strong{color:#e0501a}
-.s-estate .l{font-family:'Fraunces',serif;color:#0b8a9a}
+.s-estate .l{font-family:'Manrope',sans-serif;color:#0b8a9a}
 .s-estate .panel{border:3px solid #ffb27a;box-shadow:0 8px 24px #ff6a2b22}
 .s-estate .foot{background:#0a8a9b;color:#fff}
 </style></head>
@@ -247,6 +246,6 @@ function applica(){
  if(hw[s])FN.halloween(hw[s]);else (FN[s]||FN['app-chiara'])();
  // titoli larghi: piccole correzioni di spazio verticale per gli stili a righe
 }
-Promise.all(['100px Wet','800 100px Swash','100px Bu','700 100px Lob','800 100px Fraunces','700 20px Manrope','800 20px Manrope'].map(f=>document.fonts.load(f,'Qui trovi un’offerta ROMA'))).catch(()=>{}).then(()=>document.fonts.ready).then(()=>{applica();document.title='pronto'});
+Promise.all(['100px Wet','800 100px Swash','100px Bu','700 100px Lob','800 100px Manrope','700 20px Manrope','800 20px Manrope'].map(f=>document.fonts.load(f,'Qui trovi un’offerta ROMA'))).catch(()=>{}).then(()=>document.fonts.ready).then(()=>{applica();document.title='pronto'});
 </script>
 </body></html>
