@@ -44,7 +44,7 @@ Poi: consegnare la **guida di una pagina** e la card con il QR. Non chiedere il 
 
 ## B. WhatsApp (solo a chi ha risposto o ha dato il numero)
 **B1. Primo messaggio**
-> Buongiorno, siamo Sconti Roma, l'app degli sconti nei negozi di Roma e dintorni. Come richiesto, ecco il video di un minuto: [LINK]
+> Buongiorno, siamo Sconti Roma, l'app degli sconti nei negozi di Roma e dintorni. Come richiesto, ecco il video di un minuto e mezzo: [LINK]
 > Ogni mese [NOME NEGOZIO] pubblica un'offerta, i clienti la trovano nell'app e mostrano un QR alla cassa che voi inquadrate. La fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta.
 > Se non fa per voi, rispondete «NO» e non vi scriviamo più.
 
@@ -59,7 +59,7 @@ Dopo B2 senza risposta: Esito = «Nessuna risposta» e basta. Niente terzo messa
 ## C. Instagram (messaggio diretto dal profilo dell'attività)
 > Ciao! Siamo **Sconti Roma**, un'app che porta nuovi clienti ai negozi di Roma e dintorni.
 > Per [NOME NEGOZIO] funzionerebbe così: pubblicate un'offerta al mese, il cliente la trova nell'app e mostra un QR alla cassa; voi lo inquadrate e lo sconto è fatto.
-> Siamo nella fase di lancio: gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Video di un minuto: [LINK]
+> Siamo nella fase di lancio: gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Video di un minuto e mezzo: [LINK]
 > Se non vi interessa basta scrivere «no» e non vi disturbiamo più 🙂
 
 ## D. Email (all'indirizzo pubblico dell'attività)
@@ -73,7 +73,7 @@ Oggetto: **Un'idea per portare nuovi clienti a [NOME NEGOZIO]**
 >
 > La fase di lancio è gratuita, con circa due mesi di prova dalla prima pubblicazione dell'offerta. Dopo la prova vi avvisiamo prima e non addebitiamo nulla senza la vostra conferma.
 >
-> Video di un minuto: [LINK]. Guida di una pagina in allegato. Iscrizione: scontiroma.it
+> Video di un minuto e mezzo: [LINK]. Guida di una pagina in allegato. Iscrizione: scontiroma.it
 >
 > Sconti Roma, info@scontiroma.it
 >
