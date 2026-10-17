@@ -222,3 +222,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (notte): volantino per i clienti A5 (strada, università) per il lancio: QR con ?fonte=volantino-strada e riquadro «Hai un'attività?»; da stampare ora, da distribuire solo con offerte vere nell'app
 - 16/10: cartolina «Hai un negozio?» A6 per i negozi (QR con ?fonte=cartolina-negozi, senza prezzo né prova)
 - 16/10: conteggio dei QR dei volantini: visite (clienti e negozi, anonime) e iscrizioni per fonte nella scheda admin Riepilogo; salvataggio della fonte anche per i negozi
+- 17/10: cancellazione account cliente: il Riepilogo dell'admin conta gli account cancellati (solo numero e data, nessun dato personale); prova del cliente: 6 passi su 6 fatti
