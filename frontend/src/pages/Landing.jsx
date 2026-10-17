@@ -68,7 +68,7 @@ export default function Landing() {
                 <span className="text-grad">tutta tua.</span>
               </h1>
               <p data-testid="hero-sottotitolo" className="mt-5 max-w-xl font-serif text-3xl italic leading-tight text-foreground md:text-4xl">
-                Scopri quanto puoi risparmiare nel tuo quartiere.
+                Scopri quanto puoi risparmiare vicino a te.
               </p>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">
                 I negozi che ami, a prezzo scontato. Dal caffè alla pizza, dal parrucchiere alla palestra:
@@ -95,7 +95,7 @@ export default function Landing() {
                 <img {...ROMA_TREVI} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
-                  <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
+                  <div className="font-serif text-3xl mt-1">Roma, zona per zona</div>
                   <div className="text-sm text-muted-foreground">Dal centro alla periferia</div>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function Landing() {
         <div className="grid gap-6 md:grid-cols-3">
           {[
             { n: "01", t: "Registrati", d: "Crea il tuo account in pochi secondi.", c: "fucsia" },
-            { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
+            { n: "02", t: "Scegli", d: "Filtra per zona di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
             { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Tutto qui.", c: "neon" },
           ].map((s) => (
             <Card key={s.n} className="relative border-border bg-muted backdrop-blur p-8 hover:bg-muted transition group overflow-hidden">
@@ -132,7 +132,7 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <div className="text-xs uppercase tracking-[0.2em] text-neon">Dove siamo</div>
-            <h2 className="mt-2 font-serif text-5xl">Il tuo <span className="text-grad">quartiere</span>, ovunque a Roma</h2>
+            <h2 className="mt-2 font-serif text-5xl">La tua <span className="text-grad">zona</span>, ovunque a Roma</h2>
           </div>
           <Link to="/discounts" className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-12">
             <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 grad-fucsia-viola" />
@@ -155,7 +155,7 @@ export default function Landing() {
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-white">Per i commercianti</div>
               <h2 className="mt-3 font-serif text-5xl text-white leading-tight">
-                Un solo sconto,<br/>nuovi clienti dal quartiere.
+                Un solo sconto,<br/>nuovi clienti vicino a te.
               </h2>
               <p className="mt-4 text-white max-w-md">
                 Hai un'attività a Roma o nei dintorni? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.

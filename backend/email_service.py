@@ -335,7 +335,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
               Il tuo abbonamento mensile è attivo e si è rinnovato con successo!
             </p>
             <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#333">
-              I commercianti del tuo quartiere hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
+              I commercianti della tua zona hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
             </p>
           </td>
         </tr>
@@ -472,7 +472,7 @@ async def send_grace_period_reminder(
 </div>
 
 <p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
-  Ti bastano <strong>30 secondi</strong> per aggiornare il metodo di pagamento e non perdere l'accesso agli sconti dei commercianti del tuo quartiere.
+  Ti bastano <strong>30 secondi</strong> per aggiornare il metodo di pagamento e non perdere l'accesso agli sconti dei commercianti della tua zona.
 </p>
 
 <div style="text-align:center;margin:28px 0">
@@ -642,7 +642,7 @@ async def send_welcome_client(to: str, name: str) -> Optional[str]:
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Benvenuto in {BRAND}!</h2>
 <p style="{_P}">Ciao {name},</p>
-<p style="{_P}">da oggi trovi gli sconti dei negozi del tuo quartiere: scegli un'offerta, mostra il QR al banco e paghi il prezzo scontato.</p>
+<p style="{_P}">da oggi trovi gli sconti dei negozi della tua zona: scegli un'offerta, mostra il QR al banco e paghi il prezzo scontato.</p>
 <p style="{_P}">Durante la fase di lancio {BRAND} è <strong>gratuito</strong>: non serve nessun abbonamento.</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/discounts" style="{_BTN}">Guarda gli sconti</a></div>
 <p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Per entrare con un tocco attiva il Face ID dalla sezione «Sicurezza» del tuo account.</p>
