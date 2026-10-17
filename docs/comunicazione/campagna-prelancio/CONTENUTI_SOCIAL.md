@@ -25,7 +25,7 @@
 ## 2. Profili: bio e link
 **Instagram `sconti.roma`, bio (max 150 caratteri)**
 - Variante A: `Le offerte dei negozi vicino a te. Roma e dintorni. Stiamo arrivando: lista d'attesa qui sotto. 18+` (105)
-- Variante B: `Quelle del tuo quartiere, tutte in un'app. Gratuita nella fase di lancio. Stiamo arrivando. 18+` (96)
+- Variante B: `Quelle vicino a te, tutte in un'app. Gratuita nella fase di lancio. Stiamo arrivando. 18+` (96)
 - Variante C: `Un'offerta, un QR, un negozio sotto casa. Roma e dintorni. Avvisami quando parte ↓ 18+` (87)
 - Link: `https://scontiroma.it/?fonte=ig-bio` (con CTA B: la stessa bio, ultima frase «Seguici, stiamo arrivando»).
 - Dal lancio: sostituire con `Le offerte dei negozi vicino a te. Roma e dintorni. Gratuita nella fase di lancio. 18+`.
@@ -44,23 +44,23 @@ Formato quadrato 1080×1080 (carosello fino a 5 immagini; storie 1080×1920). Co
   > Stiamo arrivando con Sconti Roma: le offerte dei negozi di Roma e dintorni, in un'app. Scegli la zona, guardi l'offerta, mostri il QR al banco.
   > Lasciaci la tua email nella lista d'attesa e ti avvisiamo noi quando parte. Link in bio.
   > Gratuita nella fase di lancio. Solo 18+.
-  > #ScontiRoma #Roma #RomaEDintorni #NegoziDiQuartiere #OfferteRoma
+  > #ScontiRoma #Roma #RomaEDintorni #NegoziLocali #OfferteRoma
 - **Variante B (benefit)**
   > A fine mese ogni euro conta, e il bar sotto casa lo sai già dove sta.
   > Sconti Roma raccoglie in un posto solo le offerte dei negozi vicino a te. Stiamo arrivando: iscriviti alla lista d'attesa (link in bio) e ti avvisiamo quando parte.
   > Gratuita nella fase di lancio. Roma e dintorni. 18+.
-  > #ScontiRoma #Roma #RomaEDintorni #NegoziDiQuartiere #Risparmio
+  > #ScontiRoma #Roma #RomaEDintorni #NegoziLocali #Risparmio
 - **Variante C (comunità)**
-  > I negozi del quartiere ci sono ogni giorno. Adesso arriva un modo per ricambiare, e magari spendere un po' meno.
+  > I negozi sotto casa ci sono ogni giorno. Adesso arriva un modo per ricambiare, e magari spendere un po' meno.
   > Sconti Roma: le offerte dei negozi vicino a te. Stiamo arrivando. Entra nella lista d'attesa, link in bio.
   > Gratuita nella fase di lancio. Roma e dintorni. 18+.
-  > #ScontiRoma #Roma #RomaEDintorni #NegoziDiQuartiere #OfferteRoma
+  > #ScontiRoma #Roma #RomaEDintorni #NegoziLocali #OfferteRoma
 - **CTA B (senza lista):** sostituire «Lasciaci la tua email… Link in bio.» con «Seguici qui: ti diciamo noi quando parte.»
 - **Immagine:** fondo bianco, grande «Stiamo arrivando» in fucsia, sotto «Le offerte dei negozi vicino a te», fascia viola con «Roma e dintorni · 18+». Nessuna data.
 - **Quando:** gio 22/10, 18:30.
 
 ### P2 – Perché Sconti Roma (extra, non in calendario) **[OK-TITOLARE]**
-> Perché un'app? Perché i negozi di quartiere hanno spesso offerte che nessuno vede, e chi abita lì non sa dove guardare.
+> Perché un'app? Perché i negozi sotto casa hanno spesso offerte che nessuno vede, e chi abita lì non sa dove guardare.
 > Sconti Roma mette tutto in un posto: l'offerta del mese di ogni negozio, il QR da mostrare al banco, niente di più. Stiamo arrivando.
 > Gratuita nella fase di lancio. Roma e dintorni. 18+. Lista d'attesa: link in bio. Sconti Roma
 > (CTA B: «Seguici qui per sapere quando parte.»)
@@ -83,7 +83,7 @@ Formato quadrato 1080×1080 (carosello fino a 5 immagini; storie 1080×1920). Co
 - **Bloccato [TERMINI]:** qualsiasi riga con «circa due mesi di prova» o con il prezzo dell'abbonamento, finché il consulente non valida i Termini (#116).
 
 ### P5 – Dillo a un amico (extra, da usare dopo il 28/10) **[OK-TITOLARE]**
-> Conosci qualcuno che ama i negozi del suo quartiere? Mandagli Sconti Roma. Stiamo arrivando: la lista d'attesa è qui, link in bio. Gratuita nella fase di lancio. Roma e dintorni. 18+. Sconti Roma
+> Conosci qualcuno che ama i negozi vicino a casa sua? Mandagli Sconti Roma. Stiamo arrivando: la lista d'attesa è qui, link in bio. Gratuita nella fase di lancio. Roma e dintorni. 18+. Sconti Roma
 
 ### P6 – Che negozio vorresti trovare? (gio 29/10, 18:30)
 > Dimmelo qui sotto, senza nome e cognome di nessuno: che tipo di negozio ti piacerebbe trovare su Sconti Roma? Il fornaio, la pizzeria al taglio, la lavanderia, il parrucchiere?
@@ -113,7 +113,7 @@ Una sequenza per giorno, massimo 5–6 schermate. Ogni schermata ha il testo a s
 5. «Avvisami quando parte → lista d'attesa» (adesivo link) / CTA B: «Seguici, ti avvisiamo qui»
 
 ### S2 – Sondaggio (ven 23/10)
-1. «Dove fai più spesso la spesa vicino a casa?» sondaggio: «Negozio di quartiere / Supermercato»
+1. «Dove fai più spesso la spesa vicino a casa?» sondaggio: «Negozio sotto casa / Supermercato»
 2. «Quando esci a colazione?» sondaggio: «Ogni giorno / Ogni tanto / Mai» (colazione = tema sano)
 3. «Ti piacerebbe trovare le offerte in un posto solo?» sondaggio Sì / Dipende
 4. «Grazie! Stiamo arrivando. Lista d'attesa → link» / CTA B
@@ -177,7 +177,7 @@ Rispondere entro 2 giorni, brevi, mai dati personali. Firma «Sconti Roma». Est
 - **Ho un negozio, come faccio?** Grazie! Scrivici qui in privato: ti spieghiamo come funziona in 5 minuti. Se non ti interessa, nessun problema.
 - **È una truffa? Chi siete?** Capiamo il dubbio. Sconti Roma è un'app italiana: nome, sede e contatti sono sul sito scontiroma.it. Non chiediamo password né pagamenti per iscriversi alla lista.
 - **È spam?** Se ti ha disturbato ci dispiace: scrivici «basta» e non ti scriviamo più. Sconti Roma
-- **Non c'è il mio quartiere.** Grazie! Nell'app tocca «Fammi sapere quando arrivate»: è un voto anonimo che ci aiuta a capire dove andare. Non promettiamo avvisi.
+- **Non c'è la mia zona.** Grazie! Nell'app tocca «Fammi sapere quando arrivate»: è un voto anonimo che ci aiuta a capire dove andare. Non promettiamo avvisi.
 - **Posso usarla se ho meno di 18 anni?** No, Sconti Roma è per maggiorenni (18+).
 - **Funziona su Android/iPhone?** Funziona dal browser del telefono. *(Verificare prima di rispondere.)*
 - **Avete sconti sul vino/birra?** Sconti Roma non pubblicizza sconti sugli alcolici come offerta principale.
@@ -203,7 +203,7 @@ Elenco, priorità e primi due da chiedere il 19/10: `GRUPPI_DA_CONTATTARE.md`.
   > Ciao a tutti! Sconti Roma è un'app che raccoglie le offerte dei negozi vicino a te, a Roma e dintorni. Stiamo arrivando: se vuoi sapere quando parte, trovi la lista d'attesa qui: [LINK gruppo-0X]. Gratuita nella fase di lancio. Solo 18+.
   > Se non vuoi vedere altri messaggi di questo tipo, scrivilo nei commenti e li togliamo. Sconti Roma
 - **Variante B (domanda)**
-  > Una curiosità: quale negozio di quartiere vorreste trovare con un'offerta del mese? Lo chiediamo perché stiamo arrivando con Sconti Roma, l'app con le offerte dei negozi vicino a te (Roma e dintorni, gratuita nella fase di lancio, 18+). Lista d'attesa: [LINK]. Se il post disturba, scrivetelo e lo togliamo. Sconti Roma
+  > Una curiosità: quale negozio sotto casa vorreste trovare con un'offerta del mese? Lo chiediamo perché stiamo arrivando con Sconti Roma, l'app con le offerte dei negozi vicino a te (Roma e dintorni, gratuita nella fase di lancio, 18+). Lista d'attesa: [LINK]. Se il post disturba, scrivetelo e lo togliamo. Sconti Roma
 - CTA B: sostituire il link con «Per ora ci trovate su Instagram e Facebook come Sconti Roma».
 
 ### 8.3 Post nei gruppi di commercianti (solo se gli amministratori consentono promozioni di attività) **[TERMINI per le righe con prova/prezzo]**
@@ -296,7 +296,7 @@ Oggetto: **Sconti Roma è partita**
 Dato che non c'è una data pubblica, **non si scrive «rimandato»**. Contenuti di tenuta da §3: P2, P5, P6, post del giorno con una nuova variante di P1, e un reel di §5. Messaggio per chi chiede: vedi «Quando parte?» in §7.
 
 ## 12. Hashtag (generici, al massimo 6 per post, nessun nome di quartiere)
-Principali: `#ScontiRoma #Roma #RomaEDintorni #NegoziDiQuartiere #OfferteRoma`. Rotazione: `#Risparmio #ColazioneFuoriCasa #SpesaDiQuartiere #CommercioLocale #NegoziVicinoCasa`. Per i negozi: `#NegoziLocali #CommercioLocale #PiccoliNegozi`. Non usare hashtag con marchi, né quelli con nomi di quartieri o di zone.
+Principali: `#ScontiRoma #Roma #RomaEDintorni #NegoziLocali #OfferteRoma`. Rotazione: `#Risparmio #ColazioneFuoriCasa #SpesaVicinoCasa #CommercioLocale #NegoziVicinoCasa`. Per i negozi: `#NegoziLocali #CommercioLocale #PiccoliNegozi`. Non usare hashtag con marchi, né quelli con nomi di quartieri o di zone.
 
 ## 13. Urgenza onesta: cosa si può e non si può dire
 **Si può** (se vero quel giorno): «Stiamo arrivando», «Ci siamo quasi», «Iscriviti: ti avvisiamo noi quando parte», «Le offerte restano in attesa e partono con il lancio», «Oggi partiamo», «Chi è in lista riceve l'avviso», «Il mese ha una sola offerta per negozio: guardala finché c'è», **ma solo dal lancio e solo se l'offerta ha davvero una scadenza**.

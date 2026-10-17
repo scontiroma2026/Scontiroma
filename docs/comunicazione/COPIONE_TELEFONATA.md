@@ -1,6 +1,6 @@
-# Copione per telefonare a un negozio di quartiere (60–90 secondi)
+# Copione per telefonare a un negozio (60–90 secondi)
 
-Tono: gentile, da persona del quartiere, mai insistente. Parlare piano, sorridere (si sente), lasciare spazio.
+Tono: gentile, da persona del posto, mai insistente. Parlare piano, sorridere (si sente), lasciare spazio.
 Si telefona **un negozio per volta**, in orari tranquilli (mai all'ora di punta del negozio). Chi dice di no non si richiama.
 
 Regole sui testi:

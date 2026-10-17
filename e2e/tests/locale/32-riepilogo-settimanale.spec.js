@@ -11,7 +11,7 @@ test('riepilogo: l\'endpoint chiede la master password e non contiene dati perso
   const a = await admin(request);
   const r = await chiama(request, 'GET', '/admin/riepilogo-settimanale', { token: a.token, headers: a.headers });
   expect(r.status).toBe(200);
-  expect(r.data.metriche).toHaveLength(8);
+  expect(r.data.metriche).toHaveLength(9);
   expect(JSON.stringify(r.data)).not.toContain('@');
 });
 

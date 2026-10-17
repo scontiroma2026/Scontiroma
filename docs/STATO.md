@@ -222,4 +222,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 15/10 (notte): volantino per i clienti A5 (strada, università) per il lancio: QR con ?fonte=volantino-strada e riquadro «Hai un'attività?»; da stampare ora, da distribuire solo con offerte vere nell'app
 - 16/10: cartolina «Hai un negozio?» A6 per i negozi (QR con ?fonte=cartolina-negozi, senza prezzo né prova)
 - 16/10: conteggio dei QR dei volantini: visite (clienti e negozi, anonime) e iscrizioni per fonte nella scheda admin Riepilogo; salvataggio della fonte anche per i negozi
+- 16/10: locandine A4 passate da Fraunces a Manrope (restano i caratteri a tema di Halloween, Natale, ecc.); PNG rigenerati
 - 16/10: cartolina negozi: sfondo azzurro/turchese (diverso dal volantino clienti rosa-viola)
+- 16/10: tolta la parola «quartiere» dai testi pubblici (sito, email ai clienti, post, hashtag, messaggi ai negozi); restano fuori Termini e consenso email in Privacy (testi legali, da far vedere al consulente) e i testi interni dell'admin
+- 17/10: prova del cliente sul sito di prova: passi 1-5 fatti (iscrizione, email di conferma, accesso, cuore, segnalazione con email di esito); tolta la scritta «Gratis durante la fase di lancio» dalle schermate account e abbonamento del cliente
+- 17/10: cancellazione account cliente: il Riepilogo dell'admin conta gli account cancellati (solo numero e data, nessun dato personale); prova del cliente: 6 passi su 6 fatti

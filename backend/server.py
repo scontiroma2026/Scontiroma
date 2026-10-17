@@ -5091,6 +5091,7 @@ async def _conteggi_settimana(da: date, a: date) -> dict:
         "scansioni_qr": scansioni,
         "iscrizioni_da_qr_negozi": await db.users.count_documents({"role": "client", "referred_at": intervallo}),
         "nuove_segnalazioni": await db.segnalazioni.count_documents({"creata_il": intervallo}),
+        "account_cancellati": await db.cancellazioni_account.count_documents({"creata_il": intervallo}),
         "fonti": {r["fonte"]: r["nel_periodo"] for r in await _iscrizioni_per_fonte(lo, hi)},
     }
 
@@ -5104,6 +5105,7 @@ METRICHE_RIEPILOGO = (
     ("scansioni_qr", "Scansioni dei QR dei negozi"),
     ("iscrizioni_da_qr_negozi", "Iscrizioni dai QR dei negozi"),
     ("nuove_segnalazioni", "Nuove segnalazioni e reclami"),
+    ("account_cancellati", "Account cancellati dai clienti"),
 )
 
 
@@ -6925,6 +6927,8 @@ async def gdpr_delete_account(user: dict = Depends(get_current_user), response: 
 
     # Elimina l'utente
     await db.users.delete_one({"id": uid})
+    # Solo un conteggio per l'admin: nessun nome, email o identificativo della persona.
+    await db.cancellazioni_account.insert_one({"ruolo": user.get("role"), "creata_il": datetime.now(timezone.utc).isoformat()})
     if user.get("email"):
         _email_in_background(send_account_deleted(user["email"], user.get("name") or ""), "account-cancellato")
 
