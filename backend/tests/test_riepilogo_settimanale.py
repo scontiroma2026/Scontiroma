@@ -106,6 +106,9 @@ async def semina():
         {"id": "s1", "tipo": "offerta", "stato": "ricevuta", "creata_il": ORA, "email": "chi.segnala@example.com", "motivo": "x"},
         {"id": "s2", "tipo": "reclamo_commerciante", "stato": "in_esame", "creata_il": PRIMA, "motivo": "y"},
         {"id": "s3", "tipo": "offerta", "stato": "accolta", "creata_il": ORA, "motivo": "z"}])
+    # account cancellati dai clienti (solo ruolo e data, nessun dato personale)
+    await db.cancellazioni_account.insert_many([
+        {"ruolo": "client", "creata_il": ORA}, {"ruolo": "client", "creata_il": ORA}, {"ruolo": "client", "creata_il": PRIMA}])
 
 
 def test_calcoli_e_confronto_con_la_settimana_prima():
@@ -123,6 +126,7 @@ def test_calcoli_e_confronto_con_la_settimana_prima():
         assert (m["scansioni_qr"]["questa"], m["scansioni_qr"]["precedente"]) == (7, 5)
         assert m["iscrizioni_da_qr_negozi"]["questa"] == 1 and m["iscrizioni_da_qr_negozi"]["precedente"] == 0
         assert m["nuove_segnalazioni"]["questa"] == 2 and m["nuove_segnalazioni"]["precedente"] == 1
+        assert m["account_cancellati"]["questa"] == 2 and m["account_cancellati"]["precedente"] == 1
         fonti = {f["fonte"]: f for f in r["fonti"]}
         assert (fonti["volantino"]["questa"], fonti["volantino"]["precedente"]) == (2, 0)
         assert (fonti["social"]["questa"], fonti["social"]["precedente"], fonti["social"]["totale"]) == (1, 1, 2)
@@ -286,5 +290,5 @@ def test_endpoint_admin_richiede_master_password():
         assert r.status_code == 200
         j = r.json()
         assert {"periodo", "metriche", "fonti", "interesse_zone", "situazione", "da_guardare"} <= set(j)
-        assert len(j["metriche"]) == 8
+        assert len(j["metriche"]) == 9
     run(body)
