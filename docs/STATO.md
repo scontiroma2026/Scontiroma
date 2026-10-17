@@ -223,3 +223,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 16/10: cartolina «Hai un negozio?» A6 per i negozi (QR con ?fonte=cartolina-negozi, senza prezzo né prova)
 - 16/10: conteggio dei QR dei volantini: visite (clienti e negozi, anonime) e iscrizioni per fonte nella scheda admin Riepilogo; salvataggio della fonte anche per i negozi
 - 16/10: locandine A4 passate da Fraunces a Manrope (restano i caratteri a tema di Halloween, Natale, ecc.); PNG rigenerati
+- 16/10: cartolina negozi: sfondo azzurro/turchese (diverso dal volantino clienti rosa-viola)
