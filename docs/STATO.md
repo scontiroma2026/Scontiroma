@@ -225,3 +225,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 16/10: locandine A4 passate da Fraunces a Manrope (restano i caratteri a tema di Halloween, Natale, ecc.); PNG rigenerati
 - 16/10: cartolina negozi: sfondo azzurro/turchese (diverso dal volantino clienti rosa-viola)
 - 16/10: tolta la parola «quartiere» dai testi pubblici (sito, email ai clienti, post, hashtag, messaggi ai negozi); restano fuori Termini e consenso email in Privacy (testi legali, da far vedere al consulente) e i testi interni dell'admin
+- 17/10: prova del cliente sul sito di prova: passi 1-5 fatti (iscrizione, email di conferma, accesso, cuore, segnalazione con email di esito); tolta la scritta «Gratis durante la fase di lancio» dalle schermate account e abbonamento del cliente

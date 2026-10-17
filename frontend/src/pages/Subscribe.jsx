@@ -113,10 +113,9 @@ export default function Subscribe() {
           </div>
         ) : !required ? (
           <div data-testid="launch-free" className="text-center">
-            <div className="font-serif text-3xl text-foreground">Gratis durante la fase di lancio</div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Per usare gli sconti di Sconti Roma non serve nessun abbonamento e nessun pagamento.
-            </p>
+            <div className="font-serif text-3xl text-foreground">
+              Per usare gli sconti non serve nessun abbonamento e nessun pagamento.
+            </div>
             <Button onClick={() => nav("/discounts")} className="mt-6 grad-fucsia-viola text-white hover:scale-105 transition rounded-full">
               Sfoglia gli sconti
             </Button>

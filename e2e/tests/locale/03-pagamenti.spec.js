@@ -19,15 +19,17 @@ test('dopo la pagina Sicurezza il cliente va agli sconti, non al pagamento', asy
   await expect(page).toHaveURL(/\/discounts/);
 });
 
-test('pagina abbonamento e account: "Gratis durante la fase di lancio", nessun pagamento', async ({ page, request }) => {
+test('pagina abbonamento e account: nessun abbonamento, nessun pagamento, niente «Gratis durante la fase di lancio»', async ({ page, request }) => {
   const c = await registra(request, 'client');
   await loginNelBrowser(page, c.email, c.password);
   await page.goto('/subscribe');
-  await expect(page.getByTestId('launch-free')).toContainText('Gratis durante la fase di lancio');
+  await expect(page.getByTestId('launch-free')).toContainText('non serve nessun abbonamento');
+  await expect(page.getByTestId('launch-free')).not.toContainText('Gratis durante la fase di lancio');
   await expect(page.getByTestId('subscribe-btn')).toHaveCount(0);
   await expect(page.getByText(/€\s*2,99/)).toHaveCount(0);
   await page.goto('/dashboard');
-  await expect(page.getByTestId('launch-free')).toContainText('Gratis durante la fase di lancio');
+  await expect(page.getByTestId('launch-free')).toContainText('non serve nessun abbonamento');
+  await expect(page.getByTestId('launch-free')).not.toContainText('Gratis durante la fase di lancio');
   await expect(page.getByTestId('activate-btn')).toHaveCount(0);
 });
 
