@@ -235,3 +235,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: scheda di lettura del DPA di Render (docs/legale/DPA_RENDER_SCHEDA.md); si accetta con i Termini, SCC con foro in Irlanda
 - 18/10: scheda del DPA di Atlas (vale in automatico); Render: regione Francoforte
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
+- 18/10: richiesta del titolare: valutare il plugin Anthropic «privacy-legal» (claude-for-legal) nel lavoro legale del 21/10; da leggere prima, poi copiare solo il necessario
