@@ -42,7 +42,7 @@ Note di stampa: il QR deve restare nero su fondo chiaro, senza scritte sopra; pr
 
 ---
 
-## (b) Post per gruppi Facebook e WhatsApp di quartiere
+## (b) Post per gruppi Facebook e WhatsApp di zona
 
 ### Regole di buona educazione per i gruppi
 1. Leggere le regole del gruppo e chiedere il permesso agli amministratori **prima** di pubblicare; se il gruppo vieta la promozione, non pubblicare.
@@ -56,7 +56,7 @@ Note di stampa: il QR deve restare nero su fondo chiaro, senza scritte sopra; pr
 **[da far vedere al consulente]** queste regole d'uso (consenso, messaggi non richiesti).
 
 ### Testo del post (Facebook)
-> Ciao [ZONA]! Sconti Roma è un'app che raccoglie le offerte dei negozi di quartiere, a Roma e dintorni. Scegli la tua zona, guarda l'offerta del mese e, quando vai in negozio, mostri il QR al banco. È gratuita nella fase di lancio. Per maggiorenni (18+). Se ti va di provarla: [LINK APP].
+> Ciao [ZONA]! Sconti Roma è un'app che raccoglie le offerte dei negozi sotto casa, a Roma e dintorni. Scegli la tua zona, guarda l'offerta del mese e, quando vai in negozio, mostri il QR al banco. È gratuita nella fase di lancio. Per maggiorenni (18+). Se ti va di provarla: [LINK APP].
 > Se non vuoi vedere altri messaggi di questo tipo, scrivilo nei commenti e li togliamo.
 > Sconti Roma
 
@@ -75,15 +75,15 @@ Note di stampa: il QR deve restare nero su fondo chiaro, senza scritte sopra; pr
 
 **Didascalia 1 (zona pilota)**
 > Abiti a [ZONA]? Scegli la tua zona su Sconti Roma e guarda le offerte dei negozi vicino a te. Mostri il QR al banco e il gioco è fatto. Gratuita nella fase di lancio. Solo 18+. Link in bio.
-> #ScontiRoma #Roma #OfferteRoma #NegoziDiQuartiere #RomaEDintorni #[ZONA]
+> #ScontiRoma #Roma #OfferteRoma #NegoziLocali #RomaEDintorni #[ZONA]
 
 **Didascalia 2 (negozio aderente, solo con il suo permesso scritto)**
 > [NOME NEGOZIO] è su Sconti Roma! Guarda [OFFERTA DEL MESE] nell'app. Mostra il QR al banco. Gratuita nella fase di lancio. 18+. Link in bio.
-> #ScontiRoma #Roma #NegoziDiQuartiere #OfferteRoma #RomaEDintorni #[ZONA]
+> #ScontiRoma #Roma #NegoziLocali #OfferteRoma #RomaEDintorni #[ZONA]
 
 **Didascalia 3 (generica)**
 > Roma e dintorni, tante zone, tante offerte dei negozi vicino a te. Apri Sconti Roma, scegli la zona e scopri quelle del mese. Gratuita nella fase di lancio. 18+.
-> #ScontiRoma #Roma #RomaEDintorni #OfferteRoma #NegoziDiQuartiere #Risparmio
+> #ScontiRoma #Roma #RomaEDintorni #OfferteRoma #NegoziLocali #Risparmio
 
 **Testo per le storie (adesivo)**
 > «Scegli la tua zona. Sconti Roma, gratis nella fase di lancio. 18+»
@@ -102,7 +102,7 @@ Nell'app, se in una zona non ci sono offerte compare la scheda «Stiamo arrivand
 
 **Didascalia Instagram**
 > [ZONA], ci stiamo arrivando. Apri Sconti Roma, scegli la tua zona e tocca «Fammi sapere quando arrivate». Gratuita nella fase di lancio. 18+. Link in bio.
-> #ScontiRoma #Roma #RomaEDintorni #[ZONA] #NegoziDiQuartiere #OfferteRoma
+> #ScontiRoma #Roma #RomaEDintorni #[ZONA] #NegoziLocali #OfferteRoma
 
 **Frase per i negozi della zona (opzionale):** «Hai un negozio a [ZONA]? Scrivici a [CONTATTO SCONTI ROMA]».
 

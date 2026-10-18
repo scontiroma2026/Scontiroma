@@ -27,7 +27,7 @@ const { expect } = base;
 
 const unico = (tag) => `e2e.${tag}.${Date.now()}.${crypto.randomBytes(3).toString('hex')}@example.com`;
 const PASSWORD = 'password-e2e-123';
-const MERCHANT = { shop_name: 'Negozio di prova', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000', address: "Via dell'Esempio 1, Roma" };
+const MERCHANT = { shop_name: 'Negozio di prova', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000', partita_iva: '12345678903', address: "Via dell'Esempio 1, Roma" };
 
 // ---------- API ----------
 // Ogni chiamata usa un contesto nuovo, senza cookie: il server legge prima il cookie e poi

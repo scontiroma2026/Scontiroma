@@ -1,4 +1,7 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import api from "@/lib/api";
+import { salvaFonte, registraVisitaFonte } from "@/lib/referral";
 import { Button } from "@/components/ui/button";
 import VideoCommercianti from "@/components/VideoCommercianti";
 
@@ -17,11 +20,17 @@ const FAQ = [
 ];
 
 export default function PerICommercianti() {
+  const [params] = useSearchParams();
+  useEffect(() => {
+    // QR del volantino (?fonte=): si ricorda per la registrazione del negozio e si conta la visita (anonima)
+    salvaFonte(params.get("fonte"));
+    registraVisitaFonte(params.get("fonte"), "negozio", (fonte, tipo) => api.post("/fonte/visita", { fonte, tipo }).catch(() => {}));
+  }, [params]);
   return (
     <main data-testid="per-i-commercianti-page" className="mx-auto max-w-3xl px-6 py-12 text-foreground">
       <div className="text-xs uppercase tracking-[0.2em] text-gold">Per i commercianti</div>
       <h1 className="mt-2 font-serif text-4xl sm:text-5xl text-foreground">
-        Nuovi clienti dal tuo quartiere
+        Nuovi clienti vicino al tuo negozio
       </h1>
       <p className="mt-4 text-muted-foreground leading-relaxed">
         Sconti Roma porta nel tuo negozio le persone che abitano vicino a te, a Roma e dintorni.

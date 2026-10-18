@@ -32,7 +32,7 @@ import server  # noqa: E402
 PASSWORD = "password-giusta-123"
 CLIENTE = {"password": PASSWORD, "name": "Giulia Prova", "role": "client", "legal_accepted": True}
 NEGOZIO = {"password": PASSWORD, "name": "Titolare Prova", "role": "merchant", "legal_accepted": True,
-           "legal_specific_accepted": True, "shop_name": "Negozio Prova", "phone": "0600000000"}
+           "legal_specific_accepted": True, "shop_name": "Negozio Prova", "phone": "0600000000", "partita_iva": "12345678903"}
 
 
 @pytest.fixture(autouse=True)

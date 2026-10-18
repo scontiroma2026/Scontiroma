@@ -58,8 +58,7 @@ export default function ClientDashboard() {
           </div>
           {!required ? (
             <>
-              <div data-testid="launch-free" className="mt-3 font-serif text-3xl text-terracotta">Gratis durante la fase di lancio</div>
-              <p className="mt-1 text-sm text-muted-foreground">Per usare gli sconti non serve nessun abbonamento.</p>
+              <div data-testid="launch-free" className="mt-3 font-serif text-2xl text-terracotta">Per usare gli sconti non serve nessun abbonamento.</div>
               <div className="mt-4 flex gap-2">
                 <Link to="/discounts"><Button className="grad-fucsia-viola text-white hover:scale-105 transition">Sfoglia sconti</Button></Link>
                 {isActive && <Link to="/subscribe"><Button variant="outline">Gestisci abbonamento</Button></Link>}
