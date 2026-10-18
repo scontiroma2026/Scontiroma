@@ -11,7 +11,7 @@ const CONSENT_MAX_MS = 182 * 24 * 60 * 60 * 1000; // 6 mesi
 const DEFAULT_PREFS = {
   essential: true, // always on
   functional: false,
-  marketing: false, // reserved for future
+  marketing: false, // categoria non attiva: non raccogliere consenso finché non viene implementata
 };
 
 function readConsent() {
@@ -99,7 +99,7 @@ export default function CookieBanner() {
 
   const acceptAll = () => {
     saveConsent(
-      { essential: true, functional: true, marketing: true },
+      { essential: true, functional: true, marketing: false },
       "accept_all"
     );
     setVisible(false);
@@ -135,10 +135,10 @@ export default function CookieBanner() {
                   I biscotti della casa
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Usiamo cookie <strong>tecnici essenziali</strong> per farti
-                  accedere in sicurezza. Se ci autorizzi, useremo anche cookie{" "}
-                  <strong>funzionali</strong> per ricordare le tue preferenze
-                  (mappa, geolocalizzazione).{" "}
+                  Usiamo strumenti <strong>tecnici essenziali</strong> per farti
+                  accedere in sicurezza. Se ci autorizzi, abiliteremo anche
+                  funzionalità facoltative e statistiche di prima parte per
+                  ricordare alcune preferenze e misurare le visite.{" "}
                   <strong>Non usiamo profilazione né tracciamento pubblicitario.</strong>{" "}
                   Leggi la{" "}
                   <Link
@@ -209,17 +209,17 @@ export default function CookieBanner() {
               />
               <PrefRow
                 testid="pref-functional"
-                title="Funzionali"
-                desc="Ricordano preferenze come mappa e geolocalizzazione. Migliorano l'esperienza."
+                title="Funzionali e statistiche"
+                desc="Funzioni facoltative e statistiche di prima parte (visite e pagine viste). Puoi rifiutarle."
                 checked={prefs.functional}
                 onChange={(v) => setPrefs({ ...prefs, functional: v })}
               />
               <PrefRow
                 testid="pref-marketing"
-                title="Marketing (nessuno attivo)"
-                desc="Al momento non usiamo cookie di marketing o profilazione. Riservato a futuri usi con nuovo consenso."
-                checked={prefs.marketing}
-                onChange={(v) => setPrefs({ ...prefs, marketing: v })}
+                title="Marketing (non attivo)"
+                desc="Nessun cookie o strumento di marketing è attivo. Questa categoria non può essere attivata finché tali strumenti non saranno implementati e descritti."
+                checked={false}
+                disabled
               />
             </div>
 
