@@ -15,6 +15,6 @@ Fonte: https://render.com/dpa, letto dal testo pubblico (versione «Last Modifie
 
 ## Da fare (punti aperti)
 1. Annotare nella Privacy: Render è fornitore di hosting, responsabile, con SCC (trasferimento verso gli USA) e Data Privacy Framework.
-2. Controllare la **regione dei server** su Render (Settings > Region) e scriverla nel registro: se è fuori dall'UE, dirlo nella Privacy.
+2. Regione dei server su Render: **Francoforte (UE)**, confermata dal titolare il 18/10. Scriverlo nel registro e nella Privacy.
 3. Copiare nel registro l'elenco dei sub-responsabili della sezione 4 (e la data di controllo).
 4. Rileggere il DPA ogni volta che cambia la data «Last Modified».
