@@ -13,6 +13,6 @@ Fonte: https://www.mongodb.com/legal/data-processing-agreement (testo pubblico, 
 
 ## Da fare (punti aperti)
 1. Scrivere nella Privacy: MongoDB Atlas, responsabile del trattamento, con SCC.
-2. Controllare la **regione del cluster** (Atlas > Cluster > Configuration) e registrarla; se non è in UE, dirlo nella Privacy.
+2. Regione del cluster Scontiroma: **AWS Francoforte (eu-central-1)**, tre nodi (un primario e due secondari), MongoDB 8.0.34, verificata dal titolare il 18/10. Registrarla e scriverlo nella Privacy: dati in UE.
 3. Copiare l'elenco dei sub-responsabili e la data di controllo.
 4. Rileggere il DPA quando cambia la data di versione.
