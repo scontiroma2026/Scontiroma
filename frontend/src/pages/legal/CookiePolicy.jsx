@@ -88,12 +88,9 @@ export default function CookiePolicy() {
           </table>
         </div>
 
-        <h3 className="font-serif text-xl text-foreground mt-6">2.1bis Cookie funzionali (richiedono consenso)</h3>
+        <h3 className="font-serif text-xl text-foreground mt-6">2.1bis Funzionalità facoltative e statistiche di prima parte (richiedono consenso)</h3>
         <p>
-          Si attivano solo se accetti la categoria "funzionali" nel banner
-          cookie. Servono a capire, in forma anonima, quante persone usano
-          l'app e quali pagine visitano — nessun dato è collegato alla tua
-          identità.
+          Le statistiche di prima parte vengono inviate al nostro server solo se accetti la categoria "Funzionali e statistiche" nel banner. Usano un identificativo casuale del browser e registrano eventi come apertura e pagine visitate; non vengono intenzionalmente collegati all'account. Per questo motivo non le descriviamo come completamente anonime. La categoria include anche le eventuali preferenze facoltative indicate nel banner.
         </p>
         <div className="overflow-x-auto mt-3">
           <table className="w-full text-sm border border-border">
@@ -108,9 +105,7 @@ export default function CookiePolicy() {
               <tr>
                 <td className="border border-border p-2 font-mono">sr_vid</td>
                 <td className="border border-border p-2">
-                  Identificativo anonimo generato a caso, usato solo per
-                  contare visite e pagine viste (analytics interna, nessun
-                  fornitore esterno)
+                  Identificativo casuale del browser usato per contare aperture, visite e pagine viste (statistiche interne di prima parte, senza fornitore analytics esterno)
                 </td>
                 <td className="border border-border p-2">Fino a cancellazione manuale</td>
               </tr>
