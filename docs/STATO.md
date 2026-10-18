@@ -228,3 +228,5 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 17/10: prova del cliente sul sito di prova: passi 1-5 fatti (iscrizione, email di conferma, accesso, cuore, segnalazione con email di esito); tolta la scritta «Gratis durante la fase di lancio» dalle schermate account e abbonamento del cliente
 - 17/10: cancellazione account cliente: il Riepilogo dell'admin conta gli account cancellati (solo numero e data, nessun dato personale); prova del cliente: 6 passi su 6 fatti
 - 17/10: lista aggiornata (chiusi: prova generale e Manrope/«quartiere»); unite #186, #187 (con #188, #189, #190)
+- 18/10: lista aggiornata; testi legali affidati all'agente dopo il reset (21/10); video nell'app: resta com'è
+- 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
