@@ -33,6 +33,36 @@ export default function Termini() {
           capelli, pizza) resta tra il Cliente e il Commerciante.
         </p>
 
+        {/* [PROPOSTA - DA VALIDARE dal consulente] Punto 24: blocco P2B (Reg. UE 2019/1150, norme citate non verificate sui testi ufficiali). */}
+        <h3 className="font-serif text-xl text-foreground mt-6">Informazioni per i Commercianti (trasparenza)</h3>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            <strong>Condizioni chiare.</strong> Le condizioni che valgono per
+            i Commercianti sono scritte in questi Termini, in italiano e in
+            modo semplice. Le modifiche si comunicano come indicato all'art. 9.
+          </li>
+          <li>
+            <strong>Ordine delle offerte.</strong> Le offerte sono mostrate
+            dalla più recente alla meno recente. Se il Cliente attiva la
+            posizione, sono mostrate dalla più vicina. Nessun Commerciante
+            può pagare per comparire prima o in evidenza: oggi non esistono
+            corsie a pagamento.
+          </li>
+          <li>
+            <strong>Motivazioni.</strong> Se rifiutiamo un'offerta, ne
+            indichiamo il motivo per iscritto. Per la sospensione o la
+            chiusura del negozio vedi l'art. 2.
+          </li>
+          <li>
+            <strong>Reclami.</strong> Il Commerciante può fare un reclamo dalla
+            sua area o scrivere a{" "}
+            <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
+              info@scontiroma.it
+            </a>
+            . La procedura è descritta all'art. 11.
+          </li>
+        </ul>
+
         <h2 className="font-serif text-2xl text-foreground mt-8">2. Registrazione</h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
@@ -49,9 +79,34 @@ export default function Termini() {
             Un solo account per persona. Account multipli o fittizi possono
             essere chiusi.
           </li>
+          {/* [PROPOSTA - DA VALIDARE] Punto 26: sostituisce «sospendere o chiudere account che violano i Termini, ai sensi dell'art. 1456 c.c.» (art. 1456 c.c. non verificato sul testo ufficiale). */}
           <li>
-            Sconti Roma si riserva il diritto di sospendere o chiudere account
-            che violano i Termini, ai sensi dell'art. 1456 c.c.
+            <strong>Sospensione.</strong> Se un account o un negozio viola i
+            Termini, possiamo sospenderlo. Ti scriviamo il motivo, in modo
+            chiaro, su un supporto durevole (di norma l'email dell'account),
+            al più tardi nel momento in cui la sospensione ha effetto.
+          </li>
+          <li>
+            <strong>Chiusura.</strong> Se decidiamo di chiudere l'account di
+            un Commerciante, lo avvisiamo con almeno <strong>30 giorni</strong>{" "}
+            di preavviso. Il preavviso non c'è se la chiusura è urgente (ad
+            esempio per tutelare i Clienti o per obbligo di legge) o se la
+            violazione è grave o ripetuta: in questi casi scriviamo comunque il
+            motivo.
+          </li>
+          <li>
+            <strong>Reclamo.</strong> Se non sei d'accordo con una sospensione
+            o una chiusura, scrivi a{" "}
+            <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
+              info@scontiroma.it
+            </a>
+            : riesaminiamo la decisione e rispondiamo con un motivo entro{" "}
+            <strong>10 giorni lavorativi</strong>.
+          </li>
+          <li>
+            <strong>La disdetta non è una sospensione.</strong> Se un
+            Commerciante disdice il servizio, la disdetta segue le regole
+            dell'art. 3.2 e dell'art. 6, non queste.
           </li>
         </ul>
 
@@ -267,11 +322,15 @@ export default function Termini() {
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">9. Modifiche ai Termini</h2>
+        {/* [PROPOSTA - DA VALIDARE] Punto 24: preavviso portato da 15 a 30 giorni per i Commercianti (art. 3 Reg. UE 2019/1150, non verificato sul testo ufficiale). */}
         <p>
-          Sconti Roma può modificare i Termini in qualsiasi momento. Le
-          modifiche sostanziali saranno comunicate via email con almeno 15
-          giorni di preavviso. L'utilizzo del Servizio dopo l'entrata in
-          vigore delle modifiche costituisce accettazione delle stesse.
+          Sconti Roma può modificare i Termini. Le modifiche sostanziali
+          saranno comunicate via email: ai <strong>Commercianti</strong> con
+          almeno <strong>30 giorni</strong> di preavviso, agli altri utenti
+          con almeno 15 giorni. Il Commerciante può disdire prima della data
+          di entrata in vigore, senza penali. L'utilizzo del Servizio dopo
+          l'entrata in vigore delle modifiche costituisce accettazione delle
+          stesse.
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">10. Legge applicabile e foro competente</h2>
@@ -293,6 +352,33 @@ export default function Termini() {
           ricorrere agli organismi di risoluzione alternativa delle
           controversie previsti dalla legge.
         </p>
+        {/* [PROPOSTA - DA VALIDARE] Punto 25: info@ come punto di contatto per segnalazioni e reclami (artt. 11-12 Reg. UE 2019/1150 e artt. 16-17-19 Reg. UE 2022/2065, non verificati sui testi ufficiali). */}
+        <h3 className="font-serif text-xl text-foreground mt-6">Segnalazioni e reclami</h3>
+        <p>
+          <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">
+            info@scontiroma.it
+          </a>{" "}
+          è il nostro punto di contatto per segnalazioni (ad esempio contenuti
+          che ritieni illeciti o uno sconto non rispettato) e per i reclami
+          dei Commercianti. Puoi anche usare il pulsante «Segnala questa
+          offerta», anche senza account, oppure la scheda «Reclami» nell'area
+          del Commerciante.
+        </p>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>Ti confermiamo la ricezione entro 5 giorni lavorativi.</li>
+          <li>
+            Ti diamo l'esito con una motivazione scritta, se ci lasci
+            un'email.
+          </li>
+          <li>Non salviamo il tuo indirizzo IP.</li>
+          <li>
+            Conserviamo la segnalazione per 24 mesi, poi si cancella da sola.
+          </li>
+          <li>
+            Il riesame di una sospensione o chiusura si fa entro 10 giorni
+            lavorativi (art. 2).
+          </li>
+        </ul>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">12. Contatti</h2>
         <ul className="list-disc pl-6 space-y-1 text-sm">

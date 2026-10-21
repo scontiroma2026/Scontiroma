@@ -234,3 +234,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
 - 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
+- 21/10: gruppo 5 (punti 24, 25, 26) in bozza: blocco P2B, punto di contatto info@ per segnalazioni e reclami, sospensione/chiusura con motivo e 30 giorni nei Termini (art. 1, 2, 9, 11); lista per l'avvocato in docs/legale/LISTA_AVVOCATO_GRUPPO5.md; da validare. Trovato: la sospensione del negozio non chiede né invia il motivo (proposta in lista, non implementata)
