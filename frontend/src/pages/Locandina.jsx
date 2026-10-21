@@ -4,6 +4,18 @@ import { Printer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
+import { WHATSAPP_PATH, INSTAGRAM_PATH, FACEBOOK_PATH } from "@/lib/socialGlyphs";
+
+// Contatti pubblici di Sconti Roma (decisione del titolare del 21/10).
+const WHATSAPP_NUMERO = "352 247 3526";
+
+function Glifo({ path, bg }) {
+  return (
+    <span style={{ flex: "none", width: "6mm", height: "6mm", borderRadius: "50%", background: bg, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+      <svg viewBox="0 0 24 24" width="3.6mm" height="3.6mm" aria-hidden="true"><path fill="#fff" d={path} /></svg>
+    </span>
+  );
+}
 
 /**
  * Locandina promozionale A5 stampabile per i banchi dei commercianti.
@@ -479,6 +491,22 @@ export default function Locandina() {
                 >
                   <strong style={{ color: "#FF2E93" }}>Iscrizione gratuita</strong>
                 </div>
+              </div>
+            </div>
+
+            {/* Contatti: WhatsApp e social */}
+            <div
+              data-testid="locandina-contatti"
+              style={{ marginTop: "3mm", display: "flex", justifyContent: "center", gap: "6mm", color: "#F4F4F5", fontSize: "8pt", lineHeight: 1.2 }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "2mm" }}>
+                <Glifo path={WHATSAPP_PATH} bg="#25D366" />
+                <div><div style={{ opacity: 0.7, fontSize: "6.5pt" }}>Contattaci su WhatsApp</div><strong>{WHATSAPP_NUMERO}</strong></div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
+                <Glifo path={INSTAGRAM_PATH} bg="radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285AEB 90%)" />
+                <Glifo path={FACEBOOK_PATH} bg="#0866FF" />
+                <div><div style={{ opacity: 0.7, fontSize: "6.5pt" }}>Seguici su Instagram e Facebook</div><strong>Sconti Roma</strong></div>
               </div>
             </div>
 
