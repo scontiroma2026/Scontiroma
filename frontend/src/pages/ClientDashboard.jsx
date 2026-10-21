@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, TicketCheck, Sparkles, Star, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
 import MyUsedDiscounts from "@/components/MyUsedDiscounts";
 import GdprSection from "@/components/GdprSection";
+import SconticiniTessere from "@/components/SconticiniTessere";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -146,6 +147,8 @@ export default function ClientDashboard() {
           </div>
         )}
       </div>
+
+      <SconticiniTessere />
 
       <div className="mt-12">
         <h2 className="mb-2 font-serif text-3xl flex items-center gap-2"><Star size={22} className="text-amber-800"/> I miei sconti usati</h2>

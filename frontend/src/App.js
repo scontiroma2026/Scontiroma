@@ -13,6 +13,7 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
+import RegolamentoSconticini from "@/pages/legal/RegolamentoSconticini";
 import CookiePolicy from "@/pages/legal/CookiePolicy";
 import Termini from "@/pages/legal/Termini";
 import Recesso from "@/pages/legal/Recesso";
@@ -82,6 +83,7 @@ function App() {
             <Route path="/qr" element={<QRVerify />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/sconticini/regolamento" element={<RegolamentoSconticini />} />
             <Route path="/termini" element={<Termini />} />
             <Route path="/recesso" element={<Recesso />} />
             <Route path="/support" element={<Support />} />

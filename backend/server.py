@@ -58,6 +58,8 @@ from email_service import (
     send_account_deleted,
     send_waitlist_confirmation,
     send_waitlist_launch_notice,
+    send_sconticini_premio_cliente,
+    send_sconticini_premio_negozio,
 )
 import paypal_service
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Body
@@ -115,6 +117,13 @@ def client_email_confirmation_required() -> bool:
 # pagamento del mese non è visibile ai clienti. Non addebita nulla: i pagamenti si segnano a mano.
 def merchant_payment_required() -> bool:
     return os.environ.get("MERCHANT_PAYMENT_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+# «Sconticini» (raccolta a premio per negozio): SPENTO per impostazione predefinita. Finché il regolamento non è chiuso
+# e approvato dal titolare niente viene contato, salvato né inviato (nessun effetto sul riscatto degli sconti).
+# Lo accende il titolare su Render con SCONTICINI_ENABLED=true. Letto a ogni richiesta.
+def sconticini_enabled() -> bool:
+    return os.environ.get("SCONTICINI_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
 # Stripe
@@ -2842,6 +2851,7 @@ async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
     out = {"client_subscription_required": client_subscription_required(),
            "prelaunch_mode": prelaunch_mode(),
+           "sconticini_enabled": sconticini_enabled(),
            # «Migliora foto» compare solo se la chiave Gemini è impostata su Render
            "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip())}
     # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
@@ -3937,6 +3947,8 @@ async def _log_scan(valid: bool, reason: str, redemption: Optional[dict] = None)
             "merchant_id": redemption.get("merchant_id") if redemption else None,
             "user_id": redemption.get("user_id") if redemption else None,
         }
+        if redemption and redemption.get("_premio"):
+            doc["tipo"] = "premio_sconticini"
         # Aggiungi shop_name pre-calcolato per il log admin (evita join a query)
         if redemption and redemption.get("merchant_id"):
             m = await db.users.find_one({"id": redemption["merchant_id"]})
@@ -4079,6 +4091,19 @@ async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
         await _log_scan(False, "QR code manomesso")
         return None, "QR code manomesso"
     r = await db.redemptions.find_one({"code": code})
+    if not r and sconticini_enabled():
+        # QR del premio Sconticini (stessa firma a rotazione, stessa convalida con il codice del negozio)
+        r = await db.sconticini_premi.find_one({"code": code})
+        if r:
+            r["_premio"] = True
+            if r.get("status") == "pending" and r.get("expires_at", "") < datetime.now(timezone.utc).isoformat():
+                await _sconticini_segna_scaduto(r)
+                await _log_scan(False, "Premio Sconticini scaduto", r)
+                return None, MSG_PREMIO_SCADUTO
+            if r.get("status") == "expired":
+                await _log_scan(False, "Premio Sconticini scaduto", r)
+                return None, MSG_PREMIO_SCADUTO
+            return r, None
     if not r:
         await _log_scan(False, "Codice non trovato")
         return None, "Codice non trovato"
@@ -4098,13 +4123,14 @@ async def qr_verify_public(token: str):
     if r.get("status") == "redeemed":
         await _log_scan(False, "Codice già utilizzato", r)
         return {"valid": False, "reason": "Codice già utilizzato"}
-    disc = await db.discounts.find_one({"id": r.get("discount_id")})
+    disc = None if r.get("_premio") else await db.discounts.find_one({"id": r.get("discount_id")})
     m = await db.users.find_one({"id": r.get("merchant_id")})
     return {
         "valid": True,
         "shop_id": r.get("merchant_id"),
         "shop_name": (m.get("shop_name") if m else None) or "-",
-        "discount_title": disc.get("title") if disc else "-",
+        "discount_title": f"Premio Sconticini: {r.get('premio')}" if r.get("_premio") else (disc.get("title") if disc else "-"),
+        "premio": bool(r.get("_premio")),
         "permit": _qr_permit(r),
         "permit_sec": SHOP_PERMIT_SEC,
     }
@@ -4195,33 +4221,45 @@ async def qr_redeem(payload: QrRedeemIn, request: Request):
         if not rivisto:
             await _log_scan(False, "Codice già utilizzato", r)
             return _redeem_error(400, "used", "Codice già utilizzato")
-    prev = await _last_redeemed(r["user_id"], mid, exclude_id=r["id"])
+    premio = bool(r.get("_premio"))
+    coll = db.sconticini_premi if premio else db.redemptions
+    prev = None if premio else await _last_redeemed(r["user_id"], mid, exclude_id=r["id"])
+    sconticino = None
     if r.get("status") == "pending":
         if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
             await _log_scan(False, "Limite giornaliero: cliente ha già usato lo sconto oggi", r)
             return _redeem_error(400, "daily_limit",
                                  "Limite giornaliero: il cliente ha già utilizzato questo sconto oggi", daily_limit=True)
-        res = await db.redemptions.update_one(
+        res = await coll.update_one(
             {"id": r["id"], "status": "pending"},
             {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat(),
                       **({"permit_used": permit["jti"]} if permit else {})}})
         if res.modified_count == 1:
             await _log_scan(True, "OK", r)
-        r = await db.redemptions.find_one({"id": r["id"]}) or r
-    disc = await db.discounts.find_one({"id": r.get("discount_id")})
+            if premio:
+                await _sconticini_premio_usato(r)
+            else:
+                sconticino = await _sconticini_dopo_riscatto(r)  # mai un errore qui: lo sconto è già stato applicato
+        r = await coll.find_one({"id": r["id"]}) or r
+        r["_premio"] = premio
+    disc = None if premio else await db.discounts.find_one({"id": r.get("discount_id")})
     m = await db.users.find_one({"id": mid})
     c = await db.users.find_one({"id": r.get("user_id")})
     out = {
         "valid": True,
         "client_name": short_client_name(c.get("name") if c else None),
         "shop_name": m.get("shop_name") if m else "-",
-        "discount_title": disc.get("title") if disc else "-",
+        "discount_title": f"Premio Sconticini: {r.get('premio')}" if premio else (disc.get("title") if disc else "-"),
         "discount_percent": None if not disc or not disc.get("original_price") else round((1 - disc["discounted_price"] / disc["original_price"]) * 100),
         "redeemed_at": r.get("redeemed_at") or datetime.now(timezone.utc).isoformat(),
         "use_number": r.get("use_number") or 1,
         "max_uses": r.get("max_uses_per_month") or 1,
         "prev_used_at": prev.get("redeemed_at") if prev else None,
     }
+    if premio:
+        out["premio"] = True
+    if sconticino:
+        out["sconticino"] = sconticino
     if device_token_new:
         out["device_token"] = device_token_new
         out["device_days"] = SHOP_DEVICE_DAYS
@@ -4232,6 +4270,10 @@ async def qr_redeem(payload: QrRedeemIn, request: Request):
 async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(require_merchant)):
     code, slot, token = parse_rotating_code(payload.code)
     r = await db.redemptions.find_one({"code": code, "merchant_id": user["id"]})
+    if not r and sconticini_enabled():
+        pr = await db.sconticini_premi.find_one({"code": code, "merchant_id": user["id"]})
+        if pr:
+            return await _verifica_premio_commerciante(pr, slot, token)
     if not r:
         raise HTTPException(404, "Codice non trovato")
     if r["status"] == "redeemed":
@@ -4262,13 +4304,313 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
     if result.modified_count == 0:
         raise HTTPException(400, "Codice già utilizzato")
     r = await db.redemptions.find_one({"id": r["id"]})
+    sconticino = await _sconticini_dopo_riscatto(r)
     disc = await db.discounts.find_one({"id": r["discount_id"]})
     cu = await db.users.find_one({"id": r["user_id"]})
     # Al commerciante niente id del cliente e solo nome + iniziale del cognome.
     r = {k: v for k, v in r.items() if k not in ("_id", "user_id")}
     r["discount_title"] = disc.get("title") if disc else ""
     r["client_name"] = short_client_name(cu.get("name") if cu else None)
-    return {"redemption": r}
+    return {"redemption": r, **({"sconticino": sconticino} if sconticino else {})}
+
+
+# ---------- Sconticini (raccolta a premio per negozio) ----------
+# PROPOSTA: tutto dietro l'interruttore SCONTICINI_ENABLED (spento finché il regolamento non è chiuso e approvato).
+# Regole: 1 sconticino per ogni sconto USATO e verificato al banco (QR del cliente + codice del negozio, o commerciante
+# collegato); al massimo SCONTICINI_MAX_AL_GIORNO al giorno per cliente e negozio; raggiunta la soglia il cliente
+# sblocca un QR premio monouso con scadenza, che il negozio scansiona come uno sconto normale; poi il contatore riparte.
+# Il premio e la soglia li decide il negozio; il premio è a suo carico. Documenti: docs/sconticini/.
+SCONTICINI_SOGLIA_MIN = 3
+SCONTICINI_SOGLIA_MAX = 20
+SCONTICINI_MAX_AL_GIORNO = 1
+SCONTICINI_REGOLAMENTO_VERSIONE = "bozza-1"
+MSG_PREMIO_SCADUTO = "Premio scaduto: il cliente non può più usarlo"
+
+
+def _sconticini_premio_giorni() -> int:
+    try:
+        return max(1, int(os.environ.get("SCONTICINI_PREMIO_GIORNI", "60")))
+    except ValueError:
+        return 60
+
+
+def _sconticini_attivo_o_404() -> None:
+    if not sconticini_enabled():
+        raise HTTPException(404, "Funzione non attiva")
+
+
+def _label_data(iso: Optional[str]) -> str:
+    try:
+        d = datetime.fromisoformat(iso).astimezone(ROME_TZ)
+        return f"{d.day} {MESI_IT[d.month - 1]} {d.year}"
+    except Exception:
+        return ""
+
+
+async def _sconticini_evento(tipo: str, chiave: str, **campi) -> bool:
+    """Scrive una riga del tracciamento. La chiave è unica: la stessa non si scrive due volte (ritorna False)."""
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {"id": str(uuid.uuid4()), "chiave": chiave, "tipo": tipo, "at": now, "giorno": _rome_day(now), **campi}
+    try:
+        await db.sconticini_eventi.insert_one(doc)
+        return True
+    except DuplicateKeyError:
+        return False
+
+
+async def _sconticini_segna_scaduto(premio: dict) -> None:
+    res = await db.sconticini_premi.update_one(
+        {"id": premio["id"], "status": "pending"},
+        {"$set": {"status": "expired", "expired_at": datetime.now(timezone.utc).isoformat()}})
+    if res.modified_count == 1:
+        await _sconticini_evento("premio_scaduto", f"scad:{premio['id']}", user_id=premio.get("user_id"),
+                                 merchant_id=premio.get("merchant_id"), premio_id=premio["id"])
+
+
+async def _sconticini_scadenze(filtro: dict) -> None:
+    """Segna come scaduti i premi non usati oltre la data (si fa quando qualcuno li guarda: nessun lavoro in background)."""
+    filtro = {**filtro, "status": "pending", "expires_at": {"$lt": datetime.now(timezone.utc).isoformat()}}
+    for p in await db.sconticini_premi.find(filtro).to_list(500):
+        await _sconticini_segna_scaduto(p)
+
+
+async def _sconticini_dopo_riscatto(r: dict) -> Optional[dict]:
+    """Chiamata dopo che uno sconto è stato USATO e verificato. Dà 1 sconticino (se il negozio partecipa) e, alla soglia,
+    sblocca il premio. Non solleva mai errori verso chi scansiona: lo sconto è già applicato. Ritorna un riepilogo
+    mostrabile al negozio (nessun dato personale) oppure None."""
+    if not sconticini_enabled():
+        return None
+    try:
+        mid, uid = r["merchant_id"], r["user_id"]
+        cfg = await db.sconticini_config.find_one({"merchant_id": mid})
+        if not cfg or not cfg.get("attivo") or cfg.get("sospeso_admin"):
+            return None
+        soglia = int(cfg["soglia"])
+        oggi = _rome_day()
+        # Limite giornaliero per negozio e cliente
+        gia = await db.sconticini_eventi.count_documents(
+            {"tipo": "guadagnato", "user_id": uid, "merchant_id": mid, "giorno": oggi})
+        if gia >= SCONTICINI_MAX_AL_GIORNO:
+            await _sconticini_evento("rifiutato_limite", f"lim:{r['id']}", user_id=uid, merchant_id=mid,
+                                     redemption_id=r["id"])
+            return None
+        # Un solo sconticino per riscatto verificato: la chiave è unica
+        if not await _sconticini_evento("guadagnato", f"guad:{r['id']}", user_id=uid, merchant_id=mid,
+                                        redemption_id=r["id"], soglia=soglia):
+            return None
+        now = datetime.now(timezone.utc).isoformat()
+        saldo = await db.sconticini_saldi.find_one_and_update(
+            {"user_id": uid, "merchant_id": mid},
+            {"$inc": {"count": 1, "totale": 1}, "$set": {"ultimo_uso_at": now, "updated_at": now},
+             "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": now}},
+            upsert=True, return_document=ReturnDocument.AFTER)
+        riepilogo = {"count": int(saldo.get("count") or 0), "soglia": soglia, "sbloccato": False}
+        if riepilogo["count"] >= soglia:
+            preso = await db.sconticini_saldi.find_one_and_update(
+                {"user_id": uid, "merchant_id": mid, "count": {"$gte": soglia}},
+                {"$inc": {"count": -soglia}, "$set": {"updated_at": now}}, return_document=ReturnDocument.AFTER)
+            if preso:
+                premio = await _sconticini_crea_premio(uid, mid, cfg, soglia)
+                riepilogo.update({"count": soglia, "sbloccato": True, "premio": premio["premio"]})
+        return riepilogo
+    except Exception as e:  # lo sconto è già stato applicato: un errore qui non deve vederlo il negozio
+        logging.error(f"[sconticini] conteggio non riuscito: {type(e).__name__}")
+        return None
+
+
+async def _sconticini_crea_premio(uid: str, mid: str, cfg: dict, soglia: int) -> dict:
+    now = datetime.now(timezone.utc)
+    premio = {"id": str(uuid.uuid4()), "user_id": uid, "merchant_id": mid, "premio": cfg["premio"], "soglia": soglia,
+              "status": "pending", "created_at": now.isoformat(),
+              "expires_at": (now + timedelta(days=_sconticini_premio_giorni())).isoformat(), "redeemed_at": None}
+    for _ in range(5):
+        premio["code"] = "PR" + gen_code(8)
+        try:
+            await db.sconticini_premi.insert_one(premio)
+            break
+        except DuplicateKeyError:
+            continue
+    else:
+        raise RuntimeError("codice premio non generato")
+    premio.pop("_id", None)
+    await _sconticini_evento("premio_sbloccato", f"sbl:{premio['id']}", user_id=uid, merchant_id=mid,
+                             premio_id=premio["id"], soglia=soglia)
+    # Email (nome del cliente al negozio: come in cassa, nome e iniziale del cognome)
+    c = await db.users.find_one({"id": uid}) or {}
+    m = await db.users.find_one({"id": mid}) or {}
+    scade = _label_data(premio["expires_at"])
+    if c.get("email"):
+        _email_in_background(send_sconticini_premio_cliente(
+            c["email"], c.get("name") or "", m.get("shop_name") or "", premio["premio"], scade), "sconticini-cliente")
+    if m.get("email"):
+        _email_in_background(send_sconticini_premio_negozio(
+            m["email"], m.get("name") or "", m.get("shop_name") or "", short_client_name(c.get("name")),
+            premio["premio"], scade), "sconticini-negozio")
+    return premio
+
+
+async def _sconticini_premio_usato(premio: dict) -> None:
+    await _sconticini_evento("premio_usato", f"uso:{premio['id']}", user_id=premio.get("user_id"),
+                             merchant_id=premio.get("merchant_id"), premio_id=premio["id"])
+
+
+async def _verifica_premio_commerciante(pr: dict, slot, token) -> dict:
+    """Come `/redemptions/verify`, ma per un QR premio (commerciante collegato)."""
+    if pr["status"] == "redeemed":
+        raise HTTPException(400, "Codice già utilizzato")
+    if pr["status"] == "expired" or pr.get("expires_at", "") < datetime.now(timezone.utc).isoformat():
+        await _sconticini_segna_scaduto(pr)
+        raise HTTPException(400, MSG_PREMIO_SCADUTO)
+    if slot is not None and token is not None:
+        if abs(current_slot() - slot) > 1:
+            raise HTTPException(400, "QR code scaduto, chiedi al cliente di aggiornarlo")
+        if not hmac_lib.compare_digest(_rotating_hmac(pr["code"], slot), token):
+            raise HTTPException(400, "QR code non valido (possibile screenshot)")
+    res = await db.sconticini_premi.update_one(
+        {"id": pr["id"], "status": "pending"},
+        {"$set": {"status": "redeemed", "redeemed_at": datetime.now(timezone.utc).isoformat()}})
+    if res.modified_count == 0:
+        raise HTTPException(400, "Codice già utilizzato")
+    await _log_scan(True, "OK", {**pr, "_premio": True})
+    await _sconticini_premio_usato(pr)
+    cu = await db.users.find_one({"id": pr["user_id"]})
+    return {"redemption": {"id": pr["id"], "code": pr["code"], "status": "redeemed", "premio": True,
+                           "discount_title": f"Premio Sconticini: {pr['premio']}",
+                           "client_name": short_client_name(cu.get("name") if cu else None)}}
+
+
+def _premio_pubblico(p: dict) -> dict:
+    return {"id": p["id"], "premio": p.get("premio"), "stato": p.get("status"), "sbloccato_il": p.get("created_at"),
+            "scade_il": p.get("expires_at"), "riscattato_il": p.get("redeemed_at")}
+
+
+# --- Cliente ---
+@api.get("/sconticini/me")
+async def sconticini_me(user: dict = Depends(require_client)):
+    """Le tessere del cliente: una per negozio, con barra «3 su 5», ultimo uso e premi sbloccati."""
+    _sconticini_attivo_o_404()
+    uid = user["id"]
+    await _sconticini_scadenze({"user_id": uid})
+    saldi = await db.sconticini_saldi.find({"user_id": uid}).to_list(500)
+    premi = await db.sconticini_premi.find({"user_id": uid}).sort("created_at", -1).to_list(500)
+    per_negozio: dict = {}
+    for s in saldi:
+        per_negozio.setdefault(s["merchant_id"], {"saldo": s, "premi": []})
+    for p in premi:
+        per_negozio.setdefault(p["merchant_id"], {"saldo": None, "premi": []})["premi"].append(p)
+    tessere = []
+    for mid, v in per_negozio.items():
+        m = await db.users.find_one({"id": mid}) or {}
+        cfg = await db.sconticini_config.find_one({"merchant_id": mid}) or {}
+        s = v["saldo"] or {}
+        attivo = bool(cfg.get("attivo")) and not cfg.get("sospeso_admin")
+        tessere.append({
+            "merchant_id": mid, "shop_name": m.get("shop_name") or "-", "attivo": attivo,
+            "count": int(s.get("count") or 0), "soglia": int(cfg.get("soglia") or 0) or None,
+            "premio": cfg.get("premio") if attivo else None,
+            "ultimo_uso_at": s.get("ultimo_uso_at"),
+            "premi": [_premio_pubblico(p) for p in v["premi"] if p["status"] == "pending"]
+                     + [_premio_pubblico(p) for p in v["premi"] if p["status"] != "pending"][:3],
+        })
+    tessere.sort(key=lambda t: (not any(p["stato"] == "pending" for p in t["premi"]), -t["count"]))
+    return {"enabled": True, "tessere": tessere}
+
+
+@api.get("/sconticini/premi/{premio_id}/token")
+async def sconticini_premio_token(premio_id: str, user: dict = Depends(require_client)):
+    """QR a rotazione (ogni 20 secondi, come quello degli sconti) del premio. Solo del proprietario e solo se valido."""
+    _sconticini_attivo_o_404()
+    p = await db.sconticini_premi.find_one({"id": premio_id, "user_id": user["id"]})
+    if not p:
+        raise HTTPException(404, "Premio non trovato")
+    if p["status"] == "pending" and p["expires_at"] < datetime.now(timezone.utc).isoformat():
+        await _sconticini_segna_scaduto(p)
+        raise HTTPException(410, MSG_PREMIO_SCADUTO)
+    if p["status"] == "expired":
+        raise HTTPException(410, MSG_PREMIO_SCADUTO)
+    if p["status"] == "redeemed":
+        raise HTTPException(409, "Premio già utilizzato")
+    slot = current_slot()
+    payload = f"{p['code']}.{slot}.{_rotating_hmac(p['code'], slot)}"
+    origin = os.environ.get("FRONTEND_URL", "").rstrip("/")
+    return {"code": p["code"], "slot": slot, "qr_value": f"{origin}/qr/{payload}" if origin else payload,
+            "expires_in": ROTATION_WINDOW_SEC - (int(datetime.now(timezone.utc).timestamp()) % ROTATION_WINDOW_SEC),
+            "window_sec": ROTATION_WINDOW_SEC}
+
+
+# --- Commerciante ---
+class SconticiniConfigIn(BaseModel):
+    attivo: bool
+    soglia: int = Field(ge=SCONTICINI_SOGLIA_MIN, le=SCONTICINI_SOGLIA_MAX)
+    premio: str = Field(min_length=3, max_length=80)
+    accetto_regolamento: bool = False
+
+
+def _cfg_pubblica(cfg: Optional[dict]) -> dict:
+    cfg = cfg or {}
+    return {"attivo": bool(cfg.get("attivo")), "soglia": cfg.get("soglia") or 5, "premio": cfg.get("premio") or "",
+            "sospeso_admin": bool(cfg.get("sospeso_admin")),
+            "regolamento_accettato": cfg.get("regolamento_versione") == SCONTICINI_REGOLAMENTO_VERSIONE,
+            "regolamento_versione": SCONTICINI_REGOLAMENTO_VERSIONE,
+            "limiti": {"soglia_min": SCONTICINI_SOGLIA_MIN, "soglia_max": SCONTICINI_SOGLIA_MAX,
+                       "max_al_giorno": SCONTICINI_MAX_AL_GIORNO, "premio_giorni": _sconticini_premio_giorni()}}
+
+
+async def _sconticini_numeri(filtro: dict) -> dict:
+    ev = db.sconticini_eventi
+    sbloccati = await ev.count_documents({**filtro, "tipo": "premio_sbloccato"})
+    usati = await ev.count_documents({**filtro, "tipo": "premio_usato"})
+    scaduti = await ev.count_documents({**filtro, "tipo": "premio_scaduto"})
+    return {"sconticini_assegnati": await ev.count_documents({**filtro, "tipo": "guadagnato"}),
+            "premi_sbloccati": sbloccati, "premi_riscattati": usati, "premi_scaduti": scaduti,
+            "premi_da_usare": max(0, sbloccati - usati - scaduti)}
+
+
+@api.get("/merchants/me/sconticini")
+async def merchant_sconticini(user: dict = Depends(require_merchant)):
+    """Impostazioni del negozio, numeri e ultimi premi (cliente come in cassa: nome e iniziale del cognome)."""
+    _sconticini_attivo_o_404()
+    mid = user["id"]
+    await _sconticini_scadenze({"merchant_id": mid})
+    cfg = await db.sconticini_config.find_one({"merchant_id": mid})
+    premi = await db.sconticini_premi.find({"merchant_id": mid}).sort("created_at", -1).to_list(50)
+    righe = []
+    for p in premi:
+        c = await db.users.find_one({"id": p["user_id"]}, {"name": 1})
+        righe.append({**_premio_pubblico(p), "cliente": short_client_name((c or {}).get("name"))})
+    clienti = await db.sconticini_saldi.count_documents({"merchant_id": mid})
+    return {"enabled": True, "config": _cfg_pubblica(cfg),
+            "numeri": {**await _sconticini_numeri({"merchant_id": mid}), "clienti_con_tessera": clienti},
+            "premi": righe}
+
+
+@api.put("/merchants/me/sconticini")
+async def merchant_sconticini_salva(payload: SconticiniConfigIn, user: dict = Depends(require_merchant)):
+    """Il negozio decide se partecipare, quanti sconticini servono e quale premio dà. Per attivare serve accettare il
+    regolamento (versione registrata). Le modifiche valgono per i premi futuri: quelli già sbloccati restano com'erano."""
+    _sconticini_attivo_o_404()
+    mid = user["id"]
+    premio = " ".join(payload.premio.split())
+    if len(premio) < 3 or re.search(r"[<>]", premio):
+        raise HTTPException(400, "Scrivi il premio con parole semplici (almeno 3 lettere, senza simboli come < o >).")
+    prima = await db.sconticini_config.find_one({"merchant_id": mid}) or {}
+    ver = prima.get("regolamento_versione")
+    now = datetime.now(timezone.utc).isoformat()
+    extra = {}
+    if payload.attivo and ver != SCONTICINI_REGOLAMENTO_VERSIONE:
+        if not payload.accetto_regolamento:
+            raise HTTPException(400, "Per attivare gli Sconticini devi accettare il regolamento.")
+        ver = SCONTICINI_REGOLAMENTO_VERSIONE
+        extra["regolamento_accettato_il"] = now
+    await db.sconticini_config.update_one(
+        {"merchant_id": mid},
+        {"$set": {"attivo": payload.attivo, "soglia": payload.soglia, "premio": premio,
+                  "regolamento_versione": ver, "updated_at": now, **extra},
+         "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": now}}, upsert=True)
+    await _sconticini_evento("config", f"cfg:{uuid.uuid4()}", merchant_id=mid, attivo=payload.attivo,
+                             soglia=payload.soglia, premio=premio,
+                             soglia_prima=prima.get("soglia"), premio_prima=prima.get("premio"))
+    return {"config": _cfg_pubblica(await db.sconticini_config.find_one({"merchant_id": mid}))}
 
 
 # ---------- Admin ----------
@@ -4322,6 +4664,58 @@ def require_admin_master(request: Request, user: dict = Depends(require_admin)) 
     if not token or not _verify_master_token(token, user["id"]):
         raise HTTPException(403, "Master password richiesta")
     return user
+
+
+# --- Admin ---
+class SconticiniSospendiIn(BaseModel):
+    sospeso: bool
+
+
+@api.get("/admin/sconticini")
+async def admin_sconticini(user: dict = Depends(require_admin_master), limit: int = 200):
+    """Vista completa: totali, una riga per negozio e il tracciamento degli ultimi eventi (solo admin: nome intero)."""
+    if not sconticini_enabled():
+        return {"enabled": False}
+    await _sconticini_scadenze({})
+    negozi = []
+    for cfg in await db.sconticini_config.find({}).to_list(2000):
+        m = await db.users.find_one({"id": cfg["merchant_id"]}, {"shop_name": 1}) or {}
+        negozi.append({"merchant_id": cfg["merchant_id"], "shop_name": m.get("shop_name") or "-",
+                       "attivo": bool(cfg.get("attivo")), "sospeso_admin": bool(cfg.get("sospeso_admin")),
+                       "soglia": cfg.get("soglia"), "premio": cfg.get("premio"),
+                       "regolamento_versione": cfg.get("regolamento_versione"),
+                       "regolamento_accettato_il": cfg.get("regolamento_accettato_il"),
+                       **await _sconticini_numeri({"merchant_id": cfg["merchant_id"]})})
+    nomi: dict = {}
+
+    async def nome(uid, campo="name"):
+        if not uid:
+            return ""
+        if uid not in nomi:
+            u = await db.users.find_one({"id": uid}, {"name": 1, "shop_name": 1}) or {}
+            nomi[uid] = (u.get("name") or "", u.get("shop_name") or "")
+        return nomi[uid][0 if campo == "name" else 1]
+
+    eventi = []
+    async for e in db.sconticini_eventi.find({}).sort("at", -1).limit(min(max(limit, 1), 500)):
+        e.pop("_id", None)
+        e.pop("chiave", None)
+        e["client_name"] = await nome(e.get("user_id"))
+        e["shop_name"] = await nome(e.get("merchant_id"), "shop")
+        eventi.append(e)
+    return {"enabled": True, "totali": await _sconticini_numeri({}), "negozi": negozi, "eventi": eventi}
+
+
+@api.post("/admin/sconticini/negozi/{merchant_id}/sospendi")
+async def admin_sconticini_sospendi(merchant_id: str, payload: SconticiniSospendiIn,
+                                    user: dict = Depends(require_admin_master)):
+    """Ferma (o riattiva) gli Sconticini di un negozio. I contatori e i premi già sbloccati restano."""
+    _sconticini_attivo_o_404()
+    if not await db.sconticini_config.find_one({"merchant_id": merchant_id}):
+        raise HTTPException(404, "Il negozio non ha attivato gli Sconticini")
+    await db.sconticini_config.update_one({"merchant_id": merchant_id}, {"$set": {"sospeso_admin": payload.sospeso}})
+    await _sconticini_evento("admin_sospensione", f"adm:{uuid.uuid4()}", merchant_id=merchant_id, sospeso=payload.sospeso)
+    return {"ok": True, "sospeso": payload.sospeso}
 
 
 def _issue_master_cookie(response: Response, user_id: str) -> dict:
@@ -6040,6 +6434,13 @@ async def on_startup():
     await db.subscriptions.create_index("user_id")
     await db.redemptions.create_index("code", unique=True)
     await db.redemptions.create_index("merchant_id")
+    # Sconticini: un solo evento per chiave (un sconticino per riscatto verificato), un saldo per cliente e negozio
+    await db.sconticini_eventi.create_index("chiave", unique=True)
+    await db.sconticini_eventi.create_index([("merchant_id", 1), ("at", -1)])
+    await db.sconticini_saldi.create_index([("user_id", 1), ("merchant_id", 1)], unique=True)
+    await db.sconticini_premi.create_index("code", unique=True)
+    await db.sconticini_premi.create_index([("user_id", 1), ("merchant_id", 1)])
+    await db.sconticini_config.create_index("merchant_id", unique=True)
     await db.scansioni_locandina.create_index([("merchant_id", 1), ("giorno", 1)], unique=True)
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
@@ -6857,6 +7258,11 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
     consents = await db.consent_logs.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     reviews = await db.reviews.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
     app_feedback = await db.app_feedback.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
+    sconticini = {
+        "saldi": await db.sconticini_saldi.find({"user_id": uid}, {"_id": 0}).to_list(length=None),
+        "premi": await db.sconticini_premi.find({"user_id": uid}, {"_id": 0, "code": 0}).to_list(length=None),
+        "eventi": await db.sconticini_eventi.find({"user_id": uid}, {"_id": 0, "chiave": 0}).to_list(length=None),
+    }
 
     # Merchant-specific
     discounts, next_discounts, archive = [], [], []
@@ -6876,6 +7282,7 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
         "cookie_consent_log": consents,
         "reviews": reviews,
         "app_feedback": app_feedback,
+        "sconticini": sconticini,
         "merchant_discounts": discounts,
         "merchant_next_discounts": next_discounts,
         "merchant_discounts_archive": archive,
@@ -6894,7 +7301,8 @@ async def _erase_user_data(user: dict) -> None:
         await coll.update_many({"user_id": uid}, anon)
     # 2. Elimina tutto il resto collegato all'utente
     for coll in (db.redemptions, db.qr_scans, db.consent_logs, db.reviews,
-                 db.app_feedback, db.webauthn_challenges, db.avvisi_preferiti):
+                 db.app_feedback, db.webauthn_challenges, db.avvisi_preferiti,
+                 db.sconticini_saldi, db.sconticini_premi, db.sconticini_eventi):
         await coll.delete_many({"user_id": uid})
     if user.get("email"):
         await db.login_guard.delete_many({"key": _login_guard_key(user["email"].strip().lower())})
@@ -6905,6 +7313,8 @@ async def _erase_user_data(user: dict) -> None:
             await coll.delete_many({"merchant_id": uid})
         await db.avvisi_preferiti.delete_many({"merchant_id": uid})
         await db.scansioni_locandina.delete_many({"merchant_id": uid})
+        for coll in (db.sconticini_config, db.sconticini_saldi, db.sconticini_premi, db.sconticini_eventi):
+            await coll.delete_many({"merchant_id": uid})
         # Sconti usati e scansioni QR fatti dai clienti presso questo negozio: senza il negozio
         # restavano orfani e continuavano a contare nelle statistiche dell'admin.
         await db.redemptions.delete_many({"merchant_id": uid})

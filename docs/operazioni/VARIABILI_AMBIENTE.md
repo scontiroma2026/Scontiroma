@@ -46,6 +46,8 @@ Legenda: 🔒 = segreto (solo su Render, mai in chat, PR o file) · ⚙️ = non
 |---|---|---|---|---|
 | `PRELAUNCH_MODE` | ⚙️ | `true` solo se il titolare decide la campagna dal 19/10 | `false` il giorno del lancio | `false` |
 | `CLIENT_EMAIL_CONFIRMATION_REQUIRED` | ⚙️ | `true` | `true` | **`true`** (acceso anche se la variabile manca) |
+| `SCONTICINI_ENABLED` | ⚙️ | `false` finché il regolamento non è chiuso e il titolare non dice di accendere | `true` solo dopo l'OK | **`false`** (spento: nessun conteggio, nessun dato, pagine nascoste) |
+| `SCONTICINI_PREMIO_GIORNI` | ⚙️ | `60` | `60` | `60` |
 | `CLIENT_SUBSCRIPTION_REQUIRED` | ⚙️ | `false` (già in `render.yaml`) | `false` | `false` |
 | `MERCHANT_PAYMENT_REQUIRED` | ⚙️ | `false` | `false` fino alla conferma esplicita del titolare | `false` |
 | `TRIAL_END_DATE` | ⚙️ | **vuota** (nessuna data per ora) | vuota | nessun banner di fine prova |

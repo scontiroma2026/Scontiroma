@@ -809,3 +809,37 @@ async def send_waitlist_launch_notice(to: str, uid: str, utoken: str) -> Optiona
 {_piede_lista_attesa(uid, utoken)}
 """
     return await _send(to, f"{BRAND} è online", _shell(inner))
+
+
+# ---------- Sconticini (PROPOSTA, accesi solo con SCONTICINI_ENABLED) ----------
+# Il QR del premio cambia ogni 20 secondi (come quello degli sconti): per questo l'email non lo contiene come immagine,
+# ma porta il cliente alla sua tessera, dove il QR si mostra al banco. Niente percentuali, prezzi o promesse.
+async def send_sconticini_premio_cliente(to: str, name: str, shop_name: str, premio: str, scade_label: str) -> Optional[str]:
+    """Al cliente: ha raggiunto il premio di un negozio."""
+    name = _esc((name or "").strip().split(" ")[0] or "ciao")
+    shop_name, premio, scade_label = _esc(shop_name), _esc(premio), _esc(scade_label)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Hai sbloccato un premio</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">hai raccolto tutti gli sconticini di <strong>{shop_name}</strong>: il premio è tuo.</p>
+<p style="{_P}"><strong style="color:#00E5FF">{premio}</strong></p>
+<p style="{_P}">Apri la tua tessera, mostra il QR del premio al banco e dì il codice a chi lavora in negozio. Il premio si usa una sola volta e vale fino al {scade_label}.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/dashboard#sconticini" style="{_BTN}">Apri la mia tessera</a></div>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Il premio è offerto dal negozio. Ricevi questa email perché hai raccolto sconticini con il tuo account {BRAND}.</p>
+"""
+    return await _send(to, f"Hai sbloccato il premio di {shop_name} — {BRAND}", _shell(inner))
+
+
+async def send_sconticini_premio_negozio(to: str, name: str, shop_name: str, cliente: str, premio: str, scade_label: str) -> Optional[str]:
+    """Al commerciante: un cliente ha raggiunto il premio (il cliente è indicato come in cassa: nome e iniziale del cognome)."""
+    name = _esc((name or "").strip().split(" ")[0] or "ciao")
+    shop_name, cliente, premio, scade_label = _esc(shop_name), _esc(cliente), _esc(premio), _esc(scade_label)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Un cliente ha raggiunto il premio</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">il cliente <strong>{cliente}</strong> ha raggiunto il premio di <strong>{shop_name}</strong>:</p>
+<p style="{_P}"><strong style="color:#00E5FF">{premio}</strong></p>
+<p style="{_P}">Può presentarsi entro il {scade_label} con il QR del premio: scansionalo come uno sconto normale, con il codice del negozio. Il premio è a carico del negozio.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai agli Sconticini</a></div>
+"""
+    return await _send(to, f"Un cliente ha raggiunto il premio — {BRAND}", _shell(inner))
