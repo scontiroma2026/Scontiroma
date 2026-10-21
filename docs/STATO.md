@@ -235,3 +235,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
 - 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
 - 21/10: lista d'attesa, punto 13 (PR in bozza): frase di informativa nel modulo (titolare, 12 mesi, annullo, Resend, 18+, link Privacy), allineata al codice; da far vedere al consulente prima dell'unione e prima di accendere il pre-lancio
+- 21/10: lista d'attesa: versione del consenso 2026-10-v2 (cambia l'informativa sotto la casella); le iscrizioni già raccolte restano con v1, nessuna nuova conferma richiesta
