@@ -40,6 +40,12 @@ Letti da un agente solo in parte: i siti ufficiali non erano raggiungibili dall'
 | Google / Gmail gratuito (casella privacy@) | 🔴 | Nessun contratto sui dati trovato per un Gmail gratuito; l'addendum vale per Workspace e piani a pagamento. | Tenere privacy@ su Gmail gratuito è accettabile finché non si cambia? Scelta del titolare: spostare su casella Aruba, oppure Workspace (circa 6,80 € per utente al mese, IVA esclusa, da controllare). |
 Nella Privacy (#202, #203) non è scritto nulla su Aruba e Google.
 
+## Modifiche ai Termini con negozi già iscritti, e lista d'attesa (21/10)
+| Tema | Rischio | Cosa abbiamo | Cosa chiedere |
+|---|---|---|---|
+| Negozi già iscritti prima delle modifiche ai Termini | 🟠 | All'iscrizione si salvano solo le due caselle spuntate, non la versione del testo visto. Esiste almeno un negozio iscritto il 21/10. | Come comunicare le modifiche (email con preavviso, art. 9 dei Termini; P2B: preavviso minimo da verificare)? Conviene salvare da ora la versione dei Termini accettata? |
+| Lista d'attesa: iscritti con consenso `2026-10-v1` | 🟠 | Hanno visto la frase breve, non l'informativa completa (titolare, 12 mesi, Resend). Non parte nessuna richiesta di nuova conferma. | Basta l'informativa nell'avviso di lancio e il link per annullare, o serve un nuovo consenso? |
+
 ## Altri gruppi
 Gruppi 3–8 (punti 13–35): da aggiungere man mano che si chiudono con il titolare.
 
