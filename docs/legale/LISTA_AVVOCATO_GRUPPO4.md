@@ -1,0 +1,16 @@
+# Lista per l'avvocato – Gruppo 4 (contenuti dei negozi, foto, prezzi)
+
+**Tutto è [DA VALIDARE]** dal consulente: non è un parere legale. Le norme citate sono **da verificare** (non controllate su fonti ufficiali).
+Regola del titolare (21/10): quando non siamo sicuri, abbiamo scelto la soluzione più prudente e la scriviamo qui.
+Legenda: 🔴 rischio alto · 🟠 medio · 🟢 basso. Repository pubblico: nessun dato personale.
+
+| Punto | Rischio | Cosa abbiamo scelto (prudente) | Domanda all'avvocato |
+|---|---|---|---|
+| 20 – Foto con persone e marchi | 🔴 | Manleva del negozio in Termini art. 8; riga «Non caricare foto in cui si riconoscono persone senza il loro permesso» nei Termini e sotto il campo foto del modulo (solo avviso, **nessuna spunta**: scelta del titolare del 15/10); controllo dell'admin foto per foto, già attivo. | 1) La manleva così scritta regge verso un negozio (e verso un consumatore, se un negozio è tale)? 2) Basta l'avviso senza spunta o conviene una conferma? 3) Che responsabilità ha la piattaforma, che approva a mano prima di pubblicare (hosting con controllo preventivo)? 4) Artt. 96-97 L. 633/1941 e art. 8 DSA: citati a memoria, **da verificare**. |
+| 21 – Foto scartate, motivo scritto | 🟠 | Termini art. 8: criteri di approvazione e motivo scritto; contestazione a info@scontiroma.it con riesame entro **10 giorni lavorativi** (numero **proposto da noi**). Email di approvazione: «Per contestare scrivi a info@scontiroma.it». | 1) 10 giorni lavorativi vanno bene o serve un altro termine? 2) La motivazione data «al momento» dell'approvazione soddisfa l'art. 4 Reg. UE 2019/1150 (P2B, **da verificare**) o va data prima? 3) Quando il negozio non è «utilizzatore commerciale» in senso P2B, cosa resta? |
+| 22 – Libreria foto di esempio e Colosseo | 🟠 | Libreria: si tiene com'è, con `LICENZA.txt` (Unsplash). Colosseo: il titolare ha scelto di **sostituire la foto della home con una senza monumento**, da fare nel passo «libreria foto» (non in questa PR). | 1) Art. 108 Codice dei beni culturali (uso commerciale di immagini di beni dello Stato): si applica a una foto di sfondo del sito? Serve autorizzazione o canone? (**da verificare**) 2) Vale anche per Piazza San Pietro (riquadro quartiere)? 3) La licenza Unsplash va bene per offrire le foto ai negozi come sfondo? |
+| 23 – Prezzo pieno e sconto | 🟠 | Termini art. 5: il negozio garantisce che il prezzo pieno indicato è il più basso applicato nei 30 giorni precedenti. Avviso sotto «Prezzo originale» nel modulo. Nessuna logica nuova nel codice. | 1) Art. 17-bis Codice del Consumo (D.Lgs. 206/2005, **da verificare**): articolo esatto, eccezioni (prodotti deperibili, vendite in saldo) e se si applica a servizi e menu. 2) Sentenza C-330/23 della Corte di giustizia (**da verificare**): cosa cambia per la formula «prezzo più basso dei 30 giorni»? 3) La piattaforma risponde se pubblica un prezzo pieno non vero? Basta il controllo a mano? 4) La percentuale «−NN%» calcolata dall'app è ammessa? |
+
+## Cosa deve solo validare il consulente
+- I testi in `frontend/src/pages/legal/Termini.jsx` (art. 5 e art. 8), marcati `[PROPOSTA]` nel codice.
+- Gli avvisi nel modulo offerta e la frase nell'email di approvazione.

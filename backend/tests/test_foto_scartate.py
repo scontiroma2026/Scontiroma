@@ -89,6 +89,7 @@ def test_foto_scartata_sparisce_e_il_motivo_va_nell_email(coll, url, posta):
         assert d["foto_scartate"] == [{"numero": 1, "motivo": "Volto riconoscibile"}]
     run(body)
     assert any("Foto 1: Volto riconoscibile" in html for _, html in posta)
+    assert any("Per contestare scrivi a" in html and "info@scontiroma.it" in html for _, html in posta)
 
 
 @pytest.mark.parametrize("coll,url", CASI)
@@ -101,6 +102,7 @@ def test_senza_foto_scartate_come_prima(coll, url, posta):
         assert d["image_urls"] == FOTO and "foto_scartate" not in d
     run(body)
     assert all("Foto non pubblicate" not in html for _, html in posta)
+    assert all("Per contestare scrivi a" not in html for _, html in posta)
 
 
 @pytest.mark.parametrize("coll,url", CASI)
