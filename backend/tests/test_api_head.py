@@ -12,3 +12,14 @@ def test_radice_api_get_e_head():
         assert h.status_code == 200
 
     run(body, False)
+
+
+def test_salute_db_get_e_head():
+    async def body(c):
+        r = await c.get("/api/salute-db")
+        assert r.status_code == 200
+        assert r.json() == {"database": "ok"}
+        h = await c.head("/api/salute-db")
+        assert h.status_code == 200
+
+    run(body, False)
