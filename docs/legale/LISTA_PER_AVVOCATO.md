@@ -32,6 +32,14 @@ Legenda: 🔴 prima di accendere i pagamenti o il pre-lancio · 🟠 da valutare
 | 11 | 🟠 | Testo prudente: «Autorizzi ora l'addebito automatico: il primo importo sarà addebitato solo il [data]» (evita «preautorizzato») | Tempi minimi di avviso nelle regole di Stripe e PayPal per le prove gratuite; il promemoria prima di ogni addebito serve per legge? |
 | 12 | 🟢 | Tenuta la sezione sui servizi a pagamento futuri nel Recesso | Conferma |
 
+## Fornitori: Aruba e Google/Gmail (21/10, non chiusi)
+Letti da un agente solo in parte: i siti ufficiali non erano raggiungibili dall'ambiente; solo l'addendum di Google è stato letto (a metà). Il resto viene da risultati di ricerca, **da verificare sul testo originale**.
+| Fornitore | Rischio | Cosa risulta | Cosa chiedere / fare |
+|---|---|---|---|
+| Aruba (dominio e posta) | 🟠 | La nomina a responsabile (art. 23 delle condizioni) sembra inclusa nel contratto. Non trovati: termine di notifica violazioni, cancellazione a fine servizio, elenco subfornitori, sede dei dati della posta. Dati del titolare visibili nel whois senza l'opzione privacy. | Basta la nomina dentro le condizioni generali come art. 28? Titolare: scaricare le condizioni in vigore dall'area clienti Aruba e chiedere al loro DPO (indirizzo da confermare). |
+| Google / Gmail gratuito (casella privacy@) | 🔴 | Nessun contratto sui dati trovato per un Gmail gratuito; l'addendum vale per Workspace e piani a pagamento. | Tenere privacy@ su Gmail gratuito è accettabile finché non si cambia? Scelta del titolare: spostare su casella Aruba, oppure Workspace (circa 6,80 € per utente al mese, IVA esclusa, da controllare). |
+Nella Privacy (#202, #203) non è scritto nulla su Aruba e Google.
+
 ## Altri gruppi
 Gruppi 3–8 (punti 13–35): da aggiungere man mano che si chiudono con il titolare.
 
