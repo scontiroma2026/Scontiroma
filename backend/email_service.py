@@ -672,7 +672,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 async def send_admin_new_merchant(to: str, shop_name: str, category: str, zone: str, email: str, phone: str) -> Optional[str]:
     """Avviso all'admin: un nuovo commerciante si è iscritto."""
     rows = "".join(f'<tr><td style="padding:4px 12px 4px 0;color:#a1a1aa">{k}</td><td style="padding:4px 0;color:#fff">{_esc(v or "—")}</td></tr>'
-                   for k, v in (("Negozio", shop_name), ("Categoria", category), ("Quartiere", zone), ("Email", email), ("Telefono", phone)))
+                   for k, v in (("Negozio", shop_name), ("Categoria", category), ("Zona", zone), ("Email", email), ("Telefono", phone)))
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuovo commerciante iscritto</h2>
 <table role="presentation" style="margin:0 0 16px;font-size:14px">{rows}</table>
@@ -690,6 +690,18 @@ async def send_admin_new_offer(to: str, shop_name: str, title: str, next_month: 
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Approva o rifiuta</a></div>
 """
     return await _send(to, f"Offerta da approvare: {shop_name or 'negozio'}", _shell(inner))
+
+
+async def send_admin_new_client(to: str, quando: str, totale_clienti: int) -> Optional[str]:
+    """Avviso all'admin: si è iscritto un nuovo cliente. Nessun dato personale del cliente
+    (né nome né email): solo data/ora e il numero totale dei clienti."""
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuovo cliente iscritto</h2>
+<p style="{_P}">Si è iscritto un nuovo cliente il <strong>{_esc(quando)}</strong>.</p>
+<p style="{_P}">Clienti iscritti in tutto: <strong style="color:#00E5FF">{int(totale_clienti)}</strong>.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Apri il pannello admin</a></div>
+"""
+    return await _send(to, "Nuovo cliente iscritto", _shell(inner))
 
 
 async def send_account_deleted(to: str, name: str) -> Optional[str]:

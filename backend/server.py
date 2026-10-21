@@ -55,11 +55,13 @@ from email_service import (
     send_welcome_merchant,
     send_admin_new_merchant,
     send_admin_new_offer,
+    send_admin_new_client,
     send_account_deleted,
     send_waitlist_confirmation,
     send_waitlist_launch_notice,
 )
 import paypal_service
+from pywebpush import webpush, WebPushException
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Body
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -678,6 +680,119 @@ def _email_in_background(coro, label: str) -> None:
     asyncio.create_task(run())
 
 
+# ---------- Notifiche push all'admin (Web Push standard, chiavi VAPID) ----------
+# Le chiavi VAPID arrivano da VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY se impostate; altrimenti il server ne
+# genera una coppia la prima volta e la salva in `config_push` (mai nel repository né nei log).
+VAPID_SUBJECT = "mailto:info@scontiroma.it"
+PUSH_TTL_SEC = 24 * 3600
+PUSH_ISCRIZIONI_MAX_PER_ADMIN = 10
+
+
+def _b64url(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def _genera_chiavi_vapid() -> dict:
+    """Nuova coppia P-256: pubblica «non compressa» e privata grezza (32 byte), entrambe base64url,
+    lo stesso formato di `web-push generate-vapid-keys`."""
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    priv = ec.generate_private_key(ec.SECP256R1())
+    raw_priv = priv.private_numbers().private_value.to_bytes(32, "big")
+    pub = priv.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
+    return {"public_key": _b64url(pub), "private_key": _b64url(raw_priv)}
+
+
+async def _chiavi_vapid() -> dict:
+    """Chiavi VAPID da usare: env se presenti, altrimenti quelle salvate (generate una sola volta)."""
+    env_pub = os.environ.get("VAPID_PUBLIC_KEY", "").strip()
+    env_priv = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
+    if env_pub and env_priv:
+        return {"public_key": env_pub, "private_key": env_priv, "origine": "env"}
+    doc = await db.config_push.find_one({"key": "vapid"})
+    if not doc:
+        nuove = _genera_chiavi_vapid()
+        try:
+            # $setOnInsert: se due avvii generano insieme, vince la prima coppia salvata.
+            await db.config_push.update_one(
+                {"key": "vapid"},
+                {"$setOnInsert": {**nuove, "created_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True)
+        except DuplicateKeyError:
+            pass
+        doc = await db.config_push.find_one({"key": "vapid"})
+        logging.info("[push-admin] chiavi VAPID generate e salvate nel database")
+    return {"public_key": doc["public_key"], "private_key": doc["private_key"], "origine": "database"}
+
+
+async def _invia_push_admin(titolo: str, testo: str = "", url: str = "/admin", user_id: Optional[str] = None) -> dict:
+    """Manda una notifica a tutte le iscrizioni degli admin (o di un solo admin). Le iscrizioni scadute
+    (404/410) si cancellano; ogni altro errore va solo nei log, senza l'indirizzo dell'iscrizione."""
+    filtro_admin = {"role": "admin"}
+    if user_id:
+        filtro_admin["id"] = user_id
+    admin_ids = [u["id"] async for u in db.users.find(filtro_admin, {"_id": 0, "id": 1})]
+    if not admin_ids:
+        return {"inviate": 0, "rimosse": 0, "errori": 0}
+    iscrizioni = await db.admin_push_iscrizioni.find(
+        {"user_id": {"$in": admin_ids}}, {"_id": 0}).to_list(PUSH_ISCRIZIONI_MAX_PER_ADMIN * len(admin_ids))
+    esito = {"inviate": 0, "rimosse": 0, "errori": 0}
+    if not iscrizioni:
+        return esito
+    chiavi = await _chiavi_vapid()
+    dati = _json.dumps({"title": titolo, "body": testo, "url": url}, ensure_ascii=False)
+    for s in iscrizioni:
+        info = {"endpoint": s["endpoint"], "keys": {"p256dh": s["p256dh"], "auth": s["auth"]}}
+        try:
+            # Claims nuovi a ogni invio: la libreria ci scrive dentro «aud» del servizio push.
+            await asyncio.to_thread(webpush, subscription_info=info, data=dati,
+                                    vapid_private_key=chiavi["private_key"],
+                                    vapid_claims={"sub": VAPID_SUBJECT}, ttl=PUSH_TTL_SEC, timeout=10)
+            esito["inviate"] += 1
+        except WebPushException as e:
+            stato = getattr(getattr(e, "response", None), "status_code", None)
+            if stato in (404, 410):
+                await db.admin_push_iscrizioni.delete_one({"endpoint": s["endpoint"]})
+                esito["rimosse"] += 1
+                logging.info(f"[push-admin] iscrizione scaduta ({stato}) cancellata")
+            else:
+                esito["errori"] += 1
+                logging.warning(f"[push-admin] non inviata (stato {stato})")
+        except Exception as e:
+            esito["errori"] += 1
+            logging.warning(f"[push-admin] non inviata: {type(e).__name__}")
+    return esito
+
+
+def _push_admin_in_background(titolo: str, testo: str = "", label: str = "push") -> None:
+    """Notifica all'admin senza far aspettare chi usa l'app; un errore finisce solo nei log."""
+    async def run():
+        try:
+            await _invia_push_admin(titolo, testo)
+        except Exception as e:
+            logging.warning(f"[push-admin:{label}] non inviata: {type(e).__name__}")
+    asyncio.create_task(run())
+
+
+def admin_email_nuovo_cliente_attiva() -> bool:
+    """Interruttore ADMIN_EMAIL_NUOVO_CLIENTE (predefinito acceso)."""
+    return os.environ.get("ADMIN_EMAIL_NUOVO_CLIENTE", "true").strip().lower() not in ("false", "0", "no", "off")
+
+
+def _avvisa_admin_nuovo_cliente() -> None:
+    """Nuovo cliente iscritto: notifica push ed email all'admin, entrambe SENZA dati del cliente."""
+    _push_admin_in_background("Nuovo cliente iscritto", "", "nuovo-cliente")
+    to = _admin_notify_to()
+    if not (to and admin_email_nuovo_cliente_attiva()):
+        return
+
+    async def email():
+        totale = await db.users.count_documents({"role": "client"})
+        quando = _rome_now().strftime("%d/%m/%Y alle %H:%M")
+        await send_admin_new_client(to, quando, totale)
+    _email_in_background(email(), "admin-nuovo-cliente")
+
+
 # ---------- Offerta Mese Prossimo: helpers ----------
 NEXT_OFFER_WINDOW_DAYS = 7
 
@@ -865,6 +980,8 @@ async def confirm_email(payload: ConfirmEmailIn):
     if res.modified_count != 1:  # due tocchi insieme: ne vale uno solo
         raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LINK_NON_VALIDO})
     _email_in_background(send_welcome_client(u["email"], u.get("name") or ""), "benvenuto-cliente")
+    if u.get("role") == "client":
+        _avvisa_admin_nuovo_cliente()
     return {"ok": True}
 
 
@@ -1013,12 +1130,16 @@ async def register(payload: RegisterIn, response: Response, request: Request):
         if _admin_notify_to():
             _email_in_background(send_admin_new_merchant(_admin_notify_to(), doc.get("shop_name") or "", doc.get("category") or "",
                                                          doc.get("zone") or "", email, doc.get("phone") or ""), "admin-nuovo-commerciante")
+        _push_admin_in_background(f"Nuovo commerciante: {doc.get('shop_name') or 'senza nome'}", "", "nuovo-commerciante")
     elif conferma_token:
         # Niente accesso finché non tocca il link; il benvenuto parte dopo la conferma.
         _email_in_background(send_email_confirmation(email, doc.get("name") or "", conferma_token), "conferma-email")
         return {"confirmation_required": True, "email": email, "message": MSG_CONFERMA_INVIATA}
     else:
         _email_in_background(send_welcome_client(email, doc.get("name") or ""), "benvenuto-cliente")
+        if payload.role == "client":
+            # Con la conferma dell'email accesa l'avviso parte solo dopo la conferma (niente avvisi per account mai attivati).
+            _avvisa_admin_nuovo_cliente()
 
     access = create_token(user_id, email, "access")
     refresh = create_token(user_id, email, "refresh")
@@ -2532,8 +2653,10 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data["expired_at"] = None
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
-        if existing.get("approval_status") != "pending" and _admin_notify_to():
-            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
+        if existing.get("approval_status") != "pending":
+            if _admin_notify_to():
+                _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
+            _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}", "", "admin-offerta")
     else:
         did = str(uuid.uuid4())
         doc = payload.cleaned()
@@ -2554,6 +2677,7 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         d = doc
         if _admin_notify_to():
             _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
+        _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}", "", "admin-offerta")
     return {"discount": await enrich_discount(d)}
 
 
@@ -2589,9 +2713,12 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     now_iso = datetime.now(timezone.utc).isoformat()
     data.update({"approval_status": "pending", "approval_note": "", "approved_at": None, "updated_at": now_iso})
     existing = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
-    if (not existing or existing.get("approval_status") != "pending") and _admin_notify_to():
-        _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
-                                                  window["next_month_label"]), "admin-offerta-mese-prossimo")
+    if not existing or existing.get("approval_status") != "pending":
+        if _admin_notify_to():
+            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
+                                                      window["next_month_label"]), "admin-offerta-mese-prossimo")
+        _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}",
+                                  f"Mese di {window['next_month_label']}", "admin-offerta-mese-prossimo")
     if existing:
         await db.next_discounts.update_one({"id": existing["id"]}, {"$set": data})
         nd = await db.next_discounts.find_one({"id": existing["id"]})
@@ -4322,6 +4449,58 @@ def require_admin_master(request: Request, user: dict = Depends(require_admin)) 
     if not token or not _verify_master_token(token, user["id"]):
         raise HTTPException(403, "Master password richiesta")
     return user
+
+
+# ---------- Notifiche push sul telefono dell'admin ----------
+class PushChiaviIn(BaseModel):
+    p256dh: str = Field(..., min_length=10, max_length=200)
+    auth: str = Field(..., min_length=8, max_length=100)
+
+
+class PushIscrizioneIn(BaseModel):
+    endpoint: str = Field(..., min_length=10, max_length=1000)
+    keys: PushChiaviIn
+
+
+class PushDisiscrizioneIn(BaseModel):
+    endpoint: str = Field(..., min_length=10, max_length=1000)
+
+
+@api.get("/admin/push/chiave-pubblica")
+async def admin_push_chiave_pubblica(user: dict = Depends(require_admin_master)):
+    chiavi = await _chiavi_vapid()
+    iscritti = await db.admin_push_iscrizioni.count_documents({"user_id": user["id"]})
+    return {"public_key": chiavi["public_key"], "iscrizioni": iscritti}
+
+
+@api.post("/admin/push/iscrizione")
+async def admin_push_iscrizione(payload: PushIscrizioneIn, user: dict = Depends(require_admin_master)):
+    if not payload.endpoint.startswith("https://"):
+        raise HTTPException(422, "Iscrizione non valida")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    esistente = await db.admin_push_iscrizioni.find_one({"endpoint": payload.endpoint})
+    if not esistente and await db.admin_push_iscrizioni.count_documents({"user_id": user["id"]}) >= PUSH_ISCRIZIONI_MAX_PER_ADMIN:
+        raise HTTPException(409, f"Hai già {PUSH_ISCRIZIONI_MAX_PER_ADMIN} dispositivi con le notifiche: disattivane uno prima.")
+    await db.admin_push_iscrizioni.update_one(
+        {"endpoint": payload.endpoint},
+        {"$set": {"user_id": user["id"], "p256dh": payload.keys.p256dh, "auth": payload.keys.auth, "updated_at": now_iso},
+         "$setOnInsert": {"created_at": now_iso}},
+        upsert=True)
+    return {"ok": True}
+
+
+@api.delete("/admin/push/iscrizione")
+async def admin_push_disiscrizione(payload: PushDisiscrizioneIn, user: dict = Depends(require_admin_master)):
+    res = await db.admin_push_iscrizioni.delete_one({"endpoint": payload.endpoint, "user_id": user["id"]})
+    return {"ok": True, "rimosse": res.deleted_count}
+
+
+@api.post("/admin/push/prova")
+async def admin_push_prova(user: dict = Depends(require_admin_master)):
+    if not await db.admin_push_iscrizioni.count_documents({"user_id": user["id"]}):
+        raise HTTPException(404, "Nessun dispositivo con le notifiche attive: tocca prima «Attiva notifiche».")
+    esito = await _invia_push_admin("Prova di Sconti Roma", "Le notifiche su questo telefono funzionano.", user_id=user["id"])
+    return {"ok": esito["inviate"] > 0, **esito}
 
 
 def _issue_master_cookie(response: Response, user_id: str) -> dict:
@@ -6067,6 +6246,15 @@ async def on_startup():
     )
     await seed_data()
     await ensure_master_doc()
+    # Notifiche push all'admin: indici e chiavi VAPID (generate al primo avvio se non sono su Render).
+    try:
+        await db.config_push.create_index("key", unique=True)
+        await db.admin_push_iscrizioni.create_index("endpoint", unique=True)
+        await db.admin_push_iscrizioni.create_index("user_id")
+        chiavi = await _chiavi_vapid()
+        logging.info(f"[push-admin] chiavi VAPID pronte (origine: {chiavi['origine']})")
+    except Exception as e:
+        logging.error(f"[push-admin] preparazione fallita: {type(e).__name__}")
     # Migrazione sicura: chi era già iscritto è confermato (nessun utente esistente resta bloccato).
     # Idempotente; non tocca chi ha già il campo (anche i nuovi non confermati).
     try:
