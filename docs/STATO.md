@@ -234,3 +234,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
 - 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
+- 21/10: Privacy, punto 13-14 (PR in bozza): voce lista d'attesa (consenso, 12 mesi, elenco di esclusione, Resend), IP «nel nostro database», LocationIQ con formula prudente, regioni di Render e Atlas (Francoforte), Stripe e PayPal titolari autonomi; righe per l'avvocato in docs/legale/LISTA_AVVOCATO_GRUPPO3.md
