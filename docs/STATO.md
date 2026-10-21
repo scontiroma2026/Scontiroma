@@ -236,3 +236,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 21/10: volantino clienti, cartolina negozi e locandina negozio (stile app-chiara) con WhatsApp 352 247 3526 e Instagram/Facebook «Sconti Roma» con loghi (bozza, PR)
 - 21/10: locandina stampabile dell'app (A5): aggiunti WhatsApp 352 247 3526 e «Seguici su Instagram e Facebook – Sconti Roma» con i loghi
 - 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
+- 21/10: nuovo indirizzo /api/salute-db (GET e HEAD) per il monitor UptimeRobot del database: 200 se MongoDB risponde, 503 se no
