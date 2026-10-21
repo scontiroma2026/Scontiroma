@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<title>Video attesa clienti</title>
+<!-- Scena del video di attesa per i clienti. render.js chiama setMode('v'|'q'), setup(timeline) e render(t) per ogni fotogramma.
+     Colori del sito (fucsia #D81B72, viola #6D4AFF, ciano #00798C), carattere Manrope ospitato in locale (fonts.css, licenza OFL).
+     Il numero WhatsApp NON è scritto qui (repository pubblico): arriva da timeline.json, che prepara.py compone con CONTATTO_WHATSAPP. -->
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root { --fucsia: #D81B72; --viola: #6D4AFF; --ciano: #00798C; --ink: #16132B; --bg: #F5F6F8; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); font-family: 'Manrope', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body.q { height: 1080px; }
+#bg { position: absolute; inset: 0; background:
+  radial-gradient(circle at 12% 8%, rgba(216,27,114,0.16) 0, transparent 38%),
+  radial-gradient(circle at 92% 30%, rgba(109,74,255,0.16) 0, transparent 40%),
+  radial-gradient(circle at 20% 92%, rgba(0,121,140,0.10) 0, transparent 40%), var(--bg); }
+.grad { background: linear-gradient(135deg, #D81B72 0%, #6D4AFF 100%); }
+.abs { position: absolute; }
+.brand { display: flex; align-items: center; gap: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.tile { display: grid; place-items: center; background: #fff; border-radius: 22%; box-shadow: 0 10px 30px rgba(22,19,43,0.18); color: var(--ink); }
+.tile svg { width: 72%; height: auto; }
+.chip { display: inline-flex; align-items: center; gap: 12px; border-radius: 999px; font-weight: 800; white-space: nowrap; }
+#phone { background: #16132B; box-shadow: 0 40px 90px rgba(22,19,43,0.35), 0 0 0 2px rgba(255,255,255,0.4) inset; }
+#screen { position: absolute; overflow: hidden; background: #fff; }
+#screen img { position: absolute; left: 0; top: 0; width: 100%; height: auto; will-change: transform, opacity; }
+#sub { display: flex; align-items: center; justify-content: center; text-align: center; z-index: 5; }
+#sub span { display: inline-block; font-weight: 700; line-height: 1.22; }
+#gancio, #finale { inset: 0; color: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; }
+#gancio { justify-content: center; }
+#gancio h1 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.04; }
+#finale h2 { font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.alto { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.qrcard { background: #fff; border-radius: 32px; box-shadow: 0 24px 60px rgba(22,19,43,0.35); display: grid; place-items: center; }
+.qrcard img { display: block; }
+.url { font-weight: 800; letter-spacing: -0.01em; }
+.riga { display: flex; }
+.wchip { border: 3px solid rgba(255,255,255,0.9); color: #fff; }
+.wchip.pieno { background: #fff; color: var(--fucsia); border-color: #fff; }
+.contatti { display: flex; flex-direction: column; font-weight: 700; }
+.contatti .c { display: flex; align-items: center; }
+.contatti svg { flex: none; display: block; }
+.contatti .loghi { display: flex; flex: none; }
+.contatti b { font-weight: 800; }
+
+/* ===== verticale 1080x1920 ===== */
+body.v #top { left: 64px; top: 70px; right: 64px; display: flex; justify-content: space-between; align-items: center; }
+body.v #top .brand { font-size: 52px; } body.v #top .tile { width: 92px; height: 92px; }
+body.v #top .chip { font-size: 40px; padding: 14px 30px; }
+body.v #phone { left: 190px; top: 196px; width: 700px; height: 1393px; border-radius: 80px; }
+body.v #screen { left: 18px; top: 18px; width: 664px; height: 1357px; border-radius: 64px; }
+body.v #sub { left: 50px; right: 50px; top: 1630px; height: 230px; }
+body.v #sub span { font-size: 56px; color: #fff; background: rgba(22,19,43,0.9); padding: 20px 34px; border-radius: 28px; max-width: 980px; }
+body.v #gancio h1 { font-size: 118px; max-width: 900px; margin-top: 40px; }
+body.v #gancio .tile { width: 170px; height: 170px; }
+body.v #gancio .nome { font-size: 54px; font-weight: 800; margin-top: 26px; opacity: .95; }
+body.v #finale { justify-content: center; padding-bottom: 330px; }
+body.v #finale .alto { flex-direction: column; }
+body.v #finale .col { display: contents; }
+body.v #finale .tile { width: 136px; height: 136px; order: 1; }
+body.v #finale h2 { font-size: 112px; margin-top: 24px; order: 1; }
+body.v #finale .sotto { font-size: 58px; font-weight: 700; margin-top: 8px; order: 1; }
+body.v #finale .qrcard { width: 400px; height: 400px; margin-top: 40px; order: 2; } body.v #finale .qrcard img { width: 344px; height: 344px; }
+body.v #finale .url { font-size: 76px; margin-top: 26px; order: 3; }
+body.v #finale .riga { gap: 20px; margin-top: 30px; } body.v #finale .wchip { font-size: 42px; padding: 14px 32px; }
+body.v .contatti { margin-top: 44px; gap: 26px; font-size: 44px; align-items: center; }
+body.v .contatti .c { text-align: left; } body.v #c_social b { display: block; }
+body.v .contatti .c { gap: 20px; } body.v .contatti svg { width: 72px; height: 72px; } body.v .contatti .loghi { gap: 12px; }
+
+/* ===== quadrato 1080x1080 ===== */
+body.q #top { left: 560px; top: 70px; width: 470px; display: flex; justify-content: space-between; align-items: center; }
+body.q #top .brand { font-size: 40px; gap: 14px; } body.q #top .tile { width: 72px; height: 72px; }
+body.q #top .chip { font-size: 32px; padding: 10px 22px; }
+body.q #phone { left: 76px; top: 70px; width: 446px; height: 940px; border-radius: 56px; }
+body.q #screen { left: 14px; top: 14px; width: 418px; height: 912px; border-radius: 44px; }
+body.q #sub { left: 560px; width: 470px; top: 210px; height: 420px; justify-content: flex-start; text-align: left; }
+body.q #sub span { font-size: 50px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.15; }
+body.q.fin #sub { left: 40px; right: 40px; width: auto; top: 948px; height: 110px; justify-content: center; text-align: center; }
+body.q.fin #sub span { font-size: 34px; font-weight: 700; color: #fff; background: rgba(22,19,43,0.88); padding: 12px 24px; border-radius: 20px; }
+body.q #gancio h1 { font-size: 100px; max-width: 900px; margin-top: 30px; }
+body.q #gancio .tile { width: 130px; height: 130px; }
+body.q #gancio .nome { font-size: 44px; font-weight: 800; margin-top: 18px; }
+body.q #finale { justify-content: center; padding-bottom: 130px; }
+body.q #finale .alto { flex-direction: row; gap: 64px; }
+body.q #finale .col { align-items: flex-start; text-align: left; }
+body.q #finale .tile { width: 88px; height: 88px; }
+body.q #finale h2 { font-size: 74px; margin-top: 18px; }
+body.q #finale .sotto { font-size: 40px; font-weight: 700; margin-top: 6px; }
+body.q #finale .url { font-size: 50px; margin-top: 20px; }
+body.q #finale .qrcard { width: 300px; height: 300px; } body.q #finale .qrcard img { width: 256px; height: 256px; }
+body.q #finale .riga { gap: 16px; margin-top: 30px; } body.q #finale .wchip { font-size: 30px; padding: 9px 22px; }
+body.q .contatti { margin-top: 26px; gap: 14px; font-size: 30px; align-items: center; }
+body.q .contatti .c { gap: 14px; } body.q .contatti svg { width: 46px; height: 46px; } body.q .contatti .loghi { gap: 10px; }
+</style></head>
+<body class="v">
+<div id="bg" class="abs"></div>
+
+<template id="icona"><svg viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M34.5 3 L35.8 5.7 L38.5 7 L35.8 8.3 L34.5 11 L33.2 8.3 L30.5 7 L33.2 5.7 Z" fill="#00798C"/>
+  <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#D81B72" stroke-width="2" stroke-linecap="round"/>
+  <path d="M4 27 L4 11 L18 11 L18 14 L30 14 L30 27" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M6 26.5 L6 20 Q6 16.5 9 16.5 Q12 16.5 12 20 L12 26.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M13 26.5 L13 19.5 Q13 16 16.5 16 Q20 16 20 19.5 L20 26.5 Z" fill="#D81B72"/>
+  <path d="M21 26.5 L21 20 Q21 16.5 23.5 16.5 Q26 16.5 26 20 L26 26.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M27 26.5 L27 21.5 Q27 18.5 29 18.5 Q31 18.5 31 21.5 L31 26.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+</svg></template>
+
+<div id="top" class="abs">
+  <div class="brand"><div class="tile ico"></div><span>Sconti Roma</span></div>
+  <span class="chip grad" style="color:#fff">18+</span>
+</div>
+
+<div id="phone" class="abs"><div id="screen">
+  <img id="i_home" src="app/home.jpg" alt="">
+  <img id="i_offerte" src="app/offerte.jpg" alt="">
+  <img id="i_vuoto" src="app/attesa_vuoto.jpg" alt="">
+  <img id="i_pieno" src="app/attesa_pieno.jpg" alt="">
+  <img id="i_grazie" src="app/attesa_grazie.jpg" alt="">
+</div></div>
+
+<div id="gancio" class="abs grad">
+  <div class="tile ico"></div>
+  <div class="nome">Sconti Roma</div>
+  <h1 id="gtxt"></h1>
+</div>
+
+<!-- Finale: assorbe anche «gratuita nella fase di lancio» e «18+» (le due etichette si accendono quando la voce le dice). -->
+<div id="finale" class="abs grad">
+  <div class="alto">
+    <div class="col">
+      <div class="tile ico"></div>
+      <h2>Sconti Roma</h2>
+      <div class="sotto">stiamo arrivando.</div>
+      <div class="url">scontiroma.it</div>
+    </div>
+    <div class="qrcard"><img src="qr.svg" alt=""></div>
+  </div>
+  <div class="riga"><span id="c_lancio" class="chip wchip pieno">Gratuita nella fase di lancio</span><span id="c_18" class="chip wchip pieno">18+</span></div>
+  <div class="contatti">
+    <!-- Glifi semplici disegnati a mano (bianco), non i file ufficiali: cornetta da Material Icons «call» (Apache 2.0). -->
+    <div class="c" id="c_wa">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4a20 20 0 0 0-17.3 30L4 44l10.3-2.7A20 20 0 1 0 24 4z" fill="none" stroke="#fff" stroke-width="3.4" stroke-linejoin="round"/>
+        <g transform="translate(12.5 12.5) scale(0.95)" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></g></svg>
+      <span>Contattaci su WhatsApp: <b id="wa_num"></b></span>
+    </div>
+    <div class="c" id="c_social">
+      <span class="loghi">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="11" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="24" r="8.6" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="35" cy="13" r="2.6" fill="#fff"/></svg>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#fff"/><path d="M26.6 44.8V30.2h4.9l.8-5.7h-5.7v-3.6c0-1.6.5-2.8 2.8-2.8h3v-5.1c-.5-.1-2.3-.2-4.4-.2-4.3 0-7.3 2.6-7.3 7.5v4.2H16v5.7h4.7v14.6" fill="#1877F2"/></svg>
+      </span>
+      <span>Seguici su Instagram e Facebook: <b>Sconti Roma</b></span>
+    </div>
+  </div>
+</div>
+
+<div id="sub" class="abs"><span id="subtxt"></span></div>
+
+<script>
+const $ = id => document.getElementById(id);
+document.querySelectorAll('.ico').forEach(e => e.appendChild($('icona').content.cloneNode(true)));
+let D = null, MODE = 'v';
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const out = x => 1 - Math.pow(1 - clamp(x), 3);
+const ramp = (t, a, d) => clamp((t - a) / d);
+window.setMode = m => { MODE = m; document.body.className = m; };
+window.setup = d => { D = d; $('wa_num').textContent = d.whatsapp || '[numero]'; };
+function scena(t) { for (const [k, [a, b]] of Object.entries(D.scene)) if (t >= a && t < b) return k; return 'finale'; }
+const pop = (id, t0, t) => { const x = out(ramp(t, t0, 0.35)); $(id).style.opacity = x; $(id).style.transform = `translateY(${(1 - x) * 18}px) scale(${0.9 + 0.1 * x})`; };
+window.render = t => {
+  const S = D.scene, sw = $('screen').clientWidth, k = sw / 1170, vh = $('screen').clientHeight / k;
+  const sc = scena(t);
+  document.body.className = MODE + (sc === 'finale' ? ' fin' : '');
+  // sottotitolo corrente (nel gancio le parole sono già la grande scritta)
+  const s = D.sottotitoli.find(([a, b]) => t >= a && t < b) || D.sottotitoli[D.sottotitoli.length - 1];
+  $('subtxt').textContent = s[2];
+  $('gtxt').textContent = D.sottotitoli[0][2];
+  const subIn = out(ramp(t, s[0], 0.18));
+  $('sub').style.opacity = (sc !== 'gancio' ? 1 : 0) * (0.25 + 0.75 * subIn);
+  $('sub').style.transform = `translateY(${(1 - subIn) * 14}px)`;
+  // gancio
+  const gOut = ease(ramp(t, S.gancio[1] - 0.05, 0.4));
+  $('gancio').style.opacity = 1 - gOut; $('gancio').style.transform = `translateY(${-gOut * 120}px)`;
+  const gIn = out(ramp(t, 0, 0.5));
+  $('gtxt').style.transform = `scale(${0.92 + 0.08 * gIn})`; $('gtxt').style.opacity = gIn;
+  // telefono
+  const pIn = out(ramp(t, S.gancio[1] - 0.1, 0.55)), pOut = ease(ramp(t, S.finale[0] - 0.05, 0.45));
+  $('phone').style.transform = `translateY(${(1 - pIn) * 260 + pOut * 80}px) scale(${1 - pOut * 0.05})`;
+  $('phone').style.opacity = pIn * (1 - pOut);
+  // schermate
+  const L = { i_home: 0, i_offerte: 0, i_vuoto: 0, i_pieno: 0, i_grazie: 0 }, Y = { ...L };
+  const xf = (a, d) => ease(ramp(t, a, d));
+  Y.i_home = 260 * ease(ramp(t, S.home[0] + 0.2, S.home[1] - S.home[0]));
+  const [o0, o1] = D.offerte_scroll; Y.i_offerte = o0 + (o1 - o0) * ease(ramp(t, S.offerte[0] + 0.25, S.offerte[1] - S.offerte[0] - 0.2));
+  const M = D.modulo; const ys = M.scroll * ease(ramp(t, S.modulo[0] + 0.1, 0.9));
+  Y.i_vuoto = Y.i_pieno = ys; Y.i_grazie = M.scroll;
+  L.i_home = 1; L.i_offerte = xf(S.offerte[0] - 0.12, 0.3); L.i_vuoto = xf(S.modulo[0] - 0.12, 0.3); L.i_pieno = xf(M.pieno_da, 0.25); L.i_grazie = xf(M.grazie_da, 0.3);
+  for (const id in L) { const e = $(id); e.style.opacity = L[id]; e.style.transform = `translateY(${-Math.min(Y[id], e.naturalHeight - vh) * k}px)`; }
+  // finale: entra, poi le etichette si accendono con la voce e arrivano i contatti
+  const fIn = ease(ramp(t, S.finale[0] - 0.05, 0.45));
+  $('finale').style.opacity = fIn; $('finale').style.transform = `translateY(${(1 - fIn) * 60}px)`;
+  pop('c_lancio', D.etichette.lancio, t); pop('c_18', D.etichette.diciotto, t);
+  pop('c_wa', D.etichette.whatsapp, t); pop('c_social', D.etichette.social, t);
+};
+</script>
+</body></html>

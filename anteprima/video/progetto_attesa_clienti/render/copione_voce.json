@@ -1,0 +1,25 @@
+{
+  "nota": "Tempi in secondi sulla voce voce_16s.mp3 (16,43 s). Tagli dei sottotitoli sulle pause trovate con silencedetect (silenzi.py, soglia -30 dB, 0,07 s); le parole sono quelle esatte della voce. Il numero WhatsApp non è qui: lo aggiunge prepara.py da CONTATTO_WHATSAPP.",
+  "durata": 16.5,
+  "sottotitoli": [
+    [0.00, 1.87, "Stai cercando sconti vicino a te?"],
+    [1.87, 3.35, "Sta arrivando Sconti Roma:"],
+    [3.35, 6.58, "l'app che raccoglie le offerte dei negozi di Roma e dintorni."],
+    [6.58, 8.04, "Niente da scaricare per ora:"],
+    [8.04, 10.75, "lasci la tua email e ti avvisiamo noi appena si parte."],
+    [10.75, 12.68, "È gratuita nella fase di lancio,"],
+    [12.68, 14.50, "ed è per chi ha almeno diciotto anni."],
+    [14.50, 16.50, "Sconti Roma, stiamo arrivando."]
+  ],
+  "scene": {
+    "gancio": [0.00, 1.87],
+    "home": [1.87, 3.35],
+    "offerte": [3.35, 6.58],
+    "modulo": [6.58, 10.75],
+    "finale": [10.75, 16.50]
+  },
+  "etichette": { "lancio": 10.85, "diciotto": 12.75, "whatsapp": 13.6, "social": 14.3 },
+  "modulo": { "pieno_da": 8.55, "grazie_da": 9.75, "scroll": 1180 },
+  "offerte_scroll": [0, 2700],
+  "url": "https://scontiroma.it/?fonte=video-attesa"
+}
