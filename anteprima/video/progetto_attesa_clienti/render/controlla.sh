@@ -7,8 +7,8 @@ for f in "$EXP"/*.mp4; do
   echo "$(basename "$f"): $(ffprobe -v error -show_entries format=duration,size -of csv=p=0 "$f")"
 done
 ffmpeg -hide_banner -i "$EXP/sconti_roma_attesa_verticale_1080x1920.mp4" -af loudnorm=print_format=summary -f null - 2>&1 | grep -E "Input Integrated|Input True Peak"
-# 0,2 inizio | 1,7 / 2,3 gancio→home | 3,2 / 3,9 home→offerte | 6,4 / 7,3 offerte→modulo | 9,0 email | 10,2 grazie | 11,3 finale | 13,0 18+ | 16,3 fine (contatti)
-T="0.2 1.7 2.3 3.2 3.9 6.4 7.3 9.0 10.2 11.3 13.0 16.3"
+# 0,2 inizio | 1,7 / 2,3 gancio→home | 3,2 / 3,9 home→offerte | 6,4 / 7,0 offerte→modulo | 7,8 email | 8,8 grazie | 9,8 finale | 11,6 18+ | 15,3 fine (contatti)
+T="0.2 1.7 2.3 3.2 3.9 6.4 7.0 7.8 8.8 9.8 11.6 15.3"
 for M in verticale_1080x1920 quadrato_1080x1080; do
   rm -rf "$OUT/chk_$M"; mkdir -p "$OUT/chk_$M"; i=0
   for t in $T; do ffmpeg -hide_banner -loglevel error -y -ss "$t" -i "$EXP/sconti_roma_attesa_$M.mp4" -frames:v 1 "$OUT/chk_$M/$(printf %02d $i).jpg"; i=$((i+1)); done

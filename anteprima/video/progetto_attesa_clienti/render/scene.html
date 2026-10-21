@@ -28,6 +28,10 @@ body.q { height: 1080px; }
 #gancio, #finale { inset: 0; color: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; }
 #gancio { justify-content: center; }
 #gancio h1 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.04; }
+#g_social { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+#g_social svg { display: block; flex: none; } #g_social b { font-weight: 800; }
+body.v #g_social { bottom: 150px; gap: 12px; font-size: 35px; } body.v #g_social svg { width: 52px; height: 52px; }
+body.q #g_social { bottom: 70px; gap: 12px; font-size: 30px; } body.q #g_social svg { width: 44px; height: 44px; }
 #finale h2 { font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
 .alto { display: flex; align-items: center; }
 .col { display: flex; flex-direction: column; }
@@ -122,6 +126,12 @@ body.q .contatti .c { gap: 14px; } body.q .contatti svg { width: 46px; height: 4
   <div class="tile ico"></div>
   <div class="nome">Sconti Roma</div>
   <h1 id="gtxt"></h1>
+  <!-- In basso, piccolo, senza coprire il titolo (richiesta del titolare, 21/10) -->
+  <div id="g_social">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="11" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="24" r="8.6" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="35" cy="13" r="2.6" fill="#fff"/></svg>
+    <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#fff"/><path d="M26.6 44.8V30.2h4.9l.8-5.7h-5.7v-3.6c0-1.6.5-2.8 2.8-2.8h3v-5.1c-.5-.1-2.3-.2-4.4-.2-4.3 0-7.3 2.6-7.3 7.5v4.2H16v5.7h4.7v14.6" fill="#1877F2"/></svg>
+    <span>Seguici su Instagram e Facebook: <b>Sconti Roma</b></span>
+  </div>
 </div>
 
 <!-- Finale: assorbe anche «gratuita nella fase di lancio» e «18+» (le due etichette si accendono quando la voce le dice). -->
