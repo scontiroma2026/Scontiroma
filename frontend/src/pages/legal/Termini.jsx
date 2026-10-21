@@ -76,8 +76,10 @@ export default function Termini() {
             <strong>Dopo la fase di lancio</strong>: €4,99 al mese + IVA.
           </li>
           <li>
-            <strong>Preavviso di 30 giorni</strong> prima della fine della fase
-            di lancio e di qualsiasi variazione di prezzo.
+            <strong>Avvisi per email</strong>: ti scriviamo al giorno 30 della
+            prova, 7 giorni prima del primo pagamento e 3 giorni prima di ogni
+            addebito mensile. Le variazioni di prezzo ti vengono comunicate
+            con almeno 30 giorni di preavviso.
           </li>
           <li>
             <strong>Nessun addebito senza la tua conferma</strong>: il

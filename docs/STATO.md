@@ -233,3 +233,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: lista aggiornata; testi legali affidati all'agente dopo il reset (21/10); video nell'app: resta com'è
 - 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
+- 21/10: punto 3 chiuso dal titolare (calendario di #169): Termini 3.2 e Privacy allineati (email al giorno 30, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito; 30 giorni solo per le variazioni di prezzo). Testo legale in PR, non unito.

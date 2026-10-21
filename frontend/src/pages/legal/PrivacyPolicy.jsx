@@ -137,7 +137,7 @@ export default function PrivacyPolicy() {
                 <td className="border border-border p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-border p-2">Invio email transazionali (benvenuto, recupero password, promemoria di scadenza delle offerte)</td>
+                <td className="border border-border p-2">Invio email transazionali (benvenuto, recupero password, promemoria di scadenza delle offerte e, per i commercianti, avvisi su prova e pagamenti: giorno 30 della prova, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito, mancato pagamento, ricevuta)</td>
                 <td className="border border-border p-2">Esecuzione del contratto (art. 6.1.b GDPR)</td>
               </tr>
               <tr>
