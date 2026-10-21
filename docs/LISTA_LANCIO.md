@@ -1,4 +1,4 @@
-# Lista «pronto al lancio» di Sconti Roma (aggiornata il 18/10)
+# Lista «pronto al lancio» di Sconti Roma (aggiornata il 21/10)
 
 **Regola del titolare (14/10, rettificata il 15/10):** quando chiede «la lista», si risponde con questa lista **numerata** dopo aver controllato lo stato reale delle PR. I punti chiusi (✅) si **cancellano** dalla lista e la lista si **rinumera**; la storia di ciò che è stato fatto resta in `docs/STATO.md`. I punti nuovi si aggiungono, quelli cambiati si rettificano. Questo file è la fonte: va tenuto allineato.
 
@@ -33,10 +33,11 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 ## C. Dopo il lancio, con calma
 21. ⬜ **Un abbonamento per commerciante**, anche con più punti vendita (serve gestire più punti vendita in un account; adattare i Termini).
 22. ⬜ **Prova gratuita ripetuta** e Partita IVA con più punti vendita (impronta anti-abuso, segnalazioni in admin).
-23. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità, punti e raccolte a premio.
-24. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
-25. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
-26. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); serve il permesso a cancellare. Le PR superate restano da decidere una alla volta: #103, #81, #100, #101.
+23. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità (le raccolte a premio sono al punto 24).
+24. ⏳ **Sconticini (raccolta a premio per negozio):** codice e specifica pronti in PR in bozza, tutto **spento** (`SCONTICINI_ENABLED=false`). Un sconto usato e verificato al banco = 1 sconticino; il negozio sceglie soglia e premio (a suo carico); alla soglia QR del premio monouso con scadenza. Bloccato da: regolamento (`docs/sconticini/REGOLAMENTO.md`) da chiudere, con la domanda 🔴 sulle operazioni a premio (D.P.R. 430/2001), e controllo del nome. Non accendere prima dell'OK del titolare.
+25. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
+26. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
+27. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); serve il permesso a cancellare. Le PR superate restano da decidere una alla volta: #103, #81, #100, #101.
 
 ## Decisioni del titolare (riferimento)
 Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.

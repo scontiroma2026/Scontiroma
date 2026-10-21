@@ -29,6 +29,7 @@ import AdminClienti from "@/components/admin/AdminClienti";
 import AdminEconomics from "@/components/admin/AdminEconomics";
 import AdminTraffic from "@/components/admin/AdminTraffic";
 import AdminNextMonth from "@/components/admin/AdminNextMonth";
+import AdminSconticini from "@/components/admin/AdminSconticini";
 
 /**
  * AdminDashboard — orchestratore snello.
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState("launch");
   // Economics e Abbonati servono solo con l'abbonamento cliente acceso
   // (CLIENT_SUBSCRIPTION_REQUIRED): nella fase di lancio restano nascoste, non cancellate.
-  const { subscriptionRequired } = useAppConfig();
+  const { subscriptionRequired, sconticini } = useAppConfig();
   const [selectedMerchantId, setSelectedMerchantId] = useState(null);
   const [discountsOpen, setDiscountsOpen] = useState(false);
 
@@ -138,6 +139,7 @@ export default function AdminDashboard() {
     ["appfeedback", "Feedback App"],
     ["segnalazioni", "Segnalazioni"],
     ["clienti", "Clienti"],
+    ...(sconticini ? [["sconticini", "Sconticini"]] : []),
     ["log", "Log completo"],
   ].filter(([k]) => subscriptionRequired || !SUBSCRIPTION_TABS.includes(k));
 
@@ -209,6 +211,7 @@ export default function AdminDashboard() {
       {tab === "appfeedback" && <AdminAppFeedback hdrs={hdrs} />}
       {tab === "segnalazioni" && <AdminSegnalazioni hdrs={hdrs} />}
       {tab === "clienti" && <AdminClienti hdrs={hdrs} />}
+      {tab === "sconticini" && sconticini && <AdminSconticini hdrs={hdrs} />}
       {tab === "economics" && subscriptionRequired && <AdminEconomics hdrs={hdrs} />}
       {tab === "traffic" && <AdminTraffic hdrs={hdrs} />}
       {tab === "log" && <AdminLog recent={stats.recent} />}

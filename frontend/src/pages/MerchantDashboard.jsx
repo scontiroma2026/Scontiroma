@@ -6,6 +6,7 @@ import { QrCode, TicketPercent, ChevronRight, Eye, Pencil, PlusCircle } from "lu
 import GdprSection from "@/components/GdprSection";
 import MerchantReferralCard from "@/components/MerchantReferralCard";
 import ShopCodeCard from "@/components/ShopCodeCard";
+import MerchantSconticini from "@/components/MerchantSconticini";
 import ShopDescriptionCard from "@/components/ShopDescriptionCard";
 import MerchantHours from "@/components/MerchantHours";
 import NextOfferCard from "@/components/NextOfferCard";
@@ -185,6 +186,8 @@ export default function MerchantDashboard() {
             </div>
 
             <ShopCodeCard />
+
+            <MerchantSconticini />
 
             <div id="qr" className="scroll-mt-24">
               <MerchantReferralCard />

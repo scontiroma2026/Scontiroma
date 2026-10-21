@@ -59,3 +59,9 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 - Visura camerale (punto 3 della lista) e dati dell'azienda.
 - Scelte già fatte da riportare: Stripe e PayPal titolari autonomi; 12 mesi per la lista d'attesa; Partita IVA obbligatoria; nessuna spunta foto per ora; «disdici quando vuoi» con effetto a fine mese.
 - Decisione sul nome e sul logo (punto 15 della lista), per non pagare un deposito sul nome sbagliato.
+
+## 6. Sconticini (nuovo, 21/10; dettagli: `docs/sconticini/REGOLAMENTO.md`, parte D)
+26. 🔴 Gli Sconticini sono un'operazione a premio (D.P.R. 430/2001)? Chi è il promotore (negozio o Sconti Roma), serve cauzione, quale comunicazione al Ministero, per quanto si conserva il regolamento?
+27. 🔴 Premio sotto forma di **sconto** su un acquisto futuro: cambia la qualificazione?
+28. 🟠 Email al negozio con «Mario R.» e aggiornamento della Privacy (proposta C1), clausole nei Termini clienti e negozi (C2, C3).
+29. 🟠 Nome «Sconticini»: controllo anteriorità e uso come nome di funzione.

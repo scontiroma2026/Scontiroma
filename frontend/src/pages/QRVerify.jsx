@@ -104,7 +104,7 @@ export default function QRVerify() {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ac-verdeBg text-ac-verde">
             <Check size={36} strokeWidth={3} aria-hidden="true" />
           </div>
-          <h1 className="mt-4 font-serif text-[34px] font-bold leading-tight">Codice valido</h1>
+          <h1 className="mt-4 font-serif text-[34px] font-bold leading-tight">{anteprima.premio ? "Premio valido" : "Codice valido"}</h1>
           <p data-testid="qr-offerta" className="mt-2 font-serif text-xl font-bold leading-snug">{anteprima.discount_title}</p>
           <p className="mt-0.5 text-base font-semibold text-ac-soft">{anteprima.shop_name}</p>
 
@@ -170,7 +170,7 @@ export default function QRVerify() {
                 disabled={invio || (!telefono && codice.length !== 4)}
                 className="ac-grad ac-ombra-rosa mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl px-6 text-lg font-extrabold text-white transition active:scale-[0.99] disabled:opacity-50 disabled:shadow-none"
               >
-                {invio ? "Un attimo…" : "Applica sconto"}
+                {invio ? "Un attimo…" : anteprima.premio ? "Consegna il premio" : "Applica sconto"}
               </button>
 
               {telefono && (
@@ -199,11 +199,11 @@ export default function QRVerify() {
         <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-2xl" style={{animation: "pop 0.4s ease-out"}}>
           <Check size={72} className="text-emerald-600" strokeWidth={3} />
         </div>
-        <h1 className="font-serif text-[44px] tracking-tight sm:text-6xl sm:tracking-normal text-white text-center leading-none">SCONTO<br/>VALIDO</h1>
+        <h1 className="font-serif text-[44px] tracking-tight sm:text-6xl sm:tracking-normal text-white text-center leading-none">{result.premio ? "PREMIO" : "SCONTO"}<br/>VALIDO</h1>
         <div className="mt-8 w-full max-w-sm rounded-3xl bg-black/20 backdrop-blur-md border border-white/40 p-6 text-white text-center">
           <div className="text-xs uppercase tracking-[0.2em] text-white">Cliente</div>
           <div className="mt-1 font-serif text-3xl">{result.client_name}</div>
-          <div className="mt-4 text-xs uppercase tracking-[0.2em] text-white">Sconto</div>
+          <div className="mt-4 text-xs uppercase tracking-[0.2em] text-white">{result.premio ? "Premio" : "Sconto"}</div>
           <div className="mt-1 font-serif text-2xl leading-tight">{result.discount_title}</div>
           <div className="mt-1 text-lg text-white">{result.shop_name}</div>
           {result.discount_percent && (
@@ -211,7 +211,17 @@ export default function QRVerify() {
               −{result.discount_percent}%
             </div>
           )}
-          {result.max_uses > 1 && (
+          {result.sconticino && (
+            <div data-testid="sconticino-riepilogo" className="mt-4 rounded-xl bg-black/25 px-4 py-2.5 text-sm">
+              <div className="font-bold">
+                {result.sconticino.sbloccato
+                  ? `Sconticino ${result.sconticino.soglia} su ${result.sconticino.soglia}: premio sbloccato`
+                  : `Sconticino ${result.sconticino.count} su ${result.sconticino.soglia}`}
+              </div>
+              {result.sconticino.sbloccato && <div className="mt-0.5 text-xs text-white">{result.sconticino.premio}</div>}
+            </div>
+          )}
+          {!result.premio && result.max_uses > 1 && (
             <div data-testid="usage-summary" className="mt-4 rounded-xl bg-black/25 px-4 py-2.5 text-sm">
               <div className="font-bold">Utilizzo {result.use_number} di {result.max_uses} questo mese</div>
               {result.prev_used_at && (
@@ -223,7 +233,7 @@ export default function QRVerify() {
           )}
         </div>
         <p className="mt-6 text-sm text-white">
-          Applica lo sconto e concludi il pagamento.
+          {result.premio ? "Consegna il premio al cliente: è offerto dal negozio." : "Applica lo sconto e concludi il pagamento."}
         </p>
         {ricordato && (
           <p data-testid="telefono-salvato" className="mt-1 text-xs text-white">
