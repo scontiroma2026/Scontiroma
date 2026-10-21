@@ -14,6 +14,7 @@ import RenewalBanner from "@/components/RenewalBanner";
 import PagamentoNegozio from "@/components/PagamentoNegozio";
 import ReclamoCard from "@/components/ReclamoCard";
 import MerchantInsights from "@/components/MerchantInsights";
+import NotifichePushUtente from "@/components/NotifichePushUtente";
 import { Scheda, Pillola, StatoVuoto, ErroreRiprova, Scheletro, CLASSE_PRIMARIO, CLASSE_BASE_SECONDARIO, CLASSE_BORDO } from "@/components/AreaUI";
 import { useAppConfig } from "@/context/ConfigContext";
 
@@ -189,6 +190,9 @@ export default function MerchantDashboard() {
             <div id="qr" className="scroll-mt-24">
               <MerchantReferralCard />
             </div>
+
+            {/* Compare solo con PUSH_UTENTI_ENABLED acceso sul server */}
+            <NotifichePushUtente ruolo="merchant" />
 
             <ReclamoCard />
 
