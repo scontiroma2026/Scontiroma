@@ -233,3 +233,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: lista aggiornata; testi legali affidati all'agente dopo il reset (21/10); video nell'app: resta com'è
 - 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
+- 21/10: locandina stampabile dell'app (A5): aggiunti WhatsApp 352 247 3526 e «Seguici su Instagram e Facebook – Sconti Roma» con i loghi
