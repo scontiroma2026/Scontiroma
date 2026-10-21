@@ -234,3 +234,8 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
 - 21/10: video di attesa per i clienti (15,5 s, voce del titolare già registrata a -16 LUFS senza la frase «Niente da scaricare per ora:», tagliata con dissolvenza; nessuna musica; social anche in apertura): riprese reali del sito locale con negozi finti, sottotitoli a tempo con silencedetect, finale con QR `?fonte=video-attesa`, «18+», «Gratuita nella fase di lancio», WhatsApp e «Seguici su Instagram e Facebook: Sconti Roma». Script in `anteprima/video/progetto_attesa_clienti/`, video nella cartella privata; non pubblicato. Ramo `claude/video-attesa-clienti`
+- 21/10: volantino clienti, cartolina negozi e locandina negozio (stile app-chiara) con WhatsApp 352 247 3526 e Instagram/Facebook «Sconti Roma» con loghi (bozza, PR)
+- 21/10: locandina stampabile dell'app (A5): aggiunti WhatsApp 352 247 3526 e «Seguici su Instagram e Facebook – Sconti Roma» con i loghi
+- 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
+- 21/10: nuovo indirizzo /api/salute-db (GET e HEAD) per il monitor UptimeRobot del database: 200 se MongoDB risponde, 503 se no
+- 21/10: locandina A4: in stampa PDF tolti i riquadri grigi dietro WhatsApp/social e la barretta su «offerta»

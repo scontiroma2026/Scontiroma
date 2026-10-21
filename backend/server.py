@@ -6636,6 +6636,17 @@ async def root():
     return {"message": "Sconti Roma API", "status": "ok", "version": APP_VERSION}
 
 
+@api.api_route("/salute-db", methods=["GET", "HEAD"])
+async def salute_db():
+    # Controllo online del database (UptimeRobot, GET o HEAD): 200 se MongoDB risponde, 503 se no.
+    # Non legge né restituisce dati.
+    try:
+        await db.command("ping")
+    except Exception:
+        return JSONResponse(status_code=503, content={"database": "non raggiungibile"})
+    return {"database": "ok"}
+
+
 # ---------- AI description assistant RIMOSSO su richiesta utente (2026-08-27) ----------
 
 
