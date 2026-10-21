@@ -10,4 +10,4 @@ description: Regole per testi, grafiche, volantini, video e post pubblici di Sco
 - Font con licenza libera (Google Fonts) e licenze nel repository.
 - Prima di usare crediti ElevenLabs o altri a pagamento: chiedere il permesso al titolare.
 - I messaggi commerciali seguono le regole della skill `legale-documenti` (consenso/opt-out).
-- **Chiusura di video, volantini e post** (decisione del titolare del 21/10): sempre «Contattaci su WhatsApp: 352 247 3526» e «Seguici su Instagram e Facebook: @sconti.roma», con i loghi ufficiali di WhatsApp, Instagram e Facebook. Sono l'unica eccezione al divieto di loghi di terzi: usare i glifi ufficiali senza modificarli, solo per indicare i nostri profili.
+- **Chiusura di video, volantini e post** (decisione del titolare del 21/10): sempre «Contattaci su WhatsApp: 352 247 3526» e «Seguici su Instagram e Facebook: Sconti Roma» (su Instagram il nome utente è sconti.roma), con i loghi ufficiali di WhatsApp, Instagram e Facebook. Sono l'unica eccezione al divieto di loghi di terzi: usare i glifi ufficiali senza modificarli, solo per indicare i nostri profili.
