@@ -15,6 +15,8 @@ export function calcolaVoci({ user, discount, next }) {
 
   if (!discount) {
     voci.push({ id: "offerta", tono: "rosa", to: "/merchant/discount", titolo: "Pubblica la tua offerta", sotto: "Così i clienti possono trovarla" });
+  } else if (discount.approval_status === "awaiting_merchant") {  // «Ci pensiamo noi»: preparata da noi
+    voci.push({ id: "preparata", tono: "rosa", to: "/merchant/discount", titolo: "Conferma l'offerta preparata da noi", sotto: "Controllala e confermala, oppure modificala" });
   } else if (discount.approval_status === "rejected") {
     voci.push({ id: "rifiutata", tono: "rosa", to: "/merchant/discount", titolo: "Correggi l'offerta rifiutata", sotto: "Modificala e rimandala in revisione" });
   } else if (!foto && !discount.locked_this_month) {  // approvata e bloccata fino al 1° del mese: la foto non si può cambiare
