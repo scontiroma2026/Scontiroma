@@ -1,6 +1,5 @@
 """Notifiche push per commercianti e clienti (interruttore PUSH_UTENTI_ENABLED, predefinito spento).
 pywebpush è sostituito da una funzione finta: nessuna chiamata di rete. Database locale (mongomock)."""
-import asyncio
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -54,7 +53,7 @@ async def iscrivi(c, h, fine):
 
 
 async def attendi():
-    await asyncio.sleep(0.15)  # lascia finire le notifiche in background
+    await server.attendi_lavori_in_background()  # aspetta la fine delle notifiche in background
 
 
 async def negozio_con_offerta(zona="Garbatella", titolo="Menù del giorno", stato="approved"):

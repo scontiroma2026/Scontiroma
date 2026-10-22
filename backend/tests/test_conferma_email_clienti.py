@@ -74,14 +74,14 @@ def run(body):
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             await body(c)
+            await server.attendi_lavori_in_background()  # nessun lavoro in background lasciato a metà
     asyncio.run(main())
 
 
 async def iscrivi(c, email, **extra):
     r = await c.post("/api/auth/register", json={**CLIENTE, "email": email, **extra})
     assert r.status_code == 200, r.text
-    await asyncio.sleep(0)  # lascia partire l'email in background
-    await asyncio.sleep(0)
+    await server.attendi_lavori_in_background()  # l'email parte in background
     return r
 
 
@@ -133,8 +133,7 @@ def test_login_bloccato_finche_non_conferma_poi_entra(_ambiente):
         token = _ambiente["conferma"][-1][1]
         ok = await c.post("/api/auth/confirm-email", json={"token": token})
         assert ok.status_code == 200 and ok.json() == {"ok": True}
-        await asyncio.sleep(0)
-        await asyncio.sleep(0)
+        await server.attendi_lavori_in_background()
         assert _ambiente["benvenuto"] == 1
         doc = await server.db.users.find_one({"email": "a@example.com"})
         assert doc["email_confirmed"] is True
