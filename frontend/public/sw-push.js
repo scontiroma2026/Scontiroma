@@ -1,7 +1,7 @@
-/* Service worker delle notifiche push per l'admin di Sconti Roma.
- * Fa solo due cose: mostra le notifiche che arrivano dal server e, al tocco, apre /admin.
- * Non intercetta le richieste del sito (nessun "fetch"): il resto del sito funziona come prima.
- * Viene registrato solo quando l'admin tocca «Attiva notifiche». */
+/* Service worker delle notifiche push di Sconti Roma (admin, commercianti e clienti).
+ * Fa solo due cose: mostra le notifiche che arrivano dal server e, al tocco, apre la pagina indicata
+ * (es. /admin, /merchant/dashboard, /discounts/<id>). Non intercetta le richieste del sito (nessun "fetch").
+ * Viene registrato solo quando qualcuno tocca «Attiva notifiche». */
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -12,8 +12,8 @@ self.addEventListener("activate", (event) => {
 });
 
 function percorsoSicuro(url) {
-  // Solo indirizzi interni al sito (es. "/admin"); qualsiasi altra cosa porta a /admin.
-  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") ? url : "/admin";
+  // Solo indirizzi interni al sito (es. "/admin"); qualsiasi altra cosa porta alla home.
+  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\") ? url : "/";
 }
 
 self.addEventListener("push", (event) => {
