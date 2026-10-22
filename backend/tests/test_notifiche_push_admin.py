@@ -61,7 +61,7 @@ async def admin_master(c):
     uid, h = await nuovo_utente("admin")
     m = await c.post("/api/admin/verify-master", json={"password": MASTER}, headers=h)
     assert m.status_code == 200, m.text
-    return uid, {**h, "X-Admin-Master": m.json()["token"]}
+    return uid, {**h, "X-Admin-Master": m.cookies["admin_master_token"]}
 
 
 def iscrizione(fine="telefono"):

@@ -140,7 +140,7 @@ def test_nessuna_risposta_contiene_campi_riservati(monkeypatch):
         await server.db.admin_security.delete_many({})
         m = await c.post("/api/admin/verify-master", json={"password": MASTER}, headers=admin["h"])
         assert m.status_code == 200, m.text
-        admin_h = {**admin["h"], "X-Admin-Master": m.json()["token"]}
+        admin_h = {**admin["h"], "X-Admin-Master": m.cookies["admin_master_token"]}
 
         hashes = [u["password_hash"] async for u in server.db.users.find({}, {"password_hash": 1})]
         params = {"discount_id": did, "merchant_id": merchant["id"], "rid": rid, "archivio_id": "inesistente", "codice": "ZZZZZ"}

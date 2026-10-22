@@ -72,7 +72,7 @@ async def admin(c):
     await server.db.users.insert_one({"id": uid, "email": f"a.{uid[:6]}@example.com", "role": "admin", "name": "A"})
     h = {"Authorization": f"Bearer {server.create_token(uid, 'x@example.com')}"}
     m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=h)
-    return {**h, "X-Admin-Master": m.json()["token"]}
+    return {**h, "X-Admin-Master": m.cookies["admin_master_token"]}
 
 
 def test_codice_stabile_breve_e_non_ambiguo():

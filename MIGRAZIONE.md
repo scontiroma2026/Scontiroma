@@ -161,7 +161,7 @@ Obiettivo: stare tranquilli su affidabilità, dati, pagamenti ed email. Costo in
 ### Pagamenti veri
 - [ ] **Stripe**: attiva l'account (dati aziendali e IBAN), passa alla modalità **Live**, crea un nuovo webhook Live (stesso indirizzo ed eventi della Fase 5) e aggiorna in Render `STRIPE_SECRET_KEY` (`sk_live_…`) e `STRIPE_WEBHOOK_SECRET`.
 - [ ] **PayPal**: crea l'app **Live**, il webhook Live e aggiorna `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID` e `PAYPAL_MODE=live`.
-- [ ] Un abbonamento vero da 2,99 € fatto da te, poi disdetto, per verificare tutto il giro.
+- [ ] (Solo se un giorno si riaccendono i pagamenti dei clienti, oggi spenti) un abbonamento vero fatto da te, poi disdetto, per verificare tutto il giro.
 
 ### Sicurezza
 - [ ] In Render imposta `CSRF_ORIGIN_MODE=enforce`, dopo aver controllato nei log di qualche giorno che non compaiano righe `[csrf] Origin non riconosciuto` per richieste legittime.
