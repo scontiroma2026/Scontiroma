@@ -821,3 +821,82 @@ async def send_waitlist_launch_notice(to: str, uid: str, utoken: str) -> Optiona
 {_piede_lista_attesa(uid, utoken)}
 """
     return await _send(to, f"{BRAND} è online", _shell(inner))
+
+
+# ---------- «Ci pensiamo noi»: offerta preparata da Sconti Roma, da confermare ----------
+def _foto_per_email(url: str) -> str:
+    """Solo foto raggiungibili da un programma di posta: indirizzi https o le foto della libreria
+    (percorsi «/esempi/...» del sito, resi assoluti). Le foto caricate dal telefono (data:) no:
+    molti programmi di posta le bloccano; si vedono nella pagina di conferma."""
+    u = str(url or "").strip()
+    if u.startswith("/") and not u.startswith("//"):
+        return f"{APP_URL}{u}"
+    return u if u.startswith("https://") or u.startswith("http://") else ""
+
+
+def _riga(etichetta: str, valore) -> str:
+    if valore in (None, ""):
+        return ""
+    return (f'<tr><td style="padding:6px 12px 6px 0;color:#a1a1aa;vertical-align:top;white-space:nowrap">{etichetta}</td>'
+            f'<td style="padding:6px 0;color:#fff">{_esc(valore)}</td></tr>')
+
+
+async def send_ci_pensiamo_noi(to: str, name: str, shop_name: str, offerta: dict, link_conferma: str,
+                               link_modifica: str, testo_responsabilita: str, giorni: int) -> Optional[str]:
+    """Al commerciante: l'offerta che abbiamo inserito per lui (servizio gratuito «Ci pensiamo noi»), con il
+    riepilogo completo, la frase di responsabilità e i pulsanti «Confermo» e «Voglio modificarla».
+    Il token compare solo nel link: mai nei log (vedi `_send`)."""
+    nome = _esc((name or "").strip() or "ciao")
+    negozio = _esc(shop_name)
+    foto = [f for f in (_foto_per_email(u) for u in (offerta.get("image_urls") or [])) if f]
+    foto_html = "".join(
+        f'<img src="{_esc(u)}" alt="Foto dell\'offerta" width="496" style="display:block;width:100%;max-width:496px;height:auto;border-radius:12px;margin:0 0 12px">'
+        for u in foto[:3])
+    n_foto = len(offerta.get("image_urls") or [])
+    nota_foto = ""
+    if n_foto and len(foto) < n_foto:
+        nota_foto = f'<p style="margin:0 0 12px;color:#a1a1aa;font-size:13px">Foto in tutto: {n_foto}. Le vedi tutte aprendo «Confermo».</p>'
+    elif not n_foto:
+        nota_foto = '<p style="margin:0 0 12px;color:#a1a1aa;font-size:13px">Nessuna foto: puoi aggiungerla con «Voglio modificarla».</p>'
+    prezzi = ""
+    try:
+        prezzi = f"{_eur(float(offerta['discounted_price']))} invece di {_eur(float(offerta['original_price']))}"
+    except Exception:
+        pass
+    usi = offerta.get("max_uses_per_month") or 1
+    righe = "".join([
+        _riga("Titolo", offerta.get("title")),
+        _riga("Descrizione", offerta.get("description")),
+        _riga("Prezzo", prezzi),
+        _riga("Giorni e orari", offerta.get("validity_info")),
+        _riga("Utilizzi al mese", "1 volta per cliente" if usi == 1 else f"{usi} volte per cliente"),
+        _riga("Condizioni", offerta.get("terms")),
+        _riga("Prenotazione", offerta.get("plan_ahead")),
+        _riga("Altre informazioni", offerta.get("additional_info")),
+    ])
+    btn_secondario = "display:inline-block;padding:12px 24px;border:2px solid #00E5FF;color:#00E5FF;text-decoration:none;font-weight:700;border-radius:9999px"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Non hai tempo? Ci pensiamo noi.</h2>
+<p style="{_P}">Ciao {nome},</p>
+<p style="{_P}">come d'accordo, abbiamo preparato l'offerta di <strong>{negozio}</strong> su {BRAND}. Il servizio è <strong>gratuito</strong>. Controllala qui sotto: l'offerta non è ancora visibile ai clienti e lo diventa solo dopo la tua conferma e il nostro controllo.</p>
+{foto_html}{nota_foto}
+<table role="presentation" style="margin:0 0 16px;font-size:14px;width:100%">{righe}</table>
+<div style="background:#1a1a20;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin:16px 0;color:#fde68a">{_esc(testo_responsabilita)}</div>
+<div style="text-align:center;margin:24px 0 12px"><a href="{link_conferma}" style="{_BTN}">Confermo</a></div>
+<div style="text-align:center;margin:0 0 24px"><a href="{link_modifica}" style="{btn_secondario}">Voglio modificarla</a></div>
+<p style="margin:0 0 8px;color:#a1a1aa;font-size:13px">Il link «Confermo» vale {int(giorni)} giorni e si usa una volta sola; non serve entrare con la password. «Voglio modificarla» ti chiede di entrare nella tua area commercianti.</p>
+<p style="margin:0 0 8px;color:#a1a1aa;font-size:13px">Non ti va bene o non ci hai chiesto nulla? Non fare niente: senza conferma l'offerta non viene pubblicata. Puoi anche rispondere a questa email o scriverci a <a href="mailto:info@scontiroma.it" style="color:#a1a1aa">info@scontiroma.it</a>.</p>
+<p style="margin:16px 0 0;color:#71717a;font-size:12px;word-break:break-all">Link diretto per confermare: {link_conferma}</p>
+"""
+    return await _send(to, f"Abbiamo preparato la tua offerta: confermala — {BRAND}", _shell(inner))
+
+
+async def send_admin_offerta_confermata(to: str, shop_name: str, title: str) -> Optional[str]:
+    """Avviso all'admin: il negozio ha confermato l'offerta preparata con «Ci pensiamo noi»."""
+    negozio = _esc(shop_name or "Un negozio")
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il negozio {negozio} ha confermato l'offerta</h2>
+<p style="{_P}">L'offerta <strong style="color:#00E5FF">"{_esc(title)}"</strong>, preparata con «Ci pensiamo noi», è stata confermata dal negozio ed è ora in revisione.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Approva o rifiuta</a></div>
+"""
+    return await _send(to, f"Il negozio {shop_name or 'negozio'} ha confermato l'offerta", _shell(inner))

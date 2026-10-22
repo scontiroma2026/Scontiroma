@@ -12,6 +12,7 @@ import PhotoGallery from "@/components/PhotoGallery";
 import ArchivioOfferte from "@/components/ArchivioOfferte";
 import { Scheda, TONI, ErroreRiprova, Scheletro } from "@/components/AreaUI";
 import RiquadroBozza from "@/components/RiquadroBozza";
+import BannerOffertaPreparata from "@/components/BannerOffertaPreparata";
 import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
 
 const EMPTY_FORM = {
@@ -269,6 +270,9 @@ export default function MerchantDiscount() {
         )}
 
         {/* ---- Banner offerta corrente ---- */}
+        {!isNext && status === "awaiting_merchant" && (
+          <BannerOffertaPreparata conModifica={false} onConfermata={() => load(mode)} />
+        )}
         {!isNext && status === "pending" && (
           <Avviso testid="banner-pending" tono="ambra" icona={<Clock size={20} />} titolo="Offerta in fase di revisione">
             Sarà attiva a breve dopo l'approvazione dell'amministratore. Nel frattempo puoi modificarla liberamente.
@@ -465,6 +469,7 @@ export default function MerchantDiscount() {
                     : nextOffer ? `Aggiorna offerta di ${monthLabel} (torna in revisione)` : `Invia offerta di ${monthLabel} (in revisione)`)
                   : (readOnly ? <><Lock size={16} aria-hidden="true" /> Modifiche bloccate questo mese</>
                     : loading ? "Salvataggio…"
+                    : status === "awaiting_merchant" ? "Salva le mie modifiche e invia in revisione"
                     : existing ? "Aggiorna e ri-invia in revisione" : "Pubblica (in revisione)")}
               </button>
             </form>

@@ -4,10 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil, KeyRound } from "lucide-react";
+import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil, KeyRound, Clock } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
+import CiPensiamoNoiDialog from "@/components/admin/CiPensiamoNoiDialog";
 
 /**
  * Tab "Negozi" — tabella gestione commercianti & sconti con azioni inline
@@ -27,6 +28,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
   const [daRifiutare, setDaRifiutare] = useState(null);
+  const [ciPensiamoNoi, setCiPensiamoNoi] = useState(null); // negozio per cui prepariamo l'offerta
 
   const needle = q.trim().toLowerCase();
   const filteredMerchants = needle
@@ -208,6 +210,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             onDelDiscount={() => delDiscount(m.discount_id, m.shop_name)}
             onDelMerchant={() => del(m)}
             onViewDiscounts={() => onViewDiscounts?.(m.id)}
+            onCiPensiamoNoi={() => setCiPensiamoNoi(m)}
           />
         ))}
       </div>
@@ -220,6 +223,10 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
           busy={busy}
         />
       )}
+      {ciPensiamoNoi && (
+        <CiPensiamoNoiDialog merchant={ciPensiamoNoi} hdrs={hdrs} onChiudi={() => setCiPensiamoNoi(null)}
+          onSalvata={() => { setCiPensiamoNoi(null); onRefresh(); }} />
+      )}
       <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={rejectInline} />
     </Card>
   );
@@ -227,6 +234,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
 
 const STATO_OFFERTA = {
   pending: { testo: "In attesa di approvazione", cls: "bg-amber-400/15 text-amber-800 border-amber-400/40" },
+  awaiting_merchant: { testo: "In attesa di conferma del negozio", cls: "bg-sky-400/15 text-sky-800 border-sky-400/40" },
   approved: { testo: "Approvata", cls: "bg-emerald-400/15 text-emerald-700 border-emerald-400/40" },
   rejected: { testo: "Rifiutata", cls: "bg-red-500/15 text-red-700 border-red-500/40" },
   expired: { testo: "Scaduta", cls: "bg-muted text-muted-foreground border-border" },
@@ -266,9 +274,12 @@ function MerchantRow({
   onStartEdit, onSaveEdit, onCancelEdit,
   onToggleApprove, onTogglePagato, onToggleDiscountActive,
   onApproveInline, onRejectInline, onOpenDiscountEdit,
-  onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts,
+  onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts, onCiPensiamoNoi,
 }) {
   const stato = STATO_OFFERTA[m.discount_approval] || STATO_OFFERTA.approved;
+  const daConfermare = m.discount_approval === "awaiting_merchant";
+  // «Ci pensiamo noi»: si può preparare l'offerta se il negozio non ne ha una in revisione o approvata
+  const puoPreparare = !m.has_discount || ["awaiting_merchant", "rejected", "expired"].includes(m.discount_approval);
   return (
     <div data-testid={`admin-merchant-${m.id}`} className={`rounded-2xl border p-4 ${m.approved ? "border-border bg-muted" : "border-red-500/40 bg-red-500/5"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -342,16 +353,23 @@ function MerchantRow({
                   <Azione testid={`inline-reject-${m.discount_id}`} onClick={onRejectInline} icon={X} tono="rosso">Rifiuta</Azione>
                 </>
               )}
-              <Azione testid={`edit-discount-${m.discount_id}`} onClick={onOpenDiscountEdit} icon={Pencil}>Modifica</Azione>
+              {!daConfermare && <Azione testid={`edit-discount-${m.discount_id}`} onClick={onOpenDiscountEdit} icon={Pencil}>Modifica</Azione>}
               <Azione testid={`toggle-discount-${m.discount_id}`} onClick={onToggleDiscountActive} icon={m.discount_active ? EyeOff : Eye} tono="giallo">
                 {m.discount_active ? "Nascondi" : "Rendi visibile"}
               </Azione>
-              <Azione testid={`admin-force-edit-${m.discount_id}`} onClick={onForceEdit} icon={Unlock}>Permetti modifica al commerciante</Azione>
+              {!daConfermare && <Azione testid={`admin-force-edit-${m.discount_id}`} onClick={onForceEdit} icon={Unlock}>Permetti modifica al commerciante</Azione>}
               <Azione testid={`admin-delete-discount-${m.discount_id}`} onClick={onDelDiscount} icon={Trash2} tono="rosso">Elimina offerta</Azione>
             </div>
           </>
         ) : (
           <p className="mt-1 text-xs text-muted-foreground">Nessuna offerta caricata.</p>
+        )}
+        {puoPreparare && (
+          <div className="mt-3">
+            <Azione testid={`ci-pensiamo-noi-${m.id}`} onClick={onCiPensiamoNoi} icon={Clock} tono="verde">
+              {daConfermare ? "Ci pensiamo noi: modifica e rimanda l'email" : "Ci pensiamo noi: crea offerta"}
+            </Azione>
+          </div>
         )}
         <button type="button" data-testid={`view-discounts-${m.id}`} onClick={onViewDiscounts} className="mt-2 inline-flex min-h-11 items-center text-xs text-ciano underline-offset-2 hover:underline">
           Storico offerte →

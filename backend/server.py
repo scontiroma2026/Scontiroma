@@ -33,6 +33,8 @@ from urllib.parse import urlparse, urljoin
 import prova_pagamenti as pp
 from email_service import (
     mask_email,
+    send_ci_pensiamo_noi,
+    send_admin_offerta_confermata,
     send_password_reset,
     send_email_confirmation,
     send_preferito_nuova_offerta,
@@ -2614,7 +2616,8 @@ async def list_discounts(zone: Optional[str] = None, category: Optional[str] = N
 @api.get("/discounts/{discount_id}")
 async def get_discount(discount_id: str):
     d = await db.discounts.find_one({"id": discount_id})
-    if not d:
+    # «Ci pensiamo noi»: l'offerta preparata da noi non si vede finché il negozio non la conferma
+    if not d or d.get("approval_status") == STATO_ATTESA_NEGOZIO:
         raise HTTPException(404, "Sconto non trovato")
     return {"discount": await enrich_discount(d)}
 
@@ -2921,6 +2924,12 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data["approved_at"] = None
         data["force_editable"] = False
         data["expired_at"] = None
+        if existing.get("approval_status") == STATO_ATTESA_NEGOZIO:
+            # «Ci pensiamo noi»: il negozio ha modificato e inviato lui l'offerta preparata da noi
+            data.update({"merchant_confirmed_at": now_iso, "merchant_confirm_version": None,
+                         "merchant_confirm_via": "modifica"})
+            await db.ci_pensiamo_noi_link.update_many({"discount_id": existing["id"], "used_at": None},
+                                                      {"$set": {"used_at": now_iso}})
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
         if existing.get("approval_status") != "pending":
@@ -5870,6 +5879,8 @@ async def _approva_offerta(discount_id: str, foto_scartate: Optional[list] = Non
 @api.post("/admin/discounts/{discount_id}/approve")
 async def admin_approve_discount(discount_id: str, payload: Optional[ApprovaIn] = Body(default=None), user: dict = Depends(require_admin_master)):
     d0 = await db.discounts.find_one({"id": discount_id})
+    if d0 and d0.get("approval_status") == STATO_ATTESA_NEGOZIO:
+        raise HTTPException(409, "Il negozio non ha ancora confermato l'offerta preparata da noi.")
     if d0:
         via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
         if not via["ok"]:
@@ -5938,6 +5949,9 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
 @api.post("/admin/discounts/{discount_id}/force-edit")
 async def admin_force_edit(discount_id: str, user: dict = Depends(require_admin_master)):
     """Admin override: allow merchant to modify a locked offer this month."""
+    d0 = await db.discounts.find_one({"id": discount_id}, {"approval_status": 1})
+    if d0 and d0.get("approval_status") == STATO_ATTESA_NEGOZIO:
+        raise HTTPException(409, "Il negozio non ha ancora confermato l'offerta preparata da noi.")
     result = await db.discounts.update_one({"id": discount_id},
         {"$set": {"force_editable": True, "approval_status": "pending"}})
     if result.matched_count == 0:
@@ -6189,6 +6203,201 @@ async def admin_delete_discount(discount_id: str, user: dict = Depends(require_a
     if result.deleted_count == 0:
         raise HTTPException(404, "Sconto non trovato")
     return {"ok": True}
+
+
+# ---------- «Ci pensiamo noi»: offerta preparata dall'admin, confermata dal negozio ----------
+# Decisione del titolare (18/10): per i negozi che hanno poco tempo l'offerta la inseriamo noi, gratis.
+# L'offerta nasce nello stato STATO_ATTESA_NEGOZIO: non si vede ai clienti, non conta come pubblicazione
+# e non avvia la prova. Il negozio la conferma con un link monouso (7 giorni, senza login) o dalla sua
+# dashboard; da lì segue il flusso normale «in revisione» -> approvazione dell'admin.
+# Della conferma si salvano solo data/ora e versione del testo: nessun IP, nessun dato del dispositivo.
+STATO_ATTESA_NEGOZIO = "awaiting_merchant"
+CPN_SCADENZA_GIORNI = 7
+CPN_TESTO_VERSIONE = "ci-pensiamo-noi-2026-10-22"
+CPN_TESTO_CONFERMA = ("Confermando dichiari che i dati dell'offerta sono corretti e te ne assumi la responsabilità, "
+                      "come se l'avessi inserita tu.")
+# Stati dell'offerta attuale che l'admin può sostituire con una preparata da noi: mai un'offerta in
+# revisione (l'ha inviata il negozio) o approvata (è online o bloccata per il mese).
+_CPN_SOSTITUIBILI = (STATO_ATTESA_NEGOZIO, "rejected", "expired")
+_CPN_CAMPI_OFFERTA = ("title", "description", "original_price", "discounted_price", "image_url", "image_urls",
+                      "terms", "plan_ahead", "validity_info", "additional_info", "max_uses_per_month")
+
+
+def _cpn_link(path: str) -> str:
+    return f"{_frontend_url() or 'http://localhost:3000'}{path}"
+
+
+def _cpn_offerta_pubblica(d: dict) -> dict:
+    """Solo i campi dell'offerta da far vedere al negozio nella pagina di conferma."""
+    out = {k: d.get(k) for k in _CPN_CAMPI_OFFERTA}
+    if not isinstance(out.get("image_urls"), list) or not out["image_urls"]:
+        out["image_urls"] = [d["image_url"]] if d.get("image_url") else []
+    try:
+        out["percent_off"] = round((d["original_price"] - d["discounted_price"]) / d["original_price"] * 100)
+    except Exception:
+        out["percent_off"] = 0
+    return out
+
+
+async def _cpn_puo_preparare(merchant_id: str) -> dict:
+    d = await db.discounts.find_one({"merchant_id": merchant_id})
+    if not d:
+        return {"ok": True, "motivo": "", "discount": None}
+    st = d.get("approval_status") or "approved"
+    if st in _CPN_SOSTITUIBILI:
+        return {"ok": True, "motivo": "", "discount": d}
+    motivo = ("Il negozio ha già un'offerta in revisione: approvala o rifiutala dalla scheda «Offerte in attesa»."
+              if st == "pending" else "Il negozio ha già un'offerta approvata per questo mese.")
+    return {"ok": False, "motivo": motivo, "discount": d}
+
+
+async def _cpn_conferma(d: dict, via: str) -> Optional[dict]:
+    """Il negozio conferma l'offerta preparata: passa «in revisione» (poi approvazione dell'admin; in
+    pre-lancio resta in attesa fino ad «Approva tutte»). Ritorna l'offerta aggiornata, None se nel
+    frattempo non era più da confermare (due tocchi insieme, modifica, nuova versione dell'admin)."""
+    ora = datetime.now(timezone.utc).isoformat()
+    res = await db.discounts.update_one(
+        {"id": d["id"], "approval_status": STATO_ATTESA_NEGOZIO, "prepared_at": d.get("prepared_at")},
+        {"$set": {"approval_status": "pending", "approval_note": "", "updated_at": ora,
+                  "merchant_confirmed_at": ora, "merchant_confirm_version": CPN_TESTO_VERSIONE,
+                  "merchant_confirm_via": via}})
+    if res.modified_count != 1:
+        return None
+    # Prova della conferma: solo data/ora, versione del testo e da dove (link o dashboard). Niente IP.
+    await db.conferme_offerta.insert_one({
+        "id": str(uuid.uuid4()), "merchant_id": d["merchant_id"], "discount_id": d["id"],
+        "prepared_at": d.get("prepared_at"), "confirmed_at": ora, "testo_versione": CPN_TESTO_VERSIONE,
+        "via": via, "titolo": d.get("title") or ""})
+    # I link ancora in giro per questa offerta non servono più
+    await db.ci_pensiamo_noi_link.update_many({"discount_id": d["id"], "used_at": None}, {"$set": {"used_at": ora}})
+    m = await db.users.find_one({"id": d["merchant_id"]}) or {}
+    negozio = m.get("shop_name") or "Un negozio"
+    if _admin_notify_to():
+        _email_in_background(send_admin_offerta_confermata(_admin_notify_to(), negozio, d.get("title") or ""),
+                             "admin-ci-pensiamo-noi")
+    _push_admin_in_background(f"Il negozio {negozio} ha confermato l'offerta", d.get("title") or "", "admin-ci-pensiamo-noi")
+    return await db.discounts.find_one({"id": d["id"]})
+
+
+@api.get("/admin/merchants/{merchant_id}/ci-pensiamo-noi")
+async def admin_cpn_stato(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Per il modulo dell'admin: si può preparare l'offerta? Se ce n'è già una da confermare, i suoi dati."""
+    if not await db.users.find_one({"id": merchant_id, "role": "merchant"}, {"id": 1}):
+        raise HTTPException(404, "Commerciante non trovato")
+    v = await _cpn_puo_preparare(merchant_id)
+    d = v["discount"]
+    da_confermare = bool(d and d.get("approval_status") == STATO_ATTESA_NEGOZIO)
+    return {"ok": v["ok"], "motivo": v["motivo"],
+            "offerta": _cpn_offerta_pubblica(d) if da_confermare else None,
+            "inviata_at": d.get("prepared_at") if da_confermare else None}
+
+
+@api.post("/admin/merchants/{merchant_id}/ci-pensiamo-noi")
+async def admin_cpn_prepara(merchant_id: str, payload: DiscountIn, user: dict = Depends(require_admin_master)):
+    """L'admin inserisce l'offerta per conto del negozio (gratis) e gli manda l'email con «Confermo»."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
+        raise HTTPException(404, "Commerciante non trovato")
+    if not m.get("email"):
+        raise HTTPException(409, "Il negozio non ha un indirizzo email: non possiamo chiedergli la conferma.")
+    v = await _cpn_puo_preparare(merchant_id)
+    if not v["ok"]:
+        raise HTTPException(409, v["motivo"])
+    data = payload.cleaned()
+    if not data.get("title") or not data.get("description"):
+        raise HTTPException(422, "Titolo e descrizione sono obbligatori")
+    ora = datetime.now(timezone.utc)
+    data.update({
+        "active": True, "updated_at": ora.isoformat(),
+        "approval_status": STATO_ATTESA_NEGOZIO, "approval_note": "", "locked_month": None,
+        "approved_at": None, "published_at": None, "force_editable": False, "expired_at": None,
+        "prepared_by_admin": True, "prepared_at": ora.isoformat(),
+        "merchant_confirmed_at": None, "merchant_confirm_version": None, "merchant_confirm_via": None,
+    })
+    esistente = v["discount"]
+    if esistente:  # rifiutata o scaduta: è già nell'archivio; da confermare: si sostituisce
+        await db.discounts.update_one({"id": esistente["id"]}, {"$set": data})
+        did = esistente["id"]
+    else:
+        did = str(uuid.uuid4())
+        data.update({"id": did, "merchant_id": merchant_id, "created_at": ora.isoformat()})
+        await db.discounts.insert_one(dict(data))
+    # Un solo link valido per offerta: quello nuovo sostituisce i precedenti
+    await db.ci_pensiamo_noi_link.update_many({"discount_id": did, "used_at": None},
+                                              {"$set": {"used_at": ora.isoformat(), "sostituito": True}})
+    token = secrets.token_urlsafe(32)
+    scade = ora + timedelta(days=CPN_SCADENZA_GIORNI)
+    await db.ci_pensiamo_noi_link.insert_one({
+        "id": str(uuid.uuid4()), "discount_id": did, "merchant_id": merchant_id,
+        "token_hash": _hash_token_conferma(token), "created_at": ora.isoformat(),
+        "expires_at": scade.isoformat(), "used_at": None})
+    d = await db.discounts.find_one({"id": did})
+    inviata = await send_ci_pensiamo_noi(
+        m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio", _cpn_offerta_pubblica(d),
+        _cpn_link(f"/conferma-offerta?token={token}"), _cpn_link("/merchant/discount"),
+        CPN_TESTO_CONFERMA, CPN_SCADENZA_GIORNI)
+    return {"discount": await enrich_discount(d), "email_inviata": bool(inviata), "scade_il": scade.isoformat()}
+
+
+class CpnTokenIn(BaseModel):
+    token: str = Field(default="", max_length=200)
+
+
+async def _cpn_da_token(token: str):
+    """(link, offerta) dal token, oppure un errore 400 con codice: link_non_valido, link_usato, link_scaduto."""
+    token = (token or "").strip()
+    link = await db.ci_pensiamo_noi_link.find_one({"token_hash": _hash_token_conferma(token)}) if token else None
+    if not link:
+        raise HTTPException(400, {"code": "link_non_valido", "msg": "Questo link non è valido."})
+    if link.get("used_at"):
+        raise HTTPException(400, {"code": "link_usato", "msg": "Questo link è già stato usato: l'offerta è già confermata o ne è arrivata una versione nuova."})
+    try:
+        scaduto = datetime.fromisoformat(link.get("expires_at", "")) < datetime.now(timezone.utc)
+    except Exception:
+        scaduto = True
+    if scaduto:
+        raise HTTPException(400, {"code": "link_scaduto", "msg": "Questo link è scaduto (vale 7 giorni). Entra nell'area commercianti per confermare o modificare l'offerta, oppure scrivici."})
+    d = await db.discounts.find_one({"id": link["discount_id"], "merchant_id": link["merchant_id"]})
+    if not d or d.get("approval_status") != STATO_ATTESA_NEGOZIO:
+        raise HTTPException(400, {"code": "link_usato", "msg": "Questa offerta non è più da confermare."})
+    return link, d
+
+
+@api.post("/ci-pensiamo-noi/anteprima")
+async def cpn_anteprima(payload: CpnTokenIn):
+    """Pagina «Conferma la tua offerta» (senza login): riepilogo e testo da accettare. Non consuma il link."""
+    link, d = await _cpn_da_token(payload.token)
+    m = await db.users.find_one({"id": d["merchant_id"]}) or {}
+    return {"negozio": m.get("shop_name") or "", "offerta": _cpn_offerta_pubblica(d),
+            "testo_conferma": CPN_TESTO_CONFERMA, "testo_versione": CPN_TESTO_VERSIONE,
+            "scade_il": link.get("expires_at")}
+
+
+@api.post("/ci-pensiamo-noi/conferma")
+async def cpn_conferma_link(payload: CpnTokenIn):
+    """«Confermo» dal link dell'email: monouso, valido 7 giorni, senza login. Con POST dalla pagina dell'app
+    (un GET potrebbe essere aperto dagli antivirus della posta)."""
+    link, d = await _cpn_da_token(payload.token)
+    ora = datetime.now(timezone.utc).isoformat()
+    res = await db.ci_pensiamo_noi_link.update_one({"id": link["id"], "used_at": None}, {"$set": {"used_at": ora}})
+    if res.modified_count != 1:  # due tocchi insieme: ne vale uno solo
+        raise HTTPException(400, {"code": "link_usato", "msg": "Questo link è già stato usato."})
+    if not await _cpn_conferma(d, "link_email"):
+        raise HTTPException(400, {"code": "link_usato", "msg": "Questa offerta non è più da confermare."})
+    m = await db.users.find_one({"id": d["merchant_id"]}) or {}
+    return {"ok": True, "negozio": m.get("shop_name") or ""}
+
+
+@api.post("/merchants/me/discount/conferma-preparata")
+async def merchant_cpn_conferma(user: dict = Depends(require_merchant)):
+    """«Confermo» dalla dashboard del commerciante (già entrato con il suo account)."""
+    d = await db.discounts.find_one({"merchant_id": user["id"]})
+    if not d or d.get("approval_status") != STATO_ATTESA_NEGOZIO:
+        raise HTTPException(409, "Non c'è un'offerta preparata da confermare.")
+    d2 = await _cpn_conferma(d, "dashboard")
+    if not d2:
+        raise HTTPException(409, "Non c'è un'offerta preparata da confermare.")
+    return {"discount": await enrich_discount(d2)}
 
 
 # ---------- Seeding ----------
@@ -6641,6 +6850,7 @@ async def on_startup():
     await db.waitlist.create_index("email", unique=True)
     await db.waitlist.create_index("id", unique=True)
     await db.waitlist.create_index("confirm_token_hash", sparse=True)
+    await db.ci_pensiamo_noi_link.create_index("token_hash")
     # Garantisce idempotenza reale dei webhook di rinnovo (Stripe/PayPal possono
     # ri-consegnare lo stesso evento più volte): l'indice unique fa fallire a
     # livello DB il secondo insert concorrente, anche se il check applicativo
@@ -7463,9 +7673,10 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
     app_feedback = await db.app_feedback.find({"user_id": uid}, {"_id": 0}).to_list(length=None)
 
     # Merchant-specific
-    discounts, next_discounts, archive = [], [], []
+    discounts, next_discounts, archive, conferme = [], [], [], []
     if user.get("role") == "merchant":
-        discounts = await db.discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+        conferme = await db.conferme_offerta.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
+        discounts =await db.discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
         next_discounts = await db.next_discounts.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
         archive = await db.discounts_archive.find({"merchant_id": uid}, {"_id": 0}).to_list(length=None)
 
@@ -7483,6 +7694,7 @@ async def gdpr_export(user: dict = Depends(get_current_user)):
         "merchant_discounts": discounts,
         "merchant_next_discounts": next_discounts,
         "merchant_discounts_archive": archive,
+        "merchant_offer_confirmations": conferme,
     }
     return export_doc
 
@@ -7506,7 +7718,8 @@ async def _erase_user_data(user: dict) -> None:
 
     # 3. Se merchant: offerte (attuale, mese dopo, archivio) e recensioni ricevute
     if user.get("role") == "merchant":
-        for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews):
+        for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews,
+                     db.conferme_offerta, db.ci_pensiamo_noi_link):
             await coll.delete_many({"merchant_id": uid})
         await db.avvisi_preferiti.delete_many({"merchant_id": uid})
         await db.push_coda.delete_many({"merchant_id": uid})
