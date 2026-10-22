@@ -55,11 +55,13 @@ from email_service import (
     send_welcome_merchant,
     send_admin_new_merchant,
     send_admin_new_offer,
+    send_admin_new_client,
     send_account_deleted,
     send_waitlist_confirmation,
     send_waitlist_launch_notice,
 )
 import paypal_service
+from pywebpush import webpush, WebPushException
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Response, Body
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -678,6 +680,388 @@ def _email_in_background(coro, label: str) -> None:
     asyncio.create_task(run())
 
 
+# ---------- Notifiche push all'admin (Web Push standard, chiavi VAPID) ----------
+# Le chiavi VAPID arrivano da VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY se impostate; altrimenti il server ne
+# genera una coppia la prima volta e la salva in `config_push` (mai nel repository né nei log).
+VAPID_SUBJECT = "mailto:info@scontiroma.it"
+PUSH_TTL_SEC = 24 * 3600
+PUSH_ISCRIZIONI_MAX_PER_ADMIN = 10
+
+
+def _b64url(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def _genera_chiavi_vapid() -> dict:
+    """Nuova coppia P-256: pubblica «non compressa» e privata grezza (32 byte), entrambe base64url,
+    lo stesso formato di `web-push generate-vapid-keys`."""
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    priv = ec.generate_private_key(ec.SECP256R1())
+    raw_priv = priv.private_numbers().private_value.to_bytes(32, "big")
+    pub = priv.public_key().public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
+    return {"public_key": _b64url(pub), "private_key": _b64url(raw_priv)}
+
+
+async def _chiavi_vapid() -> dict:
+    """Chiavi VAPID da usare: env se presenti, altrimenti quelle salvate (generate una sola volta)."""
+    env_pub = os.environ.get("VAPID_PUBLIC_KEY", "").strip()
+    env_priv = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
+    if env_pub and env_priv:
+        return {"public_key": env_pub, "private_key": env_priv, "origine": "env"}
+    doc = await db.config_push.find_one({"key": "vapid"})
+    if not doc:
+        nuove = _genera_chiavi_vapid()
+        try:
+            # $setOnInsert: se due avvii generano insieme, vince la prima coppia salvata.
+            await db.config_push.update_one(
+                {"key": "vapid"},
+                {"$setOnInsert": {**nuove, "created_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True)
+        except DuplicateKeyError:
+            pass
+        doc = await db.config_push.find_one({"key": "vapid"})
+        logging.info("[push-admin] chiavi VAPID generate e salvate nel database")
+    return {"public_key": doc["public_key"], "private_key": doc["private_key"], "origine": "database"}
+
+
+async def _invia_push_admin(titolo: str, testo: str = "", url: str = "/admin", user_id: Optional[str] = None) -> dict:
+    """Manda una notifica a tutte le iscrizioni degli admin (o di un solo admin)."""
+    filtro_admin = {"role": "admin"}
+    if user_id:
+        filtro_admin["id"] = user_id
+    admin_ids = [u["id"] async for u in db.users.find(filtro_admin, {"_id": 0, "id": 1})]
+    if not admin_ids:
+        return {"inviate": 0, "rimosse": 0, "errori": 0}
+    iscrizioni = await db.admin_push_iscrizioni.find(
+        {"user_id": {"$in": admin_ids}}, {"_id": 0}).to_list(PUSH_ISCRIZIONI_MAX_PER_ADMIN * len(admin_ids))
+    return await _manda_push(db.admin_push_iscrizioni, iscrizioni, titolo, testo, url, "push-admin")
+
+
+async def _manda_push(collezione, iscrizioni: list, titolo: str, testo: str, url: str, etichetta: str) -> dict:
+    """Motore comune (admin, commercianti, clienti): stessa notifica a ogni iscrizione dell'elenco. Le scadute
+    (404/410) si cancellano dalla `collezione`; ogni altro errore va solo nei log, senza l'indirizzo dell'iscrizione."""
+    esito = {"inviate": 0, "rimosse": 0, "errori": 0}
+    if not iscrizioni:
+        return esito
+    chiavi = await _chiavi_vapid()
+    dati = _json.dumps({"title": titolo, "body": testo, "url": url}, ensure_ascii=False)
+    for s in iscrizioni:
+        info = {"endpoint": s["endpoint"], "keys": {"p256dh": s["p256dh"], "auth": s["auth"]}}
+        try:
+            # Claims nuovi a ogni invio: la libreria ci scrive dentro «aud» del servizio push.
+            await asyncio.to_thread(webpush, subscription_info=info, data=dati,
+                                    vapid_private_key=chiavi["private_key"],
+                                    vapid_claims={"sub": VAPID_SUBJECT}, ttl=PUSH_TTL_SEC, timeout=10)
+            esito["inviate"] += 1
+        except WebPushException as e:
+            stato = getattr(getattr(e, "response", None), "status_code", None)
+            if stato in (404, 410):
+                await collezione.delete_one({"endpoint": s["endpoint"]})
+                esito["rimosse"] += 1
+                logging.info(f"[{etichetta}] iscrizione scaduta ({stato}) cancellata")
+            else:
+                esito["errori"] += 1
+                logging.warning(f"[{etichetta}] non inviata (stato {stato})")
+        except Exception as e:
+            esito["errori"] += 1
+            logging.warning(f"[{etichetta}] non inviata: {type(e).__name__}")
+    return esito
+
+
+def _push_admin_in_background(titolo: str, testo: str = "", label: str = "push") -> None:
+    """Notifica all'admin senza far aspettare chi usa l'app; un errore finisce solo nei log."""
+    async def run():
+        try:
+            await _invia_push_admin(titolo, testo)
+        except Exception as e:
+            logging.warning(f"[push-admin:{label}] non inviata: {type(e).__name__}")
+    asyncio.create_task(run())
+
+
+def admin_email_nuovo_cliente_attiva() -> bool:
+    """Interruttore ADMIN_EMAIL_NUOVO_CLIENTE (predefinito acceso)."""
+    return os.environ.get("ADMIN_EMAIL_NUOVO_CLIENTE", "true").strip().lower() not in ("false", "0", "no", "off")
+
+
+def _avvisa_admin_nuovo_cliente() -> None:
+    """Nuovo cliente iscritto: notifica push ed email all'admin, entrambe SENZA dati del cliente."""
+    _push_admin_in_background("Nuovo cliente iscritto", "", "nuovo-cliente")
+    to = _admin_notify_to()
+    if not (to and admin_email_nuovo_cliente_attiva()):
+        return
+
+    async def email():
+        totale = await db.users.count_documents({"role": "client"})
+        quando = _rome_now().strftime("%d/%m/%Y alle %H:%M")
+        await send_admin_new_client(to, quando, totale)
+    _email_in_background(email(), "admin-nuovo-cliente")
+
+
+# ---------- Notifiche push per commercianti e clienti (interruttore PUSH_UTENTI_ENABLED) ----------
+# Stesse chiavi VAPID e stesso service worker (/sw-push.js) dell'admin. Interruttore SPENTO per impostazione
+# predefinita: gli indirizzi /api/push/* rispondono 404, il sito non mostra nulla e nessuna notifica parte.
+# Da accendere solo dopo l'aggiornamento di Privacy e Cookie. Nel testo delle notifiche mai dati personali.
+PUSH_ISCRIZIONI_MAX_PER_UTENTE = 10
+# Versione del testo dei consensi mostrato nel riquadro «Notifiche» del cliente: si salva con ogni scelta.
+PUSH_CONSENSO_VERSIONE = "2026-10-21"
+PUSH_PROMO_ORA_INIZIO = 9   # notifiche promozionali solo dalle 9:00 alle 21:00 (ora di Roma);
+PUSH_PROMO_ORA_FINE = 21    # fuori fascia restano in coda e partono dopo
+PUSH_CATEGORIE_CLIENTE = ("servizio", "offerte")
+
+
+def push_utenti_attivo() -> bool:
+    return os.environ.get("PUSH_UTENTI_ENABLED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _consenso_push(user: dict, categoria: str) -> bool:
+    return bool(((user.get("push_consenso") or {}).get(categoria) or {}).get("attivo"))
+
+
+def _breve(testo: str, n: int = 60) -> str:
+    testo = (testo or "").strip()
+    return testo if len(testo) <= n else testo[: n - 1].rstrip() + "…"
+
+
+async def _prenota_push(chiave: str, user_id: Optional[str], giorni: int = 60) -> bool:
+    """Prenotazione atomica: True solo la prima volta per quella chiave (due server insieme non mandano doppioni)."""
+    r = await db.push_inviati.update_one(
+        {"chiave": chiave},
+        {"$setOnInsert": {"chiave": chiave, "user_id": user_id,
+                          "expires_at": datetime.now(timezone.utc) + timedelta(days=giorni)}}, upsert=True)
+    return r.upserted_id is not None
+
+
+async def _invia_push_utente(user_id: str, titolo: str, testo: str = "", url: str = "/",
+                             categoria: str = "servizio") -> dict:
+    """Notifica a tutti i dispositivi di un commerciante o di un cliente. Il cliente la riceve solo con il consenso
+    di quella categoria («servizio» o «offerte»); il commerciante riceve solo notifiche di servizio."""
+    vuoto = {"inviate": 0, "rimosse": 0, "errori": 0}
+    if not push_utenti_attivo() or not user_id:
+        return vuoto
+    u = await db.users.find_one({"id": user_id}, {"_id": 0, "id": 1, "role": 1, "push_consenso": 1})
+    if not u or u.get("role") not in ("client", "merchant"):
+        return vuoto
+    if u["role"] == "client" and not _consenso_push(u, categoria):
+        return vuoto
+    if u["role"] == "merchant" and categoria != "servizio":
+        return vuoto
+    iscrizioni = await db.push_iscrizioni.find({"user_id": user_id}, {"_id": 0}).to_list(PUSH_ISCRIZIONI_MAX_PER_UTENTE)
+    return await _manda_push(db.push_iscrizioni, iscrizioni, titolo, testo, url, "push-utenti")
+
+
+def _push_utente_in_background(user_id: Optional[str], titolo: str, testo: str = "", url: str = "/",
+                               categoria: str = "servizio", label: str = "push") -> None:
+    """Come _invia_push_utente, senza far aspettare chi usa l'app; un errore finisce solo nei log."""
+    if not push_utenti_attivo() or not user_id:
+        return
+
+    async def run():
+        try:
+            await _invia_push_utente(user_id, titolo, testo, url, categoria)
+        except Exception as e:
+            logging.warning(f"[push-utenti:{label}] non inviata: {type(e).__name__}")
+    asyncio.create_task(run())
+
+
+def _push_esito_offerta(merchant_id: Optional[str], titolo_offerta: str, approvata: bool, mese_dopo: bool = False) -> None:
+    """Al commerciante: «Offerta approvata: …» o «Offerta da correggere: …» (il motivo resta nell'app e nell'email)."""
+    t = _breve(titolo_offerta) or "la tua offerta"
+    if approvata:
+        _push_utente_in_background(
+            merchant_id, f"Offerta approvata: {t}",
+            "Sarà online dal 1° del mese prossimo." if mese_dopo else "Ora i clienti la vedono su Sconti Roma.",
+            "/merchant/dashboard", label="offerta-approvata")
+    else:
+        _push_utente_in_background(
+            merchant_id, f"Offerta da correggere: {t}", "Apri Sconti Roma per vedere cosa cambiare.",
+            "/merchant/dashboard" if mese_dopo else "/merchant/discount", label="offerta-rifiutata")
+
+
+def _aree_della_zona(zona: Optional[str]) -> list:
+    """Aree del menu (le 16 zone) che comprendono la zona salvata sul negozio."""
+    return [v for v, _, _ in ZONE_AREE if _zona_corrisponde(zona, v)]
+
+
+async def _accoda_push_offerta(d: dict) -> int:
+    """Offerta appena online: mette in coda una notifica PROMOZIONALE per i clienti con il consenso «offerte»
+    che seguono il negozio (preferiti) o hanno scelto la sua zona. Una volta per cliente, negozio e mese."""
+    if not push_utenti_attivo():
+        return 0
+    mid = d.get("merchant_id")
+    m = await db.users.find_one({"id": mid, "role": "merchant"}, {"_id": 0, "id": 1, "zone": 1, "approved": 1}) if mid else None
+    if not m or m.get("approved") is False:
+        return 0
+    aree = _aree_della_zona(m.get("zone"))
+    condizioni = [{"preferiti": mid}]
+    if aree:
+        condizioni.append({"push_consenso.offerte.zone": {"$in": aree}})
+    iscritti = set(await db.push_iscrizioni.distinct("user_id"))
+    mese = current_month_key()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    accodate = 0
+    async for c in db.users.find({"role": "client", "push_consenso.offerte.attivo": True, "$or": condizioni},
+                                 {"_id": 0, "id": 1, "preferiti": 1}):
+        if c["id"] not in iscritti:
+            continue
+        if not await _prenota_push(f"promo:{c['id']}:{mid}:{mese}", c["id"], 40):
+            continue
+        await db.push_coda.insert_one({
+            "id": str(uuid.uuid4()), "user_id": c["id"], "merchant_id": mid, "discount_id": d.get("id"),
+            "tipo": "preferito" if mid in (c.get("preferiti") or []) else "zona", "creata_il": now_iso})
+        accodate += 1
+    return accodate
+
+
+async def _invia_coda_promozionale() -> dict:
+    """Svuota la coda delle notifiche promozionali: al massimo UNA al giorno per cliente e mai tra le 21:00 e
+    le 9:00 (ora di Roma). Più offerte in coda diventano una sola notifica; chi ha già ricevuto quella del
+    giorno resta in coda fino a domani. Consenso, offerta e negozio si ricontrollano al momento dell'invio."""
+    esito = {"inviate": 0, "rimandate": 0, "scartate": 0}
+    if not push_utenti_attivo():
+        return {**esito, "spento": True}
+    adesso = _rome_now()
+    if not (PUSH_PROMO_ORA_INIZIO <= adesso.hour < PUSH_PROMO_ORA_FINE):
+        return {**esito, "fuori_orario": True}
+    giorno = adesso.strftime("%Y-%m-%d")
+    sospesi = await _merchant_sospesi()
+    for uid in await db.push_coda.distinct("user_id"):
+        voci = await db.push_coda.find({"user_id": uid}, {"_id": 0}).sort("creata_il", 1).to_list(200)
+        ids = [v["id"] for v in voci]
+        c = await db.users.find_one({"id": uid, "role": "client"},
+                                    {"_id": 0, "id": 1, "preferiti": 1, "push_consenso": 1})
+        if not c or not _consenso_push(c, "offerte"):
+            await db.push_coda.delete_many({"id": {"$in": ids}})
+            esito["scartate"] += len(ids)
+            continue
+        aree_cliente = set(((c.get("push_consenso") or {}).get("offerte") or {}).get("zone") or [])
+        valide = []
+        for v in voci:
+            d = await db.discounts.find_one({"id": v.get("discount_id")}, {"_id": 0})
+            if not d or d.get("approval_status") != "approved" or d.get("active") is False \
+                    or d.get("merchant_id") in sospesi:
+                continue
+            m = await db.users.find_one({"id": d.get("merchant_id")}, {"_id": 0, "id": 1, "shop_name": 1, "zone": 1})
+            segue = d.get("merchant_id") in (c.get("preferiti") or [])
+            if m and (segue or aree_cliente & set(_aree_della_zona(m.get("zone")))):
+                valide.append((d, m, segue))
+        if not valide:
+            await db.push_coda.delete_many({"id": {"$in": ids}})
+            esito["scartate"] += len(ids)
+            continue
+        if not await _prenota_push(f"promo-giorno:{uid}:{giorno}", uid, 3):
+            esito["rimandate"] += 1  # già una oggi: resta in coda per domani
+            continue
+        if len(valide) == 1:
+            d, m, segue = valide[0]
+            titolo = "Nuova offerta da un negozio che segui" if segue else "Nuova offerta nella tua zona"
+            testo = _breve(f"{m.get('shop_name') or 'Un negozio'}: {d.get('title') or ''}", 110)
+            url = f"/discounts/{d['id']}"
+        else:
+            titolo = "Nuove offerte per te"
+            testo = f"{len(valide)} nuove offerte da negozi che segui o nella tua zona."
+            url = "/discounts"
+        await _invia_push_utente(uid, titolo, testo, url, "offerte")
+        await db.push_coda.delete_many({"id": {"$in": ids}})
+        esito["inviate"] += 1
+    return esito
+
+
+def _push_promo_in_background(d: dict) -> None:
+    """Accoda le notifiche promozionali per un'offerta appena online e prova subito a mandarle (se in fascia)."""
+    if not push_utenti_attivo():
+        return
+
+    async def run():
+        try:
+            if await _accoda_push_offerta(d):
+                await _invia_coda_promozionale()
+        except Exception as e:
+            logging.warning(f"[push-utenti:promo] non inviata: {type(e).__name__}")
+    asyncio.create_task(run())
+
+
+async def _run_push_offerte_in_scadenza() -> dict:
+    """Ogni giorno (10:05, Roma): «La tua offerta scade tra 3 giorni» ai commercianti con l'offerta online che
+    non hanno ancora caricato quella del mese dopo né scelto «Non rinnovo». Una sola volta per offerta e mese."""
+    if not push_utenti_attivo():
+        return {"spento": True, "inviate": 0}
+    oggi = _rome_now().date()
+    nm = next_month_key()
+    caricate = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
+    iscritti = set(await db.push_iscrizioni.distinct("user_id"))
+    inviate = 0
+    for d in await db.discounts.find({"approval_status": "approved", "active": True}, {"_id": 0}).to_list(None):
+        fino = _offerta_valida_fino_al(d)
+        if not fino or d.get("merchant_id") in caricate or d.get("merchant_id") not in iscritti:
+            continue
+        if (date.fromisoformat(fino) - oggi).days != 3:
+            continue
+        m = await db.users.find_one({"id": d.get("merchant_id")}, {"_id": 0, "id": 1, "no_renew_month": 1})
+        if not m or m.get("no_renew_month") == nm:
+            continue
+        if not await _prenota_push(f"scade3:{d['id']}:{fino}", d.get("merchant_id")):
+            continue
+        await _invia_push_utente(d["merchant_id"], "La tua offerta scade tra 3 giorni",
+                                 "Carica l'offerta del mese prossimo per restare visibile.", "/merchant/dashboard")
+        inviate += 1
+    return {"inviate": inviate}
+
+
+async def _run_push_riepilogo_commercianti() -> dict:
+    """Ogni sera (21:30, Roma): «Oggi X clienti hanno usato il tuo sconto», SOLO se X > 0. Mai una notifica per
+    ogni scansione, nessun nome. Una sola volta per negozio e giorno."""
+    if not push_utenti_attivo():
+        return {"spento": True, "inviate": 0}
+    giorno = _rome_now().strftime("%Y-%m-%d")
+    da = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    iscritti = set(await db.push_iscrizioni.distinct("user_id"))
+    conteggi: dict = {}
+    async for r in db.redemptions.find({"status": "redeemed", "redeemed_at": {"$gte": da}},
+                                       {"_id": 0, "merchant_id": 1, "redeemed_at": 1}):
+        if r.get("merchant_id") in iscritti and _rome_day(r.get("redeemed_at")) == giorno:
+            conteggi[r["merchant_id"]] = conteggi.get(r["merchant_id"], 0) + 1
+    inviate = 0
+    for mid, x in conteggi.items():
+        if x <= 0 or not await _prenota_push(f"riepilogo:{mid}:{giorno}", mid, 3):
+            continue
+        titolo = "Oggi 1 cliente ha usato il tuo sconto" if x == 1 else f"Oggi {x} clienti hanno usato il tuo sconto"
+        await _invia_push_utente(mid, titolo, "", "/merchant/dashboard")
+        inviate += 1
+    return {"inviate": inviate}
+
+
+async def _run_push_sconti_in_scadenza() -> dict:
+    """Penultimo giorno del mese (10:10, Roma): «Il tuo sconto scade domani» ai clienti con un QR generato e non
+    ancora usato (il codice vale solo nel mese in cui è nato). Notifica di servizio, una per cliente e mese."""
+    if not push_utenti_attivo():
+        return {"spento": True, "inviate": 0}
+    adesso = _rome_now()
+    ultimo = calendar.monthrange(adesso.year, adesso.month)[1]
+    if ultimo - adesso.day != 1:
+        return {"inviate": 0, "oggi_no": True}
+    mese = current_month_key()
+    sospesi = await _merchant_sospesi()
+    iscritti = set(await db.push_iscrizioni.distinct("user_id"))
+    gia = set()
+    inviate = 0
+    async for r in db.redemptions.find({"status": "pending", "month_key": mese},
+                                       {"_id": 0, "user_id": 1, "discount_id": 1, "merchant_id": 1}):
+        uid = r.get("user_id")
+        if uid not in iscritti or uid in gia or r.get("merchant_id") in sospesi:
+            continue
+        d = await db.discounts.find_one({"id": r.get("discount_id")}, {"_id": 0, "approval_status": 1, "active": 1})
+        if not d or d.get("approval_status") != "approved" or d.get("active") is False:
+            continue
+        gia.add(uid)
+        if not await _prenota_push(f"sconto-domani:{uid}:{mese}", uid):
+            continue
+        esito = await _invia_push_utente(uid, "Il tuo sconto scade domani",
+                                         "Hai un QR non ancora usato: vale fino a domani sera.", "/dashboard")
+        inviate += 1 if esito["inviate"] else 0
+    return {"inviate": inviate}
+
+
 # ---------- Offerta Mese Prossimo: helpers ----------
 NEXT_OFFER_WINDOW_DAYS = 7
 
@@ -865,6 +1249,8 @@ async def confirm_email(payload: ConfirmEmailIn):
     if res.modified_count != 1:  # due tocchi insieme: ne vale uno solo
         raise HTTPException(400, {"code": "link_non_valido", "msg": MSG_LINK_NON_VALIDO})
     _email_in_background(send_welcome_client(u["email"], u.get("name") or ""), "benvenuto-cliente")
+    if u.get("role") == "client":
+        _avvisa_admin_nuovo_cliente()
     return {"ok": True}
 
 
@@ -1013,12 +1399,16 @@ async def register(payload: RegisterIn, response: Response, request: Request):
         if _admin_notify_to():
             _email_in_background(send_admin_new_merchant(_admin_notify_to(), doc.get("shop_name") or "", doc.get("category") or "",
                                                          doc.get("zone") or "", email, doc.get("phone") or ""), "admin-nuovo-commerciante")
+        _push_admin_in_background(f"Nuovo commerciante: {doc.get('shop_name') or 'senza nome'}", "", "nuovo-commerciante")
     elif conferma_token:
         # Niente accesso finché non tocca il link; il benvenuto parte dopo la conferma.
         _email_in_background(send_email_confirmation(email, doc.get("name") or "", conferma_token), "conferma-email")
         return {"confirmation_required": True, "email": email, "message": MSG_CONFERMA_INVIATA}
     else:
         _email_in_background(send_welcome_client(email, doc.get("name") or ""), "benvenuto-cliente")
+        if payload.role == "client":
+            # Con la conferma dell'email accesa l'avviso parte solo dopo la conferma (niente avvisi per account mai attivati).
+            _avvisa_admin_nuovo_cliente()
 
     access = create_token(user_id, email, "access")
     refresh = create_token(user_id, email, "refresh")
@@ -2458,6 +2848,7 @@ def _avvisi_in_background(d: dict) -> None:
         except Exception as e:
             logging.warning(f"[preferiti] avvisi non inviati: {e}")
     asyncio.create_task(_invia())
+    _push_promo_in_background(d)  # notifiche push promozionali (solo con PUSH_UTENTI_ENABLED e consenso «offerte»)
 
 
 async def _avvisa_preferiti(d: dict) -> int:
@@ -2532,8 +2923,10 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data["expired_at"] = None
         await db.discounts.update_one({"id": existing["id"]}, {"$set": data})
         d = await db.discounts.find_one({"id": existing["id"]})
-        if existing.get("approval_status") != "pending" and _admin_notify_to():
-            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
+        if existing.get("approval_status") != "pending":
+            if _admin_notify_to():
+                _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
+            _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}", "", "admin-offerta")
     else:
         did = str(uuid.uuid4())
         doc = payload.cleaned()
@@ -2554,6 +2947,7 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         d = doc
         if _admin_notify_to():
             _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", d.get("title") or ""), "admin-offerta")
+        _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}", "", "admin-offerta")
     return {"discount": await enrich_discount(d)}
 
 
@@ -2589,9 +2983,12 @@ async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depend
     now_iso = datetime.now(timezone.utc).isoformat()
     data.update({"approval_status": "pending", "approval_note": "", "approved_at": None, "updated_at": now_iso})
     existing = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
-    if (not existing or existing.get("approval_status") != "pending") and _admin_notify_to():
-        _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
-                                                  window["next_month_label"]), "admin-offerta-mese-prossimo")
+    if not existing or existing.get("approval_status") != "pending":
+        if _admin_notify_to():
+            _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
+                                                      window["next_month_label"]), "admin-offerta-mese-prossimo")
+        _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}",
+                                  f"Mese di {window['next_month_label']}", "admin-offerta-mese-prossimo")
     if existing:
         await db.next_discounts.update_one({"id": existing["id"]}, {"$set": data})
         nd = await db.next_discounts.find_one({"id": existing["id"]})
@@ -4324,6 +4721,183 @@ def require_admin_master(request: Request, user: dict = Depends(require_admin)) 
     return user
 
 
+# ---------- Notifiche push sul telefono dell'admin ----------
+class PushChiaviIn(BaseModel):
+    p256dh: str = Field(..., min_length=10, max_length=200)
+    auth: str = Field(..., min_length=8, max_length=100)
+
+
+class PushIscrizioneIn(BaseModel):
+    endpoint: str = Field(..., min_length=10, max_length=1000)
+    keys: PushChiaviIn
+
+
+class PushDisiscrizioneIn(BaseModel):
+    endpoint: str = Field(..., min_length=10, max_length=1000)
+
+
+@api.get("/admin/push/chiave-pubblica")
+async def admin_push_chiave_pubblica(user: dict = Depends(require_admin_master)):
+    chiavi = await _chiavi_vapid()
+    iscritti = await db.admin_push_iscrizioni.count_documents({"user_id": user["id"]})
+    return {"public_key": chiavi["public_key"], "iscrizioni": iscritti}
+
+
+@api.post("/admin/push/iscrizione")
+async def admin_push_iscrizione(payload: PushIscrizioneIn, user: dict = Depends(require_admin_master)):
+    if not payload.endpoint.startswith("https://"):
+        raise HTTPException(422, "Iscrizione non valida")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    esistente = await db.admin_push_iscrizioni.find_one({"endpoint": payload.endpoint})
+    if not esistente and await db.admin_push_iscrizioni.count_documents({"user_id": user["id"]}) >= PUSH_ISCRIZIONI_MAX_PER_ADMIN:
+        raise HTTPException(409, f"Hai già {PUSH_ISCRIZIONI_MAX_PER_ADMIN} dispositivi con le notifiche: disattivane uno prima.")
+    await db.admin_push_iscrizioni.update_one(
+        {"endpoint": payload.endpoint},
+        {"$set": {"user_id": user["id"], "p256dh": payload.keys.p256dh, "auth": payload.keys.auth, "updated_at": now_iso},
+         "$setOnInsert": {"created_at": now_iso}},
+        upsert=True)
+    return {"ok": True}
+
+
+@api.delete("/admin/push/iscrizione")
+async def admin_push_disiscrizione(payload: PushDisiscrizioneIn, user: dict = Depends(require_admin_master)):
+    res = await db.admin_push_iscrizioni.delete_one({"endpoint": payload.endpoint, "user_id": user["id"]})
+    return {"ok": True, "rimosse": res.deleted_count}
+
+
+@api.post("/admin/push/prova")
+async def admin_push_prova(user: dict = Depends(require_admin_master)):
+    if not await db.admin_push_iscrizioni.count_documents({"user_id": user["id"]}):
+        raise HTTPException(404, "Nessun dispositivo con le notifiche attive: tocca prima «Attiva notifiche».")
+    esito = await _invia_push_admin("Prova di Sconti Roma", "Le notifiche su questo telefono funzionano.", user_id=user["id"])
+    return {"ok": esito["inviate"] > 0, **esito}
+
+
+# ---------- Notifiche push di commercianti e clienti (ognuno solo per sé) ----------
+async def require_push_utente(request: Request) -> dict:
+    """Interruttore spento = l'indirizzo non esiste (404, anche senza accesso). Solo commercianti e clienti,
+    ognuno per sé: l'utente viene sempre dal token, mai dal corpo della richiesta."""
+    if not push_utenti_attivo():
+        raise HTTPException(404, "Not Found")
+    user = await get_current_user(request)
+    if user.get("role") not in ("client", "merchant"):
+        raise HTTPException(403, "Riservato a commercianti e clienti")
+    return user
+
+
+def require_push_cliente(user: dict = Depends(require_push_utente)) -> dict:
+    if user.get("role") != "client":
+        raise HTTPException(403, "Riservato ai clienti")
+    return user
+
+
+class PushConsensoIn(BaseModel):
+    servizio: bool = False
+    offerte: bool = False
+    zone: List[str] = Field(default_factory=list, max_length=len(ZONES))
+
+
+def _stato_consenso_push(user: dict) -> dict:
+    pc = user.get("push_consenso") or {}
+    return {"servizio": _consenso_push(user, "servizio"), "offerte": _consenso_push(user, "offerte"),
+            "zone": list((pc.get("offerte") or {}).get("zone") or [])}
+
+
+@api.get("/push/stato")
+async def push_stato(user: dict = Depends(require_push_utente)):
+    chiavi = await _chiavi_vapid()
+    out = {"public_key": chiavi["public_key"], "ruolo": user["role"],
+           "iscrizioni": await db.push_iscrizioni.count_documents({"user_id": user["id"]}),
+           "max_dispositivi": PUSH_ISCRIZIONI_MAX_PER_UTENTE}
+    if user["role"] == "client":
+        out["consenso"] = _stato_consenso_push(user)
+        out["versione_testo"] = PUSH_CONSENSO_VERSIONE
+    return out
+
+
+@api.post("/push/iscrizione")
+async def push_iscrizione(payload: PushIscrizioneIn, user: dict = Depends(require_push_utente)):
+    if not payload.endpoint.startswith("https://"):
+        raise HTTPException(422, "Iscrizione non valida")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    esistente = await db.push_iscrizioni.find_one({"endpoint": payload.endpoint}, {"_id": 0, "user_id": 1})
+    if (not esistente or esistente.get("user_id") != user["id"]) and \
+            await db.push_iscrizioni.count_documents({"user_id": user["id"]}) >= PUSH_ISCRIZIONI_MAX_PER_UTENTE:
+        raise HTTPException(409, f"Hai già {PUSH_ISCRIZIONI_MAX_PER_UTENTE} dispositivi con le notifiche: disattivane uno prima.")
+    # Stesso telefono usato prima da un altro account: l'iscrizione passa al nuovo (il vecchio non riceve più nulla qui).
+    await db.push_iscrizioni.update_one(
+        {"endpoint": payload.endpoint},
+        {"$set": {"user_id": user["id"], "ruolo": user["role"], "p256dh": payload.keys.p256dh,
+                  "auth": payload.keys.auth, "updated_at": now_iso},
+         "$setOnInsert": {"created_at": now_iso}},
+        upsert=True)
+    return {"ok": True}
+
+
+@api.delete("/push/iscrizione")
+async def push_disiscrizione(payload: PushDisiscrizioneIn, user: dict = Depends(require_push_utente)):
+    res = await db.push_iscrizioni.delete_one({"endpoint": payload.endpoint, "user_id": user["id"]})
+    return {"ok": True, "rimosse": res.deleted_count}
+
+
+@api.post("/push/prova")
+async def push_prova(user: dict = Depends(require_push_utente)):
+    if not await db.push_iscrizioni.count_documents({"user_id": user["id"]}):
+        raise HTTPException(404, "Nessun dispositivo con le notifiche attive: tocca prima «Attiva notifiche».")
+    iscrizioni = await db.push_iscrizioni.find({"user_id": user["id"]}, {"_id": 0}).to_list(PUSH_ISCRIZIONI_MAX_PER_UTENTE)
+    esito = await _manda_push(db.push_iscrizioni, iscrizioni, "Prova di Sconti Roma",
+                              "Le notifiche su questo telefono funzionano.",
+                              "/merchant/dashboard" if user["role"] == "merchant" else "/dashboard", "push-utenti")
+    return {"ok": esito["inviate"] > 0, **esito}
+
+
+@api.put("/push/consenso")
+async def push_consenso(payload: PushConsensoIn, user: dict = Depends(require_push_cliente)):
+    """Consensi SEPARATI del cliente: «servizio» e «offerte» (promozionale). Ogni categoria salva il proprio
+    momento e la versione del testo solo quando cambia. Revoca immediata: le offerte in coda si cancellano."""
+    zone = [z for z in dict.fromkeys(payload.zone) if z in ZONES]
+    if payload.offerte and not zone and not (user.get("preferiti") or []):
+        raise HTTPException(422, "Scegli almeno una zona (o segui un negozio con il cuore) per le notifiche sulle offerte.")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    attuale = _stato_consenso_push(user)
+    sets = {}
+    for cat in PUSH_CATEGORIE_CLIENTE:
+        nuovo = bool(getattr(payload, cat))
+        if nuovo != attuale[cat]:
+            sets[f"push_consenso.{cat}.attivo"] = nuovo
+            sets[f"push_consenso.{cat}.at"] = now_iso
+            sets[f"push_consenso.{cat}.versione_testo"] = PUSH_CONSENSO_VERSIONE
+            await db.consent_logs.insert_one({
+                "id": str(uuid.uuid4()), "user_id": user["id"], "action": f"push_{cat}_{'si' if nuovo else 'no'}",
+                "prefs": {"versione_testo": PUSH_CONSENSO_VERSIONE}, "timestamp": now_iso})
+    sets["push_consenso.offerte.zone"] = zone if payload.offerte else []
+    await db.users.update_one({"id": user["id"]}, {"$set": sets})
+    if not payload.offerte:
+        await db.push_coda.delete_many({"user_id": user["id"]})
+    u = await db.users.find_one({"id": user["id"]}, {"_id": 0, "push_consenso": 1})
+    return {"consenso": _stato_consenso_push(u or {}), "versione_testo": PUSH_CONSENSO_VERSIONE}
+
+
+@api.delete("/push/tutto")
+async def push_disattiva_tutto(user: dict = Depends(require_push_utente)):
+    """«Disattiva tutto»: toglie i consensi (cliente), svuota la coda e cancella le iscrizioni di TUTTI i suoi dispositivi."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if user["role"] == "client":
+        sets = {"push_consenso.offerte.zone": []}
+        attuale = _stato_consenso_push(user)
+        for cat in PUSH_CATEGORIE_CLIENTE:
+            if attuale[cat]:
+                sets.update({f"push_consenso.{cat}.attivo": False, f"push_consenso.{cat}.at": now_iso,
+                             f"push_consenso.{cat}.versione_testo": PUSH_CONSENSO_VERSIONE})
+                await db.consent_logs.insert_one({
+                    "id": str(uuid.uuid4()), "user_id": user["id"], "action": f"push_{cat}_no",
+                    "prefs": {"versione_testo": PUSH_CONSENSO_VERSIONE}, "timestamp": now_iso})
+        await db.users.update_one({"id": user["id"]}, {"$set": sets})
+    await db.push_coda.delete_many({"user_id": user["id"]})
+    res = await db.push_iscrizioni.delete_many({"user_id": user["id"]})
+    return {"ok": True, "rimosse": res.deleted_count}
+
+
 def _issue_master_cookie(response: Response, user_id: str) -> dict:
     exp = datetime.now(timezone.utc) + timedelta(minutes=ADMIN_MASTER_TTL_MIN)
     token = _sign_master(user_id, exp)
@@ -5287,6 +5861,7 @@ async def _approva_offerta(discount_id: str, foto_scartate: Optional[list] = Non
             await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", foto_scartate)
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
+    _push_esito_offerta(d.get("merchant_id"), d.get("title") or "", approvata=True)
     if d.get("active", True):
         _avvisi_in_background(d)
     return d
@@ -5355,6 +5930,8 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
             await send_merchant_rejected(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", motivo)
     except Exception as e:
         logging.warning(f"reject email failed: {e}")
+    if d_rif:  # nella notifica niente motivo: lo legge nell'app e nell'email
+        _push_esito_offerta(d_rif.get("merchant_id"), d_rif.get("title") or "", approvata=False)
     return {"ok": True}
 
 
@@ -5444,6 +6021,7 @@ async def admin_approve_next_offer(next_id: str, payload: Optional[ApprovaIn] = 
                                          m.get("shop_name") or "il tuo negozio", nd.get("title") or "", scartate)
     except Exception as e:
         logging.warning(f"next-offer approve email failed: {e}")
+    _push_esito_offerta(nd.get("merchant_id"), nd.get("title") or "", approvata=True, mese_dopo=True)
     return {"next_discount": _enrich_next(nd)}
 
 
@@ -5466,6 +6044,8 @@ async def admin_reject_next_offer(next_id: str, payload: RejectIn, user: dict = 
                                          nd.get("title") or "", motivo)
     except Exception as e:
         logging.warning(f"next-offer reject email failed: {e}")
+    if nd_rif:
+        _push_esito_offerta(nd_rif.get("merchant_id"), nd_rif.get("title") or "", approvata=False, mese_dopo=True)
     return {"ok": True}
 
 
@@ -6013,6 +6593,15 @@ def _start_scheduler() -> None:
         id="waitlist_retention_daily",
         replace_existing=True,
     )
+    # Notifiche push a commercianti e clienti: i lavori girano sempre ma non fanno nulla con PUSH_UTENTI_ENABLED spento.
+    _scheduler.add_job(_run_push_offerte_in_scadenza, CronTrigger(hour=10, minute=5, timezone="Europe/Rome"),
+                       id="push_offerte_in_scadenza", replace_existing=True, misfire_grace_time=3 * 3600, coalesce=True)
+    _scheduler.add_job(_run_push_sconti_in_scadenza, CronTrigger(hour=10, minute=10, timezone="Europe/Rome"),
+                       id="push_sconti_in_scadenza", replace_existing=True, misfire_grace_time=3 * 3600, coalesce=True)
+    _scheduler.add_job(_run_push_riepilogo_commercianti, CronTrigger(hour=21, minute=30, timezone="Europe/Rome"),
+                       id="push_riepilogo_commercianti", replace_existing=True, misfire_grace_time=3600, coalesce=True)
+    _scheduler.add_job(_invia_coda_promozionale, CronTrigger(hour="9-20", minute="*/15", timezone="Europe/Rome"),
+                       id="push_coda_promozionale", replace_existing=True, misfire_grace_time=600, coalesce=True)
     _scheduler.start()
     logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, next-offer reminders 09:30, rollover 1° 00:05 Europe/Rome")
 
@@ -6067,6 +6656,21 @@ async def on_startup():
     )
     await seed_data()
     await ensure_master_doc()
+    # Notifiche push all'admin: indici e chiavi VAPID (generate al primo avvio se non sono su Render).
+    try:
+        await db.config_push.create_index("key", unique=True)
+        await db.admin_push_iscrizioni.create_index("endpoint", unique=True)
+        await db.admin_push_iscrizioni.create_index("user_id")
+        # Commercianti e clienti (usate solo con PUSH_UTENTI_ENABLED acceso)
+        await db.push_iscrizioni.create_index("endpoint", unique=True)
+        await db.push_iscrizioni.create_index("user_id")
+        await db.push_coda.create_index("user_id")
+        await db.push_inviati.create_index("chiave", unique=True)
+        await db.push_inviati.create_index("expires_at", expireAfterSeconds=0)
+        chiavi = await _chiavi_vapid()
+        logging.info(f"[push-admin] chiavi VAPID pronte (origine: {chiavi['origine']})")
+    except Exception as e:
+        logging.error(f"[push-admin] preparazione fallita: {type(e).__name__}")
     # Migrazione sicura: chi era già iscritto è confermato (nessun utente esistente resta bloccato).
     # Idempotente; non tocca chi ha già il campo (anche i nuovi non confermati).
     try:
@@ -6894,7 +7498,8 @@ async def _erase_user_data(user: dict) -> None:
         await coll.update_many({"user_id": uid}, anon)
     # 2. Elimina tutto il resto collegato all'utente
     for coll in (db.redemptions, db.qr_scans, db.consent_logs, db.reviews,
-                 db.app_feedback, db.webauthn_challenges, db.avvisi_preferiti):
+                 db.app_feedback, db.webauthn_challenges, db.avvisi_preferiti,
+                 db.push_iscrizioni, db.push_coda, db.push_inviati):
         await coll.delete_many({"user_id": uid})
     if user.get("email"):
         await db.login_guard.delete_many({"key": _login_guard_key(user["email"].strip().lower())})
@@ -6904,6 +7509,7 @@ async def _erase_user_data(user: dict) -> None:
         for coll in (db.discounts, db.next_discounts, db.discounts_archive, db.reviews):
             await coll.delete_many({"merchant_id": uid})
         await db.avvisi_preferiti.delete_many({"merchant_id": uid})
+        await db.push_coda.delete_many({"merchant_id": uid})
         await db.scansioni_locandina.delete_many({"merchant_id": uid})
         # Sconti usati e scansioni QR fatti dai clienti presso questo negozio: senza il negozio
         # restavano orfani e continuavano a contare nelle statistiche dell'admin.

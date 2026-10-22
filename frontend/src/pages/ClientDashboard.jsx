@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, TicketCheck, Sparkles, Star, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
 import MyUsedDiscounts from "@/components/MyUsedDiscounts";
 import GdprSection from "@/components/GdprSection";
+import NotifichePushUtente from "@/components/NotifichePushUtente";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -152,6 +153,9 @@ export default function ClientDashboard() {
         <p className="text-sm text-muted-foreground mb-4">Lascia una recensione: 5 stelle sull'app, un commento privato solo per l'amministratore.</p>
         <MyUsedDiscounts />
       </div>
+
+      {/* Compare solo con PUSH_UTENTI_ENABLED acceso sul server */}
+      <NotifichePushUtente ruolo="client" className="mt-12 max-w-2xl" />
 
       <div className="mt-12">
         <GdprSection />
