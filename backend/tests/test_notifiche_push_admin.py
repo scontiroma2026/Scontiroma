@@ -74,7 +74,7 @@ async def iscrivi_telefono(c, h, fine="telefono"):
 
 
 async def attendi():
-    await asyncio.sleep(0.15)  # lascia finire notifiche ed email in background
+    await server.attendi_lavori_in_background()  # aspetta la fine di notifiche ed email in background
 
 
 async def registra(c, role):
