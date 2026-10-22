@@ -672,6 +672,36 @@ def _admin_notify_to() -> str:
     return os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
 
 
+# Lavori che partono «in background» dopo la risposta (email, notifiche push, geocodifica, avviso di lancio).
+# asyncio tiene solo un riferimento debole ai task: senza questo insieme un lavoro può sparire a metà. L'insieme
+# serve anche ai test, che aspettano la fine dei lavori invece di indovinare un'attesa fissa (asyncio.sleep).
+_LAVORI_IN_BACKGROUND: set = set()
+
+
+def _in_background(coro) -> asyncio.Task:
+    """Fa partire `coro` senza far aspettare chi usa l'app e ne tiene il riferimento finché non finisce."""
+    task = asyncio.create_task(coro)
+    _LAVORI_IN_BACKGROUND.add(task)
+    task.add_done_callback(_LAVORI_IN_BACKGROUND.discard)
+    return task
+
+
+async def attendi_lavori_in_background(timeout: float = 15.0) -> None:
+    """Aspetta la fine dei lavori in background di questo event loop, compresi quelli fatti partire da altri lavori
+    (per esempio avvisi ai preferiti → notifiche promozionali). Oltre `timeout` secondi alza TimeoutError."""
+    loop = asyncio.get_running_loop()
+    scadenza = loop.time() + timeout
+    while True:
+        attivi = [t for t in list(_LAVORI_IN_BACKGROUND)
+                  if not t.done() and t.get_loop() is loop and t is not asyncio.current_task()]
+        if not attivi:
+            return
+        resto = scadenza - loop.time()
+        if resto <= 0:
+            raise TimeoutError(f"{len(attivi)} lavori in background non finiti dopo {timeout} s")
+        await asyncio.wait(attivi, timeout=resto)
+
+
 def _email_in_background(coro, label: str) -> None:
     """Invia un'email senza far aspettare chi usa l'app; un errore finisce solo nei log."""
     async def run():
@@ -679,7 +709,7 @@ def _email_in_background(coro, label: str) -> None:
             await coro
         except Exception as e:
             logging.warning(f"[email:{label}] non inviata: {e}")
-    asyncio.create_task(run())
+    _in_background(run())
 
 
 # ---------- Notifiche push all'admin (Web Push standard, chiavi VAPID) ----------
@@ -778,7 +808,7 @@ def _push_admin_in_background(titolo: str, testo: str = "", label: str = "push")
             await _invia_push_admin(titolo, testo)
         except Exception as e:
             logging.warning(f"[push-admin:{label}] non inviata: {type(e).__name__}")
-    asyncio.create_task(run())
+    _in_background(run())
 
 
 def admin_email_nuovo_cliente_attiva() -> bool:
@@ -863,7 +893,7 @@ def _push_utente_in_background(user_id: Optional[str], titolo: str, testo: str =
             await _invia_push_utente(user_id, titolo, testo, url, categoria)
         except Exception as e:
             logging.warning(f"[push-utenti:{label}] non inviata: {type(e).__name__}")
-    asyncio.create_task(run())
+    _in_background(run())
 
 
 def _push_esito_offerta(merchant_id: Optional[str], titolo_offerta: str, approvata: bool, mese_dopo: bool = False) -> None:
@@ -980,7 +1010,7 @@ def _push_promo_in_background(d: dict) -> None:
                 await _invia_coda_promozionale()
         except Exception as e:
             logging.warning(f"[push-utenti:promo] non inviata: {type(e).__name__}")
-    asyncio.create_task(run())
+    _in_background(run())
 
 
 async def _run_push_offerte_in_scadenza() -> dict:
@@ -1393,7 +1423,7 @@ async def register(payload: RegisterIn, response: Response, request: Request):
 
     # Geocoding fire-and-forget per il merchant (Nominatim può essere lento, non blocchiamo)
     if payload.role == "merchant" and doc.get("address"):
-        asyncio.create_task(geocode_and_save_merchant(user_id, doc["address"]))
+        _in_background(geocode_and_save_merchant(user_id, doc["address"]))
 
     # Email di benvenuto e, per i commercianti, avviso all'admin (in background)
     if payload.role == "merchant":
@@ -2850,7 +2880,7 @@ def _avvisi_in_background(d: dict) -> None:
                 logging.info(f"[preferiti] {n} avvisi per l'offerta {d.get('id', '')[:8]}")
         except Exception as e:
             logging.warning(f"[preferiti] avvisi non inviati: {e}")
-    asyncio.create_task(_invia())
+    _in_background(_invia())
     _push_promo_in_background(d)  # notifiche push promozionali (solo con PUSH_UTENTI_ENABLED e consenso «offerte»)
 
 
@@ -3066,7 +3096,7 @@ async def merchant_update_profile(payload: MerchantProfileIn, user: dict = Depen
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
         # Se l'indirizzo è cambiato, re-geocodifica in background
         if updates.get("address") and updates["address"] != user.get("address"):
-            asyncio.create_task(geocode_and_save_merchant(user["id"], updates["address"]))
+            _in_background(geocode_and_save_merchant(user["id"], updates["address"]))
     u = await db.users.find_one({"id": user["id"]})
     return {"user": sanitize_user(u)}
 
@@ -5228,7 +5258,7 @@ async def admin_lista_attesa_avviso(payload: AvvisoLancioIn, user: dict = Depend
     _avviso_stato["in_corso"] = True
     await db.settings.update_one({"key": "avviso_lancio_automatico"}, {"$set": {
         "key": "avviso_lancio_automatico", "attivo": True, "avviato_il": datetime.now(timezone.utc).isoformat()}}, upsert=True)
-    _avviso_task = asyncio.create_task(_avviso_in_background())
+    _avviso_task = _in_background(_avviso_in_background())
     return {"avviato": True, "da_inviare": da_inviare}
 
 

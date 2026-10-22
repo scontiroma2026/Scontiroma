@@ -1,6 +1,5 @@
 """Segnalazioni pubbliche, reclami dei commercianti, esito motivato e eliminazione dei clienti dall'admin.
 Database locale (mongomock), email finte."""
-import asyncio
 import uuid
 
 import pytest
@@ -60,7 +59,7 @@ def test_segnalazione_pubblica_e_esito(_email_finte):
         assert e.value.status_code == 422
         await server.admin_esito_segnalazione(sid, server.EsitoSegnalazioneIn(stato="accolta", motivazione="Verificato con il negozio."), {})
         assert (await server.db.segnalazioni.find_one({"id": sid}))["stato"] == "accolta"
-        await asyncio.sleep(0.05)  # le email partono in background
+        await server.attendi_lavori_in_background()  # le email partono in background
         assert any(x[0] == "esito" for x in _email_finte)
 
     run(body, False)
