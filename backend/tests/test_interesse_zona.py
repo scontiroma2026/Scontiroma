@@ -102,7 +102,7 @@ def test_admin_vede_la_tabella_interesse_per_zona():
         await server.db.users.insert_one({"id": uid, "email": f"a.{uid[:6]}@example.com", "role": "admin", "name": "A"})
         h = {"Authorization": f"Bearer {server.create_token(uid, 'x@example.com')}"}
         m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=h)
-        r = await c.get("/api/admin/launch-summary", headers={**h, "X-Admin-Master": m.json()["token"]})
+        r = await c.get("/api/admin/launch-summary", headers={**h, "X-Admin-Master": m.cookies["admin_master_token"]})
         assert r.status_code == 200, r.text
         assert r.json()["interesse_zone"] == [
             {"zona": "Aurelio", "voti": 3}, {"zona": "EUR", "voti": 2}, {"zona": "Ostia", "voti": 1}]

@@ -178,7 +178,7 @@ def test_commerciante_approvata_e_da_correggere(push, monkeypatch):
         assert push[-1]["dati"]["url"] == "/merchant/dashboard"
         uid_a, ha = await nuovo_utente("admin")
         m = await c.post("/api/admin/verify-master", json={"password": MASTER}, headers=ha)
-        ha = {**ha, "X-Admin-Master": m.json()["token"]}
+        ha = {**ha, "X-Admin-Master": m.cookies["admin_master_token"]}
         motivo = "La foto non mostra il piatto offerto"
         r = await c.post(f"/api/admin/discounts/{did}/reject", json={"reason": motivo}, headers=ha)
         assert r.status_code == 200, r.text

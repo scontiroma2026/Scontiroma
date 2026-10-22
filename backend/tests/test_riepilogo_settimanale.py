@@ -285,7 +285,7 @@ def test_endpoint_admin_richiede_master_password():
         h = {"Authorization": f"Bearer {server.create_token(uid, 'a.prova@example.com')}"}
         assert (await c.get("/api/admin/riepilogo-settimanale", headers=h)).status_code in (401, 403)   # manca la master
         m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=h)
-        h["X-Admin-Master"] = m.json()["token"]
+        h["X-Admin-Master"] = m.cookies["admin_master_token"]
         r = await c.get("/api/admin/riepilogo-settimanale", headers=h)
         assert r.status_code == 200
         j = r.json()

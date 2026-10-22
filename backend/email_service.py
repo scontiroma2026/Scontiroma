@@ -7,6 +7,7 @@ e loggano soltanto (non blocca il flusso applicativo).
 """
 import os
 import re
+import sys
 import asyncio
 import html
 import logging
@@ -75,7 +76,36 @@ def mask_emails_in_text(testo) -> str:
     return _EMAIL_RE.sub(lambda m: mask_email(m.group(0)), str(testo))
 
 
-async def _send(to, subject: str, html: str) -> Optional[str]:
+# Avviso per le email non partite: il server registra qui una funzione `async (tipo, codice)` che conta i
+# fallimenti e, oltre una soglia, avvisa l'admin con una notifica push. Riceve solo il tipo di email (nome della
+# funzione, es. «send_welcome_client») e il codice d'errore: mai indirizzi o altri dati personali.
+_avviso_email_fallita = None
+
+
+def imposta_avviso_email_fallita(funzione) -> None:
+    global _avviso_email_fallita
+    _avviso_email_fallita = funzione
+
+
+def _codice_errore(e: Exception) -> str:
+    """Codice breve dell'errore del fornitore (stato HTTP o tipo di errore), senza il testo del messaggio."""
+    for attr in ("code", "status_code", "error_type"):
+        v = getattr(e, attr, None)
+        if v not in (None, ""):
+            return str(v)[:40]
+    return type(e).__name__[:40]
+
+
+async def _segnala_fallimento(tipo: str, e: Exception) -> None:
+    if _avviso_email_fallita is None:
+        return
+    try:
+        await _avviso_email_fallita(tipo, _codice_errore(e))
+    except Exception as err:  # il conteggio non deve mai bloccare l'app
+        log.warning(f"[email:conteggio-fallite] non registrato: {type(err).__name__}")
+
+
+async def _send(to, subject: str, html: str, tipo: str = "") -> Optional[str]:
     """`to` può essere un indirizzo o una lista. Con `EMAIL_ALLOWED_RECIPIENTS`
     impostata (solo ambiente di prova) i destinatari non consentiti sono scartati
     in silenzio (log con solo dominio e motivo): nessuna eccezione."""
@@ -104,17 +134,29 @@ async def _send(to, subject: str, html: str) -> Optional[str]:
         log.info(f"[email:sent] to={label} id={eid}")
         return eid
     except Exception as e:
-        log.error(f"[email:error] to={label} subject={subject!r} err={mask_emails_in_text(e)}")
+        tipo = tipo or _tipo_dal_chiamante()
+        log.error(f"[email:error] tipo={tipo} to={label} subject={subject!r} err={mask_emails_in_text(e)}")
+        await _segnala_fallimento(tipo, e)
         return None
 
 
-# Marchio e prezzo usati in tutte le email (un solo punto da cambiare).
+def _tipo_dal_chiamante() -> str:
+    """Tipo di email = nome della funzione send_… che ha chiamato _send (nessun dato personale)."""
+    try:
+        f = sys._getframe(2)  # 0 = qui, 1 = _send, 2 = la funzione send_…
+        return f.f_code.co_name[:60]
+    except Exception:
+        return "sconosciuta"
+
+
+# Marchio usato in tutte le email. PRICE_EUR resta solo come valore di riserva della ricevuta del vecchio
+# abbonamento clienti (spento): nessun testo delle email cita un prezzo per i clienti.
 BRAND = "Sconti Roma"
 PRICE_EUR = 2.99
 
 
 def _eur(value: float) -> str:
-    """Importo in formato italiano: 2.99 -> "2,99 €"."""
+    """Importo in formato italiano: 4.5 -> "4,50 €"."""
     return f"{value:.2f}".replace(".", ",") + " €"
 
 

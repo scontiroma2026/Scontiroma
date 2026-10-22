@@ -94,7 +94,7 @@ export default function ClientDashboard() {
               <p className="mt-1 text-sm text-muted-foreground">Attiva l'abbonamento per accedere agli sconti.</p>
               <Link to="/subscribe">
                 <Button data-testid="activate-btn" className="mt-4 grad-fucsia-viola text-white hover:scale-105 transition">
-                  Attiva a €2,99/mese
+                  Attiva l'abbonamento
                 </Button>
               </Link>
             </>

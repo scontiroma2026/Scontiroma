@@ -31,6 +31,7 @@ import ipaddress
 import socket
 from urllib.parse import urlparse, urljoin
 import prova_pagamenti as pp
+import email_service
 from email_service import (
     mask_email,
     send_ci_pensiamo_noi,
@@ -672,6 +673,12 @@ def _admin_notify_to() -> str:
     return os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
 
 
+# Vecchio abbonamento clienti (SPENTO: CLIENT_SUBSCRIPTION_REQUIRED=false). Il codice di Stripe/PayPal resta ma non
+# addebita nulla; il prezzo sta solo qui e non compare in nessun testo mostrato agli utenti.
+PREZZO_CLIENTE_CENT = 299
+PREZZO_CLIENTE_EUR = PREZZO_CLIENTE_CENT / 100
+
+
 def _email_in_background(coro, label: str) -> None:
     """Invia un'email senza far aspettare chi usa l'app; un errore finisce solo nei log."""
     async def run():
@@ -779,6 +786,63 @@ def _push_admin_in_background(titolo: str, testo: str = "", label: str = "push")
         except Exception as e:
             logging.warning(f"[push-admin:{label}] non inviata: {type(e).__name__}")
     asyncio.create_task(run())
+
+
+# ---------- Allarme email non partite (invio Resend fallito) ----------
+# Ogni fallimento è una riga in `email_fallite` con solo tipo di email e codice d'errore (nessun indirizzo, nessun
+# dato personale), cancellata da sola dopo 7 giorni. Oltre la soglia in un'ora l'admin riceve UNA notifica push
+# (mai un'email: se le email non partono, un'email di avviso non arriverebbe).
+EMAIL_FALLITE_GIORNI = 7
+
+
+def _soglia_email_fallite() -> int:
+    try:
+        return max(1, int(os.environ.get("EMAIL_FALLITE_SOGLIA_ORA", "3")))
+    except ValueError:
+        return 3
+
+
+async def _registra_email_fallita(tipo: str, codice: str) -> None:
+    ora = datetime.now(timezone.utc)
+    await db.email_fallite.insert_one({
+        "id": str(uuid.uuid4()), "tipo": str(tipo or "sconosciuta")[:60], "codice": str(codice or "?")[:40],
+        "at": ora.isoformat(), "expires_at": ora + timedelta(days=EMAIL_FALLITE_GIORNI),
+    })
+    soglia = _soglia_email_fallite()
+    ultima_ora = await db.email_fallite.count_documents({"at": {"$gte": (ora - timedelta(hours=1)).isoformat()}})
+    if ultima_ora < soglia:
+        return
+    # Al massimo un avviso per ora solare, anche con due copie del server accese (prenotazione atomica).
+    chiave = f"allarme_email_fallite_{ora:%Y%m%d%H}"
+    try:
+        prenota = await db.reminder_claims.update_one(
+            {"key": chiave}, {"$setOnInsert": {"key": chiave, "expires_at": ora + timedelta(days=2)}}, upsert=True)
+    except DuplicateKeyError:
+        return
+    if prenota.upserted_id is None:
+        return
+    logging.warning(f"[email:allarme] {ultima_ora} email non partite nell'ultima ora (soglia {soglia})")
+    await _invia_push_admin("Email non partite",
+                            f"{ultima_ora} email non sono partite nell'ultima ora. Controlla «Salute» nel pannello admin.")
+
+
+async def _conteggio_email_fallite() -> dict:
+    """Per il riquadro «Salute»: quante email non sono partite nelle ultime 24 ore, per tipo e per codice."""
+    ora = datetime.now(timezone.utc)
+    da_24h = (ora - timedelta(hours=24)).isoformat()
+    righe = await db.email_fallite.find({"at": {"$gte": da_24h}}, {"_id": 0, "tipo": 1, "codice": 1, "at": 1}).to_list(5000)
+    per_tipo: dict = {}
+    for r in righe:
+        per_tipo[r.get("tipo") or "sconosciuta"] = per_tipo.get(r.get("tipo") or "sconosciuta", 0) + 1
+    da_1h = (ora - timedelta(hours=1)).isoformat()
+    return {
+        "ok": not righe, "ultime_24h": len(righe), "ultima_ora": sum(1 for r in righe if (r.get("at") or "") >= da_1h),
+        "per_tipo": per_tipo, "codici": sorted({r.get("codice") or "?" for r in righe}),
+        "ultima": max((r.get("at") or "" for r in righe), default=None), "soglia_ora": _soglia_email_fallite(),
+    }
+
+
+email_service.imposta_avviso_email_fallita(_registra_email_fallita)
 
 
 def admin_email_nuovo_cliente_attiva() -> bool:
@@ -3361,9 +3425,9 @@ async def create_checkout(payload: Optional[StripeCheckoutIn] = None, user: dict
     if prices:
         price = prices[0]
     else:
-        # Crea Price €2,99/mese (idempotente via lookup_key)
+        # Crea il Price mensile (idempotente via lookup_key)
         price = stripe.Price.create(
-            unit_amount=299,
+            unit_amount=PREZZO_CLIENTE_CENT,
             currency="eur",
             recurring={"interval": "month"},
             lookup_key=STRIPE_PRICE_LOOKUP,
@@ -3390,7 +3454,7 @@ async def create_checkout(payload: Optional[StripeCheckoutIn] = None, user: dict
         "session_id": session.id,
         "user_id": user["id"],
         "lookup_key": STRIPE_PRICE_LOOKUP,
-        "amount": 299, "currency": "eur",
+        "amount": PREZZO_CLIENTE_CENT, "currency": "eur",
         "status": "initiated", "payment_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -3496,7 +3560,7 @@ async def extend_subscription_on_renewal(
     provider: str,
     provider_event_id: str,
     provider_sub_id: str,
-    price_eur: float = 2.99,
+    price_eur: float = PREZZO_CLIENTE_EUR,
 ) -> Optional[str]:
     """Estende l'abbonamento di 30 giorni quando arriva un evento di rinnovo pagato
     (Stripe `invoice.payment_succeeded` o PayPal `PAYMENT.SALE.COMPLETED`).
@@ -3614,7 +3678,7 @@ async def mark_subscription_paid(session, user_id: str):
         "user_id": user_id,
         "plan": "monthly",
         "status": "active",
-        "price_eur": 2.99,
+        "price_eur": PREZZO_CLIENTE_EUR,
         "start_date": now.isoformat(),
         "end_date": end.isoformat(),
         "stripe_session_id": session_id,
@@ -3868,7 +3932,7 @@ async def stripe_webhook(request: Request):
             return {"status": "ok", "skipped": "first_charge_handled_by_checkout"}
         stripe_sub_id = obj.get("subscription")
         invoice_id = obj.get("id")
-        amount_paid = (obj.get("amount_paid") or 299) / 100.0  # cents → EUR
+        amount_paid = (obj.get("amount_paid") or PREZZO_CLIENTE_CENT) / 100.0  # cents → EUR
         if stripe_sub_id and invoice_id:
             sub = await db.subscriptions.find_one({"stripe_subscription_id": stripe_sub_id})
             if sub:
@@ -4042,7 +4106,7 @@ async def paypal_activate(payload: PayPalActivateIn, user: dict = Depends(requir
         "user_id": user["id"],
         "plan": "monthly",
         "status": "active",
-        "price_eur": 2.99,
+        "price_eur": PREZZO_CLIENTE_EUR,
         "start_date": now.isoformat(),
         "end_date": end.isoformat(),
         "paypal_subscription_id": payload.subscription_id,
@@ -4103,7 +4167,7 @@ async def paypal_webhook(request: Request):
         sale_id = resource.get("id")
         billing_agreement_id = resource.get("billing_agreement_id") or resource.get("supplementary_data", {}).get("related_ids", {}).get("subscription_id")
         amount = resource.get("amount", {})
-        price = float(amount.get("total") or amount.get("value") or 2.99)
+        price = float(amount.get("total") or amount.get("value") or PREZZO_CLIENTE_EUR)
         if sale_id and billing_agreement_id:
             sub = await db.subscriptions.find_one({"paypal_subscription_id": billing_agreement_id})
             if sub:
@@ -4915,7 +4979,8 @@ def _issue_master_cookie(response: Response, user_id: str) -> dict:
         max_age=ADMIN_MASTER_TTL_MIN * 60,
         httponly=True, secure=True, samesite="none", path="/",
     )
-    return {"ok": True, "token": token, "expires_in": ADMIN_MASTER_TTL_MIN * 60}
+    # Il token vive solo nel cookie httpOnly: mai nel corpo della risposta (revisione esterna, P1).
+    return {"ok": True, "expires_in": ADMIN_MASTER_TTL_MIN * 60}
 
 
 def _lock_check(doc: dict, field: str = "locked_until"):
@@ -5304,7 +5369,7 @@ async def admin_stats(user: dict = Depends(require_admin_master)):
     active_subs = await db.subscriptions.count_documents({"status": "active", "end_date": {"$gt": now.isoformat()}})
     total_redemptions = await db.redemptions.count_documents({})
     redemptions_month = await db.redemptions.count_documents({"created_at": {"$gte": start_month}})
-    mrr = active_subs * 2.99
+    mrr = active_subs * PREZZO_CLIENTE_EUR
 
     # Last 30 days per-day counts
     thirty_ago = (now - timedelta(days=30)).isoformat()
@@ -6844,6 +6909,8 @@ async def on_startup():
     await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
     await db.reminder_claims.create_index("key", unique=True)
     await db.reminder_claims.create_index("expires_at", expireAfterSeconds=0)
+    await db.email_fallite.create_index("expires_at", expireAfterSeconds=0)  # righe delle email non partite: 7 giorni
+    await db.email_fallite.create_index("at")
     await db.users.create_index("webauthn_credentials.credential_id", sparse=True)
     await db.users.create_index("reset_token", sparse=True)
     await db.users.create_index("email_confirm_token_hash", sparse=True)
@@ -7287,13 +7354,20 @@ async def admin_health(user: dict = Depends(require_admin_master)):
             return {"ok": True, "ms": round((_t.time()-t0)*1000)}
         except Exception as e:
             return {"ok": False, "error": str(e)[:100]}
-    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), _check_resend(), _locationiq_prova())
+    async def check_email_fallite():
+        try:
+            return await _conteggio_email_fallite()
+        except Exception as e:
+            return {"ok": False, "error": type(e).__name__}
+    results = await asyncio.gather(check_db(), check_stripe(), check_paypal(), _check_resend(), _locationiq_prova(),
+                                   check_email_fallite())
     return {
         "db": results[0],
         "stripe": results[1],
         "paypal": results[2],
         "resend": results[3],
         "locationiq": results[4],
+        "email_fallite": results[5],
         "checked_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -7976,7 +8050,7 @@ async def admin_traffic(user: dict = Depends(require_admin_master)):
 @api.get("/admin/economics")
 async def admin_economics(user: dict = Depends(require_admin_master)):
     """Riepilogo economico: abbonati attivi per provider, MRR, commissioni stimate, netto."""
-    PRICE = 2.99
+    PRICE = PREZZO_CLIENTE_EUR
     now = datetime.now(timezone.utc)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
 

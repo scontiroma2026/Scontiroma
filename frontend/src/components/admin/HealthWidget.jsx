@@ -4,7 +4,8 @@ import { Loader2, Activity } from "lucide-react";
 
 /**
  * Widget indicatore stato di salute dei servizi critici.
- * Mostra pallini verdi/rossi + latenza per DB, Stripe, PayPal, Resend, LocationIQ.
+ * Mostra pallini verdi/rossi + latenza per DB, Stripe, PayPal, Resend, LocationIQ
+ * e il numero di email non partite nelle ultime 24 ore.
  * Si aggiorna ogni 30s.
  */
 export default function HealthWidget() {
@@ -45,7 +46,10 @@ export default function HealthWidget() {
     { key: "locationiq", label: "Indirizzi (LocationIQ)" },
   ];
 
-  const allOk = services.every((s) => health[s.key]?.ok);
+  // Email non partite (invio Resend fallito) nelle ultime 24 ore: solo numeri, tipo di email e codice d'errore.
+  const fallite = health.email_fallite || {};
+  const nFallite = fallite.ultime_24h || 0;
+  const allOk = services.every((s) => health[s.key]?.ok) && nFallite === 0;
 
   return (
     <div
@@ -71,6 +75,16 @@ export default function HealthWidget() {
             </div>
           );
         })}
+        <div data-testid="health-email-fallite" className="flex items-center gap-2 text-xs">
+          <span className={`h-2.5 w-2.5 rounded-full ${nFallite === 0 ? "bg-green-400" : "bg-red-500"}`} />
+          <span className="text-foreground/80">Email non partite (24 h)</span>
+          <span className={nFallite === 0 ? "text-muted-foreground" : "text-red-700 font-semibold"}>{nFallite}</span>
+          {nFallite > 0 && (
+            <span className="text-[10px] text-muted-foreground">
+              (ultima ora: {fallite.ultima_ora || 0}; {Object.entries(fallite.per_tipo || {}).map(([k, v]) => `${k} ${v}`).join(", ")})
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
