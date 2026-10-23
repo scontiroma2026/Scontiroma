@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, TicketCheck, Sparkles, Star, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react";
 import MyUsedDiscounts from "@/components/MyUsedDiscounts";
 import GdprSection from "@/components/GdprSection";
+import NotifichePushUtente from "@/components/NotifichePushUtente";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
@@ -58,8 +59,7 @@ export default function ClientDashboard() {
           </div>
           {!required ? (
             <>
-              <div data-testid="launch-free" className="mt-3 font-serif text-3xl text-terracotta">Gratis durante la fase di lancio</div>
-              <p className="mt-1 text-sm text-muted-foreground">Per usare gli sconti non serve nessun abbonamento.</p>
+              <div data-testid="launch-free" className="mt-3 font-serif text-2xl text-terracotta">Per usare gli sconti non serve nessun abbonamento.</div>
               <div className="mt-4 flex gap-2">
                 <Link to="/discounts"><Button className="grad-fucsia-viola text-white hover:scale-105 transition">Sfoglia sconti</Button></Link>
                 {isActive && <Link to="/subscribe"><Button variant="outline">Gestisci abbonamento</Button></Link>}
@@ -94,7 +94,7 @@ export default function ClientDashboard() {
               <p className="mt-1 text-sm text-muted-foreground">Attiva l'abbonamento per accedere agli sconti.</p>
               <Link to="/subscribe">
                 <Button data-testid="activate-btn" className="mt-4 grad-fucsia-viola text-white hover:scale-105 transition">
-                  Attiva a €2,99/mese
+                  Attiva l'abbonamento
                 </Button>
               </Link>
             </>
@@ -153,6 +153,9 @@ export default function ClientDashboard() {
         <p className="text-sm text-muted-foreground mb-4">Lascia una recensione: 5 stelle sull'app, un commento privato solo per l'amministratore.</p>
         <MyUsedDiscounts />
       </div>
+
+      {/* Compare solo con PUSH_UTENTI_ENABLED acceso sul server */}
+      <NotifichePushUtente ruolo="client" className="mt-12 max-w-2xl" />
 
       <div className="mt-12">
         <GdprSection />

@@ -18,7 +18,7 @@ Stato: **approvato dal titolare il 15/10** come video; **non pubblicabile** finc
 - Non inviare prima della validazione dei Termini (percentuali e prezzo si vedono nel video).
 
 ## Cose da pubblicare sui social (punto 11 della lista)
-- Formato: master o quadrata. Caption neutra, per esempio: «Hai un'attività a Roma? Un'offerta al mese e i clienti del quartiere ti trovano su Sconti Roma. Gratuita nella fase di lancio. Segui la guida per iscriverti.» + link del sito con il parametro di fonte (`?src=facebook-<codice>` o `?src=instagram`).
+- Formato: master o quadrata. Caption neutra, per esempio: «Hai un'attività a Roma? Un'offerta al mese e i clienti vicini ti trovano su Sconti Roma. Gratuita nella fase di lancio. Segui la guida per iscriverti.» + link del sito con il parametro di fonte (`?src=facebook-<codice>` o `?src=instagram`).
 - Aggiungere «Scena di esempio» nella caption: negozi e offerte del video sono inventati.
 - Niente data di lancio; 18+; nessun quartiere.
 - Pubblicare solo dopo: Termini validati, musica con licenza verificata, titolare OK.

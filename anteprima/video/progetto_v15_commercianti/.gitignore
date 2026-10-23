@@ -1,0 +1,6 @@
+# Nel repository: copione, script e documentazione. Video, audio, clip, immagini e miniature restano nella cartella privata.
+*.mp4
+*.wav
+*.mp3
+*.png
+*.jpg

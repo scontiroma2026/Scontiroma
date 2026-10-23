@@ -40,7 +40,7 @@ test('mappa: nessuna richiesta di posizione all\'apertura', async ({ page }) => 
 
 test('home: niente «metà prezzo» né «migliaia di romani»', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByTestId('hero-sottotitolo')).toHaveText('Scopri quanto puoi risparmiare nel tuo quartiere.');
+  await expect(page.getByTestId('hero-sottotitolo')).toHaveText('Scopri quanto puoi risparmiare vicino a te.');
   const testo = await page.locator('body').innerText();
   expect(testo).not.toMatch(/metà prezzo/i);
   expect(testo).not.toMatch(/migliaia/i);
