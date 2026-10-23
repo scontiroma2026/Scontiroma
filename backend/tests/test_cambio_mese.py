@@ -140,6 +140,7 @@ def run(body):
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             await body(c)
+            await server.attendi_lavori_in_background()  # nessun lavoro in background lasciato a metà
     asyncio.run(main())
 
 
@@ -281,7 +282,7 @@ def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
         assert len(eseguiti) == 1, esiti
         assert eseguiti[0]["month"] == dopo
         assert (eseguiti[0]["promoted"], eseguiti[0]["migrated_pending"], eseguiti[0]["expired"]) == (2, 1, 2)
-        await asyncio.sleep(0.05)
+        await server.attendi_lavori_in_background()
 
         # offerte del mese dopo: B ed E sono online, A e C scadute, D aspetta l'approvazione
         assert await titoli_pubblici(c) == {"Prossima B rinnova", "Prossima E nuovo"}
@@ -405,9 +406,9 @@ def test_avviso_ai_preferiti_una_volta_per_mese(orologio, posta):
                                           "preferiti": [b["id"]], "consents": {"avvisi_preferiti": True}})
         orologio("2026-11-01", 0, 5)
         await asyncio.gather(server._run_month_rollover(), server._run_month_rollover())
-        await asyncio.sleep(0.1)
+        await server.attendi_lavori_in_background()
         await server._run_month_rollover()
-        await asyncio.sleep(0.1)
+        await server.attendi_lavori_in_background()
     run(body)
     assert posta["preferiti"] == ["cliente@example.com"]
 

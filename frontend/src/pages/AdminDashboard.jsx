@@ -29,6 +29,7 @@ import AdminClienti from "@/components/admin/AdminClienti";
 import AdminEconomics from "@/components/admin/AdminEconomics";
 import AdminTraffic from "@/components/admin/AdminTraffic";
 import AdminNextMonth from "@/components/admin/AdminNextMonth";
+import AdminNotifichePush from "@/components/admin/AdminNotifichePush";
 
 /**
  * AdminDashboard — orchestratore snello.
@@ -163,6 +164,8 @@ export default function AdminDashboard() {
       <div className="mb-4">
         <HealthWidget />
       </div>
+
+      <AdminNotifichePush hdrs={hdrs} />
 
       <GeocodeIssuesWidget hdrs={hdrs} />
 
