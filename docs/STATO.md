@@ -234,6 +234,7 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: lista aggiornata; testi legali affidati all'agente dopo il reset (21/10); video nell'app: resta com'è
 - 18/10: tolti dalla lista l'avvocato a forfait e il punto del contatto con i negozi (decisione del titolare)
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
+- 21/10: punto 3 chiuso dal titolare (calendario di #169): Termini 3.2 e Privacy allineati (email al giorno 30, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito; 30 giorni solo per le variazioni di prezzo). Testo legale in PR, non unito.
 - 21/10: video di attesa per i clienti (15,5 s, voce del titolare già registrata a -16 LUFS senza la frase «Niente da scaricare per ora:», tagliata con dissolvenza; nessuna musica; social anche in apertura): riprese reali del sito locale con negozi finti, sottotitoli a tempo con silencedetect, finale con QR `?fonte=video-attesa`, «18+», «Gratuita nella fase di lancio», WhatsApp e «Seguici su Instagram e Facebook: Sconti Roma». Script in `anteprima/video/progetto_attesa_clienti/`, video nella cartella privata; non pubblicato. Ramo `claude/video-attesa-clienti`
 - 21/10: volantino clienti, cartolina negozi e locandina negozio (stile app-chiara) con WhatsApp 352 247 3526 e Instagram/Facebook «Sconti Roma» con loghi (bozza, PR)
 - 21/10: locandina stampabile dell'app (A5): aggiunti WhatsApp 352 247 3526 e «Seguici su Instagram e Facebook – Sconti Roma» con i loghi

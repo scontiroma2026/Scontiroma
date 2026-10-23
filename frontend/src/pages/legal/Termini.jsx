@@ -92,8 +92,12 @@ export default function Termini() {
           <li>
             <strong>Dopo la prova</strong>: €4,99 al mese + IVA. Ogni
             variazione di prezzo ti è comunicata con almeno 30 giorni di
-            preavviso. Prima della fine della prova ti inviamo due promemoria
-            via email, a 10 e a 3 giorni dalla scadenza.
+            preavviso.
+          </li>
+          <li>
+            <strong>Avvisi per email</strong>: ti scriviamo al giorno 30 della
+            prova, 7 giorni prima del primo pagamento e 3 giorni prima di ogni
+            addebito mensile.
           </li>
           <li>
             <strong>Nessun addebito senza la tua conferma</strong>: il
