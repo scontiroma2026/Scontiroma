@@ -93,7 +93,7 @@ La pagina è riscritta per intero. Prima descriveva l'annullamento dell'abboname
 - **Pagina offerta, riquadro «Informative legali»:** «abbonati» diventa «clienti»; «accesso allo sconto tramite abbonamento» diventa «fa da intermediario e fornisce l'accesso allo sconto».
 
 ## Domande per il consulente
-1. **Titolare del trattamento:** dati identificativi (nome o ditta, sede, CF o P.IVA, PEC). Oggi c'è solo il segnaposto.
+1. **Titolare del trattamento:** dati identificativi (nome o ditta, sede, CF o P.IVA, PEC). `[PROPOSTA - DA VALIDARE]` Completati il 23/10/2026 dalla visura camerale: vedi la sezione «Dati societari» in fondo.
 2. **Google Fonts:** basta dichiararlo, oppure è meglio ospitare i caratteri sul nostro server, così Google non riceve l'IP? La seconda strada è una piccola modifica tecnica che possiamo fare.
 3. **Prezzo bloccato:** va bene «finché restano iscritti senza interruzioni»?
 4. **Cosa succede se il commerciante non conferma il pagamento:** va bene «non paga nulla e la sua offerta non viene più pubblicata»?
@@ -136,3 +136,28 @@ Frase proposta (al posto di «il commerciante scansiona il tuo codice QR vede»)
 Per i Termini (obblighi del commerciante): «Il commerciante custodisce il codice del negozio, lo comunica solo al personale autorizzato e lo cambia quando una persona smette di lavorare con lui. Il commerciante è responsabile dell'uso del codice da parte del suo personale.»
 
 Domande per il consulente: la frase sul personale del commerciante è sufficiente (il commerciante è titolare autonomo per quei dati)? Il telefono «ricordato» (un attestato firmato salvato sul telefono del dipendente, valido al massimo 90 giorni, senza dati personali) va citato nella Cookie Policy tra gli strumenti tecnici? Proposta: sì, come memoria del browser `sr_codice_negozio_v1`, necessaria al servizio richiesto, scelta dal dipendente.
+
+## Aggiornamento del 23/10/2026 — Dati societari dalla visura camerale `[PROPOSTA - DA VALIDARE]`
+
+Rischio: 🟠 i dati obbligatori (art. 2250 c.c., art. 7 D.Lgs. 70/2003) mancavano in parte; con questa proposta sono completi, resta solo la validazione.
+Legenda: 🔴 alto, da sistemare prima del lancio · 🟠 medio, da valutare col consulente · 🟢 basso o già a posto.
+
+| Dato | Valore (visura del 23/10/2026) | Dove compare |
+|---|---|---|
+| Denominazione | EUROLINEA S.r.l.s. (EUROLINEA Società a responsabilità limitata semplificata) | Privacy 1, Termini, Cookie 5, Recesso 4, piè di pagina |
+| Sede legale | Via Tasso 5/B, 83031 Ariano Irpino (AV) | come sopra |
+| Codice fiscale e Partita IVA | 03240220644 | come sopra |
+| Registro Imprese | Irpinia Sannio, REA AV-313674 | Privacy 1, Termini, piè di pagina |
+| Capitale sociale | 3.000,00 € | Termini, piè di pagina |
+| PEC | eurolineasrls@alpec.it | tutti i testi e il piè di pagina |
+
+Vecchio → nuovo:
+- «Euro Linea S.r.l.s.» (staccato) → «EUROLINEA S.r.l.s.» (come in visura).
+- Privacy 1: «Per conoscere la sede legale e l'indirizzo PEC… scrivi a privacy@» → sede, CF/P.IVA, REA e PEC scritti per esteso; privacy@scontiroma.it resta il contatto per i diritti.
+- Cookie e Recesso: aggiunta una riga con il titolare (prima non era nominato).
+- Piè di pagina del sito: aggiunta una riga con i dati societari.
+
+Domande per il consulente:
+1. 🟢 Va bene la forma «codice fiscale e Partita IVA 03240220644» e «Registro delle Imprese Irpinia Sannio, REA AV-313674»?
+2. 🟠 Il capitale sociale va scritto anche come «interamente versato»? Lo indichiamo solo se risulta dalla visura.
+3. 🟢 Nei testi non indichiamo nomi di persone: se serve un riferimento, si scrive «l'amministratore unico pro tempore».

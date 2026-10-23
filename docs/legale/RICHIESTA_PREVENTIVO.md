@@ -37,7 +37,7 @@ sono [NOME E COGNOME], titolare di [RAGIONE SOCIALE / DITTA], con sede a [CITTÀ
 Allego/vi invio i documenti in PDF: [elenco dal punto C]. Posso fare una breve chiamata di [15–20] minuti se serve.
 
 Grazie e cordiali saluti,
-[NOME E COGNOME] · [RAGIONE SOCIALE] · [PEC o email] · [telefono, se vuoi indicarlo]
+[NOME E COGNOME] · EUROLINEA S.r.l.s. · eurolineasrls@alpec.it · [telefono, se vuoi indicarlo]
 
 ## B. Versione breve (modulo di un sito o messaggio)
 «Buongiorno, lancio un'app italiana di sconti (marketplace tra clienti e negozi di Roma, abbonamento mensile per i negozi, pagamenti ancora spenti). Vorrei un preventivo a forfait per revisione di Termini (negozi e clienti), Privacy, Cookie, P2B/DSA e DPA, partendo da bozze già pronte. Mi indicate prezzo totale, tempi, giri di correzione, firma e assicurazione professionale? Grazie, [NOME] [CONTATTO].»

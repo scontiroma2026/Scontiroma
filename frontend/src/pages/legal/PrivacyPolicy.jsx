@@ -18,12 +18,19 @@ export default function PrivacyPolicy() {
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">1. Titolare del trattamento</h2>
+        {/* [PROPOSTA - DA VALIDARE] 23/10/2026: dati societari dalla visura camerale (denominazione, sede, CF/P.IVA, REA, PEC). */}
         <p>
-          Titolare del trattamento è <strong>Euro Linea S.r.l.s.</strong>
-          (Partita IVA 03240220644), che gestisce il servizio <strong>Sconti
-          Roma</strong> (di seguito "noi", "Sconti Roma" o il "Titolare"). Per
-          conoscere la sede legale e l'indirizzo PEC, o per esercitare i tuoi
-          diritti, puoi contattarci in qualsiasi momento all'indirizzo{" "}
+          Titolare del trattamento è <strong>EUROLINEA S.r.l.s.</strong>{" "}
+          (EUROLINEA Società a responsabilità limitata semplificata), con sede
+          legale in Via Tasso 5/B, 83031 Ariano Irpino (AV), codice fiscale e
+          Partita IVA 03240220644, iscritta al Registro delle Imprese Irpinia
+          Sannio, REA AV-313674, PEC{" "}
+          <a href="mailto:eurolineasrls@alpec.it" className="text-fucsia hover:underline">
+            eurolineasrls@alpec.it
+          </a>
+          , che gestisce il servizio <strong>Sconti Roma</strong> (di seguito "noi", "Sconti
+          Roma" o il "Titolare"). Puoi contattarci in qualsiasi momento
+          all'indirizzo{" "}
           <a href="mailto:privacy@scontiroma.it" className="text-fucsia hover:underline">
             privacy@scontiroma.it
           </a>{" "}

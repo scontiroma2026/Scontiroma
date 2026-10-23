@@ -189,6 +189,16 @@ export default function CookiePolicy() {
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">5. Contatti</h2>
+        {/* [PROPOSTA - DA VALIDARE] 23/10/2026: titolare identificato con i dati della visura camerale. */}
+        <p>
+          Titolare del trattamento è <strong>EUROLINEA S.r.l.s.</strong>, Via
+          Tasso 5/B, 83031 Ariano Irpino (AV), codice fiscale e Partita IVA
+          03240220644, PEC{" "}
+          <a href="mailto:eurolineasrls@alpec.it" className="text-fucsia hover:underline">
+            eurolineasrls@alpec.it
+          </a>
+          . Gli altri dati sono nella Privacy Policy.
+        </p>
         <p>
           Per qualsiasi domanda su questa Cookie Policy scrivi a{" "}
           <a href="mailto:privacy@scontiroma.it" className="text-fucsia hover:underline">
