@@ -235,3 +235,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
 - 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
 - 21/10: Privacy, punto 13-14 (PR in bozza): voce lista d'attesa (consenso, 12 mesi, elenco di esclusione, Resend), IP «nel nostro database», LocationIQ con formula prudente, regioni di Render e Atlas (Francoforte), Stripe e PayPal titolari autonomi; righe per l'avvocato in docs/legale/LISTA_AVVOCATO_GRUPPO3.md
+- 23/10: lista per l'avvocato, gruppo 3 (punto 13): allineata alla decisione del 21/10 sulla versione del consenso della lista d'attesa (nuovi iscritti dal modulo con informativa: 2026-10-v2; già iscritti: restano 2026-10-v1, nessuna nuova conferma)
