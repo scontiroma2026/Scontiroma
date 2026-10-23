@@ -13,7 +13,7 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 4. ⏳ **Contratti sul trattamento dei dati (DPA):** Resend ✅ · Render ✅ letto (automatico con i Termini, server a Francoforte, scheda in `docs/legale/DPA_RENDER_SCHEDA.md`) · MongoDB Atlas ✅ letto (automatico, cluster AWS Francoforte, `docs/legale/DPA_ATLAS_SCHEDA.md`) · LocationIQ ⬜ da valutare. Restano Privacy e registro dei trattamenti (agente legale).
 5. ⏳ **Conferma email dei clienti:** provata sul sito di prova (6 passi su 6). Da accendere sul sito vero insieme al pre-lancio, non prima (oggi non ci sono offerte da vedere).
 6. ⏸️ **Pre-lancio:** `PRELAUNCH_MODE` su Render non prima della sera del 21/10 e dopo la prova da iPhone. La vecchia frase provvisoria sulla lista d'attesa (#153) è stata chiusa il 23/10: la lista d'attesa è già sul sito. Registrazione dei clienti già chiusa in pre-lancio (#151).
-7. ⏳ **Materiali per i negozi:** video v16 per i commercianti (PR #155, bozza, superata dalla v17: da chiudere con l'OK del titolare; **v17 fatta e approvata dal titolare il 15/10** (PR #179 in bozza, da unire; foto reali della libreria, guida dopo «Al banco»; uso in `docs/comunicazione/VIDEO_V17_COME_USARLO.md`; non pubblicabile finché i Termini non sono validati e la musica non ha la licenza); base del video dell'8/10, voce femminile scelta, esempi ristorante «Menù di carne» ed enoteca con negozi finti, guida dentro il video); materiali scritti #146 in allineamento ai Termini (disdetta, «circa due mesi dalla prima pubblicazione», mese non rimborsabile); sito pronto. La percentuale nel video è ammessa (decisione del titolare, negozio fittizio): da verificare con il consulente.
+7. ⏳ **Materiali per i negozi:** video v17 unito (#179; la v16 #155 è chiusa); non pubblicabile finché la musica non ha la licenza e i Termini non sono visti da un avvocato. Materiali scritti #146 e risposte pronte alle email dei negozi #218 aperti, in attesa dell'OK del titolare.
 8. ⏳ **Campagna social:** piano e copioni uniti (#140); il video v17 per i negozi va pubblicato anche sui social (formato master o quadrato) dopo la validazione dei Termini. Da fare: due gruppi per il 19/10 (ricerca del titolare), musica, video con persone, copertine nuove su WhatsApp e Facebook.
 9. ⬜ **27/10:** controllo della soglia di negozi e decisione sul 31/10.
 10. ⏳ **Prove e pratiche:** prova del cambio mese ✅ (test automatici e orari di Roma, #149) · controllo di base su un Android vero ✅ 18/10 (restano registrazione, QR e fotocamera) · marchio «Sconti Roma» ⏳ (scheda di verifica unita il 15/10 (#167): resta da portarla al consulente con le sue domande; `docs/operazioni/MARCHIO.md`) · codice ATECO ⬜ (`docs/operazioni/CODICE_ATECO.md`) · promemoria in `PROMEMORIA_DA_RIPRENDERE.md`.
@@ -26,20 +26,19 @@ Repository pubblico: qui mai password, chiavi, ID di recupero né dati di person
 15. ⬜ **Commercialista:** IVA al 22%, fattura elettronica (SdI), PEC.
 16. ⏳ **Claude:** altre email al commerciante (giorno 30 della prova, promemoria prima del 1°, mancato pagamento, ricevuta): cinque email pronte e spente (giorno 30 della prova, promemoria 7 giorni prima del primo pagamento, promemoria 3 giorni prima di ogni addebito mensile, mancato pagamento, ricevuta), PR #169 in bozza da guardare e unire (interruttore `MERCHANT_TRIAL_EMAILS`); scelte del titolare fatte il 15/10: nuove email al posto dei promemoria a 10 e 3 giorni; 7 giorni prima del primo pagamento; 3 giorni prima di ogni addebito. Restano da validare col consulente le frasi «dopo il giorno 5 vale per il mese dopo» e «non è un documento fiscale».
 17. ⬜ **Consulente:** testi della schermata di pagamento (nuova frase «Non viene addebitato niente subito…», #181) e dei Termini sui pagamenti.
-18. ⬜ **Utente:** conferma esplicita prima di accendere i pagamenti; i pagamenti dei clienti restano spenti.
-19. ⬜ Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e chiave su Render.
+18. ⬜ **Utente, dalla visura (23/10):** l'oggetto sociale non comprende una piattaforma online: modifica dal notaio e codice ATECO secondario prima di incassare dai negozi; delega a chi gestisce Sconti Roma per firmare a nome della società.
+19. ⬜ **Utente:** conferma esplicita prima di accendere i pagamenti; i pagamenti dei clienti restano spenti.
+20. ⬜ Gemini («Migliora foto»): spento fino al lancio; poi fatturazione con tetto di 5 €/mese e chiave su Render.
 
 ## C. Dopo il lancio, con calma
-20. ⬜ **Un abbonamento per commerciante**, anche con più punti vendita (serve gestire più punti vendita in un account; adattare i Termini).
-21. ⬜ **Prova gratuita ripetuta** e Partita IVA con più punti vendita (impronta anti-abuso, segnalazioni in admin).
-22. ⏳ **Sconticini (decisione 18/10):** crediti per negozio, 1 per sconto scansionato; premio e soglia scelti dal negozio, QR dedicato al premio; email al cliente e al negozio; tracciato in admin. Parte dopo il reset (mer 21/10) con regolamento dell'agente legale.
-23. ⏳ **«Ci pensiamo noi» (decisione 18/10):** offerte inserite da noi per i negozi con poco tempo, gratis, con conferma del negozio; si costruisce mercoledì.
-24. ⏳ **Correzioni dalla revisione esterna:** togliere `token` dalla risposta admin (P1), ripulire i prezzi vecchi da 2,99 € dei clienti (P3), allarmi sulle email non inviate; mercoledì.
-25. ⬜ **Profili social:** togliere «quartiere» dalle bio e dalla copertina Facebook; loghi «Seguici» nel video (`@sconti.roma`, pagina Facebook «Sconti Roma»).
-26. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità; WhatsApp con API ufficiale (Meta Business, dopo il lancio).
-27. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
-28. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
-29. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); il titolare cancella dalla pagina «Branches» di GitHub solo i branch di PR già unite (da qui la cancellazione è bloccata). PR superate chiuse il 23/10: #76, #101, #103, #153, #160; restano da decidere #81 e #100.
+21. ⬜ **Un abbonamento per commerciante**, anche con più punti vendita (serve gestire più punti vendita in un account; adattare i Termini).
+22. ⬜ **Prova gratuita ripetuta** e Partita IVA con più punti vendita (impronta anti-abuso, segnalazioni in admin).
+23. ⏳ **Sconticini (decisione 18/10):** crediti per negozio, 1 per sconto scansionato; premio e soglia scelti dal negozio, QR dedicato al premio; email al cliente e al negozio; tracciato in admin. Parte dopo il reset (mer 21/10) con regolamento dell'agente legale.
+24. ⬜ **Profili social:** togliere «quartiere» dalle bio e dalla copertina Facebook; loghi «Seguici su Instagram e Facebook: Sconti Roma» nei video.
+25. ⬜ **Idee:** Coupon Flash (priorità 1), notifiche di prossimità; WhatsApp con API ufficiale (Meta Business, dopo il lancio).
+26. ⬜ Emergent: progetto lasciato dormiente, da archiviare o eliminare (dati e `EMERGENT_LLM_KEY`).
+27. ⬜ Valutare il repository privato (prima controllare Render e minuti di GitHub Actions); file `roma.pmtiles`; WhatsApp con API ufficiale.
+28. ⏸️ **Pulizia dei branch** già uniti o superati (circa 98): rimandata per decisione del titolare (15/10); il titolare cancella dalla pagina «Branches» di GitHub solo i branch di PR già unite (da qui la cancellazione è bloccata). PR superate chiuse il 23/10: #76, #101, #103, #153, #160; restano da decidere #81 e #100.
 
 ## Decisioni del titolare (riferimento)
 Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.
