@@ -69,9 +69,9 @@ export default function ListaAttesaForm({ testid = "lista-attesa", titolo = "Avv
       {/* [PROPOSTA - DA VALIDARE dal consulente] Informativa breve (art. 13 GDPR). Durate = codice: conferma entro 48 ore,
           non confermate cancellate dopo 7 giorni, confermate e annullate dopo 12 mesi; nel database nessun IP. */}
       <p data-testid={`${testid}-informativa`} className="text-sm text-foreground/80">
-        Titolare: Euro Linea S.r.l.s. Usiamo la tua email solo per confermare l'iscrizione e per un avviso quando
+        Titolare: EUROLINEA S.r.l.s. Usiamo la tua email solo per confermare l'iscrizione e per un avviso quando
         Sconti Roma è online. La conserviamo al massimo 12 mesi. Puoi annullare quando vuoi con il link in ogni email
-        o scrivendo a privacy@scontiroma.it. Le email partono con Resend (server in Irlanda). Solo maggiorenni (18+).
+        o scrivendo a privacy@scontiroma.it. Le email partono tramite un fornitore di servizi email con server in Irlanda (dettagli nella Privacy). Solo maggiorenni (18+).
         Leggi la{" "}
         <Link to="/privacy" data-testid={`${testid}-privacy`} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
           Privacy
