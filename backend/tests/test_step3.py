@@ -37,6 +37,7 @@ def run(body):
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             await body(c)
+            await server.attendi_lavori_in_background()  # nessun lavoro in background lasciato a metà
     asyncio.run(main())
 
 
@@ -96,7 +97,7 @@ def test_admin_vede_sempre_i_numeri_il_commerciante_no(monkeypatch):
 
         aid, ah = await utente("admin")
         m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
-        ah = {**ah, "X-Admin-Master": m.json()["token"]}
+        ah = {**ah, "X-Admin-Master": m.cookies["admin_master_token"]}
         da = (await c.get(f"/api/admin/merchants/{mid}/insights", headers=ah)).json()
         assert da["dati_sufficienti"] is True
         assert (da["clienti_mese"], da["clienti_nuovi"], da["clienti_di_ritorno"]) == (1, 1, 0)
@@ -119,7 +120,7 @@ def test_riepilogo_fase_di_lancio(monkeypatch):
     async def body(c):
         aid, ah = await utente("admin")
         m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
-        ah = {**ah, "X-Admin-Master": m.json()["token"]}
+        ah = {**ah, "X-Admin-Master": m.cookies["admin_master_token"]}
         con, _ = await utente("merchant", shop_name="Con offerta", zone="Garbatella")
         await utente("merchant", shop_name="Senza offerta", zone="Marconi")
         await utente("merchant", shop_name="Sospeso", zone="Garbatella", approved=False)
@@ -164,7 +165,7 @@ def test_visite_e_iscrizioni_per_fonte_clienti_e_negozi(monkeypatch):
         await utente("merchant", shop_name="Osteria", fonte_iscrizione="volantino-negozi", fonte_iscrizione_at=datetime.now(timezone.utc).isoformat())
         aid, ah = await utente("admin")
         m = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
-        ah = {**ah, "X-Admin-Master": m.json()["token"]}
+        ah = {**ah, "X-Admin-Master": m.cookies["admin_master_token"]}
         d = (await c.get("/api/admin/fonti-qr", headers=ah)).json()["fonti"]
         riga = {r["fonte"]: r for r in d}
         assert riga["volantino-strada"]["visite_clienti"] == 2 and riga["volantino-strada"]["clienti_iscritti"] == 1

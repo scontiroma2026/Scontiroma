@@ -122,10 +122,7 @@ export default function Subscribe() {
           </div>
         ) : (
           <>
-            <div className="flex items-baseline gap-2">
-              <span className="font-serif text-7xl text-grad">€2,99</span>
-              <span className="text-muted-foreground">/ mese</span>
-            </div>
+            <div className="font-serif text-4xl text-grad">Abbonamento mensile</div>
             <ul className="mt-6 space-y-3 text-sm text-foreground/80">
               {[
                 { i: <Zap size={14} className="text-ciano" />, t: "Sconto in ogni locale partner di Roma" },
@@ -174,7 +171,7 @@ export default function Subscribe() {
                 size="lg"
                 className="mt-4 w-full grad-fucsia-viola glow-fucsia text-white font-bold hover:scale-[1.02] transition rounded-full py-6 text-base"
               >
-                {loading ? "Reindirizzamento a Stripe…" : "Paga con Stripe → €2,99/mese"}
+                {loading ? "Reindirizzamento a Stripe…" : "Paga con Stripe"}
               </Button>
             ) : (
               <div className="mt-4">
