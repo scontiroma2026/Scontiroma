@@ -235,3 +235,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 18/10: aggiunti 13 agenti esterni scelti (agency-…) in .claude/agents/ e regola: dire sempre quale agente si usa
 - 21/10: regola nuova per video, volantini e post: chiusura sempre con WhatsApp Business (352 247 3526) e «Seguici su Instagram e Facebook» con i loghi ufficiali
 - 21/10: regola del titolare: ciò che non è sicuro si chiude con la scelta prudente e va in docs/legale/LISTA_PER_AVVOCATO.md (da far vedere a un avvocato); IVA 22% confermata; altri dati mancanti con segnaposto
+- 23/10: lista per l'avvocato: punto 10 aggiornato (nei Termini proposti #157 la frase «fino a fine mese più il mese successivo» è già corretta; resta solo nell'email del giorno 30 di #169) e riga lista d'attesa allineata alla versione del consenso (nuovi iscritti 2026-10-v2, già iscritti 2026-10-v1)

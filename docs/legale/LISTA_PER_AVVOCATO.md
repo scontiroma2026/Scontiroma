@@ -28,7 +28,7 @@ Legenda: 🔴 prima di accendere i pagamenti o il pre-lancio · 🟠 da valutare
 | 7 | 🔴 | Seconda casella (artt. 1341-1342 c.c.) anche alla schermata di pagamento, con rinnovo automatico, disdetta e mese non rimborsabile | L'elenco delle clausole da approvare per iscritto è completo? Numerazione degli articoli da fissare dopo la riscrittura dei Termini. |
 | 8 | 🟠 | IVA 22% (decisa); emittente della fattura: segnaposto | Obblighi informativi minimi e fatturazione elettronica (SdI) |
 | 9 | 🟠 | Stripe e PayPal titolari autonomi anche per l'antifrode; tolti dall'elenco dei responsabili | Il ruolo non cambia per le attività accessorie? |
-| 10 | 🟠 | Frasi «dopo il giorno 5 vale per il mese successivo» e «la ricevuta non è un documento fiscale»; una sola email di sollecito al mese | Le frasi sono corrette? Frase «fino a fine mese più il mese successivo» da correggere (vera solo se la prima pubblicazione è entro l'11) |
+| 10 | 🟠 | Frasi «dopo il giorno 5 vale per il mese successivo» e «la ricevuta non è un documento fiscale»; una sola email di sollecito al mese | Le frasi sono corrette? Nei Termini proposti (#157) la frase «fino a fine mese più il mese successivo» non c'è più: già corretta (regola «entro l'11 / dal 12» con esempio). Resta solo nell'email del giorno 30 (#169, spenta), da allineare lì |
 | 11 | 🟠 | Testo prudente: «Autorizzi ora l'addebito automatico: il primo importo sarà addebitato solo il [data]» (evita «preautorizzato») | Tempi minimi di avviso nelle regole di Stripe e PayPal per le prove gratuite; il promemoria prima di ogni addebito serve per legge? |
 | 12 | 🟢 | Tenuta la sezione sui servizi a pagamento futuri nel Recesso | Conferma |
 
@@ -44,7 +44,7 @@ Nella Privacy (#202, #203) non è scritto nulla su Aruba e Google.
 | Tema | Rischio | Cosa abbiamo | Cosa chiedere |
 |---|---|---|---|
 | Negozi già iscritti prima delle modifiche ai Termini | 🟠 | All'iscrizione si salvano solo le due caselle spuntate, non la versione del testo visto. Esiste almeno un negozio iscritto il 21/10. | Come comunicare le modifiche (email con preavviso, art. 9 dei Termini; P2B: preavviso minimo da verificare)? Conviene salvare da ora la versione dei Termini accettata? |
-| Lista d'attesa: iscritti con consenso `2026-10-v1` | 🟠 | Hanno visto la frase breve, non l'informativa completa (titolare, 12 mesi, Resend). Non parte nessuna richiesta di nuova conferma. | Basta l'informativa nell'avviso di lancio e il link per annullare, o serve un nuovo consenso? |
+| Lista d'attesa: iscritti con consenso `2026-10-v1` | 🟠 | Hanno visto la frase breve, non l'informativa completa (titolare, 12 mesi, Resend). Non parte nessuna richiesta di nuova conferma. Decisione del titolare (21/10, PR #202): i nuovi iscritti dal modulo con informativa sono registrati con `2026-10-v2`; i già iscritti restano `2026-10-v1`. | Basta l'informativa nell'avviso di lancio e il link per annullare, o serve un nuovo consenso? |
 
 ## Altri gruppi
 Gruppi 3–8 (punti 13–35): da aggiungere man mano che si chiudono con il titolare.
