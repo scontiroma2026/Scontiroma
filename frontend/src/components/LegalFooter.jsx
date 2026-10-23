@@ -84,7 +84,7 @@ export default function LegalFooter() {
       {/* [PROPOSTA - DA VALIDARE] 23/10/2026: dati societari obbligatori (art. 2250 c.c.) dalla visura camerale. */}
       <p
         data-testid="footer-dati-societari"
-        className="mx-auto max-w-7xl px-6 mt-3 text-center sm:text-left text-[11px] leading-relaxed text-muted-foreground"
+        className="mx-auto max-w-7xl px-6 mt-3 text-center sm:text-left text-xs leading-relaxed text-muted-foreground"
       >
         EUROLINEA S.r.l.s. · Via Tasso 5/B, 83031 Ariano Irpino (AV) · C.F. e P.IVA 03240220644 ·
         REA AV-313674 · Capitale sociale 3.000,00 € · PEC{" "}
