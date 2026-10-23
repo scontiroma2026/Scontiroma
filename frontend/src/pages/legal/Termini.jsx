@@ -183,6 +183,13 @@ export default function Termini() {
             Fornire informazioni veritiere su attività, prodotto, prezzo e
             zona.
           </li>
+          {/* [PROPOSTA][DA VALIDARE dal consulente] Punto 23: prezzo precedente (testo da #147 sez. 13, adattato). Norma (art. 17-bis Codice del Consumo), eccezioni e sentenza C-330/23 da verificare. */}
+          <li data-testid="termini-prezzo-30-giorni">
+            Garantire che il <strong>prezzo pieno indicato</strong> nell'offerta
+            è il prezzo più basso che hai applicato a quel prodotto o servizio
+            nei 30 giorni precedenti la pubblicazione dello sconto. Se non puoi
+            garantirlo, non indicare un prezzo pieno più alto.
+          </li>
           <li>Non modificare l'offerta prima del 1° del mese successivo.</li>
           <li>
             Emettere regolare scontrino / fattura secondo la normativa fiscale
@@ -303,6 +310,25 @@ export default function Termini() {
           Piattaforma. Il Commerciante garantisce di avere i diritti su foto
           e testi che carica, comprese le foto migliorate con strumenti
           automatici, e di non violare diritti di terzi.
+        </p>
+        {/* [PROPOSTA][DA VALIDARE dal consulente] Punti 20 e 21: manleva, persone nelle foto, criteri di approvazione, contestazione. Norme (artt. 96-97 L. 633/1941, art. 4 Reg. UE 2019/1150) da verificare; termine di 10 giorni lavorativi = proposta. */}
+        <p data-testid="termini-foto-persone">
+          <strong>Non caricare foto in cui si riconoscono persone senza il
+          loro permesso.</strong> Il Commerciante è l'unico responsabile dei
+          contenuti e delle foto che carica e ci tiene indenne (manleva) da
+          pretese di terzi, comprese richieste di risarcimento, collegate a
+          quei contenuti, per quanto consentito dalla legge.
+        </p>
+        <p data-testid="termini-approvazione-foto">
+          Ogni offerta e ogni foto sono controllate da Sconti Roma prima della
+          pubblicazione. Non pubblichiamo contenuti che: mostrano persone
+          riconoscibili senza permesso; contengono marchi o opere altrui senza
+          diritto di usarli; non riguardano l'offerta; sono ingannevoli
+          (anche sul prezzo); sono di scarsa qualità o contrari alla legge. Se
+          scartiamo una foto o un'offerta, ti scriviamo il motivo. Se non sei
+          d'accordo, scrivi a{" "}
+          <a href="mailto:info@scontiroma.it" className="text-fucsia hover:underline">info@scontiroma.it</a>
+          : riesaminiamo la decisione e rispondiamo entro 10 giorni lavorativi.
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">9. Modifiche ai Termini</h2>

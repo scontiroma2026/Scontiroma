@@ -212,7 +212,7 @@ async def send_merchant_approved(to: str, name: str, shop_name: str, discount_ti
     scartate = ""
     if foto_scartate:
         righe = "".join(f"<li>Foto {int(n)}: {_esc(motivo)}</li>" for n, motivo in foto_scartate)
-        scartate = f'<p style="margin:0 0 8px;color:#d4d4d8"><strong>Foto non pubblicate:</strong> abbiamo scartato {"una foto" if len(foto_scartate) == 1 else "alcune foto"}. Il resto dell\'offerta è online.</p><ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">{righe}</ul><p style="margin:0 0 16px;color:#d4d4d8">Puoi caricare altre foto quando potrai modificare l\'offerta.</p>'
+        scartate = f'<p style="margin:0 0 8px;color:#d4d4d8"><strong>Foto non pubblicate:</strong> abbiamo scartato {"una foto" if len(foto_scartate) == 1 else "alcune foto"}. Il resto dell\'offerta è online.</p><ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">{righe}</ul><p style="margin:0 0 16px;color:#d4d4d8">Puoi caricare altre foto quando potrai modificare l\'offerta.</p><p style="margin:0 0 16px;color:#d4d4d8">Per contestare scrivi a <a href="mailto:info@scontiroma.it" style="color:#00E5FF">info@scontiroma.it</a>.</p>'
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
