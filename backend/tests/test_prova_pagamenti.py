@@ -92,7 +92,7 @@ async def admin_master(c, monkeypatch):
     _, h = await nuovo_utente("admin")
     m = await c.post("/api/admin/verify-master", json={"password": MASTER}, headers=h)
     assert m.status_code == 200, m.text
-    return {**h, "X-Admin-Master": m.json()["token"]}, h
+    return {**h, "X-Admin-Master": m.cookies["admin_master_token"]}, h
 
 
 async def titoli_pubblici(c):

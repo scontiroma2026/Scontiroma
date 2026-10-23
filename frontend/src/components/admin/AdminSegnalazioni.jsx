@@ -42,6 +42,11 @@ export default function AdminSegnalazioni({ hdrs }) {
               <span className="text-muted-foreground">{new Date(s.creata_il).toLocaleString("it-IT")}</span>
               <span className="font-semibold">Stato: {s.stato}</span>
               <span className="text-muted-foreground">Rispondere entro {s.conferma_entro}</span>
+              {s.sospensione && s.riesame_entro && (
+                <span data-testid={`segnalazione-riesame-${s.id}`} className="rounded-full border border-red-500/40 px-2 py-0.5 font-semibold text-red-700">
+                  Contesta una sospensione: riesame entro il {new Date(s.riesame_entro + "T12:00:00").toLocaleDateString("it-IT")}
+                </span>
+              )}
             </div>
             <div className="mt-1 text-sm font-semibold">{s.riferimento}</div>
             <p className="mt-2 whitespace-pre-wrap text-sm">{s.motivo}</p>
