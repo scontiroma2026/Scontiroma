@@ -63,7 +63,10 @@ async function admin(request) {
   expect(r.status, 'login admin di test').toBe(200);
   const m = await chiama(request, 'POST', '/admin/verify-master', { token: r.data.access_token, body: { password: ADMIN_MASTER_PASSWORD } });
   expect(m.status, 'master password di test').toBe(200);
-  return { token: r.data.access_token, headers: { 'X-Admin-Master': m.data.token } };
+  // Il token master arriva solo nel cookie httpOnly (mai nel corpo): lo si legge dall'intestazione Set-Cookie.
+  const master = /admin_master_token=([^;]+)/.exec(m.headers['set-cookie'] || '');
+  expect(master, 'cookie admin_master_token').toBeTruthy();
+  return { token: r.data.access_token, headers: { 'X-Admin-Master': master[1] } };
 }
 
 async function creaOffertaApprovata(request, merchantToken, offerta = {}) {

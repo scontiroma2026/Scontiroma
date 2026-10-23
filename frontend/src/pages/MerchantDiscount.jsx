@@ -12,6 +12,7 @@ import PhotoGallery from "@/components/PhotoGallery";
 import ArchivioOfferte from "@/components/ArchivioOfferte";
 import { Scheda, TONI, ErroreRiprova, Scheletro } from "@/components/AreaUI";
 import RiquadroBozza from "@/components/RiquadroBozza";
+import BannerOffertaPreparata from "@/components/BannerOffertaPreparata";
 import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
 
 const EMPTY_FORM = {
@@ -269,6 +270,9 @@ export default function MerchantDiscount() {
         )}
 
         {/* ---- Banner offerta corrente ---- */}
+        {!isNext && status === "awaiting_merchant" && (
+          <BannerOffertaPreparata conModifica={false} onConfermata={() => load(mode)} />
+        )}
         {!isNext && status === "pending" && (
           <Avviso testid="banner-pending" tono="ambra" icona={<Clock size={20} />} titolo="Offerta in fase di revisione">
             Sarà attiva a breve dopo l'approvazione dell'amministratore. Nel frattempo puoi modificarla liberamente.
@@ -359,6 +363,10 @@ export default function MerchantDiscount() {
                 <div>
                   <Label htmlFor="disc-original" className={ETICHETTA}>Prezzo originale (€)</Label>
                   <Input id="disc-original" data-testid="disc-original" type="number" inputMode="decimal" step="0.01" required value={form.original_price} onChange={upd("original_price")} className={CAMPO} />
+                  {/* [PROPOSTA][DA VALIDARE] avviso prezzo precedente, nessuna casella da spuntare */}
+                  <p data-testid="disc-original-avviso" className={AIUTO}>
+                    Inserisci il prezzo più basso a cui hai venduto questo prodotto negli ultimi 30 giorni.
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="disc-discounted" className={ETICHETTA}>Prezzo scontato (€)</Label>
@@ -369,6 +377,10 @@ export default function MerchantDiscount() {
                 <div className={ETICHETTA}>Foto dell'offerta <span className="text-xs font-semibold text-ac-mute">(fino a 8, la 1ª è la copertina)</span></div>
                 <p className={`${AIUTO} mb-3`}>
                   Carica le tue foto (verranno ottimizzate) oppure scegli dalla libreria di immagini di esempio già pronte. Trascina l'ordine o rimuovi con la X.
+                </p>
+                {/* [PROPOSTA][DA VALIDARE] avviso persone nelle foto, nessuna casella da spuntare (scelta del titolare 15/10) */}
+                <p data-testid="disc-foto-avviso" className={`${AIUTO} mb-3`}>
+                  Non caricare foto in cui si riconoscono persone senza il loro permesso.
                 </p>
                 <PhotoGallery
                   value={form.image_urls}
@@ -465,6 +477,7 @@ export default function MerchantDiscount() {
                     : nextOffer ? `Aggiorna offerta di ${monthLabel} (torna in revisione)` : `Invia offerta di ${monthLabel} (in revisione)`)
                   : (readOnly ? <><Lock size={16} aria-hidden="true" /> Modifiche bloccate questo mese</>
                     : loading ? "Salvataggio…"
+                    : status === "awaiting_merchant" ? "Salva le mie modifiche e invia in revisione"
                     : existing ? "Aggiorna e ri-invia in revisione" : "Pubblica (in revisione)")}
               </button>
             </form>

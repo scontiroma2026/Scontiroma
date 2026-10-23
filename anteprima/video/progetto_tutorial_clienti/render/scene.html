@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<title>Video tutorial clienti</title>
+<!-- Scena del video tutorial per i clienti. render.js chiama setMode('v'|'q'), setup(timeline) e render(t) per ogni fotogramma.
+     Colori del sito (fucsia #D81B72, viola #6D4AFF, ciano #00798C), carattere Manrope ospitato in locale (fonts.css, licenza OFL).
+     Il numero WhatsApp NON è scritto qui (repository pubblico): arriva da timeline.json, che prepara.py compone con CONTATTO_WHATSAPP.
+     Glifi di Instagram, Facebook e WhatsApp disegnati semplici (bianco; la «f» nel blu ufficiale); cornetta da Material Icons «call» (Apache 2.0). -->
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root { --fucsia: #D81B72; --viola: #6D4AFF; --ciano: #00798C; --ink: #16132B; --bg: #F5F6F8; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); font-family: 'Manrope', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body.q { height: 1080px; }
+#bg { position: absolute; inset: 0; background:
+  radial-gradient(circle at 12% 8%, rgba(216,27,114,0.16) 0, transparent 38%),
+  radial-gradient(circle at 92% 30%, rgba(109,74,255,0.16) 0, transparent 40%),
+  radial-gradient(circle at 20% 92%, rgba(0,121,140,0.10) 0, transparent 40%), var(--bg); }
+.grad { background: linear-gradient(135deg, #D81B72 0%, #6D4AFF 100%); }
+.abs { position: absolute; }
+.brand { display: flex; align-items: center; gap: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.tile { display: grid; place-items: center; background: #fff; border-radius: 22%; box-shadow: 0 10px 30px rgba(22,19,43,0.18); color: var(--ink); }
+.tile svg { width: 72%; height: auto; }
+.chip { display: inline-flex; align-items: center; gap: 12px; border-radius: 999px; font-weight: 800; white-space: nowrap; }
+.chip.g { color: #fff; } .chip.b { background: #fff; color: var(--fucsia); box-shadow: 0 6px 18px rgba(22,19,43,0.12); }
+#phone { background: #16132B; box-shadow: 0 40px 90px rgba(22,19,43,0.35), 0 0 0 2px rgba(255,255,255,0.4) inset; }
+#screen { position: absolute; overflow: hidden; background: #fff; }
+.layer { position: absolute; left: 0; top: 0; width: 100%; will-change: transform, opacity; }
+.layer img { display: block; width: 100%; height: auto; }
+.hl { position: absolute; border: 4px solid var(--fucsia); border-radius: 18px; box-shadow: 0 0 0 9999px rgba(22,19,43,0.28), 0 0 24px rgba(216,27,114,0.7); }
+#sub { display: flex; align-items: center; justify-content: center; text-align: center; z-index: 5; }
+#sub span { display: inline-block; font-weight: 700; line-height: 1.22; }
+#gancio, #finale { inset: 0; color: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; }
+#gancio { justify-content: center; z-index: 6; }
+#gancio h1 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.04; }
+#finale h2 { font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.social { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+.social svg, .contatti svg { display: block; flex: none; } .social b, .contatti b { font-weight: 800; }
+#passo { display: flex; align-items: center; z-index: 4; }
+#passo .n { display: grid; place-items: center; border-radius: 50%; color: #fff; font-weight: 800; box-shadow: 0 14px 34px rgba(216,27,114,0.35); flex: none; }
+#passo .t { background: #fff; color: var(--ink); font-weight: 800; border-radius: 999px; box-shadow: 0 10px 28px rgba(22,19,43,0.18); white-space: nowrap; }
+#elenco { display: flex; flex-direction: column; z-index: 4; }
+#elenco .r { display: flex; align-items: center; background: #fff; border-radius: 28px; box-shadow: 0 18px 44px rgba(22,19,43,0.25); font-weight: 800; }
+#elenco .r b { display: grid; place-items: center; border-radius: 50%; color: #fff; flex: none; }
+.alto { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.qrcard { background: #fff; border-radius: 32px; box-shadow: 0 24px 60px rgba(22,19,43,0.35); display: grid; place-items: center; }
+.qrcard img { display: block; }
+.url { font-weight: 800; letter-spacing: -0.01em; }
+.riga { display: flex; }
+.wchip { border: 3px solid #fff; background: #fff; color: var(--fucsia); }
+.contatti { display: flex; flex-direction: column; font-weight: 700; }
+.contatti .c { display: flex; align-items: center; }
+.contatti .loghi { display: flex; flex: none; }
+
+/* ===== verticale 1080x1920 ===== */
+body.v #top { left: 56px; top: 64px; right: 56px; display: flex; justify-content: space-between; align-items: center; }
+body.v #top .brand { font-size: 44px; } body.v #top .tile { width: 84px; height: 84px; }
+body.v #top .chips { display: flex; gap: 12px; } body.v #top .chip { font-size: 28px; padding: 12px 22px; }
+body.v #phone { left: 220px; top: 300px; width: 640px; height: 1274px; border-radius: 74px; }
+body.v #screen { left: 17px; top: 17px; width: 606px; height: 1240px; border-radius: 58px; }
+body.v #sub { left: 50px; right: 50px; top: 1622px; height: 250px; }
+body.v #sub span { font-size: 52px; color: #fff; background: rgba(22,19,43,0.9); padding: 20px 32px; border-radius: 28px; max-width: 990px; }
+body.v #gancio h1 { font-size: 116px; max-width: 920px; margin-top: 40px; }
+body.v #gancio .tile { width: 170px; height: 170px; }
+body.v #gancio .nome { font-size: 54px; font-weight: 800; margin-top: 26px; }
+body.v .social { bottom: 150px; gap: 12px; font-size: 35px; } body.v .social svg { width: 52px; height: 52px; }
+body.v #passo { left: 0; right: 0; top: 182px; gap: 16px; justify-content: center; } body.v #passo .n { width: 100px; height: 100px; font-size: 58px; } body.v #passo .t { font-size: 42px; padding: 16px 30px; }
+body.v #elenco { left: 120px; right: 120px; top: 620px; gap: 34px; } body.v #elenco .r { font-size: 50px; padding: 30px 36px; gap: 28px; } body.v #elenco .r b { width: 96px; height: 96px; font-size: 54px; }
+body.v #finale { justify-content: center; padding-bottom: 330px; }
+body.v #finale .alto { flex-direction: column; }
+body.v #finale .col { display: contents; }
+body.v #finale .tile { width: 136px; height: 136px; order: 1; }
+body.v #finale h2 { font-size: 112px; margin-top: 24px; order: 1; }
+body.v #finale .qrcard { width: 400px; height: 400px; margin-top: 40px; order: 2; } body.v #finale .qrcard img { width: 344px; height: 344px; }
+body.v #finale .url { font-size: 76px; margin-top: 26px; order: 3; }
+body.v #finale .riga { gap: 20px; margin-top: 30px; } body.v #finale .wchip { font-size: 42px; padding: 14px 32px; }
+body.v .contatti { margin-top: 44px; gap: 26px; font-size: 44px; align-items: center; }
+body.v .contatti .c { gap: 20px; text-align: left; } body.v .contatti svg { width: 72px; height: 72px; } body.v .contatti .loghi { gap: 12px; } body.v #c_social b { display: block; }
+
+/* ===== quadrato 1080x1080 ===== */
+body.q #top { left: 560px; top: 60px; width: 470px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+body.q #top .brand { font-size: 38px; gap: 14px; } body.q #top .tile { width: 66px; height: 66px; }
+body.q #top .chips { display: flex; gap: 10px; } body.q #top .chip { font-size: 24px; padding: 8px 16px; }
+body.q #phone { left: 76px; top: 70px; width: 446px; height: 940px; border-radius: 56px; }
+body.q #screen { left: 14px; top: 14px; width: 418px; height: 912px; border-radius: 44px; }
+body.q #sub { left: 560px; width: 470px; top: 400px; height: 420px; justify-content: flex-start; align-items: flex-start; text-align: left; }
+body.q #sub span { font-size: 46px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.15; }
+body.q.fin #sub, body.q.gan #sub { left: 40px; right: 40px; width: auto; top: 948px; height: 110px; justify-content: center; align-items: center; text-align: center; }
+body.q.fin #sub span, body.q.gan #sub span { font-size: 34px; font-weight: 700; color: #fff; background: rgba(22,19,43,0.88); padding: 12px 24px; border-radius: 20px; }
+body.q #gancio h1 { font-size: 96px; max-width: 920px; margin-top: 30px; }
+body.q #gancio .tile { width: 130px; height: 130px; }
+body.q #gancio .nome { font-size: 44px; font-weight: 800; margin-top: 18px; }
+body.q .social { bottom: 70px; gap: 12px; font-size: 30px; } body.q .social svg { width: 44px; height: 44px; }
+body.q #passo { left: 560px; top: 268px; gap: 12px; } body.q #passo .n { width: 96px; height: 96px; font-size: 54px; } body.q #passo .t { font-size: 28px; padding: 12px 20px; }
+body.q #elenco { left: 560px; width: 480px; top: 600px; gap: 20px; } body.q #elenco .r { font-size: 32px; padding: 18px 22px; gap: 18px; } body.q #elenco .r b { width: 64px; height: 64px; font-size: 36px; }
+body.q #finale { justify-content: center; padding-bottom: 130px; }
+body.q #finale .alto { flex-direction: row; gap: 64px; }
+body.q #finale .col { align-items: flex-start; text-align: left; }
+body.q #finale .tile { width: 88px; height: 88px; }
+body.q #finale h2 { font-size: 74px; margin-top: 18px; }
+body.q #finale .url { font-size: 50px; margin-top: 20px; }
+body.q #finale .qrcard { width: 300px; height: 300px; } body.q #finale .qrcard img { width: 256px; height: 256px; }
+body.q #finale .riga { gap: 16px; margin-top: 30px; } body.q #finale .wchip { font-size: 30px; padding: 9px 22px; }
+body.q .contatti { margin-top: 26px; gap: 14px; font-size: 30px; align-items: center; }
+body.q .contatti .c { gap: 14px; } body.q .contatti svg { width: 46px; height: 46px; } body.q .contatti .loghi { gap: 10px; }
+</style></head>
+<body class="v">
+<div id="bg" class="abs"></div>
+
+<template id="icona"><svg viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M34.5 3 L35.8 5.7 L38.5 7 L35.8 8.3 L34.5 11 L33.2 8.3 L30.5 7 L33.2 5.7 Z" fill="#00798C"/>
+  <line x1="2.5" y1="27" x2="31.5" y2="27" stroke="#D81B72" stroke-width="2" stroke-linecap="round"/>
+  <path d="M4 27 L4 11 L18 11 L18 14 L30 14 L30 27" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M6 26.5 L6 20 Q6 16.5 9 16.5 Q12 16.5 12 20 L12 26.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M13 26.5 L13 19.5 Q13 16 16.5 16 Q20 16 20 19.5 L20 26.5 Z" fill="#D81B72"/>
+  <path d="M21 26.5 L21 20 Q21 16.5 23.5 16.5 Q26 16.5 26 20 L26 26.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M27 26.5 L27 21.5 Q27 18.5 29 18.5 Q31 18.5 31 21.5 L31 26.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+</svg></template>
+<template id="ig"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="11" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="24" r="8.6" fill="none" stroke="#fff" stroke-width="3.6"/><circle cx="35" cy="13" r="2.6" fill="#fff"/></svg></template>
+<template id="fb"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#fff"/><path d="M26.6 44.8V30.2h4.9l.8-5.7h-5.7v-3.6c0-1.6.5-2.8 2.8-2.8h3v-5.1c-.5-.1-2.3-.2-4.4-.2-4.3 0-7.3 2.6-7.3 7.5v4.2H16v5.7h4.7v14.6" fill="#1877F2"/></svg></template>
+
+<div id="top" class="abs">
+  <div class="brand"><div class="tile ico"></div><span>Sconti Roma</span></div>
+  <div class="chips"><span class="chip b">Gratuita nella fase di lancio</span><span class="chip g grad">18+</span></div>
+</div>
+
+<div id="phone" class="abs"><div id="screen"></div></div>
+
+<div id="passo" class="abs"><div class="n grad" id="passo_n"></div><div class="t" id="passo_t"></div></div>
+<div id="elenco" class="abs"></div>
+
+<div id="gancio" class="abs grad">
+  <div class="tile ico"></div>
+  <div class="nome">Sconti Roma</div>
+  <h1 id="gtxt"></h1>
+  <div class="social"><span class="ig"></span><span class="fb"></span><span>Seguici su Instagram e Facebook: <b>Sconti Roma</b></span></div>
+</div>
+
+<div id="finale" class="abs grad">
+  <div class="alto">
+    <div class="col">
+      <div class="tile ico"></div>
+      <h2>Sconti Roma</h2>
+      <div class="url">scontiroma.it</div>
+    </div>
+    <div class="qrcard"><img src="qr.svg" alt=""></div>
+  </div>
+  <div class="riga"><span class="chip wchip">Gratuita nella fase di lancio</span><span class="chip wchip">18+</span></div>
+  <div class="contatti">
+    <div class="c" id="c_wa">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4a20 20 0 0 0-17.3 30L4 44l10.3-2.7A20 20 0 1 0 24 4z" fill="none" stroke="#fff" stroke-width="3.4" stroke-linejoin="round"/>
+        <g transform="translate(12.5 12.5) scale(0.95)" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></g></svg>
+      <span>Contattaci su WhatsApp: <b id="wa_num"></b></span>
+    </div>
+    <div class="c" id="c_social"><span class="loghi"><span class="ig"></span><span class="fb"></span></span><span>Seguici su Instagram e Facebook: <b>Sconti Roma</b></span></div>
+  </div>
+</div>
+
+<div id="sub" class="abs"><span id="subtxt"></span></div>
+
+<script>
+const $ = id => document.getElementById(id);
+document.querySelectorAll('.ico').forEach(e => e.appendChild($('icona').content.cloneNode(true)));
+document.querySelectorAll('.ig').forEach(e => e.replaceWith($('ig').content.cloneNode(true)));
+document.querySelectorAll('.fb').forEach(e => e.replaceWith($('fb').content.cloneNode(true)));
+let D = null, MODE = 'v', L = [];
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const out = x => 1 - Math.pow(1 - clamp(x), 3);
+const ramp = (t, a, d) => clamp((t - a) / d);
+const SHOT_W = 1170;
+// scorrimento: tra due punti chiave si passa con una curva morbida
+function scroll(keys, t) {
+  if (t <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) if (t < keys[i][0]) { const [a, ya] = keys[i - 1], [b, yb] = keys[i]; return ya + (yb - ya) * ease((t - a) / (b - a)); }
+  return keys[keys.length - 1][1];
+}
+window.setMode = m => { MODE = m; document.body.className = m; };
+window.setup = d => {
+  D = d; $('wa_num').textContent = d.whatsapp || '[numero]';
+  const sc = $('screen');
+  L = d.inquadrature.map(q => {
+    const el = document.createElement('div'); el.className = 'layer';
+    const img = document.createElement('img'); img.src = 'app/' + q.img + '.jpg'; el.appendChild(img);
+    const hls = (q.evidenzia || []).map(([nome, a, b]) => { const h = document.createElement('div'); h.className = 'hl'; el.appendChild(h); return { h, p: d.posizioni[nome], a, b }; });
+    sc.appendChild(el); return { q, el, img, hls };
+  });
+  $('elenco').innerHTML = d.passi.map(([, , n, t]) => `<div class="r"><b class="grad">${n}</b>${t}</div>`).join('');
+};
+window.render = t => {
+  const sw = $('screen').clientWidth, k = sw / SHOT_W, vh = $('screen').clientHeight / k;
+  const G = D.gancio, F = D.finale, gan = t < G[1], fin = t >= F[0];
+  document.body.className = MODE + (fin ? ' fin' : '') + (gan ? ' gan' : '');
+  // sottotitolo (nel gancio le parole sono già la grande scritta)
+  const s = D.sottotitoli.find(([a, b]) => t >= a && t < b) || D.sottotitoli[D.sottotitoli.length - 1];
+  $('subtxt').textContent = s[2];
+  const subIn = out(ramp(t, s[0], 0.18));
+  $('sub').style.opacity = (gan ? 0 : 1) * (0.25 + 0.75 * subIn);
+  $('sub').style.transform = `translateY(${(1 - subIn) * 14}px)`;
+  // gancio: due grandi scritte (le prime due frasi della voce), poi esce verso l'alto
+  const g1 = D.sottotitoli[0], g2 = D.sottotitoli[1];
+  const cur = t < g2[0] ? g1 : g2; $('gtxt').textContent = cur[2];
+  const gIn = out(ramp(t, cur[0], 0.4)); $('gtxt').style.opacity = gIn; $('gtxt').style.transform = `scale(${0.93 + 0.07 * gIn})`;
+  const gOut = ease(ramp(t, G[1] - 0.1, 0.4));
+  $('gancio').style.opacity = 1 - gOut; $('gancio').style.transform = `translateY(${-gOut * 120}px)`;
+  // telefono
+  const pIn = out(ramp(t, G[1] - 0.15, 0.55)), pOut = ease(ramp(t, F[0] - 0.05, 0.45));
+  $('phone').style.transform = `translateY(${(1 - pIn) * 260 + pOut * 80}px) scale(${1 - pOut * 0.05})`;
+  $('phone').style.opacity = pIn * (1 - pOut);
+  // inquadrature dell'app: dissolvenza all'ingresso, scorrimento, riquadri evidenziati
+  L.forEach(({ q, el, img, hls }, i) => {
+    const vis = ease(ramp(t, q.da, 0.3));
+    // un livello coperto del tutto dal successivo (o non ancora entrato) non si disegna: meno memoria nel browser
+    const coperto = i + 1 < L.length && t >= L[i + 1].q.da + 0.35;
+    el.style.opacity = vis; el.style.display = vis > 0 && !coperto ? 'block' : 'none';
+    const y = Math.max(0, Math.min(scroll(q.scroll, t), img.naturalHeight - vh));
+    el.style.transform = `translateY(${-y * k}px)`;
+    hls.forEach(({ h, p, a, b }) => {
+      const o = ease(ramp(t, a, 0.25)) * (1 - ease(ramp(t, b - 0.2, 0.2)));
+      const pad = 10;
+      h.style.left = (p[0] - pad) * k + 'px'; h.style.top = (p[1] - pad) * k + 'px';
+      h.style.width = (p[2] + 2 * pad) * k + 'px'; h.style.height = (p[3] + 2 * pad) * k + 'px';
+      h.style.opacity = o; h.style.transform = `scale(${1.04 - 0.04 * o})`;
+    });
+  });
+  // numero del passo
+  const ps = D.passi.find(([a, b]) => t >= a && t < b);
+  if (ps) { $('passo_n').textContent = ps[2]; $('passo_t').textContent = ps[3]; const o = out(ramp(t, ps[0], 0.35)) * (1 - ease(ramp(t, ps[1] - 0.15, 0.15))); $('passo').style.opacity = o; $('passo').style.transform = `translateX(${(1 - o) * -30}px)`; }
+  else $('passo').style.opacity = 0;
+  // elenco dei tre passi
+  const [ea, eb] = D.elenco_passi;
+  [...$('elenco').children].forEach((r, i) => { const o = out(ramp(t, ea + 0.35 + i * 0.35, 0.3)) * (1 - ease(ramp(t, eb - 0.25, 0.25))); r.style.opacity = o; r.style.transform = `translateY(${(1 - o) * 24}px)`; });
+  // barra in alto: sotto gancio e finale non serve
+  $('top').style.opacity = gan || fin ? 0 : 1;
+  // finale
+  const fIn = ease(ramp(t, F[0] - 0.05, 0.45));
+  $('finale').style.opacity = fIn; $('finale').style.transform = `translateY(${(1 - fIn) * 60}px)`;
+  const pop = (id, t0) => { const x = out(ramp(t, t0, 0.35)); $(id).style.opacity = x; $(id).style.transform = `translateY(${(1 - x) * 18}px)`; };
+  pop('c_wa', F[0] + 1.0); pop('c_social', F[0] + 1.6);
+};
+</script>
+</body></html>

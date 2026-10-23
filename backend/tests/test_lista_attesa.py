@@ -82,6 +82,7 @@ def run(body):
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             await body(c)
+            await server.attendi_lavori_in_background()  # nessun lavoro in background lasciato a metà
     asyncio.run(main())
 
 
@@ -104,7 +105,7 @@ async def admin(c):
     _, h = await nuovo_utente("admin")
     m = await c.post("/api/admin/verify-master", json={"password": MASTER}, headers=h)
     assert m.status_code == 200, m.text
-    return {**h, "X-Admin-Master": m.json()["token"]}
+    return {**h, "X-Admin-Master": m.cookies["admin_master_token"]}
 
 
 async def avvia_avviso(c, ah):

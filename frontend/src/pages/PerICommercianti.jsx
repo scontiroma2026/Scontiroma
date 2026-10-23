@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import { salvaFonte, registraVisitaFonte } from "@/lib/referral";
 import { Button } from "@/components/ui/button";
 import VideoCommercianti from "@/components/VideoCommercianti";
+import RiquadroCiPensiamoNoi from "@/components/RiquadroCiPensiamoNoi";
 
 const PASSI = [
   { n: "1", t: "Scegli cosa offrire", d: "Un prodotto o un servizio del tuo negozio, a tua scelta." },
@@ -59,6 +60,8 @@ export default function PerICommercianti() {
           <Link data-testid="cta-registra-attivita" to="/register?role=merchant">Registra la tua attività</Link>
         </Button>
       </div>
+
+      <RiquadroCiPensiamoNoi testid="ci-pensiamo-noi-commercianti" className="mt-10" />
 
       <section className="mt-12" aria-labelledby="faq-titolo">
         <h2 id="faq-titolo" className="font-serif text-3xl">Domande veloci</h2>
