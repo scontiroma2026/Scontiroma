@@ -55,7 +55,7 @@ def run(body):
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             await body(c)
-            await asyncio.sleep(0.05)  # lascia finire le email in background
+            await server.attendi_lavori_in_background()  # nessun lavoro in background lasciato a metà
     asyncio.run(main())
 
 
@@ -63,10 +63,10 @@ async def iscrivi(c, role):
     body = {"email": f"{role}.{uuid.uuid4().hex[:8]}@example.com", "password": "Password-prova-123",
             "name": "Mario Rossi", "role": role, "legal_accepted": True}
     if role == "merchant":
-        body.update({"shop_name": "Osteria di prova", "zone": "Garbatella", "category": "Ristorante", "phone": "+39 06 0000000"})
+        body.update({"shop_name": "Osteria di prova", "zone": "Garbatella", "category": "Ristorante", "phone": "+39 06 0000000", "partita_iva": "12345678903"})
     r = await c.post("/api/auth/register", json=body)
     assert r.status_code == 200, r.text
-    await asyncio.sleep(0.02)
+    await server.attendi_lavori_in_background()
     return {"Authorization": f"Bearer {r.json()['access_token']}"}
 
 
@@ -96,9 +96,9 @@ def test_offerta_da_approvare_una_sola_email_finche_resta_in_attesa(posta):
         posta.clear()
         offerta = {"title": "Menù di pesce", "description": "Descrizione.", "original_price": 40, "discounted_price": 20}
         assert (await c.post("/api/merchants/me/discount", json=offerta, headers=h)).status_code == 200
-        await asyncio.sleep(0.02)
+        await server.attendi_lavori_in_background()
         assert (await c.post("/api/merchants/me/discount", json={**offerta, "title": "Menù di pesce bis"}, headers=h)).status_code == 200
-        await asyncio.sleep(0.02)
+        await server.attendi_lavori_in_background()
     run(body)
     assert nomi(posta) == ["send_admin_new_offer"]
 
@@ -112,7 +112,7 @@ def test_offerta_mese_prossimo_avvisa_admin(posta, monkeypatch):
         r = await c.post("/api/merchants/me/next-discount", headers=h,
                          json={"title": "Offerta di novembre", "description": "Descrizione.", "original_price": 30, "discounted_price": 15})
         assert r.status_code == 200, r.text
-        await asyncio.sleep(0.02)
+        await server.attendi_lavori_in_background()
     run(body)
     assert nomi(posta) == ["send_admin_new_offer"]
     assert "novembre 2026" in posta[0][1]
@@ -123,7 +123,7 @@ def test_conferma_cancellazione_account(posta):
         h = await iscrivi(c, "client")
         posta.clear()
         assert (await c.request("DELETE", "/api/gdpr/delete-account", headers=h)).status_code == 200
-        await asyncio.sleep(0.02)
+        await server.attendi_lavori_in_background()
     run(body)
     assert nomi(posta) == ["send_account_deleted"]
 

@@ -83,7 +83,7 @@ test('i commercianti non devono confermare l\'email', async ({ page, request }) 
   const email = unico('negozio');
   const r = await chiama(request, 'POST', '/auth/register', { body: {
     email, password: PASSWORD, name: 'Luca', role: 'merchant', legal_accepted: true, legal_specific_accepted: true,
-    shop_name: 'Negozio di prova', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000', address: "Via dell'Esempio 1, Roma" } });
+    shop_name: 'Negozio di prova', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000', partita_iva: '12345678903', address: "Via dell'Esempio 1, Roma" } });
   expect(r.status).toBe(200);
   expect(r.data.access_token).toBeTruthy();
   expect(r.data.confirmation_required).toBeUndefined();

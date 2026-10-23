@@ -12,6 +12,7 @@ import PhotoGallery from "@/components/PhotoGallery";
 import ArchivioOfferte from "@/components/ArchivioOfferte";
 import { Scheda, TONI, ErroreRiprova, Scheletro } from "@/components/AreaUI";
 import RiquadroBozza from "@/components/RiquadroBozza";
+import BannerOffertaPreparata from "@/components/BannerOffertaPreparata";
 import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
 
 const EMPTY_FORM = {
@@ -80,6 +81,7 @@ export default function MerchantDiscount() {
   const [existing, setExisting] = useState(null);
   const [nextOffer, setNextOffer] = useState(null);
   const [win, setWin] = useState(null);
+  const [noRenew, setNoRenew] = useState(false);
   // Il modulo si sblocca solo quando sono arrivati i dati dal server: altrimenti la risposta
   // (anche lenta, server appena svegliato) cancellerebbe quello che il commerciante ha già scritto.
   const [loaded, setLoaded] = useState(false);
@@ -102,6 +104,7 @@ export default function MerchantDiscount() {
       setExisting(c);
       setNextOffer(n);
       setWin(nxt.data.window);
+      setNoRenew(Boolean(nxt.data.no_renew));
       const f = targetMode === "next" ? (n ? formFrom(n) : (c ? formFrom(c) : EMPTY_FORM)) : (c ? formFrom(c) : EMPTY_FORM);
       setForm(f);
       setBase(f);
@@ -195,7 +198,8 @@ export default function MerchantDiscount() {
   const status = isNext ? nextOffer?.approval_status : existing?.approval_status;
   const locked = !isNext && existing?.locked_this_month;
   const windowClosed = isNext && win && !win.open;
-  const readOnly = isNext ? windowClosed : locked;
+  const nonRinnovo = isNext && noRenew && !nextOffer;
+  const readOnly = isNext ? (windowClosed || nonRinnovo) : locked;
 
   // Tab: stessa forma per tutte, colore pieno quando è quella scelta
   const tab = (attiva, coloreAttivo) =>
@@ -266,6 +270,9 @@ export default function MerchantDiscount() {
         )}
 
         {/* ---- Banner offerta corrente ---- */}
+        {!isNext && status === "awaiting_merchant" && (
+          <BannerOffertaPreparata conModifica={false} onConfermata={() => load(mode)} />
+        )}
         {!isNext && status === "pending" && (
           <Avviso testid="banner-pending" tono="ambra" icona={<Clock size={20} />} titolo="Offerta in fase di revisione">
             Sarà attiva a breve dopo l'approvazione dell'amministratore. Nel frattempo puoi modificarla liberamente.
@@ -303,7 +310,12 @@ export default function MerchantDiscount() {
             Potrai caricare l'offerta di <strong className="text-ac-ink">{monthLabel}</strong> a partire dal <strong className="text-ac-ink">{win?.opens_on}</strong>, negli ultimi 7 giorni del mese.
           </Avviso>
         )}
-        {isNext && !windowClosed && !nextOffer && (
+        {nonRinnovo && !windowClosed && (
+          <Avviso testid="banner-next-no-renew" tono="ambra" icona={<CalendarClock size={20} />} titolo="Hai scelto di non rinnovare">
+            Il caricamento dell'offerta di <strong className="text-ac-ink">{monthLabel}</strong> è spento. Se cambi idea, torna alla pagina principale e tocca «Annulla, voglio rinnovare».
+          </Avviso>
+        )}
+        {isNext && !windowClosed && !nonRinnovo && !nextOffer && (
           <Avviso testid="banner-next-new" tono="teal" icona={<CalendarPlus size={20} />} titolo={`Prepara l'offerta di ${monthLabel}`}>
             Il modulo è precompilato con l'offerta attuale: modifica quello che vuoi. Dopo l'approvazione dell'amministratore, <strong className="text-ac-ink">il 1° del mese sostituirà automaticamente</strong> l'offerta corrente. Se non la carichi, il negozio resterà senza offerta.
           </Avviso>
@@ -452,10 +464,12 @@ export default function MerchantDiscount() {
               >
                 {isNext
                   ? (windowClosed ? <><Lock size={16} aria-hidden="true" /> Finestra chiusa — apre il {win?.opens_on}</>
+                    : nonRinnovo ? <><Lock size={16} aria-hidden="true" /> Non rinnovo: caricamento spento</>
                     : loading ? "Salvataggio…"
                     : nextOffer ? `Aggiorna offerta di ${monthLabel} (torna in revisione)` : `Invia offerta di ${monthLabel} (in revisione)`)
                   : (readOnly ? <><Lock size={16} aria-hidden="true" /> Modifiche bloccate questo mese</>
                     : loading ? "Salvataggio…"
+                    : status === "awaiting_merchant" ? "Salva le mie modifiche e invia in revisione"
                     : existing ? "Aggiorna e ri-invia in revisione" : "Pubblica (in revisione)")}
               </button>
             </form>

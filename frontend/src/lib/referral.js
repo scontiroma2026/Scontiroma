@@ -55,3 +55,17 @@ export function leggiReferral() {
     return null;
   }
 }
+
+// Conta in modo anonimo una visita arrivata da un volantino o un QR con «?fonte=»: al massimo una volta al giorno per
+// questo telefono e questa fonte. Al server vanno solo la fonte e il tipo di pagina, mai dati personali.
+export function registraVisitaFonte(valore, tipo, inviaVisita) {
+  const f = (valore || "").trim().toLowerCase();
+  if (!RE_FONTE.test(f)) return;
+  try {
+    const chiave = `fonte_visita_${tipo}_${f}`;
+    const oggi = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(chiave) === oggi) return;
+    localStorage.setItem(chiave, oggi);
+  } catch (_) { /* senza localStorage si conta una visita in più: va bene */ }
+  inviaVisita(f, tipo);
+}

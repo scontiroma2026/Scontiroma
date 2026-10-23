@@ -72,6 +72,8 @@ export default function AdminRiepilogo({ hdrs }) {
         )}
       </Card>
 
+      <FontiQr hdrs={hdrs} />
+
       <Card className="border-border bg-muted p-5">
         <h3 className="font-serif text-xl text-foreground">Adesso</h3>
         <Tabella
@@ -83,6 +85,8 @@ export default function AdminRiepilogo({ hdrs }) {
             { k: "senza", cella: ["Negozi senza offerta", s.negozi_senza_offerta] },
             { k: "seg", cella: ["Segnalazioni aperte", s.segnalazioni_aperte] },
             { k: "rec", cella: ["Reclami aperti", s.reclami_aperti] },
+            { k: "sosp", cella: ["… su sospensioni (riesame entro 10 giorni lavorativi)",
+              s.reclami_sospensione_aperti ? `${s.reclami_sospensione_aperti} · il primo entro il ${new Date(s.riesame_sospensione_entro + "T12:00:00").toLocaleDateString("it-IT")}` : 0] },
           ]}
         />
         {s.negozi_senza_offerta_nomi.length > 0 && (
@@ -135,5 +139,50 @@ function Tabella({ intestazione, righe, testid }) {
         ))}
       </tbody>
     </table>
+  );
+}
+
+/** Volantini e QR: quante visite e quante iscrizioni (clienti e negozi) per ogni fonte. Solo numeri. */
+function FontiQr({ hdrs }) {
+  const [righe, setRighe] = useState(null);
+  useEffect(() => {
+    api.get("/admin/fonti-qr", hdrs()).then((r) => setRighe(r.data.fonti)).catch(() => setRighe([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hdrs cambia a ogni render
+  }, []);
+  return (
+    <Card className="border-border bg-muted p-5" data-testid="fonti-qr">
+      <h3 className="font-serif text-xl text-foreground">Volantini e QR: visite e iscrizioni</h3>
+      <p className="mt-1 text-xs text-muted-foreground">Per ogni link con «?fonte=». Visite = persone che hanno aperto il link (una al giorno per telefono). Solo numeri.</p>
+      {!righe ? (
+        <p className="mt-2 text-sm text-muted-foreground">Caricamento…</p>
+      ) : righe.length === 0 ? (
+        <p className="mt-2 text-sm text-muted-foreground">Nessuna visita ancora.</p>
+      ) : (
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-left text-sm text-foreground">
+            <thead>
+              <tr className="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
+                <th scope="col" className="py-2 pr-3 font-semibold">Fonte</th>
+                <th scope="col" className="py-2 pr-3 text-right font-semibold">Visite clienti</th>
+                <th scope="col" className="py-2 pr-3 text-right font-semibold">Visite negozi</th>
+                <th scope="col" className="py-2 pr-3 text-right font-semibold">Clienti iscritti</th>
+                <th scope="col" className="py-2 text-right font-semibold">Negozi iscritti</th>
+              </tr>
+            </thead>
+            <tbody>
+              {righe.map((r) => (
+                <tr key={r.fonte} data-testid={`fonte-qr-${r.fonte}`} className="border-b border-border/60 last:border-0">
+                  <td className="py-2 pr-3 font-semibold">{r.fonte}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{r.visite_clienti}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{r.visite_negozi}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{r.clienti_iscritti}</td>
+                  <td className="py-2 text-right tabular-nums">{r.negozi_iscritti}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }

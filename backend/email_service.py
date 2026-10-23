@@ -7,6 +7,7 @@ e loggano soltanto (non blocca il flusso applicativo).
 """
 import os
 import re
+import sys
 import asyncio
 import html
 import logging
@@ -75,7 +76,36 @@ def mask_emails_in_text(testo) -> str:
     return _EMAIL_RE.sub(lambda m: mask_email(m.group(0)), str(testo))
 
 
-async def _send(to, subject: str, html: str) -> Optional[str]:
+# Avviso per le email non partite: il server registra qui una funzione `async (tipo, codice)` che conta i
+# fallimenti e, oltre una soglia, avvisa l'admin con una notifica push. Riceve solo il tipo di email (nome della
+# funzione, es. «send_welcome_client») e il codice d'errore: mai indirizzi o altri dati personali.
+_avviso_email_fallita = None
+
+
+def imposta_avviso_email_fallita(funzione) -> None:
+    global _avviso_email_fallita
+    _avviso_email_fallita = funzione
+
+
+def _codice_errore(e: Exception) -> str:
+    """Codice breve dell'errore del fornitore (stato HTTP o tipo di errore), senza il testo del messaggio."""
+    for attr in ("code", "status_code", "error_type"):
+        v = getattr(e, attr, None)
+        if v not in (None, ""):
+            return str(v)[:40]
+    return type(e).__name__[:40]
+
+
+async def _segnala_fallimento(tipo: str, e: Exception) -> None:
+    if _avviso_email_fallita is None:
+        return
+    try:
+        await _avviso_email_fallita(tipo, _codice_errore(e))
+    except Exception as err:  # il conteggio non deve mai bloccare l'app
+        log.warning(f"[email:conteggio-fallite] non registrato: {type(err).__name__}")
+
+
+async def _send(to, subject: str, html: str, tipo: str = "") -> Optional[str]:
     """`to` può essere un indirizzo o una lista. Con `EMAIL_ALLOWED_RECIPIENTS`
     impostata (solo ambiente di prova) i destinatari non consentiti sono scartati
     in silenzio (log con solo dominio e motivo): nessuna eccezione."""
@@ -104,17 +134,29 @@ async def _send(to, subject: str, html: str) -> Optional[str]:
         log.info(f"[email:sent] to={label} id={eid}")
         return eid
     except Exception as e:
-        log.error(f"[email:error] to={label} subject={subject!r} err={mask_emails_in_text(e)}")
+        tipo = tipo or _tipo_dal_chiamante()
+        log.error(f"[email:error] tipo={tipo} to={label} subject={subject!r} err={mask_emails_in_text(e)}")
+        await _segnala_fallimento(tipo, e)
         return None
 
 
-# Marchio e prezzo usati in tutte le email (un solo punto da cambiare).
+def _tipo_dal_chiamante() -> str:
+    """Tipo di email = nome della funzione send_… che ha chiamato _send (nessun dato personale)."""
+    try:
+        f = sys._getframe(2)  # 0 = qui, 1 = _send, 2 = la funzione send_…
+        return f.f_code.co_name[:60]
+    except Exception:
+        return "sconosciuta"
+
+
+# Marchio usato in tutte le email. PRICE_EUR resta solo come valore di riserva della ricevuta del vecchio
+# abbonamento clienti (spento): nessun testo delle email cita un prezzo per i clienti.
 BRAND = "Sconti Roma"
 PRICE_EUR = 2.99
 
 
 def _eur(value: float) -> str:
-    """Importo in formato italiano: 2.99 -> "2,99 €"."""
+    """Importo in formato italiano: 4.5 -> "4,50 €"."""
     return f"{value:.2f}".replace(".", ",") + " €"
 
 
@@ -165,13 +207,17 @@ async def send_master_reset(to: str, token: str) -> Optional[str]:
     return await _send(to, "Reset Master Password — Sconti Roma", _shell(inner))
 
 
-async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str) -> Optional[str]:
+async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str, foto_scartate: Optional[list] = None) -> Optional[str]:
     name, shop_name, discount_title = _esc(name), _esc(shop_name), _esc(discount_title)
+    scartate = ""
+    if foto_scartate:
+        righe = "".join(f"<li>Foto {int(n)}: {_esc(motivo)}</li>" for n, motivo in foto_scartate)
+        scartate = f'<p style="margin:0 0 8px;color:#d4d4d8"><strong>Foto non pubblicate:</strong> abbiamo scartato {"una foto" if len(foto_scartate) == 1 else "alcune foto"}. Il resto dell\'offerta è online.</p><ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">{righe}</ul><p style="margin:0 0 16px;color:#d4d4d8">Puoi caricare altre foto quando potrai modificare l\'offerta.</p>'
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
 <p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti i clienti di Sconti Roma.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
+{scartate}<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
 </div>
@@ -193,6 +239,38 @@ async def send_merchant_rejected(to: str, name: str, shop_name: str, discount_ti
 </div>
 """
     return await _send(to, "Offerta da rivedere — Sconti Roma", _shell(inner))
+
+
+async def send_merchant_suspended(to: str, name: str, shop_name: str, reason: str, date_label: str) -> Optional[str]:
+    """Sospensione del negozio decisa dall'admin: motivo scritto (supporto durevole) e come contestarla.
+    Solo i dati del negozio e il motivo scritto dall'admin: nessun dato di terzi."""
+    name, shop_name, reason, date_label = _esc(name), _esc(shop_name), _esc(reason), _esc(date_label)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il tuo account è stato sospeso</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 8px;color:#d4d4d8">Dal <strong>{date_label}</strong> l'account di <strong>{shop_name}</strong> su Sconti Roma è sospeso: la tua offerta non è visibile ai clienti e non si può usare finché la sospensione resta attiva.</p>
+<div style="background:#1a1a20;border:1px solid #ef4444;border-radius:8px;padding:12px 16px;margin:12px 0;color:#fecaca"><strong>Motivo:</strong> {reason}</div>
+<h3 style="margin:20px 0 6px;color:#fff;font-size:16px">Non sei d'accordo?</h3>
+<p style="margin:0 0 8px;color:#d4d4d8">Rispondi a questa email o scrivi a <a href="mailto:info@scontiroma.it" style="color:#00E5FF">info@scontiroma.it</a> spiegando perché. Puoi anche inviare un reclamo dalla tua area commerciante.</p>
+<p style="margin:0 0 16px;color:#d4d4d8">Riesaminiamo la decisione e ti rispondiamo con un esito motivato <strong>entro 10 giorni lavorativi</strong> dal tuo reclamo.</p>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Il tuo account e i tuoi dati restano salvati: se la sospensione viene tolta, la tua offerta torna visibile.</p>
+"""
+    return await _send(to, "Il tuo account è stato sospeso — Sconti Roma", _shell(inner))
+
+
+async def send_merchant_reactivated(to: str, name: str, shop_name: str) -> Optional[str]:
+    """Fine della sospensione: il negozio torna attivo."""
+    name, shop_name = _esc(name), _esc(shop_name)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Account riattivato</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8">La sospensione di <strong>{shop_name}</strong> è stata tolta: l'account è di nuovo attivo. Se la tua offerta è approvata e attiva, torna subito visibile ai clienti.</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
+</div>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Per qualsiasi domanda scrivi a <a href="mailto:info@scontiroma.it" style="color:#a1a1aa">info@scontiroma.it</a>.</p>
+"""
+    return await _send(to, "Account riattivato — Sconti Roma", _shell(inner))
 
 
 async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_label: str, days_left: int = 7) -> Optional[str]:
@@ -331,7 +409,7 @@ async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optio
               Il tuo abbonamento mensile è attivo e si è rinnovato con successo!
             </p>
             <p style="margin:0 0 28px;font-size:16px;line-height:1.6;color:#333">
-              I commercianti del tuo quartiere hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
+              I commercianti della tua zona hanno appena inserito le nuove <strong>offerte esclusive</strong> per questo mese. Non perdere l'occasione di risparmiare sui tuoi acquisti quotidiani e di sostenere le attività locali della nostra comunità.
             </p>
           </td>
         </tr>
@@ -468,7 +546,7 @@ async def send_grace_period_reminder(
 </div>
 
 <p style="margin:0 0 20px;color:#d4d4d8;font-size:15px;line-height:1.6">
-  Ti bastano <strong>30 secondi</strong> per aggiornare il metodo di pagamento e non perdere l'accesso agli sconti dei commercianti del tuo quartiere.
+  Ti bastano <strong>30 secondi</strong> per aggiornare il metodo di pagamento e non perdere l'accesso agli sconti dei commercianti della tua zona.
 </p>
 
 <div style="text-align:center;margin:28px 0">
@@ -638,7 +716,7 @@ async def send_welcome_client(to: str, name: str) -> Optional[str]:
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Benvenuto in {BRAND}!</h2>
 <p style="{_P}">Ciao {name},</p>
-<p style="{_P}">da oggi trovi gli sconti dei negozi del tuo quartiere: scegli un'offerta, mostra il QR al banco e paghi il prezzo scontato.</p>
+<p style="{_P}">da oggi trovi gli sconti dei negozi della tua zona: scegli un'offerta, mostra il QR al banco e paghi il prezzo scontato.</p>
 <p style="{_P}">Durante la fase di lancio {BRAND} è <strong>gratuito</strong>: non serve nessun abbonamento.</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/discounts" style="{_BTN}">Guarda gli sconti</a></div>
 <p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">Per entrare con un tocco attiva il Face ID dalla sezione «Sicurezza» del tuo account.</p>
@@ -659,7 +737,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
 <p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese + IVA</strong>. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma.</p>
-<p style="{_P}"><strong>Nessun vincolo:</strong> l'offerta vale per il mese in corso e non si rinnova da sola. Se non vuoi continuare, scegli «Non rinnovo».</p>
+<p style="{_P}"><strong>Disdetta:</strong> disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Per non continuare, scegli «Non rinnovo».</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
 """
     return await _send(to, f"Benvenuto in {BRAND}: crea la tua prima offerta", _shell(inner))
@@ -668,7 +746,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 async def send_admin_new_merchant(to: str, shop_name: str, category: str, zone: str, email: str, phone: str) -> Optional[str]:
     """Avviso all'admin: un nuovo commerciante si è iscritto."""
     rows = "".join(f'<tr><td style="padding:4px 12px 4px 0;color:#a1a1aa">{k}</td><td style="padding:4px 0;color:#fff">{_esc(v or "—")}</td></tr>'
-                   for k, v in (("Negozio", shop_name), ("Categoria", category), ("Quartiere", zone), ("Email", email), ("Telefono", phone)))
+                   for k, v in (("Negozio", shop_name), ("Categoria", category), ("Zona", zone), ("Email", email), ("Telefono", phone)))
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuovo commerciante iscritto</h2>
 <table role="presentation" style="margin:0 0 16px;font-size:14px">{rows}</table>
@@ -686,6 +764,18 @@ async def send_admin_new_offer(to: str, shop_name: str, title: str, next_month: 
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Approva o rifiuta</a></div>
 """
     return await _send(to, f"Offerta da approvare: {shop_name or 'negozio'}", _shell(inner))
+
+
+async def send_admin_new_client(to: str, quando: str, totale_clienti: int) -> Optional[str]:
+    """Avviso all'admin: si è iscritto un nuovo cliente. Nessun dato personale del cliente
+    (né nome né email): solo data/ora e il numero totale dei clienti."""
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuovo cliente iscritto</h2>
+<p style="{_P}">Si è iscritto un nuovo cliente il <strong>{_esc(quando)}</strong>.</p>
+<p style="{_P}">Clienti iscritti in tutto: <strong style="color:#00E5FF">{int(totale_clienti)}</strong>.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Apri il pannello admin</a></div>
+"""
+    return await _send(to, "Nuovo cliente iscritto", _shell(inner))
 
 
 async def send_account_deleted(to: str, name: str) -> Optional[str]:
@@ -744,7 +834,8 @@ async def send_admin_riepilogo_settimanale(to: str, r: dict) -> Optional[str]:
            + riga("… di cui da più di 3 giorni", s["offerte_in_attesa_oltre_3_giorni"])
            + riga("Negozi senza offerta", s["negozi_senza_offerta"])
            + riga("Segnalazioni aperte", s["segnalazioni_aperte"])
-           + riga("Reclami aperti", s["reclami_aperti"]))
+           + riga("Reclami aperti", s["reclami_aperti"])
+           + riga("… su sospensioni (riesame in 10 giorni lavorativi)", s.get("reclami_sospensione_aperti", 0)))
     pagamenti = ""
     if r.get("pagamenti"):
         nomi = {"in_prova": "In prova", "attivo": "Attivi", "scaduto": "Scaduti", "sospeso": "Sospesi"}
@@ -805,3 +896,82 @@ async def send_waitlist_launch_notice(to: str, uid: str, utoken: str) -> Optiona
 {_piede_lista_attesa(uid, utoken)}
 """
     return await _send(to, f"{BRAND} è online", _shell(inner))
+
+
+# ---------- «Ci pensiamo noi»: offerta preparata da Sconti Roma, da confermare ----------
+def _foto_per_email(url: str) -> str:
+    """Solo foto raggiungibili da un programma di posta: indirizzi https o le foto della libreria
+    (percorsi «/esempi/...» del sito, resi assoluti). Le foto caricate dal telefono (data:) no:
+    molti programmi di posta le bloccano; si vedono nella pagina di conferma."""
+    u = str(url or "").strip()
+    if u.startswith("/") and not u.startswith("//"):
+        return f"{APP_URL}{u}"
+    return u if u.startswith("https://") or u.startswith("http://") else ""
+
+
+def _riga(etichetta: str, valore) -> str:
+    if valore in (None, ""):
+        return ""
+    return (f'<tr><td style="padding:6px 12px 6px 0;color:#a1a1aa;vertical-align:top;white-space:nowrap">{etichetta}</td>'
+            f'<td style="padding:6px 0;color:#fff">{_esc(valore)}</td></tr>')
+
+
+async def send_ci_pensiamo_noi(to: str, name: str, shop_name: str, offerta: dict, link_conferma: str,
+                               link_modifica: str, testo_responsabilita: str, giorni: int) -> Optional[str]:
+    """Al commerciante: l'offerta che abbiamo inserito per lui (servizio gratuito «Ci pensiamo noi»), con il
+    riepilogo completo, la frase di responsabilità e i pulsanti «Confermo» e «Voglio modificarla».
+    Il token compare solo nel link: mai nei log (vedi `_send`)."""
+    nome = _esc((name or "").strip() or "ciao")
+    negozio = _esc(shop_name)
+    foto = [f for f in (_foto_per_email(u) for u in (offerta.get("image_urls") or [])) if f]
+    foto_html = "".join(
+        f'<img src="{_esc(u)}" alt="Foto dell\'offerta" width="496" style="display:block;width:100%;max-width:496px;height:auto;border-radius:12px;margin:0 0 12px">'
+        for u in foto[:3])
+    n_foto = len(offerta.get("image_urls") or [])
+    nota_foto = ""
+    if n_foto and len(foto) < n_foto:
+        nota_foto = f'<p style="margin:0 0 12px;color:#a1a1aa;font-size:13px">Foto in tutto: {n_foto}. Le vedi tutte aprendo «Confermo».</p>'
+    elif not n_foto:
+        nota_foto = '<p style="margin:0 0 12px;color:#a1a1aa;font-size:13px">Nessuna foto: puoi aggiungerla con «Voglio modificarla».</p>'
+    prezzi = ""
+    try:
+        prezzi = f"{_eur(float(offerta['discounted_price']))} invece di {_eur(float(offerta['original_price']))}"
+    except Exception:
+        pass
+    usi = offerta.get("max_uses_per_month") or 1
+    righe = "".join([
+        _riga("Titolo", offerta.get("title")),
+        _riga("Descrizione", offerta.get("description")),
+        _riga("Prezzo", prezzi),
+        _riga("Giorni e orari", offerta.get("validity_info")),
+        _riga("Utilizzi al mese", "1 volta per cliente" if usi == 1 else f"{usi} volte per cliente"),
+        _riga("Condizioni", offerta.get("terms")),
+        _riga("Prenotazione", offerta.get("plan_ahead")),
+        _riga("Altre informazioni", offerta.get("additional_info")),
+    ])
+    btn_secondario = "display:inline-block;padding:12px 24px;border:2px solid #00E5FF;color:#00E5FF;text-decoration:none;font-weight:700;border-radius:9999px"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Non hai tempo? Ci pensiamo noi.</h2>
+<p style="{_P}">Ciao {nome},</p>
+<p style="{_P}">come d'accordo, abbiamo preparato l'offerta di <strong>{negozio}</strong> su {BRAND}. Il servizio è <strong>gratuito</strong>. Controllala qui sotto: l'offerta non è ancora visibile ai clienti e lo diventa solo dopo la tua conferma e il nostro controllo.</p>
+{foto_html}{nota_foto}
+<table role="presentation" style="margin:0 0 16px;font-size:14px;width:100%">{righe}</table>
+<div style="background:#1a1a20;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin:16px 0;color:#fde68a">{_esc(testo_responsabilita)}</div>
+<div style="text-align:center;margin:24px 0 12px"><a href="{link_conferma}" style="{_BTN}">Confermo</a></div>
+<div style="text-align:center;margin:0 0 24px"><a href="{link_modifica}" style="{btn_secondario}">Voglio modificarla</a></div>
+<p style="margin:0 0 8px;color:#a1a1aa;font-size:13px">Il link «Confermo» vale {int(giorni)} giorni e si usa una volta sola; non serve entrare con la password. «Voglio modificarla» ti chiede di entrare nella tua area commercianti.</p>
+<p style="margin:0 0 8px;color:#a1a1aa;font-size:13px">Non ti va bene o non ci hai chiesto nulla? Non fare niente: senza conferma l'offerta non viene pubblicata. Puoi anche rispondere a questa email o scriverci a <a href="mailto:info@scontiroma.it" style="color:#a1a1aa">info@scontiroma.it</a>.</p>
+<p style="margin:16px 0 0;color:#71717a;font-size:12px;word-break:break-all">Link diretto per confermare: {link_conferma}</p>
+"""
+    return await _send(to, f"Abbiamo preparato la tua offerta: confermala — {BRAND}", _shell(inner))
+
+
+async def send_admin_offerta_confermata(to: str, shop_name: str, title: str) -> Optional[str]:
+    """Avviso all'admin: il negozio ha confermato l'offerta preparata con «Ci pensiamo noi»."""
+    negozio = _esc(shop_name or "Un negozio")
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il negozio {negozio} ha confermato l'offerta</h2>
+<p style="{_P}">L'offerta <strong style="color:#00E5FF">"{_esc(title)}"</strong>, preparata con «Ci pensiamo noi», è stata confermata dal negozio ed è ora in revisione.</p>
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/admin" style="{_BTN}">Approva o rifiuta</a></div>
+"""
+    return await _send(to, f"Il negozio {shop_name or 'negozio'} ha confermato l'offerta", _shell(inner))

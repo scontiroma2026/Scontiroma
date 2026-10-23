@@ -26,19 +26,20 @@ export default function AdminGate({ onVerified }) {
       .catch(() => {});
   }, []);
 
-  const unlock = (data) => {
-    // Il token master vive SOLO nel cookie httpOnly impostato dal backend — mai in localStorage.
+  const unlock = () => {
+    // Il token master vive SOLO nel cookie httpOnly impostato dal backend: non arriva nel corpo della risposta
+    // e non va mai in localStorage.
     toast.success("Sblocco riuscito ✦");
-    onVerified(data.token);
+    onVerified();
   };
 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     try {
-      const { data } = await api.post("/admin/verify-master", { password: pw });
+      await api.post("/admin/verify-master", { password: pw });
       setPw("");
-      unlock(data);
+      unlock();
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -51,8 +52,8 @@ export default function AdminGate({ onVerified }) {
     try {
       const { data: options } = await api.post("/admin/webauthn-master/begin");
       const assertion = await startAuthentication({ optionsJSON: options });
-      const { data } = await api.post("/admin/webauthn-master/complete", { credential: assertion });
-      unlock(data);
+      await api.post("/admin/webauthn-master/complete", { credential: assertion });
+      unlock();
     } catch (err) {
       if (err?.name === "NotAllowedError") toast.error("Verifica biometrica annullata");
       else toast.error(formatApiError(err));

@@ -26,3 +26,18 @@ def test_registrazione_commerciante():
         assert r.status_code == 200, r.text
 
     run(body, False)
+
+
+def test_partita_iva_obbligatoria_per_i_commercianti():
+    async def body(c):
+        import server
+        for extra in ({}, {"partita_iva": ""}, {"partita_iva": "   "}, {"partita_iva": None}):
+            r = await c.post("/api/auth/register", json={**BASE, "email": "senza@example.com", **extra})
+            assert r.status_code == 422, extra
+            assert r.json()["detail"] == "La Partita IVA è obbligatoria per i commercianti (11 numeri)"
+        assert await server.db.users.find_one({"email": "senza@example.com"}) is None  # nessun negozio creato
+        # i clienti non hanno bisogno della Partita IVA
+        cli = {"email": "cliente-piva@example.com", "password": "secret123", "name": "Cliente", "role": "client", "legal_accepted": True}
+        assert (await c.post("/api/auth/register", json=cli)).status_code == 200
+
+    run(body, False)

@@ -10,7 +10,7 @@ Regole d'uso:
 - Sostituire [LINK] con il link del video.
 
 ## 1. SMS o WhatsApp (solo a chi ha già risposto)
-> Buongiorno, da Sconti Roma, l'app degli sconti nei negozi di Garbatella, San Paolo e Marconi. Ogni mese la vostra attività pubblica un'offerta e i clienti del quartiere la trovano. Gratis nella fase di lancio. Video di 1 minuto: [LINK]. Per non ricevere altri messaggi rispondete STOP.
+> Buongiorno, da Sconti Roma, l'app degli sconti nei negozi di Garbatella, San Paolo e Marconi. Ogni mese la vostra attività pubblica un'offerta e i clienti vicini la trovano. Gratis nella fase di lancio. Video di 1 minuto: [LINK]. Per non ricevere altri messaggi rispondete STOP.
 
 ## 2. Messaggio Instagram o Facebook (primo contatto)
 > Ciao! Siamo **Sconti Roma**, un'app che porta clienti ai negozi di Garbatella, San Paolo e Marconi.
@@ -19,7 +19,7 @@ Regole d'uso:
 > Qui c'è un video di un minuto: [LINK]. Se vi incuriosisce, vi spieghiamo tutto in 5 minuti, anche al telefono. Se non vi interessa nessun problema, non scriviamo più 🙂
 
 ## 3. Email
-Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
+Oggetto: **Nuovi clienti vicini per [NOME NEGOZIO]**
 
 > Buongiorno,
 > siamo Sconti Roma (scontiroma.it), un'app che fa conoscere le attività di Garbatella, San Paolo e Marconi a chi abita vicino.
@@ -31,9 +31,9 @@ Oggetto: **Nuovi clienti dal quartiere per [NOME NEGOZIO]**
 >
 > Se preferite non ricevere altri messaggi, rispondete «NO» e non vi scriveremo più.
 
-## 4. Post per i gruppi Facebook di quartiere (dove la pubblicità è ammessa)
-> Avete un'attività a Garbatella, San Paolo o Marconi? 🏪 Sta arrivando **Sconti Roma**: un'offerta al mese e i clienti del quartiere vi trovano dall'app. Gratis nella fase di lancio. Video di 1 minuto: [LINK] – scriveteci in privato per info!
+## 4. Post per i gruppi Facebook di zona (dove la pubblicità è ammessa)
+> Avete un'attività a Garbatella, San Paolo o Marconi? 🏪 Sta arrivando **Sconti Roma**: un'offerta al mese e i clienti vicini vi trovano dall'app. Gratis nella fase di lancio. Video di 1 minuto: [LINK] – scriveteci in privato per info!
 
 ## 5. Telefonata (30 secondi)
-> «Buongiorno, chiamo da Sconti Roma. Ha un minuto? Stiamo lanciando un'app che porta clienti del quartiere ai negozi di Garbatella, San Paolo e Marconi. L'attività pubblica un'offerta al mese, il cliente arriva con un QR e lo si inquadra con il telefono. Ora, nella fase di lancio, è gratis. Possiamo mandarvi un video di un minuto su WhatsApp?»
+> «Buongiorno, chiamo da Sconti Roma. Ha un minuto? Stiamo lanciando un'app che porta clienti vicini ai negozi di Garbatella, San Paolo e Marconi. L'attività pubblica un'offerta al mese, il cliente arriva con un QR e lo si inquadra con il telefono. Ora, nella fase di lancio, è gratis. Possiamo mandarvi un video di un minuto su WhatsApp?»
 > → se dice sì, il numero l'ha dato lui e il WhatsApp va bene.

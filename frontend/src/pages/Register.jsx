@@ -239,7 +239,7 @@ export default function Register() {
                 />
               </div>
               <div>
-                <Label>Partita IVA <span className="text-xs text-muted-foreground">(11 cifre)</span></Label>
+                <Label>Partita IVA <span className="text-xs text-muted-foreground">(obbligatoria, 11 cifre)</span></Label>
                 <Input
                   data-testid="reg-partita-iva"
                   inputMode="numeric"

@@ -27,7 +27,7 @@ const { expect } = base;
 
 const unico = (tag) => `e2e.${tag}.${Date.now()}.${crypto.randomBytes(3).toString('hex')}@example.com`;
 const PASSWORD = 'password-e2e-123';
-const MERCHANT = { shop_name: 'Negozio di prova', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000', address: "Via dell'Esempio 1, Roma" };
+const MERCHANT = { shop_name: 'Negozio di prova', zone: 'Garbatella', category: 'Ristorante', phone: '+39 06 0000000', partita_iva: '12345678903', address: "Via dell'Esempio 1, Roma" };
 
 // ---------- API ----------
 // Ogni chiamata usa un contesto nuovo, senza cookie: il server legge prima il cookie e poi
@@ -63,7 +63,10 @@ async function admin(request) {
   expect(r.status, 'login admin di test').toBe(200);
   const m = await chiama(request, 'POST', '/admin/verify-master', { token: r.data.access_token, body: { password: ADMIN_MASTER_PASSWORD } });
   expect(m.status, 'master password di test').toBe(200);
-  return { token: r.data.access_token, headers: { 'X-Admin-Master': m.data.token } };
+  // Il token master arriva solo nel cookie httpOnly (mai nel corpo): lo si legge dall'intestazione Set-Cookie.
+  const master = /admin_master_token=([^;]+)/.exec(m.headers['set-cookie'] || '');
+  expect(master, 'cookie admin_master_token').toBeTruthy();
+  return { token: r.data.access_token, headers: { 'X-Admin-Master': master[1] } };
 }
 
 async function creaOffertaApprovata(request, merchantToken, offerta = {}) {

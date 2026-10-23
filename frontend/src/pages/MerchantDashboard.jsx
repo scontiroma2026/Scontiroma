@@ -14,8 +14,11 @@ import RenewalBanner from "@/components/RenewalBanner";
 import PagamentoNegozio from "@/components/PagamentoNegozio";
 import ReclamoCard from "@/components/ReclamoCard";
 import MerchantInsights from "@/components/MerchantInsights";
+import NotifichePushUtente from "@/components/NotifichePushUtente";
 import { Scheda, Pillola, StatoVuoto, ErroreRiprova, Scheletro, CLASSE_PRIMARIO, CLASSE_BASE_SECONDARIO, CLASSE_BORDO } from "@/components/AreaUI";
 import { useAppConfig } from "@/context/ConfigContext";
+import BannerOffertaPreparata from "@/components/BannerOffertaPreparata";
+import RiquadroCiPensiamoNoi from "@/components/RiquadroCiPensiamoNoi";
 
 export default function MerchantDashboard() {
   const { user } = useAuth();
@@ -74,8 +77,9 @@ export default function MerchantDashboard() {
             Ti avviseremo prima e non ti addebiteremo nulla senza la tua conferma.
           </div>
         )}
-        <RenewalBanner />
+        <RenewalBanner onChange={() => api.get("/merchants/me/next-discount").then((r) => setNext(r.data)).catch(() => {})} />
         <PagamentoNegozio />
+        {stato === "ok" && discount?.approval_status === "awaiting_merchant" && <BannerOffertaPreparata onConfermata={carica} />}
 
         {stato === "errore" && (
           <div className="mb-4">
@@ -118,9 +122,11 @@ export default function MerchantDashboard() {
                     <Link to="/merchant/discount" className={`${CLASSE_BASE_SECONDARIO} ${CLASSE_BORDO.rosa} min-h-[46px] flex-1`}>
                       <Pencil size={16} aria-hidden="true" /> Modifica offerta
                     </Link>
-                    <Link to={`/discounts/${discount.id}`} className={`${CLASSE_BASE_SECONDARIO} ${CLASSE_BORDO.viola} min-h-[46px] flex-1`}>
-                      <Eye size={16} aria-hidden="true" /> Vedi come i clienti
-                    </Link>
+                    {discount.approval_status !== "awaiting_merchant" && (
+                      <Link to={`/discounts/${discount.id}`} className={`${CLASSE_BASE_SECONDARIO} ${CLASSE_BORDO.viola} min-h-[46px] flex-1`}>
+                        <Eye size={16} aria-hidden="true" /> Vedi come i clienti
+                      </Link>
+                    )}
                   </div>
                 </>
               ) : (
@@ -129,6 +135,7 @@ export default function MerchantDashboard() {
                   <Link to="/merchant/discount" data-testid="create-offer-btn" className={`${CLASSE_PRIMARIO} mt-4 w-full`}>
                     <PlusCircle size={20} aria-hidden="true" /> Crea la tua offerta
                   </Link>
+                  <RiquadroCiPensiamoNoi testid="ci-pensiamo-noi-pannello" className="mt-4" />
                 </StatoVuoto>
               )}
             </Scheda>
@@ -190,6 +197,9 @@ export default function MerchantDashboard() {
               <MerchantReferralCard />
             </div>
 
+            {/* Compare solo con PUSH_UTENTI_ENABLED acceso sul server */}
+            <NotifichePushUtente ruolo="merchant" />
+
             <ReclamoCard />
 
             <div id="dati" className="scroll-mt-24">
@@ -220,6 +230,7 @@ function StatoOfferta({ discount }) {
       const fino = dataBreve(discount.valid_until); // senza data (server vecchio o dato mancante) resta la frase di prima
       testo = fino ? `Offerta visibile ai clienti fino al ${fino}` : "Offerta visibile ai clienti";
     }
+    else if (discount.approval_status === "awaiting_merchant") { tono = "ambra"; testo = "Offerta preparata da noi: da confermare"; }
     else if (discount.approval_status === "pending") { tono = "ambra"; testo = "Offerta in revisione"; }
     else if (discount.approval_status === "rejected") { tono = "rosso"; testo = "Offerta rifiutata: da correggere"; }
     else if (discount.approval_status === "expired") { tono = "ambra"; testo = "Offerta scaduta"; }

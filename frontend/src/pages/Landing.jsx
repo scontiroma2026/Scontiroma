@@ -1,4 +1,5 @@
-import { salvaReferral, salvaFonte } from "@/lib/referral";
+import api from "@/lib/api";
+import { salvaReferral, salvaFonte, registraVisitaFonte } from "@/lib/referral";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,16 +11,17 @@ import { useAppConfig } from "@/context/ConfigContext";
 
 // Foto di Roma copiate sul nostro sito (frontend/public/foto): nessun servizio esterno
 // riceve l'IP dei visitatori. Crediti in docs/comunicazione/CREDITI_FOTO.md.
+// Niente monumenti riconoscibili (scelta del 22/10): solo scorci di vicoli.
 const ROMA_HERO = {
-  src: "/foto/roma-colosseo-1280.webp",
-  srcSet: "/foto/roma-colosseo-640.webp 640w, /foto/roma-colosseo-1280.webp 1280w, /foto/roma-colosseo-1920.webp 1920w",
+  src: "/foto/roma-scorcio-1280.webp",
+  srcSet: "/foto/roma-scorcio-640.webp 640w, /foto/roma-scorcio-1280.webp 1280w, /foto/roma-scorcio-1920.webp 1920w",
   width: 1280, height: 933,
-}; // Colosseo
-const ROMA_TREVI = {
-  src: "/foto/roma-piazza-640.webp",
-  srcSet: "/foto/roma-piazza-480.webp 480w, /foto/roma-piazza-640.webp 640w",
+}; // vicolo di sera con tavolini e edera
+const ROMA_RIQUADRO = {
+  src: "/foto/roma-vicolo-640.webp",
+  srcSet: "/foto/roma-vicolo-480.webp 480w, /foto/roma-vicolo-640.webp 640w",
   width: 640, height: 800,
-}; // Piazza San Pietro dall'alto (riquadro 4:5)
+}; // vicolo di giorno con edera (riquadro 4:5)
 
 export default function Landing() {
   const [params] = useSearchParams();
@@ -28,6 +30,7 @@ export default function Landing() {
     // Cattura referral merchant_id da QR personalizzato (?ref=) — persiste per la registrazione
     salvaReferral(params.get("ref"));
     salvaFonte(params.get("fonte"));
+    registraVisitaFonte(params.get("fonte"), "cliente", (fonte, tipo) => api.post("/fonte/visita", { fonte, tipo }).catch(() => {}));
   }, [params]);
 
   // Modalità pre-lancio (spenta di norma): al posto della home c'è «Stiamo arrivando» con la lista d'attesa.
@@ -48,7 +51,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         {/* Background Rome image with heavy overlay */}
         <div className="absolute inset-0">
-          <img {...ROMA_HERO} sizes="100vw" className="h-full w-full object-cover opacity-40" alt="Roma" />
+          <img {...ROMA_HERO} sizes="100vw" className="h-full w-full object-cover opacity-40" alt="Un vicolo di Roma di sera" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
@@ -66,7 +69,7 @@ export default function Landing() {
                 <span className="text-grad">tutta tua.</span>
               </h1>
               <p data-testid="hero-sottotitolo" className="mt-5 max-w-xl font-serif text-3xl italic leading-tight text-foreground md:text-4xl">
-                Scopri quanto puoi risparmiare nel tuo quartiere.
+                Scopri quanto puoi risparmiare vicino a te.
               </p>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">
                 I negozi che ami, a prezzo scontato. Dal caffè alla pizza, dal parrucchiere alla palestra:
@@ -90,10 +93,10 @@ export default function Landing() {
             {/* Right: Rome collage */}
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
-                <img {...ROMA_TREVI} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Roma" />
+                <img {...ROMA_RIQUADRO} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Un vicolo di Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
-                  <div className="font-serif text-3xl mt-1">Roma, quartiere per quartiere</div>
+                  <div className="font-serif text-3xl mt-1">Roma, zona per zona</div>
                   <div className="text-sm text-muted-foreground">Dal centro alla periferia</div>
                 </div>
               </div>
@@ -112,7 +115,7 @@ export default function Landing() {
         <div className="grid gap-6 md:grid-cols-3">
           {[
             { n: "01", t: "Registrati", d: "Crea il tuo account in pochi secondi.", c: "fucsia" },
-            { n: "02", t: "Scegli", d: "Filtra per quartiere di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
+            { n: "02", t: "Scegli", d: "Filtra per zona di Roma o per categoria. Trova il tuo posto.", c: "ciano" },
             { n: "03", t: "Mostra il QR", d: "Il commerciante scansiona. Paghi il prezzo scontato. Tutto qui.", c: "neon" },
           ].map((s) => (
             <Card key={s.n} className="relative border-border bg-muted backdrop-blur p-8 hover:bg-muted transition group overflow-hidden">
@@ -130,7 +133,7 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <div className="text-xs uppercase tracking-[0.2em] text-neon">Dove siamo</div>
-            <h2 className="mt-2 font-serif text-5xl">Il tuo <span className="text-grad">quartiere</span>, ovunque a Roma</h2>
+            <h2 className="mt-2 font-serif text-5xl">La tua <span className="text-grad">zona</span>, ovunque a Roma</h2>
           </div>
           <Link to="/discounts" className="group relative block overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-12">
             <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-60 grad-fucsia-viola" />
@@ -153,7 +156,7 @@ export default function Landing() {
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-white">Per i commercianti</div>
               <h2 className="mt-3 font-serif text-5xl text-white leading-tight">
-                Un solo sconto,<br/>nuovi clienti dal quartiere.
+                Un solo sconto,<br/>nuovi clienti vicino a te.
               </h2>
               <p className="mt-4 text-white max-w-md">
                 Hai un'attività a Roma o nei dintorni? Pubblica un'offerta e fatti trovare da chi abita vicino a te. Gratis durante la fase di lancio.
