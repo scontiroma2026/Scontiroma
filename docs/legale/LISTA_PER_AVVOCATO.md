@@ -30,6 +30,7 @@ Legenda: 🔴 prima di accendere i pagamenti o il pre-lancio · 🟠 da valutare
 | 9 | 🟠 | Stripe e PayPal titolari autonomi anche per l'antifrode; tolti dall'elenco dei responsabili | Il ruolo non cambia per le attività accessorie? |
 | 10 | 🟠 | Frasi «dopo il giorno 5 vale per il mese successivo» e «la ricevuta non è un documento fiscale»; una sola email di sollecito al mese | Le frasi sono corrette? Nei Termini proposti (#157) la frase «fino a fine mese più il mese successivo» non c'è più: già corretta (regola «entro l'11 / dal 12» con esempio). Resta solo nell'email del giorno 30 (#169, spenta), da allineare lì |
 | 11 | 🟠 | Testo prudente: «Autorizzi ora l'addebito automatico: il primo importo sarà addebitato solo il [data]» (evita «preautorizzato») | Tempi minimi di avviso nelle regole di Stripe e PayPal per le prove gratuite; il promemoria prima di ogni addebito serve per legge? |
+| Storico sospensioni dei negozi | 🟠 | Decisione del titolare (23/10, PR #219 e #203): data e motivo di ogni sospensione o riattivazione conservati 24 mesi da ciascun evento, anche dopo la cancellazione dell'account; base giuridica legittimo interesse (rispondere ai reclami, difesa in caso di contestazioni). Riga aggiunta in Privacy art. 6. | 24 mesi anche dopo la cancellazione sono proporzionati (art. 5.1.e e 17.3.e GDPR)? Il legittimo interesse basta o serve un bilanciamento scritto? Va detto anche nella email di sospensione? |
 | 12 | 🟢 | Tenuta la sezione sui servizi a pagamento futuri nel Recesso | Conferma |
 
 ## Fornitori: Aruba e Google/Gmail (21/10, non chiusi)
