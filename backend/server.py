@@ -50,7 +50,11 @@ from email_service import (
     send_admin_segnalazione,
     send_admin_riepilogo_settimanale,
     send_esito_segnalazione,
-    send_merchant_trial_reminder,
+    send_merchant_trial_day30,
+    send_merchant_first_payment_reminder,
+    send_merchant_payment_missed,
+    send_merchant_monthly_charge_reminder,
+    send_merchant_payment_receipt,
     send_next_offer_reminder,
     send_offer_expired,
     send_admin_month_summary,
@@ -122,8 +126,22 @@ def merchant_payment_required() -> bool:
     return os.environ.get("MERCHANT_PAYMENT_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
+# Email al commerciante sulla prova (giorno 30 e promemoria 7 giorni prima del primo pagamento). Decisione del
+# titolare (15/10 e 21/10): sono queste le uniche email della prova; i vecchi promemoria a 10 e 3 giorni prima
+# della fine della prova non esistono più. Partono con MERCHANT_TRIAL_EMAILS acceso (anche a pagamenti spenti)
+# OPPURE da sole quando si accendono i pagamenti dei negozi (MERCHANT_PAYMENT_REQUIRED): nessun negozio arriva
+# al primo pagamento senza essere avvisato. Non addebitano nulla. Mancato pagamento, ricevuta e promemoria
+# 3 giorni prima di ogni addebito partono invece solo con MERCHANT_PAYMENT_REQUIRED acceso.
+def merchant_trial_emails() -> bool:
+    return os.environ.get("MERCHANT_TRIAL_EMAILS", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def email_prova_attive() -> bool:
+    return merchant_trial_emails() or merchant_payment_required()
+
+
 # Stripe
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or None
+stripe.api_key =os.environ.get("STRIPE_SECRET_KEY") or None
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_LOOKUP = "sconti_roma_monthly_299eur"
 
@@ -3880,6 +3898,47 @@ async def _registra_pagamento_automatico(merchant_id: str, month_key: str, paid_
         {"merchant_id": merchant_id},
         {"$set": {"merchant_id": merchant_id, "prossimo_rinnovo": pp.primo_del_mese_tra(dal, 1).isoformat()}},
         upsert=True)
+    await _invia_ricevuta_negozio(merchant_id, month_key, paid_at, cent, metodo)
+
+
+async def _prenota_email(key: str, giorni: int = 60) -> bool:
+    """«Prenotazione» atomica di un invio (stesso metodo dei promemoria offerta): vero solo la prima volta.
+    Due copie del server o un evento ripetuto non mandano mai due volte la stessa email."""
+    r = await db.reminder_claims.update_one(
+        {"key": key},
+        {"$setOnInsert": {"key": key, "expires_at": datetime.now(timezone.utc) + timedelta(days=giorni)}},
+        upsert=True)
+    return r.upserted_id is not None
+
+
+def _etichetta_mese(chiave: str) -> str:
+    y, m = chiave.split("-")
+    return f"{MESI_IT[int(m) - 1]} {y}"
+
+
+def _etichetta_data(d: date) -> str:
+    return f"{d.day} {MESI_IT[d.month - 1]} {d.year}"
+
+
+async def _invia_ricevuta_negozio(merchant_id: str, month_key: str, paid_at: str, cent: int, metodo: str) -> bool:
+    """Ricevuta di pagamento al negozio: solo con i pagamenti dei negozi accesi, una volta sola per mese.
+    Un errore di invio non deve mai far fallire il webhook del pagamento."""
+    if not merchant_payment_required():
+        return False
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m or not m.get("email"):
+        return False
+    key = f"ricevuta_{merchant_id}_{month_key}"
+    if not await _prenota_email(key, 400):
+        return False
+    try:
+        await send_merchant_payment_receipt(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                                            cent, _etichetta_mese(month_key), metodo)
+        return True
+    except Exception as e:
+        await db.reminder_claims.delete_one({"key": key})
+        logging.error(f"[ricevuta-negozio] invio non riuscito per negozio={str(merchant_id)[:8]}: {e}")
+        return False
 
 
 async def _stripe_evento_negozio(event) -> Optional[dict]:
@@ -6539,43 +6598,126 @@ from apscheduler.triggers.cron import CronTrigger  # noqa: E402
 _scheduler: Optional[AsyncIOScheduler] = None
 
 
-async def _run_trial_reminders(oggi=None) -> dict:
-    """Promemoria di fine prova ai negozi: uno a 10 giorni e uno a 3 giorni prima (idempotente: ogni
-    promemoria parte una volta sola per negozio). Attivo solo con MERCHANT_PAYMENT_REQUIRED acceso;
-    la data di fine prova viene da `trial_end_date` (stessa regola dei pagamenti)."""
-    if not merchant_payment_required():
-        return {"checked": 0, "sent": 0, "skipped": "pagamenti_negozi_spenti"}
+PROVA_GIORNO_EMAIL = 30       # email «giorno 30 della prova»: si manda dal 30° al 37° giorno (recupero se il server dorme)
+PROVA_GIORNI_PRIMO_PAGAMENTO = 7  # promemoria del primo pagamento: da 7 giorni prima del 1° fino al giorno prima
+
+
+async def _run_trial_emails(oggi=None) -> dict:
+    """Email di prova ai negozi: (a) giorno 30 dalla prima pubblicazione, (b) promemoria negli ultimi 7 giorni
+    prima del 1° del primo pagamento. Spente di default: partono con MERCHANT_TRIAL_EMAILS o con i pagamenti dei
+    negozi accesi (MERCHANT_PAYMENT_REQUIRED). Ognuna parte una sola volta per negozio (prenotazione atomica);
+    chi ha scelto «Non rinnovo» non riceve nulla. Non addebita nulla."""
+    if not email_prova_attive():
+        return {"checked": 0, "sent": 0, "skipped": "email_prova_spente"}
     oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
-    now_iso = datetime.now(timezone.utc).isoformat()
+    tol = await _tolleranza_giorni()
     negozi = await db.users.find({"role": "merchant"}).to_list(None)
     sent = 0
     for m in negozi:
         if not m.get("email") or m.get("no_renew_month"):
             continue
-        fine = pp.trial_end_date(await _prima_pubblicazione(m))
-        if not fine:
+        prima = await _prima_pubblicazione(m)
+        pub, inizio = pp.a_data_roma(prima), pp.billing_start_date(prima)
+        if not pub or not inizio or oggi >= inizio:
             continue
-        giorni = (fine - oggi).days
-        if 3 < giorni <= 10:
-            flag = "trial_reminder_10_sent_at"
-        elif 0 <= giorni <= 3:
-            flag = "trial_reminder_3_sent_at"
+        mancano = (inizio - oggi).days
+        nome, negozio = m.get("name") or "", m.get("shop_name") or "il tuo negozio"
+        if mancano <= PROVA_GIORNI_PRIMO_PAGAMENTO:
+            stage = "primo_pagamento"
+        elif PROVA_GIORNO_EMAIL <= (oggi - pub).days < PROVA_GIORNO_EMAIL + 8:
+            stage = "giorno30"
         else:
             continue
-        if m.get(flag):
+        key = f"prova_{stage}_{m['id']}"
+        if not await _prenota_email(key, 400):
             continue
-        # Un promemoria a 3 giorni non va mai accompagnato da uno a 10 arrivato in ritardo
-        if flag == "trial_reminder_3_sent_at":
-            await db.users.update_one({"id": m["id"], "trial_reminder_10_sent_at": {"$in": [None]}},
-                                      {"$set": {"trial_reminder_10_sent_at": "saltato"}})
         try:
-            await send_merchant_trial_reminder(
-                m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
-                max(giorni, 1), f"{fine.day} {MESI_IT[fine.month - 1]} {fine.year}")
-            await db.users.update_one({"id": m["id"]}, {"$set": {flag: now_iso}})
+            if stage == "giorno30":
+                await send_merchant_trial_day30(m["email"], nome, negozio, _etichetta_data(inizio - timedelta(days=1)),
+                                                _etichetta_data(inizio))
+            else:
+                await send_merchant_first_payment_reminder(m["email"], nome, negozio, _etichetta_data(inizio),
+                                                           mancano, tol)
             sent += 1
         except Exception as e:
-            logging.error(f"[trial-reminder] invio non riuscito per negozio={str(m.get('id'))[:8]}: {e}")
+            await db.reminder_claims.delete_one({"key": key})  # si potrà ritentare
+            logging.error(f"[email-prova] invio non riuscito per negozio={str(m.get('id'))[:8]}: {e}")
+    return {"checked": len(negozi), "sent": sent}
+
+
+PROMEMORIA_ADDEBITO_GIORNI = 3  # giorni prima del 1° del mese dell'addebito
+
+
+async def _run_monthly_charge_reminders(oggi=None) -> dict:
+    """Promemoria mensile 3 giorni prima di OGNI addebito, solo ai negozi con abbonamento attivo (carta o conto
+    online) che non hanno scelto «Non rinnovo». Una volta per mese (prenotazione atomica; se il server dorme si
+    recupera fino al giorno prima). Parte solo con MERCHANT_PAYMENT_REQUIRED acceso. Non è il promemoria del primo
+    pagamento (durante la prova, MERCHANT_TRIAL_EMAILS) né la ricevuta."""
+    if not merchant_payment_required():
+        return {"checked": 0, "sent": 0, "skipped": "pagamenti_negozi_spenti"}
+    oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
+    addebito = pp.primo_del_mese_dopo(oggi)
+    mancano = (addebito - oggi).days
+    if mancano > PROMEMORIA_ADDEBITO_GIORNI:
+        return {"checked": 0, "sent": 0, "skipped": "non_ancora_il_momento"}
+    mk = pp.chiave_mese(addebito)
+    abbonati = await db.merchant_subscriptions.distinct("merchant_id", {"status": "active"})
+    sent = 0
+    for mid in abbonati:
+        m = await db.users.find_one({"id": mid, "role": "merchant"})
+        if not m or not m.get("email") or m.get("no_renew_month"):
+            continue
+        inizio = pp.billing_start_date(await _prima_pubblicazione(m))
+        if inizio and addebito <= inizio:
+            continue  # è il primo pagamento: c'è già il suo promemoria
+        if mk in await _pagamenti_negozio(mid):
+            continue
+        key = f"addebito_{mk}_{mid}"
+        if not await _prenota_email(key, 90):
+            continue
+        try:
+            await send_merchant_monthly_charge_reminder(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                                                        _etichetta_data(addebito), mancano, MERCHANT_PRICE_CENTS)
+            sent += 1
+        except Exception as e:
+            await db.reminder_claims.delete_one({"key": key})
+            logging.error(f"[promemoria-addebito] invio non riuscito per negozio={str(mid)[:8]}: {e}")
+    return {"checked": len(abbonati), "sent": sent}
+
+
+async def _run_payment_missed(oggi=None) -> dict:
+    """Mancato pagamento: dopo i giorni di tolleranza (1-5 del mese) scrive ai negozi che hanno finito la prova
+    e non hanno nessun pagamento registrato per il mese. Una sola volta per negozio e per mese. Parte solo con
+    MERCHANT_PAYMENT_REQUIRED acceso; chi ha scelto «Non rinnovo» (in vigore) non riceve nulla."""
+    if not merchant_payment_required():
+        return {"checked": 0, "sent": 0, "skipped": "pagamenti_negozi_spenti"}
+    oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
+    tol = await _tolleranza_giorni()
+    if oggi.day <= tol:
+        return {"checked": 0, "sent": 0, "skipped": "entro_la_tolleranza"}
+    mk = pp.chiave_mese(oggi)
+    negozi = await db.users.find({"role": "merchant"}).to_list(None)
+    sent = 0
+    for m in negozi:
+        if not m.get("email"):
+            continue
+        if m.get("no_renew_month") and m["no_renew_month"] <= mk:
+            continue
+        inizio = pp.billing_start_date(await _prima_pubblicazione(m))
+        if not inizio or oggi < inizio:
+            continue
+        if mk in await _pagamenti_negozio(m["id"]):
+            continue
+        key = f"mancato_{mk}_{m['id']}"
+        if not await _prenota_email(key, 90):
+            continue
+        try:
+            await send_merchant_payment_missed(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                                               _etichetta_mese(mk), tol)
+            sent += 1
+        except Exception as e:
+            await db.reminder_claims.delete_one({"key": key})
+            logging.error(f"[mancato-pagamento] invio non riuscito per negozio={str(m.get('id'))[:8]}: {e}")
     return {"checked": len(negozi), "sent": sent}
 
 
@@ -6842,11 +6984,26 @@ def _start_scheduler() -> None:
         id="next_offer_reminders_daily",
         replace_existing=True,
     )
-    # Promemoria di fine prova ai negozi (10 e 3 giorni prima) — ogni giorno 09:45, solo con pagamenti negozi accesi
+    # I vecchi promemoria di fine prova a 10 e 3 giorni (job «trial_reminders_daily») sono stati tolti:
+    # al loro posto le email di prova qui sotto (giorno 30 e 7 giorni prima del primo pagamento).
+    # Email di prova (giorno 30, 7 giorni prima del primo pagamento) e mancato pagamento: ogni giorno, spente di
+    # default (MERCHANT_TRIAL_EMAILS / MERCHANT_PAYMENT_REQUIRED)
     _scheduler.add_job(
-        _run_trial_reminders,
-        CronTrigger(hour=9, minute=45, timezone="Europe/Rome"),
-        id="trial_reminders_daily",
+        _run_trial_emails,
+        CronTrigger(hour=9, minute=50, timezone="Europe/Rome"),
+        id="trial_emails_daily",
+        replace_existing=True,
+    )
+    _scheduler.add_job(
+        _run_payment_missed,
+        CronTrigger(hour=10, minute=15, timezone="Europe/Rome"),
+        id="payment_missed_daily",
+        replace_existing=True,
+    )
+    _scheduler.add_job(
+        _run_monthly_charge_reminders,
+        CronTrigger(hour=10, minute=25, timezone="Europe/Rome"),
+        id="monthly_charge_reminders_daily",
         replace_existing=True,
     )
     # Avviso di lancio alla lista d'attesa: riprende ogni giorno alle 10:00 (Roma) solo dopo che l'admin ha premuto AVVISA

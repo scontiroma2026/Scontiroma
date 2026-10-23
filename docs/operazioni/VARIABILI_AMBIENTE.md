@@ -48,6 +48,8 @@ Legenda: 🔒 = segreto (solo su Render, mai in chat, PR o file) · ⚙️ = non
 | `CLIENT_EMAIL_CONFIRMATION_REQUIRED` | ⚙️ | `true` | `true` | **`true`** (acceso anche se la variabile manca) |
 | `CLIENT_SUBSCRIPTION_REQUIRED` | ⚙️ | `false` (già in `render.yaml`) | `false` | `false` |
 | `MERCHANT_PAYMENT_REQUIRED` | ⚙️ | `false` | `false` fino alla conferma esplicita del titolare | `false` |
+| `MERCHANT_TRIAL_EMAILS` | ⚙️ | `false` | `false` finché il titolare non decide (poi `true`: email giorno 30 e promemoria 7 giorni prima del primo pagamento ai negozi, anche con i pagamenti spenti). Con `MERCHANT_PAYMENT_REQUIRED=true` queste due email partono comunque; i vecchi promemoria a 10 e 3 giorni non esistono più | `false` |
+| `MERCHANT_PAYMENT_REQUIRED` (email) | ⚙️ | `false` | con `true` partono anche mancato pagamento, ricevuta e promemoria mensile 3 giorni prima di ogni addebito (solo negozi con abbonamento attivo e senza «Non rinnovo») | nessuna di queste email |
 | `TRIAL_END_DATE` | ⚙️ | **vuota** (nessuna data per ora) | vuota | nessun banner di fine prova |
 
 ### Lista d'attesa e limiti anti-abuso (i valori predefiniti vanno bene: non impostarli)

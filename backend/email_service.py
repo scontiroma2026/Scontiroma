@@ -258,23 +258,6 @@ async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_lab
     return await _send(to, f"La tua offerta scade tra {giorni} — carica quella di {month_label}", _shell(inner))
 
 
-async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_left: int, end_label: str) -> Optional[str]:
-    """Promemoria di fine prova gratuita (10 e 3 giorni prima). Nessun addebito parte da qui."""
-    name, shop_name, end_label = _esc(name), _esc(shop_name), _esc(end_label)
-    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
-    inner = f"""
-<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La prova gratuita finisce tra {giorni}</h2>
-<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">La prova gratuita di <strong>{shop_name}</strong> su Sconti Roma termina il <strong style="color:#00E5FF">{end_label}</strong>.</p>
-<p style="margin:0 0 16px;color:#d4d4d8">Per continuare, <strong>aggiungi il metodo di pagamento e conferma</strong>: così la tua offerta resta pubblicata. Senza conferma, dal giorno dopo l'offerta non verrà più pubblicata e non riceverai nessun addebito.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Se non vuoi continuare, non devi fare nulla: la disdetta ha effetto a fine mese e puoi sempre scegliere «Non rinnovo» dalla tua dashboard.</p>
-<div style="text-align:center;margin:24px 0">
-<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
-</div>
-"""
-    return await _send(to, f"La tua prova gratuita finisce tra {giorni} — Sconti Roma", _shell(inner))
-
-
 async def send_admin_segnalazione(to: str, tipo: str, dettaglio: str, riferimento: str, sid: str) -> Optional[str]:
     """Avviso all'admin: nuova segnalazione o nuovo reclamo (testo breve, il resto si legge nell'area admin)."""
     tipo, dettaglio, riferimento, sid = _esc(tipo), _esc(dettaglio[:300]), _esc(riferimento), _esc(sid[:8])
@@ -709,6 +692,114 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
 """
     return await _send(to, f"Benvenuto in {BRAND}: crea la tua prima offerta", _shell(inner))
+
+
+# ---------- Email al commerciante: prova e pagamento (lista di lancio, punto 21) ----------
+# Spente di default: le fa partire il server solo con gli interruttori ambiente (vedi server.py).
+MERCHANT_PRICE_EUR = 4.99  # al mese, IVA esclusa
+_DISDETTA_NEGOZIO = ("Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. "
+                     "Per non continuare, scegli «Non rinnovo».")
+
+
+def _blocco_prezzo_negozio() -> str:
+    return (f'<p style="{_P}"><strong>Prezzo:</strong> {_eur(MERCHANT_PRICE_EUR)} + IVA al mese. '
+            f'Il pagamento è mensile e si paga sempre il 1° del mese, con una tolleranza fino al giorno 5.</p>')
+
+
+def _blocco_disdetta_negozio() -> str:
+    return f'<p style="{_P}"><strong>Disdetta:</strong> {_DISDETTA_NEGOZIO}</p>'
+
+
+async def send_merchant_trial_day30(to: str, name: str, shop_name: str, trial_end_label: str,
+                                    first_payment_label: str) -> Optional[str]:
+    """Giorno 30 della prova: a che punto sei, quando finisce, cosa succede dopo. Nessun addebito parte da qui."""
+    name, shop_name = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio")
+    trial_end_label, first_payment_label = _esc(trial_end_label), _esc(first_payment_label)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Sono passati 30 giorni dalla tua prima offerta</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">la prova di <strong>{shop_name}</strong> su {BRAND} è a buon punto: dura circa due mesi dalla prima pubblicazione, fino al <strong style="color:#00E5FF">{trial_end_label}</strong> compreso.</p>
+<p style="{_P}">Il primo pagamento sarebbe il <strong>{first_payment_label}</strong>. Prima ti scriveremo di nuovo e non ti addebiteremo nulla senza la tua conferma.</p>
+{_blocco_prezzo_negozio()}
+{_blocco_disdetta_negozio()}
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai alla dashboard</a></div>
+"""
+    return await _send(to, f"La tua prova su {BRAND}: 30 giorni", _shell(inner))
+
+
+async def send_merchant_first_payment_reminder(to: str, name: str, shop_name: str, first_payment_label: str,
+                                               days_left: int, tolerance_days: int = 5) -> Optional[str]:
+    """Promemoria prima del 1° del mese del primo pagamento. Nessun addebito parte da qui."""
+    name, shop_name = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio")
+    first_payment_label = _esc(first_payment_label)
+    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il primo pagamento è tra {giorni}</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">la prova di <strong>{shop_name}</strong> su {BRAND} termina e il primo pagamento mensile è previsto il <strong style="color:#00E5FF">{first_payment_label}</strong>.</p>
+<p style="{_P}"><strong>Prezzo:</strong> {_eur(MERCHANT_PRICE_EUR)} + IVA al mese. Puoi pagare dal 1° al {int(tolerance_days)} del mese; non ti addebitiamo nulla senza la tua conferma.</p>
+<p style="{_P}">Per continuare, aggiungi il metodo di pagamento dalla dashboard e conferma: così la tua offerta resta pubblicata.</p>
+{_blocco_disdetta_negozio()}
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai alla dashboard</a></div>
+"""
+    return await _send(to, f"Il primo pagamento su {BRAND} è tra {giorni}", _shell(inner))
+
+
+async def send_merchant_monthly_charge_reminder(to: str, name: str, shop_name: str, charge_label: str, days_left: int = 3,
+                                                price_cent: int = 499) -> Optional[str]:
+    """Promemoria mensile, pochi giorni prima di ogni addebito, per i negozi già abbonati. Non è il promemoria
+    del primo pagamento (durante la prova) né la ricevuta."""
+    name, shop_name = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio")
+    charge_label = _esc(charge_label)
+    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il prossimo pagamento è tra {giorni}</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">il pagamento mensile di <strong>{shop_name}</strong> su {BRAND} è previsto il <strong style="color:#00E5FF">{charge_label}</strong>.</p>
+<p style="{_P}"><strong>Prezzo:</strong> {_eur(price_cent / 100)} + IVA al mese. Il pagamento si fa sempre il 1° del mese, con una tolleranza fino al giorno 5.</p>
+{_blocco_disdetta_negozio()}
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai alla dashboard</a></div>
+"""
+    return await _send(to, f"Il prossimo pagamento su {BRAND} è tra {giorni}", _shell(inner))
+
+
+async def send_merchant_payment_missed(to: str, name: str, shop_name: str, month_label: str,
+                                       tolerance_days: int = 5) -> Optional[str]:
+    """Mancato pagamento del mese, dopo i giorni di tolleranza."""
+    name, shop_name, month_label = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio"), _esc(month_label)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Non risulta il pagamento di {month_label}</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">per <strong>{shop_name}</strong> non risulta ancora il pagamento di {month_label}, che si poteva fare dal 1° al {int(tolerance_days)} del mese. Finché il pagamento non risulta, l'offerta non è visibile ai clienti.</p>
+<p style="{_P}">Un pagamento che arriva dopo il giorno {int(tolerance_days)} vale per il mese successivo. Se hai già pagato, ignora questa email: può passare qualche giorno prima che il pagamento sia registrato.</p>
+<p style="{_P}"><strong>Prezzo:</strong> {_eur(MERCHANT_PRICE_EUR)} + IVA al mese.</p>
+{_blocco_disdetta_negozio()}
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai alla dashboard</a></div>
+"""
+    return await _send(to, f"Non risulta il pagamento di {month_label} — {BRAND}", _shell(inner))
+
+
+async def send_merchant_payment_receipt(to: str, name: str, shop_name: str, amount_cent: int, month_label: str,
+                                        method: str = "") -> Optional[str]:
+    """Conferma del pagamento ricevuto (non è un documento fiscale)."""
+    name, shop_name, month_label = _esc((name or "").strip() or "ciao"), _esc(shop_name or "il tuo negozio"), _esc(month_label)
+    metodo = {"stripe": "carta", "paypal": "pagamento online"}.get((method or "").lower(), "")
+    riga_metodo = f"<li>metodo: {metodo}</li>" if metodo else ""
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Pagamento ricevuto, grazie</h2>
+<p style="{_P}">Ciao {name},</p>
+<p style="{_P}">abbiamo ricevuto il pagamento di {month_label} per <strong>{shop_name}</strong>.</p>
+<ul style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">
+<li>importo: <strong>{_eur(amount_cent / 100)}</strong></li>
+<li>mese: {month_label}</li>
+{riga_metodo}
+<li>piano: {_eur(MERCHANT_PRICE_EUR)} + IVA al mese</li>
+</ul>
+<p style="{_P}">Questa email conferma il pagamento; non è un documento fiscale.</p>
+{_blocco_disdetta_negozio()}
+<div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/dashboard" style="{_BTN}">Vai alla dashboard</a></div>
+"""
+    return await _send(to, f"Pagamento ricevuto: {month_label} — {BRAND}", _shell(inner))
 
 
 async def send_admin_new_merchant(to: str, shop_name: str, category: str, zone: str, email: str, phone: str) -> Optional[str]:
