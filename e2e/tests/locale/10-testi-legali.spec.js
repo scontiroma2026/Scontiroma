@@ -33,6 +33,26 @@ test('termini: costi per i commercianti dopo la fase di lancio', async ({ page }
   await expect(t).toContainText('non si rinnovano');
 });
 
+test('termini: prova, esempio, disdetta e zona allineati alla decisione del titolare', async ({ page }) => {
+  await page.goto('/termini');
+  const t = page.getByTestId('termini-page');
+  await expect(t).toContainText('Prova gratuita di circa due mesi');
+  await expect(t).toContainText('prima pubblicazione');
+  // esempio numerico: date coerenti (prova fino al 31/12, primo pagamento il 1° gennaio)
+  await expect(t).toContainText('10 novembre 2026');
+  await expect(t).toContainText('31 dicembre 2026');
+  await expect(t).toContainText('1° gennaio 2027');
+  await expect(t).toContainText('31 gennaio 2027');
+  await expect(t).toContainText('1° febbraio 2027');
+  await expect(t).toContainText('disdici quando vuoi, porti avanti solo l\'offerta che è in corso a fine mese');
+  await expect(t).toContainText('Mese pagato non rimborsabile');
+  await expect(t).toContainText('Roma e dintorni');
+  await expect(t).toContainText('almeno 18 anni');
+  for (const v of [/60 giorni/, /nessun vincolo/i, /prezzo bloccato/i, /Garbatella/, /San Paolo/, /Marconi/]) {
+    expect(await t.innerText(), `Termini contiene ${v}`).not.toMatch(v);
+  }
+});
+
 test('iscrizione: dichiarazione dei 18 anni', async ({ page }) => {
   await page.goto('/register');
   await expect(page.getByText('Dichiaro di avere almeno 18 anni')).toBeVisible();
