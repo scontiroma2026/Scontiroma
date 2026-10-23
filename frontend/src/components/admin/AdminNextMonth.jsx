@@ -13,7 +13,7 @@ import {
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 import FotoControllo from "@/components/admin/FotoControllo";
-import { renderBold } from "@/lib/renderBold";
+import SchedaCompleta from "@/components/admin/SchedaCompleta";
 
 const STATUS_BADGE = {
   approved: ["Approvata ✓", "bg-muted border-fucsia/40 text-fucsia"],
@@ -214,12 +214,6 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
   const m = row.merchant || {};
   const [scartate, setScartate] = useState([]);
   const images = Array.isArray(nd.image_urls) && nd.image_urls.length ? nd.image_urls : (nd.image_url ? [nd.image_url] : []);
-  const InfoBlock = ({ title, text }) => text ? (
-    <div>
-      <div className="text-xs uppercase tracking-wider text-gold">{title}</div>
-      <p className="mt-1 text-sm text-foreground/80 whitespace-pre-line">{renderBold(text)}</p>
-    </div>
-  ) : null;
 
   return (
     <div data-testid={`nextoffer-detail-${row.merchant_id}`} className="mt-4 space-y-4 rounded-xl border border-ciano/20 bg-muted p-5">
@@ -265,7 +259,6 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
           </div>
         )}
         <div className="mt-3 font-serif text-2xl text-foreground">{nd.title}</div>
-        <p className="mt-1 text-sm text-foreground/80 whitespace-pre-line">{renderBold(nd.description)}</p>
         <div className="mt-3 flex flex-wrap items-baseline gap-2">
           <span className="text-fucsia font-bold text-xl">€{nd.discounted_price?.toFixed(2)}</span>
           <span className="text-muted-foreground line-through">€{nd.original_price?.toFixed(2)}</span>
@@ -275,12 +268,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
             {nd.active ? "● attiva nel catalogo" : "○ non attiva"}
           </span>
         </div>
-        <div className="mt-4 space-y-3">
-          <InfoBlock title="Termini e condizioni (Fine print)" text={nd.terms} />
-          <InfoBlock title="Pianifica in anticipo" text={nd.plan_ahead} />
-          <InfoBlock title="Inclusioni ed esclusioni" text={nd.validity_info} />
-          <InfoBlock title="Informazioni aggiuntive" text={nd.additional_info} />
-        </div>
+        <SchedaCompleta offerta={nd} negozio={m} id={nd.id} />
         {nd.approval_note && <div className="mt-3 text-xs text-destructive">Motivo ultimo rifiuto: {nd.approval_note}</div>}
       </div>
 
