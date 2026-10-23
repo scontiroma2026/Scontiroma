@@ -285,6 +285,16 @@ export default function PrivacyPolicy() {
           </li>
           <li><strong>Dati contabili / fatture</strong>: 10 anni (obbligo di legge), in forma non più collegata al tuo account.</li>
           <li><strong>Log di sicurezza</strong>: 12 mesi.</li>
+          {/* [PROPOSTA - DA VALIDARE dal consulente] 23/10: storico sospensioni dei negozi (PR #219), raccolta `sospensioni`, scadenza automatica 730 giorni, non cancellato con l'account. */}
+          <li>
+            <strong>Sospensioni dei negozi (solo commercianti)</strong>: se
+            sospendiamo o riattiviamo il tuo negozio, conserviamo la data e il
+            motivo per 24 mesi da ciascun evento, anche se nel frattempo
+            elimini l'account, poi vengono cancellati in automatico. Ci
+            servono per rispondere a un tuo reclamo e per difenderci in caso di
+            contestazioni. Base giuridica: legittimo interesse (art. 6.1.f
+            GDPR).
+          </li>
           <li>
             <strong>Lista d'attesa</strong>: se non confermi l'iscrizione con il
             link ricevuto per email (valido 48 ore), cancelliamo l'email dopo 7
