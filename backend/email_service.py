@@ -241,6 +241,38 @@ async def send_merchant_rejected(to: str, name: str, shop_name: str, discount_ti
     return await _send(to, "Offerta da rivedere — Sconti Roma", _shell(inner))
 
 
+async def send_merchant_suspended(to: str, name: str, shop_name: str, reason: str, date_label: str) -> Optional[str]:
+    """Sospensione del negozio decisa dall'admin: motivo scritto (supporto durevole) e come contestarla.
+    Solo i dati del negozio e il motivo scritto dall'admin: nessun dato di terzi."""
+    name, shop_name, reason, date_label = _esc(name), _esc(shop_name), _esc(reason), _esc(date_label)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Il tuo account è stato sospeso</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 8px;color:#d4d4d8">Dal <strong>{date_label}</strong> l'account di <strong>{shop_name}</strong> su Sconti Roma è sospeso: la tua offerta non è visibile ai clienti e non si può usare finché la sospensione resta attiva.</p>
+<div style="background:#1a1a20;border:1px solid #ef4444;border-radius:8px;padding:12px 16px;margin:12px 0;color:#fecaca"><strong>Motivo:</strong> {reason}</div>
+<h3 style="margin:20px 0 6px;color:#fff;font-size:16px">Non sei d'accordo?</h3>
+<p style="margin:0 0 8px;color:#d4d4d8">Rispondi a questa email o scrivi a <a href="mailto:info@scontiroma.it" style="color:#00E5FF">info@scontiroma.it</a> spiegando perché. Puoi anche inviare un reclamo dalla tua area commerciante.</p>
+<p style="margin:0 0 16px;color:#d4d4d8">Riesaminiamo la decisione e ti rispondiamo con un esito motivato <strong>entro 10 giorni lavorativi</strong> dal tuo reclamo.</p>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Il tuo account e i tuoi dati restano salvati: se la sospensione viene tolta, la tua offerta torna visibile.</p>
+"""
+    return await _send(to, "Il tuo account è stato sospeso — Sconti Roma", _shell(inner))
+
+
+async def send_merchant_reactivated(to: str, name: str, shop_name: str) -> Optional[str]:
+    """Fine della sospensione: il negozio torna attivo."""
+    name, shop_name = _esc(name), _esc(shop_name)
+    inner = f"""
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Account riattivato</h2>
+<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
+<p style="margin:0 0 16px;color:#d4d4d8">La sospensione di <strong>{shop_name}</strong> è stata tolta: l'account è di nuovo attivo. Se la tua offerta è approvata e attiva, torna subito visibile ai clienti.</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
+</div>
+<p style="margin:0;color:#a1a1aa;font-size:13px">Per qualsiasi domanda scrivi a <a href="mailto:info@scontiroma.it" style="color:#a1a1aa">info@scontiroma.it</a>.</p>
+"""
+    return await _send(to, "Account riattivato — Sconti Roma", _shell(inner))
+
+
 async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_label: str, days_left: int = 7) -> Optional[str]:
     name, shop_name, month_label = _esc(name), _esc(shop_name), _esc(month_label)
     inner = f"""
@@ -802,7 +834,8 @@ async def send_admin_riepilogo_settimanale(to: str, r: dict) -> Optional[str]:
            + riga("… di cui da più di 3 giorni", s["offerte_in_attesa_oltre_3_giorni"])
            + riga("Negozi senza offerta", s["negozi_senza_offerta"])
            + riga("Segnalazioni aperte", s["segnalazioni_aperte"])
-           + riga("Reclami aperti", s["reclami_aperti"]))
+           + riga("Reclami aperti", s["reclami_aperti"])
+           + riga("… su sospensioni (riesame in 10 giorni lavorativi)", s.get("reclami_sospensione_aperti", 0)))
     pagamenti = ""
     if r.get("pagamenti"):
         nomi = {"in_prova": "In prova", "attivo": "Attivi", "scaduto": "Scaduti", "sospeso": "Sospesi"}

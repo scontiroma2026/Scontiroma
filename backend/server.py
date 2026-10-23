@@ -41,6 +41,8 @@ from email_service import (
     send_preferito_nuova_offerta,
     send_merchant_approved,
     send_merchant_rejected,
+    send_merchant_suspended,
+    send_merchant_reactivated,
     send_monthly_discounts_notification,
     send_renewal_receipt,
     send_payment_failed_immediate,
@@ -5499,6 +5501,8 @@ class AdminMerchantUpdate(BaseModel):
     image_url: Optional[str] = None
     phone: Optional[str] = None
     approved: Optional[bool] = None
+    # Obbligatorio quando si sospende (approved=false): arriva al commerciante per email.
+    motivo_sospensione: Optional[str] = Field(default=None, max_length=1000)
 
 
 class AdminDiscountUpdate(BaseModel):
@@ -5812,6 +5816,9 @@ async def _riepilogo_settimanale(da: date, a: date, adesso: Optional[datetime] =
     senza_offerta = await _negozi_senza_offerta()
     aperte = [s async for s in db.segnalazioni.find({"stato": {"$in": ["ricevuta", "in_esame"]}}, {"_id": 0, "tipo": 1})]
     reclami = sum(1 for s in aperte if s.get("tipo") == "reclamo_commerciante")
+    riesami = sorted([s["riesame_entro"] async for s in db.segnalazioni.find(
+        {"stato": {"$in": ["ricevuta", "in_esame"]}, "sospensione": True}, {"_id": 0, "riesame_entro": 1})
+        if s.get("riesame_entro")])
 
     pagamenti = None
     if merchant_payment_required():
@@ -5824,6 +5831,7 @@ async def _riepilogo_settimanale(da: date, a: date, adesso: Optional[datetime] =
         "offerte_in_attesa": in_attesa, "offerte_in_attesa_oltre_3_giorni": vecchie,
         "negozi_senza_offerta": len(senza_offerta), "negozi_senza_offerta_nomi": senza_offerta,
         "segnalazioni_aperte": len(aperte) - reclami, "reclami_aperti": reclami,
+        "reclami_sospensione_aperti": len(riesami), "riesame_sospensione_entro": riesami[0] if riesami else None,
     }
     riepilogo = {
         "periodo": {"da": da.isoformat(), "a": (a - timedelta(days=1)).isoformat(), "etichetta": _etichetta_periodo(da, a),
@@ -5838,6 +5846,10 @@ async def _riepilogo_settimanale(da: date, a: date, adesso: Optional[datetime] =
 def _da_guardare(r: dict) -> list:
     """Al massimo 3 cose, scelte con regole semplici, dalla più urgente."""
     s, voci = r["situazione"], []
+    if s.get("reclami_sospensione_aperti"):
+        entro = date.fromisoformat(s["riesame_sospensione_entro"])
+        voci.append(f"{s['reclami_sospensione_aperti']} reclami su sospensioni da riesaminare: il primo entro il "
+                    f"{entro.day} {MESI_IT[entro.month - 1]} ({RIESAME_SOSPENSIONE_GIORNI_LAVORATIVI} giorni lavorativi).")
     aperte = s["segnalazioni_aperte"] + s["reclami_aperti"]
     if aperte:
         voci.append(f"{aperte} segnalazioni o reclami aperti: la risposta va data entro 5 giorni lavorativi.")
@@ -6240,16 +6252,137 @@ async def admin_list_merchants(user: dict = Depends(require_admin_master)):
     return {"merchants": out}
 
 
+# ---------- Sospensione del negozio con motivo (Termini art. 2, scelta «A» del titolare) ----------
+# Sospendere chiede un motivo scritto (almeno 10 caratteri) che il commerciante riceve per email insieme a
+# come contestarlo (info@scontiroma.it, riesame entro 10 giorni lavorativi). Ogni sospensione e
+# riattivazione finisce nello storico `sospensioni` (conservato 24 mesi come le segnalazioni).
+MOTIVO_SOSPENSIONE_MIN = 10
+RIESAME_SOSPENSIONE_GIORNI_LAVORATIVI = 10
+SOSPENSIONI_CONSERVAZIONE = timedelta(days=730)
+
+
+def _pasqua(anno: int) -> date:
+    """Domenica di Pasqua (calendario gregoriano, algoritmo di Meeus)."""
+    a, b, c = anno % 19, anno // 100, anno % 100
+    d, e = b // 4, b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = c // 4, c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7  # noqa: E741
+    m = (a + 11 * h + 22 * l) // 451
+    mese = (h + l - 7 * m + 114) // 31
+    giorno = ((h + l - 7 * m + 114) % 31) + 1
+    return date(anno, mese, giorno)
+
+
+def _festivo_roma(g: date) -> bool:
+    """Sabato, domenica, feste nazionali, Pasquetta e il patrono di Roma (29 giugno)."""
+    if g.weekday() >= 5:
+        return True
+    fisse = {(1, 1), (1, 6), (4, 25), (5, 1), (6, 2), (6, 29), (8, 15), (11, 1), (12, 8), (12, 25), (12, 26)}
+    return (g.month, g.day) in fisse or g == _pasqua(g.year) + timedelta(days=1)
+
+
+def _aggiungi_giorni_lavorativi(da: date, n: int) -> date:
+    """Il giorno lavorativo n-esimo dopo `da` (escluso `da`)."""
+    g = da
+    while n > 0:
+        g += timedelta(days=1)
+        if not _festivo_roma(g):
+            n -= 1
+    return g
+
+
+def _motivo_sospensione(testo: Optional[str]) -> str:
+    motivo = (testo or "").strip()
+    if len(motivo) < MOTIVO_SOSPENSIONE_MIN:
+        raise HTTPException(422, f"Scrivi il motivo della sospensione (almeno {MOTIVO_SOSPENSIONE_MIN} caratteri): "
+                                 "il commerciante lo riceve per email.")
+    return motivo
+
+
+async def _storico_sospensione(merchant_id: str, azione: str, motivo: str = "") -> None:
+    adesso = datetime.now(timezone.utc)
+    await db.sospensioni.insert_one({"id": str(uuid.uuid4()), "merchant_id": merchant_id, "azione": azione,
+                                     "motivo": motivo, "data": adesso.isoformat(),
+                                     "expires_at": adesso + SOSPENSIONI_CONSERVAZIONE})
+
+
+def _campi_reclamo_sospensione(merchant: Optional[dict], adesso: datetime) -> dict:
+    """Reclamo di un negozio sospeso = contestazione della sospensione: riesame entro 10 giorni lavorativi."""
+    if not merchant or merchant.get("role") != "merchant" or merchant.get("approved") is not False:
+        return {}
+    oggi = adesso.astimezone(ROME_TZ).date()
+    return {"sospensione": True,
+            "riesame_entro": _aggiungi_giorni_lavorativi(oggi, RIESAME_SOSPENSIONE_GIORNI_LAVORATIVI).isoformat()}
+
+
 @api.put("/admin/merchants/{merchant_id}")
 async def admin_update_merchant(merchant_id: str, payload: AdminMerchantUpdate, user: dict = Depends(require_admin_master)):
     updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    testo_motivo = updates.pop("motivo_sospensione", None)
     if not updates:
         raise HTTPException(400, "Nessuna modifica")
-    result = await db.users.update_one({"id": merchant_id, "role": "merchant"}, {"$set": updates})
-    if result.matched_count == 0:
+    prima = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not prima:
         raise HTTPException(404, "Commerciante non trovato")
+    era_sospeso = prima.get("approved") is False
+    sospende = updates.get("approved") is False and not era_sospeso
+    riattiva = updates.get("approved") is True and era_sospeso
+    operazione = {"$set": updates}
+    motivo = ""
+    if sospende:
+        motivo = _motivo_sospensione(testo_motivo)
+        updates["sospensione"] = {"motivo": motivo, "data": datetime.now(timezone.utc).isoformat()}
+    elif riattiva:
+        operazione["$unset"] = {"sospensione": ""}
+    await db.users.update_one({"id": merchant_id, "role": "merchant"}, operazione)
     m = await db.users.find_one({"id": merchant_id})
+    nome, negozio = m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio"
+    if sospende:
+        await _storico_sospensione(merchant_id, "sospeso", motivo)
+        if m.get("email"):
+            oggi = _rome_now().date()
+            _email_in_background(send_merchant_suspended(
+                m["email"], nome, negozio, motivo, f"{oggi.day} {MESI_IT[oggi.month - 1]} {oggi.year}"), "negozio-sospeso")
+    elif riattiva:
+        await _storico_sospensione(merchant_id, "riattivato")
+        if m.get("email"):
+            _email_in_background(send_merchant_reactivated(m["email"], nome, negozio), "negozio-riattivato")
     return {"merchant": sanitize_user(m)}
+
+
+@api.get("/admin/merchants/{merchant_id}/sospensioni")
+async def admin_storico_sospensioni(merchant_id: str, user: dict = Depends(require_admin_master)):
+    """Storico delle sospensioni e riattivazioni del negozio (più recenti prima)."""
+    righe = [r async for r in db.sospensioni.find({"merchant_id": merchant_id}, {"_id": 0, "expires_at": 0}).sort("data", -1)]
+    return {"storico": righe}
+
+
+class ContestazioneIn(BaseModel):
+    nota: str = Field(min_length=10, max_length=1500)
+
+
+@api.post("/admin/merchants/{merchant_id}/contestazione")
+async def admin_registra_contestazione(merchant_id: str, payload: ContestazioneIn, user: dict = Depends(require_admin_master)):
+    """Il commerciante ha contestato la sospensione per email (info@): l'admin la registra come reclamo,
+    così parte la scadenza dei 10 giorni lavorativi per il riesame (riepilogo e area Segnalazioni)."""
+    m = await db.users.find_one({"id": merchant_id, "role": "merchant"})
+    if not m:
+        raise HTTPException(404, "Commerciante non trovato")
+    if m.get("approved") is not False:
+        raise HTTPException(409, "Il negozio non è sospeso")
+    adesso = datetime.now(timezone.utc)
+    doc = {"id": str(uuid.uuid4()), "tipo": "reclamo_commerciante", "motivo": payload.nota.strip(),
+           "discount_id": None, "merchant_id": merchant_id, "riferimento": m.get("shop_name") or "negozio",
+           "email": m.get("email"), "autore_ruolo": "merchant", "canale": "email", "stato": "ricevuta",
+           "motivazione": "", "creata_il": adesso.isoformat(),
+           "conferma_entro": (adesso + timedelta(days=7)).date().isoformat(),
+           "expires_at": adesso + SEGNALAZIONE_CONSERVAZIONE}
+    doc.update(_campi_reclamo_sospensione(m, adesso))
+    await db.segnalazioni.insert_one(dict(doc))
+    return {"ok": True, "id": doc["id"], "riesame_entro": doc["riesame_entro"]}
 
 
 @api.delete("/admin/merchants/{merchant_id}")
@@ -6937,6 +7070,7 @@ async def on_startup():
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
     await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
+    await db.sospensioni.create_index("expires_at", expireAfterSeconds=0)  # storico sospensioni: 24 mesi
     await db.reminder_claims.create_index("key", unique=True)
     await db.reminder_claims.create_index("expires_at", expireAfterSeconds=0)
     await db.email_fallite.create_index("expires_at", expireAfterSeconds=0)  # righe delle email non partite: 7 giorni
@@ -7141,6 +7275,8 @@ async def _crea_segnalazione(payload: SegnalazioneIn, chiave: str, user: Optiona
            "autore_ruolo": (user or {}).get("role"), "stato": "ricevuta", "motivazione": "",
            "creata_il": adesso.isoformat(), "conferma_entro": (adesso + timedelta(days=7)).date().isoformat(),
            "expires_at": adesso + SEGNALAZIONE_CONSERVAZIONE}
+    if payload.tipo == "reclamo_commerciante" and merchant_id:
+        doc.update(_campi_reclamo_sospensione(await db.users.find_one({"id": merchant_id}), adesso))
     await db.segnalazioni.insert_one(dict(doc))
     if _admin_notify_to():
         _email_in_background(send_admin_segnalazione(_admin_notify_to(), payload.tipo.replace("_", " "),
