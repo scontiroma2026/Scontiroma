@@ -85,6 +85,8 @@ export default function AdminRiepilogo({ hdrs }) {
             { k: "senza", cella: ["Negozi senza offerta", s.negozi_senza_offerta] },
             { k: "seg", cella: ["Segnalazioni aperte", s.segnalazioni_aperte] },
             { k: "rec", cella: ["Reclami aperti", s.reclami_aperti] },
+            { k: "sosp", cella: ["… su sospensioni (riesame entro 10 giorni lavorativi)",
+              s.reclami_sospensione_aperti ? `${s.reclami_sospensione_aperti} · il primo entro il ${new Date(s.riesame_sospensione_entro + "T12:00:00").toLocaleDateString("it-IT")}` : 0] },
           ]}
         />
         {s.negozi_senza_offerta_nomi.length > 0 && (

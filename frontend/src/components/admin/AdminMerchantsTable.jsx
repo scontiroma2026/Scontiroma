@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 import CiPensiamoNoiDialog from "@/components/admin/CiPensiamoNoiDialog";
+import SospensioneDialog from "@/components/admin/SospensioneDialog";
 
 /**
  * Tab "Negozi" — tabella gestione commercianti & sconti con azioni inline
@@ -29,6 +30,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   const [q, setQ] = useState("");
   const [daRifiutare, setDaRifiutare] = useState(null);
   const [ciPensiamoNoi, setCiPensiamoNoi] = useState(null); // negozio per cui prepariamo l'offerta
+  const [daSospendere, setDaSospendere] = useState(null); // negozio per cui si chiede il motivo
 
   const needle = q.trim().toLowerCase();
   const filteredMerchants = needle
@@ -105,15 +107,34 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
     onRefresh();
   };
 
+  // Sospendere chiede il motivo (finestra apposita); riattivare chiede solo conferma. In entrambi i casi
+  // il commerciante riceve un'email.
   const toggleApprove = async (m) => {
-    const msg = m.approved
-      ? `Sospendere ${m.shop_name}?\n\nLa sua offerta sparisce subito dall'app e i clienti non possono più usarla. Puoi riattivarlo quando vuoi.`
-      : `Riattivare ${m.shop_name}?\n\nLa sua offerta torna visibile ai clienti (se è approvata e attiva).`;
-    if (!window.confirm(msg)) return;
+    if (m.approved) { setDaSospendere(m); return; }
+    if (!window.confirm(`Riattivare ${m.shop_name}?\n\nLa sua offerta torna visibile ai clienti (se è approvata e attiva) e il commerciante riceve l'email «Account riattivato».`)) return;
     try {
-      await api.put(`/admin/merchants/${m.id}`, { approved: !m.approved }, hdrs());
-      toast.success(m.approved ? "Negozio sospeso" : "Negozio riattivato");
+      await api.put(`/admin/merchants/${m.id}`, { approved: true }, hdrs());
+      toast.success("Negozio riattivato");
       onRefresh();
+    } catch (err) { toast.error(formatApiError(err)); }
+  };
+  const sospendi = async (motivo) => {
+    try {
+      await api.put(`/admin/merchants/${daSospendere.id}`, { approved: false, motivo_sospensione: motivo }, hdrs());
+    } catch (err) {
+      throw new Error(formatApiError(err));
+    }
+    setDaSospendere(null);
+    toast.success("Negozio sospeso: il commerciante riceve il motivo per email");
+    onRefresh();
+  };
+  const registraContestazione = async (m) => {
+    const nota = (window.prompt(`${m.shop_name} ha contestato la sospensione per email?\n\nScrivi in breve cosa contesta (almeno 10 caratteri, senza dati di altre persone). Parte la scadenza di 10 giorni lavorativi per il riesame.`, "") || "").trim();
+    if (!nota) return;
+    if (nota.length < 10) { toast.error("Scrivi almeno 10 caratteri"); return; }
+    try {
+      const { data } = await api.post(`/admin/merchants/${m.id}/contestazione`, { nota }, hdrs());
+      toast.success(`Contestazione registrata: riesame entro il ${new Date(data.riesame_entro + "T12:00:00").toLocaleDateString("it-IT")} (area Segnalazioni)`);
     } catch (err) { toast.error(formatApiError(err)); }
   };
 
@@ -201,6 +222,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             onSaveEdit={() => saveEdit(m.id)}
             onCancelEdit={cancelEdit}
             onToggleApprove={() => toggleApprove(m)}
+            onContestazione={() => registraContestazione(m)}
             onTogglePagato={() => togglePagato(m)}
             onToggleDiscountActive={() => toggleDiscountActive(m)}
             onApproveInline={() => approveInline(m.discount_id)}
@@ -227,6 +249,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
         <CiPensiamoNoiDialog merchant={ciPensiamoNoi} hdrs={hdrs} onChiudi={() => setCiPensiamoNoi(null)}
           onSalvata={() => { setCiPensiamoNoi(null); onRefresh(); }} />
       )}
+      <SospensioneDialog aperta={!!daSospendere} negozio={daSospendere?.shop_name} onChiudi={() => setDaSospendere(null)} onConferma={sospendi} />
       <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={rejectInline} />
     </Card>
   );
@@ -272,7 +295,7 @@ function testoStatoPagamento(sp) {
 function MerchantRow({
   m, hdrs, editing, form, setForm, busy,
   onStartEdit, onSaveEdit, onCancelEdit,
-  onToggleApprove, onTogglePagato, onToggleDiscountActive,
+  onToggleApprove, onContestazione, onTogglePagato, onToggleDiscountActive,
   onApproveInline, onRejectInline, onOpenDiscountEdit,
   onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts, onCiPensiamoNoi,
 }) {
@@ -317,6 +340,11 @@ function MerchantRow({
           {m.approved ? "Negozio attivo" : "Negozio sospeso"}
         </span>
       </div>
+      {!m.approved && m.sospensione && (
+        <p data-testid={`admin-merchant-sospensione-${m.id}`} className="mt-2 text-xs text-red-700">
+          Sospeso il {new Date(m.sospensione.data).toLocaleDateString("it-IT")} · Motivo: {m.sospensione.motivo}
+        </p>
+      )}
 
       {m.stato_pagamento && (
         <div data-testid={`admin-merchant-pagamento-${m.id}`} className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -392,6 +420,9 @@ function MerchantRow({
             <Azione testid={`admin-merchant-toggle-${m.id}`} onClick={onToggleApprove} icon={m.approved ? PauseCircle : PlayCircle} tono={m.approved ? "giallo" : "verde"}>
               {m.approved ? "Sospendi negozio" : "Riattiva negozio"}
             </Azione>
+            {!m.approved && (
+              <Azione testid={`admin-merchant-contestazione-${m.id}`} onClick={onContestazione} icon={Clock}>Registra contestazione ricevuta</Azione>
+            )}
             <Azione testid={`admin-merchant-delete-${m.id}`} onClick={onDelMerchant} icon={Trash2} tono="rosso">Elimina negozio</Azione>
           </>
         )}
