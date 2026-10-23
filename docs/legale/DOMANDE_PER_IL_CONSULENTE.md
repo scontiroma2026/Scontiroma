@@ -53,7 +53,7 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 34. 🟢 Rischio di aspettare: se un terzo deposita prima un segno simile, il preuso locale protegge? Se il nome cambia dopo il lancio, cosa si perde?
 
 ## 8. Società e dati aziendali (dettagli: #40)
-35. 🟠 Sede legale, PEC e civico nei testi pubblici (art. 2250 c.c., D.Lgs. 70/2003): da completare con la visura camerale.
+35. 🟢 Sede legale, PEC e civico nei testi pubblici (art. 2250 c.c., D.Lgs. 70/2003): `[PROPOSTA - DA VALIDARE]` inseriti il 23/10/2026 dalla visura camerale (EUROLINEA S.r.l.s., Via Tasso 5/B, 83031 Ariano Irpino (AV), CF e P.IVA 03240220644, REA AV-313674, capitale 3.000,00 €, PEC eurolineasrls@alpec.it) in Privacy, Termini, Cookie, Recesso e piè di pagina. Da validare la forma.
 
 ## Cosa serve da parte del titolare prima dell'incontro
 - Visura camerale (punto 3 della lista) e dati dell'azienda.

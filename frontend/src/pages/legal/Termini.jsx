@@ -12,8 +12,15 @@ export default function Termini() {
           I presenti Termini e Condizioni ("Termini") disciplinano l'accesso e
           l'utilizzo della piattaforma <strong>Sconti Roma</strong> (di seguito
           "il Servizio" o "la Piattaforma") gestita da{" "}
-          <strong>Euro Linea S.r.l.s.</strong> (Partita IVA 03240220644),
-          di seguito "Sconti Roma". Registrandoti al Servizio dichiari di
+          {/* [PROPOSTA - DA VALIDARE] 23/10/2026: dati societari dalla visura camerale (art. 2250 c.c., D.Lgs. 70/2003). */}
+          <strong>EUROLINEA S.r.l.s.</strong>, con sede legale in Via Tasso
+          5/B, 83031 Ariano Irpino (AV), codice fiscale e Partita IVA
+          03240220644, iscritta al Registro delle Imprese Irpinia Sannio, REA
+          AV-313674, capitale sociale 3.000,00 €, PEC{" "}
+          <a href="mailto:eurolineasrls@alpec.it" className="text-fucsia hover:underline">
+            eurolineasrls@alpec.it
+          </a>
+          , di seguito "Sconti Roma". Registrandoti al Servizio dichiari di
           aver letto, compreso e accettato integralmente i presenti Termini.
         </p>
 

@@ -59,6 +59,16 @@ export default function Recesso() {
           </a>
           . Ti risponderemo il prima possibile, di norma entro 3 giorni lavorativi.
         </p>
+        {/* [PROPOSTA - DA VALIDARE] 23/10/2026: chi gestisce il servizio, con i dati della visura camerale. */}
+        <p>
+          Il servizio è gestito da <strong>EUROLINEA S.r.l.s.</strong>, Via
+          Tasso 5/B, 83031 Ariano Irpino (AV), codice fiscale e Partita IVA
+          03240220644, PEC{" "}
+          <a href="mailto:eurolineasrls@alpec.it" className="text-fucsia hover:underline">
+            eurolineasrls@alpec.it
+          </a>
+          .
+        </p>
       </LegalLayout>
     </div>
   );

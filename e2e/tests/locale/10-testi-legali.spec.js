@@ -40,13 +40,15 @@ test('iscrizione: dichiarazione dei 18 anni', async ({ page }) => {
 
 test('privacy e termini: titolare identificato, nessun riferimento alla piattaforma ODR abrogata', async ({ page }) => {
   await page.goto('/privacy');
-  await expect(page.getByTestId('privacy-policy-page')).toContainText('Euro Linea S.r.l.s.');
+  await expect(page.getByTestId('privacy-policy-page')).toContainText('EUROLINEA S.r.l.s.');
   await expect(page.getByTestId('privacy-policy-page')).toContainText('nome, cognome, email');
   await page.goto('/termini');
   const t = page.getByTestId('termini-page');
-  await expect(t).toContainText('Euro Linea S.r.l.s.');
+  await expect(t).toContainText('EUROLINEA S.r.l.s.');
   await expect(t).not.toContainText('524/2013');
   await expect(t).not.toContainText('senza rimborso');
+  await expect(t).toContainText('REA AV-313674');
+  await expect(page.getByTestId('footer-dati-societari')).toContainText('03240220644');
 });
 
 test('iscrizione commerciante: seconda casella per le clausole specifiche', async ({ page }) => {
