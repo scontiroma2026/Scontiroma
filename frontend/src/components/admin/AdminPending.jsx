@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
 import FotoControllo from "@/components/admin/FotoControllo";
+import SchedaCompleta from "@/components/admin/SchedaCompleta";
 
 /**
  * Tab "Offerte in attesa": lista degli sconti pending con Approva / Rifiuta inline.
@@ -104,7 +105,6 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                   {d.merchant?.shop_name} · {d.merchant?.zone}
                 </div>
                 <div className="font-serif text-xl text-foreground mt-1">{d.title}</div>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{d.description}</p>
                 <div className="mt-2 flex items-baseline gap-2 text-sm">
                   <span className="text-fucsia font-bold text-lg">€{d.discounted_price?.toFixed(2)}</span>
                   <span className="text-muted-foreground line-through">€{d.original_price?.toFixed(2)}</span>
@@ -133,7 +133,7 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                     </span>
                   )}
                 </div>
-                {d.terms && <div className="mt-2 text-xs text-muted-foreground">Termini: {d.terms}</div>}
+                <SchedaCompleta offerta={d} negozio={d.negozio} id={d.id} />
                 <FotoControllo id={d.id} urls={d.image_urls} onChange={(lista) => setScarti((x) => ({ ...x, [d.id]: lista }))} />
               </div>
               <div className="flex flex-col gap-2 md:justify-center">

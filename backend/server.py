@@ -5540,13 +5540,34 @@ async def admin_merchant_insights(merchant_id: str, user: dict = Depends(require
     return await _insights_negozio(merchant_id, applica_soglia=False)
 
 
+def _dati_negozio_admin(m: dict) -> dict:
+    """Tutto quello che il commerciante ha inserito, per la revisione admin (campi vuoti compresi)."""
+    return {
+        "name": m.get("name") or "",
+        "email": m.get("email") or "",
+        "phone": m.get("phone") or "",
+        "address": m.get("address") or "",
+        "piva": m.get("partita_iva") or m.get("piva") or m.get("vat_number") or "",
+        "shop_name": m.get("shop_name") or "",
+        "zone": m.get("zone") or "",
+        "category": m.get("category") or "",
+        "description": m.get("description") or "",
+        "shop_description": m.get("shop_description") or "",
+        "image_url": m.get("image_url") or "",
+        "orari": m.get("orari"),
+        "stato_orari": stato_orari(m.get("orari"), _rome_now()),
+    }
+
+
 @api.get("/admin/discounts/pending")
 async def admin_list_pending(user: dict = Depends(require_admin_master)):
     docs = await db.discounts.find({"approval_status": "pending"}).sort("updated_at", -1).to_list(200)
     out = []
     for d in docs:
         e = await enrich_discount(d)
-        e["pagamento"] = await _approvazione_consentita(await db.users.find_one({"id": d.get("merchant_id")}))
+        m = await db.users.find_one({"id": d.get("merchant_id")})
+        e["pagamento"] = await _approvazione_consentita(m)
+        e["negozio"] = _dati_negozio_admin(m) if m else None
         out.append(e)
     return {"discounts": out}
 
@@ -6093,15 +6114,7 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
             "zone": m.get("zone"),
             "category": m.get("category"),
             "email": m.get("email"),
-            "merchant": {
-                "name": m.get("name"),
-                "email": m.get("email"),
-                "phone": m.get("phone"),
-                "address": m.get("address"),
-                "piva": m.get("piva") or m.get("vat_number"),
-                "zone": m.get("zone"),
-                "category": m.get("category"),
-            },
+            "merchant": _dati_negozio_admin(m),
             "reminder_sent": m.get("next_offer_reminder_month") == nm,
             "current_offer": ({
                 "title": cd.get("title"),
