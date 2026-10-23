@@ -7,7 +7,7 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 ## 1. Termini e prova gratuita (dettagli: #157 e `docs/legale/PROPOSTA_TERMINI_ALLINEATI.md`)
 1. 🟠 «Circa due mesi» con prova reale da 49 a 81 giorni: bastano la regola e l'esempio scritti nell'art. 3.2?
 2. 🟠 «Disdici quando vuoi», con effetto a fine mese, sconto da rispettare fino a fine mese e mese pagato non rimborsabile (cliente professionista): va bene la formula? La frase è la stessa in Termini, email di benvenuto e guida per i negozi: va bene identica ovunque?
-3. 🟠 Preavviso: i Termini dicevano «30 giorni prima della fine della fase di lancio», l'app scrive 10 e 3 giorni prima. Quale testo?
+3. 🟠 Preavviso: i Termini dicevano «30 giorni prima della fine della fase di lancio», l'app scriveva 10 e 3 giorni prima. **Deciso dal titolare (21/10, PR #199 e #169):** email al giorno 30 della prova, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito; i promemoria a 10 e 3 giorni sono stati tolti dal codice.
 4. 🟠 I negozi devono avere la **Partita IVA** (obbligatoria alla registrazione dal 15/10): serve una frase nei Termini e nel Recesso?
 5. 🟠 Eliminazione dell'account del negozio: subito o dal 1° del mese dopo (#102)?
 
