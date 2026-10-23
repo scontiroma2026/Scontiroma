@@ -1915,7 +1915,7 @@ async def _interesse_per_zona() -> list:
 # Doppio consenso: l'iscritto è «da_confermare» finché non tocca il link ricevuto per email (48 ore, nel DB solo
 # l'impronta del token). Le voci mai confermate si cancellano dopo 7 giorni. Il link per disiscriversi non si salva:
 # è una firma (HMAC) dell'id, così si può mettere in ogni email senza tenere altri segreti nel database.
-WAITLIST_CONSENT_VERSION = "2026-10-v1"  # cambia insieme al testo del consenso mostrato nel sito
+WAITLIST_CONSENT_VERSION = "2026-10-v2"  # cambia insieme al testo del consenso mostrato nel sito
 WAITLIST_CONFERMA_ORE = 48
 WAITLIST_NON_CONFERMATI_GIORNI = 7
 WAITLIST_FONTI = ("instagram", "facebook", "volantino", "passaparola")  # lista chiusa; poi «diretto» e «altro»
