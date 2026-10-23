@@ -136,4 +136,4 @@ Numeri, indirizzi e nomi stanno **nel gestore di password e nella busta della pe
 Le pagine di stato dei fornitori (Render, MongoDB, Resend, GitHub) vanno salvate nei Preferiti del telefono prima del 18/10; gli indirizzi esatti sono da verificare perché da qui non sono raggiungibili.
 
 ## 9. Dopo il lancio (promemoria)
-Primo lunedì del mese: costi. Dopo circa un mese: ricordare ai negozi la fine della prova (promemoria a 10 e 3 giorni già nel codice, parte solo con i pagamenti accesi). Circa due mesi: prova con soldi finti insieme a Claude e conferma esplicita prima di accendere i pagamenti veri (parte B della lista di lancio).
+Primo lunedì del mese: costi. Dopo circa un mese: ricordare ai negozi la fine della prova (email al giorno 30 e 7 giorni prima del primo pagamento, nel codice: partono con `MERCHANT_TRIAL_EMAILS` o con i pagamenti accesi; i vecchi promemoria a 10 e 3 giorni sono stati tolti). Circa due mesi: prova con soldi finti insieme a Claude e conferma esplicita prima di accendere i pagamenti veri (parte B della lista di lancio).

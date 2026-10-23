@@ -1,5 +1,6 @@
-"""Pre-lancio: approvazione di tutte le offerte in attesa con parola di conferma; promemoria di fine prova
-(10 e 3 giorni prima, una sola volta, solo con l'interruttore acceso). Database locale (mongomock)."""
+"""Pre-lancio: approvazione di tutte le offerte in attesa con parola di conferma; con i pagamenti dei negozi
+accesi partono le email di prova (giorno 30, 7 giorni prima del primo pagamento) e MAI i vecchi promemoria a 10 e
+3 giorni (decisione del titolare, 15/10 e 21/10). Database locale (mongomock)."""
 import asyncio
 from datetime import datetime, timedelta, timezone
 
@@ -13,30 +14,35 @@ def test_funzioni_di_data_coerenti():
     assert fine is not None and fine > pp.a_data_roma(primo)
 
 
-def test_promemoria_10_e_3_giorni_una_volta_sola(monkeypatch):
+def test_niente_promemoria_a_10_e_3_giorni_con_i_pagamenti_accesi(monkeypatch):
+    """Con i pagamenti accesi (e MERCHANT_TRIAL_EMAILS spento) si scorre tutta la prova giorno per giorno:
+    partono solo l'email del giorno 30 e quella 7 giorni prima del primo pagamento, una volta ciascuna."""
     import server
+    assert not hasattr(server, "_run_trial_reminders") and not hasattr(server, "send_merchant_trial_reminder")
     inviati = []
 
-    async def finto(to, name, shop, days_left, end_label):
-        inviati.append((to, days_left))
+    async def giorno30(to, name, shop, trial_end_label, first_payment_label):
+        inviati.append(("giorno30", trial_end_label))
 
-    monkeypatch.setattr(server, "send_merchant_trial_reminder", finto)
+    async def primo_pagamento(to, name, shop, first_payment_label, days_left, tolerance_days=5):
+        inviati.append(("primo_pagamento", days_left))
+    monkeypatch.setattr(server, "send_merchant_trial_day30", giorno30)
+    monkeypatch.setattr(server, "send_merchant_first_payment_reminder", primo_pagamento)
 
     async def body(c):
-        # interruttore spento: niente
+        monkeypatch.delenv("MERCHANT_TRIAL_EMAILS", raising=False)
         monkeypatch.delenv("MERCHANT_PAYMENT_REQUIRED", raising=False)
-        assert (await server._run_trial_reminders())["skipped"] == "pagamenti_negozi_spenti"
-        monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
-        primo = datetime.now(timezone.utc) - timedelta(days=50)
+        primo = datetime(2026, 10, 5, 10, 0, tzinfo=timezone.utc)  # entro l'11: primo pagamento il 1/12
         await server.db.users.insert_one({"id": "m1", "role": "merchant", "email": "m1@example.com", "name": "M",
                                           "shop_name": "S", "first_published_at": primo.isoformat()})
-        fine = pp.trial_end_date(primo.isoformat())
-        oggi = fine - timedelta(days=9)
-        assert (await server._run_trial_reminders(oggi))["sent"] == 1
-        assert (await server._run_trial_reminders(oggi))["sent"] == 0  # già inviato
-        assert (await server._run_trial_reminders(fine - timedelta(days=2)))["sent"] == 1
-        assert (await server._run_trial_reminders(fine - timedelta(days=2)))["sent"] == 0
-        assert [d for _, d in inviati] == [9, 2]
+        inizio, fine = pp.billing_start_date(primo.isoformat()), pp.trial_end_date(primo.isoformat())
+        giorno = pp.a_data_roma(primo.isoformat())
+        assert (await server._run_trial_emails(giorno))["skipped"] == "email_prova_spente"  # tutto spento: nulla
+        monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
+        while giorno <= inizio:
+            await server._run_trial_emails(giorno)
+            giorno += timedelta(days=1)
+        assert inviati == [("giorno30", f"{fine.day} novembre 2026"), ("primo_pagamento", 7)]
 
     run(body, False)
 

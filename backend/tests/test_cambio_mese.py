@@ -108,7 +108,8 @@ def posta(monkeypatch):
     monkeypatch.setattr(server, "send_admin_month_summary", admin)
     monkeypatch.setattr(server, "send_admin_riepilogo_settimanale", settimanale)
     monkeypatch.setattr(server, "send_preferito_nuova_offerta", preferiti)
-    monkeypatch.setattr(server, "send_merchant_trial_reminder", prova)
+    monkeypatch.setattr(server, "send_merchant_trial_day30", prova)
+    monkeypatch.setattr(server, "send_merchant_first_payment_reminder", prova)
     monkeypatch.setattr(server, "send_grace_period_reminder", grace)
 
     # Nessuna chiamata di pagamento deve partire: se parte, il test fallisce.
@@ -323,7 +324,7 @@ def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
 
         # niente addebiti, niente pagamenti, nessun promemoria di prova o di grazia
         assert posta["prova"] == [] and posta["grace"] == []
-        assert (await server._run_trial_reminders())["skipped"] == "pagamenti_negozi_spenti"
+        assert (await server._run_trial_emails())["skipped"] == "email_prova_spente"
         assert (await server._run_grace_reminders())["skipped"] == "subscription_not_required"
         for coll in ("merchant_payments", "merchant_subscriptions", "subscriptions", "renewal_events"):
             assert await server.db[coll].count_documents({}) == 0, coll

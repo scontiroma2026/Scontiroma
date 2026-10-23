@@ -258,23 +258,6 @@ async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_lab
     return await _send(to, f"La tua offerta scade tra {giorni} — carica quella di {month_label}", _shell(inner))
 
 
-async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_left: int, end_label: str) -> Optional[str]:
-    """Promemoria di fine prova gratuita (10 e 3 giorni prima). Nessun addebito parte da qui."""
-    name, shop_name, end_label = _esc(name), _esc(shop_name), _esc(end_label)
-    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
-    inner = f"""
-<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La prova gratuita finisce tra {giorni}</h2>
-<p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">La prova gratuita di <strong>{shop_name}</strong> su Sconti Roma termina il <strong style="color:#00E5FF">{end_label}</strong>.</p>
-<p style="margin:0 0 16px;color:#d4d4d8">Per continuare, <strong>aggiungi il metodo di pagamento e conferma</strong>: così la tua offerta resta pubblicata. Senza conferma, dal giorno dopo l'offerta non verrà più pubblicata e non riceverai nessun addebito.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Se non vuoi continuare, non devi fare nulla: la disdetta ha effetto a fine mese e puoi sempre scegliere «Non rinnovo» dalla tua dashboard.</p>
-<div style="text-align:center;margin:24px 0">
-<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
-</div>
-"""
-    return await _send(to, f"La tua prova gratuita finisce tra {giorni} — Sconti Roma", _shell(inner))
-
-
 async def send_admin_segnalazione(to: str, tipo: str, dettaglio: str, riferimento: str, sid: str) -> Optional[str]:
     """Avviso all'admin: nuova segnalazione o nuovo reclamo (testo breve, il resto si legge nell'area admin)."""
     tipo, dettaglio, riferimento, sid = _esc(tipo), _esc(dettaglio[:300]), _esc(riferimento), _esc(sid[:8])
@@ -735,7 +718,7 @@ async def send_merchant_trial_day30(to: str, name: str, shop_name: str, trial_en
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Sono passati 30 giorni dalla tua prima offerta</h2>
 <p style="{_P}">Ciao {name},</p>
-<p style="{_P}">la prova di <strong>{shop_name}</strong> su {BRAND} è a buon punto: dura fino a fine mese più il mese successivo e finisce il <strong style="color:#00E5FF">{trial_end_label}</strong>.</p>
+<p style="{_P}">la prova di <strong>{shop_name}</strong> su {BRAND} è a buon punto: dura circa due mesi dalla prima pubblicazione, fino al <strong style="color:#00E5FF">{trial_end_label}</strong> compreso.</p>
 <p style="{_P}">Il primo pagamento sarebbe il <strong>{first_payment_label}</strong>. Prima ti scriveremo di nuovo e non ti addebiteremo nulla senza la tua conferma.</p>
 {_blocco_prezzo_negozio()}
 {_blocco_disdetta_negozio()}

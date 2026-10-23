@@ -70,6 +70,7 @@ def test_giorno30_contenuto_e_una_sola_volta(inviate, monkeypatch):
         e = inviate[0]
         assert e["to"] == "m1@example.com" and "30 giorni" in e["subject"]
         assert "30 novembre 2026" in e["html"] and "1 dicembre 2026" in e["html"]
+        assert "circa due mesi dalla prima pubblicazione" in e["html"] and "fine mese più il mese successivo" not in e["html"]
         assert "Disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Per non continuare, scegli «Non rinnovo»." in e["html"]
         regole_comuni(e["html"])
 
@@ -111,15 +112,35 @@ def test_promemoria_primo_pagamento(inviate, monkeypatch):
     run(body, False)
 
 
-def test_vecchi_promemoria_sostituiti_con_interruttore_prova(inviate, monkeypatch):
+def test_vecchi_promemoria_a_10_e_3_giorni_tolti(inviate, monkeypatch):
+    """Con i soli pagamenti accesi (MERCHANT_TRIAL_EMAILS spento) partono le email nuove, mai quelle vecchie."""
     import server
+    assert not hasattr(server, "_run_trial_reminders")
+    assert not hasattr(email_service, "send_merchant_trial_reminder")
     monkeypatch.setenv("MERCHANT_PAYMENT_REQUIRED", "true")
-    monkeypatch.setenv("MERCHANT_TRIAL_EMAILS", "true")
 
     async def body(c):
         await negozio(server)
-        assert (await server._run_trial_reminders(date(2026, 11, 25)))["skipped"] == "sostituiti_da_email_prova"
-        assert inviate == []
+        assert (await server._run_trial_emails(date(2026, 11, 21)))["sent"] == 0  # 10 giorni prima: nulla
+        assert (await server._run_trial_emails(date(2026, 11, 24)))["sent"] == 1  # 7 giorni prima
+        assert (await server._run_trial_emails(date(2026, 11, 28)))["sent"] == 0  # 3 giorni prima: nulla
+        assert len(inviate) == 1 and "7 giorni" in inviate[0]["subject"]
+
+    run(body, False)
+
+
+def test_giorno30_data_esatta_anche_se_pubblicata_dopo_l_11(inviate, monkeypatch):
+    """Pubblicata il 20/10 (dal 12): la prova finisce il 31/12, non «a fine mese più il mese successivo»."""
+    import server
+    monkeypatch.setenv("MERCHANT_TRIAL_EMAILS", "true")
+
+    async def body(c):
+        await negozio(server, pubblicata=PUBBLICATA_TARDI)
+        assert (await server._run_trial_emails(date(2026, 11, 19)))["sent"] == 1  # giorno 30
+        html = inviate[0]["html"]
+        assert "31 dicembre 2026" in html and "1 gennaio 2027" in html
+        assert "fine mese più il mese successivo" not in html
+        assert "circa due mesi dalla prima pubblicazione" in html
 
     run(body, False)
 

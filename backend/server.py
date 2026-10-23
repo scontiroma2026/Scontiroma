@@ -50,7 +50,6 @@ from email_service import (
     send_admin_segnalazione,
     send_admin_riepilogo_settimanale,
     send_esito_segnalazione,
-    send_merchant_trial_reminder,
     send_merchant_trial_day30,
     send_merchant_first_payment_reminder,
     send_merchant_payment_missed,
@@ -127,12 +126,18 @@ def merchant_payment_required() -> bool:
     return os.environ.get("MERCHANT_PAYMENT_REQUIRED", "false").strip().lower() in ("1", "true", "yes", "on")
 
 
-# Email al commerciante sulla prova (giorno 30 e promemoria prima del primo pagamento). SPENTO (predefinito)
-# = non parte nessuna delle due. Acceso ("true") = partono, e i vecchi promemoria a 10 e 3 giorni (che dipendono
-# da MERCHANT_PAYMENT_REQUIRED) vengono sostituiti dal promemoria unico. Non addebita nulla; non dipende dai
-# pagamenti. Le email di mancato pagamento e di ricevuta partono invece solo con MERCHANT_PAYMENT_REQUIRED acceso.
+# Email al commerciante sulla prova (giorno 30 e promemoria 7 giorni prima del primo pagamento). Decisione del
+# titolare (15/10 e 21/10): sono queste le uniche email della prova; i vecchi promemoria a 10 e 3 giorni prima
+# della fine della prova non esistono più. Partono con MERCHANT_TRIAL_EMAILS acceso (anche a pagamenti spenti)
+# OPPURE da sole quando si accendono i pagamenti dei negozi (MERCHANT_PAYMENT_REQUIRED): nessun negozio arriva
+# al primo pagamento senza essere avvisato. Non addebitano nulla. Mancato pagamento, ricevuta e promemoria
+# 3 giorni prima di ogni addebito partono invece solo con MERCHANT_PAYMENT_REQUIRED acceso.
 def merchant_trial_emails() -> bool:
     return os.environ.get("MERCHANT_TRIAL_EMAILS", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def email_prova_attive() -> bool:
+    return merchant_trial_emails() or merchant_payment_required()
 
 
 # Stripe
@@ -6593,57 +6598,16 @@ from apscheduler.triggers.cron import CronTrigger  # noqa: E402
 _scheduler: Optional[AsyncIOScheduler] = None
 
 
-async def _run_trial_reminders(oggi=None) -> dict:
-    """Promemoria di fine prova ai negozi: uno a 10 giorni e uno a 3 giorni prima (idempotente: ogni
-    promemoria parte una volta sola per negozio). Attivo solo con MERCHANT_PAYMENT_REQUIRED acceso;
-    la data di fine prova viene da `trial_end_date` (stessa regola dei pagamenti)."""
-    if not merchant_payment_required():
-        return {"checked": 0, "sent": 0, "skipped": "pagamenti_negozi_spenti"}
-    if merchant_trial_emails():
-        return {"checked": 0, "sent": 0, "skipped": "sostituiti_da_email_prova"}
-    oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
-    now_iso = datetime.now(timezone.utc).isoformat()
-    negozi = await db.users.find({"role": "merchant"}).to_list(None)
-    sent = 0
-    for m in negozi:
-        if not m.get("email") or m.get("no_renew_month"):
-            continue
-        fine = pp.trial_end_date(await _prima_pubblicazione(m))
-        if not fine:
-            continue
-        giorni = (fine - oggi).days
-        if 3 < giorni <= 10:
-            flag = "trial_reminder_10_sent_at"
-        elif 0 <= giorni <= 3:
-            flag = "trial_reminder_3_sent_at"
-        else:
-            continue
-        if m.get(flag):
-            continue
-        # Un promemoria a 3 giorni non va mai accompagnato da uno a 10 arrivato in ritardo
-        if flag == "trial_reminder_3_sent_at":
-            await db.users.update_one({"id": m["id"], "trial_reminder_10_sent_at": {"$in": [None]}},
-                                      {"$set": {"trial_reminder_10_sent_at": "saltato"}})
-        try:
-            await send_merchant_trial_reminder(
-                m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
-                max(giorni, 1), f"{fine.day} {MESI_IT[fine.month - 1]} {fine.year}")
-            await db.users.update_one({"id": m["id"]}, {"$set": {flag: now_iso}})
-            sent += 1
-        except Exception as e:
-            logging.error(f"[trial-reminder] invio non riuscito per negozio={str(m.get('id'))[:8]}: {e}")
-    return {"checked": len(negozi), "sent": sent}
-
-
 PROVA_GIORNO_EMAIL = 30       # email «giorno 30 della prova»: si manda dal 30° al 37° giorno (recupero se il server dorme)
 PROVA_GIORNI_PRIMO_PAGAMENTO = 7  # promemoria del primo pagamento: da 7 giorni prima del 1° fino al giorno prima
 
 
 async def _run_trial_emails(oggi=None) -> dict:
     """Email di prova ai negozi: (a) giorno 30 dalla prima pubblicazione, (b) promemoria negli ultimi 7 giorni
-    prima del 1° del primo pagamento. Spente di default (MERCHANT_TRIAL_EMAILS). Ognuna parte una sola volta
-    per negozio (prenotazione atomica); chi ha scelto «Non rinnovo» non riceve nulla. Non addebita nulla."""
-    if not merchant_trial_emails():
+    prima del 1° del primo pagamento. Spente di default: partono con MERCHANT_TRIAL_EMAILS o con i pagamenti dei
+    negozi accesi (MERCHANT_PAYMENT_REQUIRED). Ognuna parte una sola volta per negozio (prenotazione atomica);
+    chi ha scelto «Non rinnovo» non riceve nulla. Non addebita nulla."""
+    if not email_prova_attive():
         return {"checked": 0, "sent": 0, "skipped": "email_prova_spente"}
     oggi = oggi or pp.a_data_roma(datetime.now(timezone.utc))
     tol = await _tolleranza_giorni()
@@ -7020,14 +6984,10 @@ def _start_scheduler() -> None:
         id="next_offer_reminders_daily",
         replace_existing=True,
     )
-    # Promemoria di fine prova ai negozi (10 e 3 giorni prima) — ogni giorno 09:45, solo con pagamenti negozi accesi
-    _scheduler.add_job(
-        _run_trial_reminders,
-        CronTrigger(hour=9, minute=45, timezone="Europe/Rome"),
-        id="trial_reminders_daily",
-        replace_existing=True,
-    )
-    # Email di prova (giorno 30, primo pagamento) e mancato pagamento: ogni giorno, spente di default (interruttori)
+    # I vecchi promemoria di fine prova a 10 e 3 giorni (job «trial_reminders_daily») sono stati tolti:
+    # al loro posto le email di prova qui sotto (giorno 30 e 7 giorni prima del primo pagamento).
+    # Email di prova (giorno 30, 7 giorni prima del primo pagamento) e mancato pagamento: ogni giorno, spente di
+    # default (MERCHANT_TRIAL_EMAILS / MERCHANT_PAYMENT_REQUIRED)
     _scheduler.add_job(
         _run_trial_emails,
         CronTrigger(hour=9, minute=50, timezone="Europe/Rome"),
