@@ -29,7 +29,12 @@ test('admin: offerta in attesa con pulsanti scritti, approva, sospendi e riattiv
   expect((await chiama(request, 'GET', '/discounts')).data.discounts.map((d) => d.id)).toContain(did);
 
   await card.getByTestId(/admin-merchant-toggle-/).click();
+  // Sospendere chiede il motivo: il pulsante resta spento finché non ci sono almeno 10 caratteri.
+  await expect(page.getByTestId('sospensione-conferma')).toBeDisabled();
+  await page.getByTestId('sospensione-motivo').fill('Sconto non applicato in negozio (prova e2e).');
+  await page.getByTestId('sospensione-conferma').click();
   await expect(card.getByTestId(/admin-merchant-stato-/)).toHaveText('Negozio sospeso');
+  await expect(card.getByTestId(/admin-merchant-sospensione-/)).toContainText('Sconto non applicato');
   expect((await chiama(request, 'GET', '/discounts')).data.discounts.map((d) => d.id)).not.toContain(did);
   const cl = await registra(request, 'client');
   expect((await chiama(request, 'POST', `/redemptions/create/${did}`, { token: cl.token })).status).toBe(403);

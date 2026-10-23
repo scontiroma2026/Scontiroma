@@ -11,16 +11,17 @@ import { useAppConfig } from "@/context/ConfigContext";
 
 // Foto di Roma copiate sul nostro sito (frontend/public/foto): nessun servizio esterno
 // riceve l'IP dei visitatori. Crediti in docs/comunicazione/CREDITI_FOTO.md.
+// Niente monumenti riconoscibili (scelta del 22/10): solo scorci di vicoli.
 const ROMA_HERO = {
-  src: "/foto/roma-colosseo-1280.webp",
-  srcSet: "/foto/roma-colosseo-640.webp 640w, /foto/roma-colosseo-1280.webp 1280w, /foto/roma-colosseo-1920.webp 1920w",
+  src: "/foto/roma-scorcio-1280.webp",
+  srcSet: "/foto/roma-scorcio-640.webp 640w, /foto/roma-scorcio-1280.webp 1280w, /foto/roma-scorcio-1920.webp 1920w",
   width: 1280, height: 933,
-}; // Colosseo
-const ROMA_TREVI = {
-  src: "/foto/roma-piazza-640.webp",
-  srcSet: "/foto/roma-piazza-480.webp 480w, /foto/roma-piazza-640.webp 640w",
+}; // vicolo di sera con tavolini e edera
+const ROMA_RIQUADRO = {
+  src: "/foto/roma-vicolo-640.webp",
+  srcSet: "/foto/roma-vicolo-480.webp 480w, /foto/roma-vicolo-640.webp 640w",
   width: 640, height: 800,
-}; // Piazza San Pietro dall'alto (riquadro 4:5)
+}; // vicolo di giorno con edera (riquadro 4:5)
 
 export default function Landing() {
   const [params] = useSearchParams();
@@ -50,7 +51,7 @@ export default function Landing() {
       <section className="relative overflow-hidden">
         {/* Background Rome image with heavy overlay */}
         <div className="absolute inset-0">
-          <img {...ROMA_HERO} sizes="100vw" className="h-full w-full object-cover opacity-40" alt="Roma" />
+          <img {...ROMA_HERO} sizes="100vw" className="h-full w-full object-cover opacity-40" alt="Un vicolo di Roma di sera" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-white" />
         </div>
         {/* Neon blobs */}
@@ -92,7 +93,7 @@ export default function Landing() {
             {/* Right: Rome collage */}
             <div className="md:col-span-5 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border-2 border-fucsia glow-fucsia" style={{animation: 'float 6s ease-in-out infinite'}}>
-                <img {...ROMA_TREVI} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Roma" />
+                <img {...ROMA_RIQUADRO} sizes="(min-width: 1024px) 480px, 90vw" className="h-full w-full object-cover" alt="Un vicolo di Roma" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent p-6 pt-16">
                   <div className="text-xs uppercase tracking-widest text-ciano">Il progetto</div>
                   <div className="font-serif text-3xl mt-1">Roma, zona per zona</div>
