@@ -1111,8 +1111,9 @@ async def _run_push_riepilogo_commercianti() -> dict:
     ogni scansione, nessun nome. Una sola volta per negozio e giorno."""
     if not push_utenti_attivo():
         return {"spento": True, "inviate": 0}
-    giorno = _rome_now().strftime("%Y-%m-%d")
-    da = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    adesso = _rome_now()
+    giorno = adesso.strftime("%Y-%m-%d")
+    da = (adesso - timedelta(days=2)).astimezone(timezone.utc).isoformat()  # stesso orologio del «giorno»
     iscritti = set(await db.push_iscrizioni.distinct("user_id"))
     conteggi: dict = {}
     async for r in db.redemptions.find({"status": "redeemed", "redeemed_at": {"$gte": da}},
