@@ -4,10 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil, KeyRound } from "lucide-react";
+import { Check, X, Trash2, Edit3, PauseCircle, PlayCircle, Unlock, EyeOff, Eye, Pencil, KeyRound, Clock } from "lucide-react";
 import { toast } from "sonner";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
 import RifiutoOffertaDialog from "@/components/admin/RifiutoOffertaDialog";
+import CiPensiamoNoiDialog from "@/components/admin/CiPensiamoNoiDialog";
+import SospensioneDialog from "@/components/admin/SospensioneDialog";
 
 /**
  * Tab "Negozi" — tabella gestione commercianti & sconti con azioni inline
@@ -27,6 +29,8 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
   const [daRifiutare, setDaRifiutare] = useState(null);
+  const [ciPensiamoNoi, setCiPensiamoNoi] = useState(null); // negozio per cui prepariamo l'offerta
+  const [daSospendere, setDaSospendere] = useState(null); // negozio per cui si chiede il motivo
 
   const needle = q.trim().toLowerCase();
   const filteredMerchants = needle
@@ -103,15 +107,34 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
     onRefresh();
   };
 
+  // Sospendere chiede il motivo (finestra apposita); riattivare chiede solo conferma. In entrambi i casi
+  // il commerciante riceve un'email.
   const toggleApprove = async (m) => {
-    const msg = m.approved
-      ? `Sospendere ${m.shop_name}?\n\nLa sua offerta sparisce subito dall'app e i clienti non possono più usarla. Puoi riattivarlo quando vuoi.`
-      : `Riattivare ${m.shop_name}?\n\nLa sua offerta torna visibile ai clienti (se è approvata e attiva).`;
-    if (!window.confirm(msg)) return;
+    if (m.approved) { setDaSospendere(m); return; }
+    if (!window.confirm(`Riattivare ${m.shop_name}?\n\nLa sua offerta torna visibile ai clienti (se è approvata e attiva) e il commerciante riceve l'email «Account riattivato».`)) return;
     try {
-      await api.put(`/admin/merchants/${m.id}`, { approved: !m.approved }, hdrs());
-      toast.success(m.approved ? "Negozio sospeso" : "Negozio riattivato");
+      await api.put(`/admin/merchants/${m.id}`, { approved: true }, hdrs());
+      toast.success("Negozio riattivato");
       onRefresh();
+    } catch (err) { toast.error(formatApiError(err)); }
+  };
+  const sospendi = async (motivo) => {
+    try {
+      await api.put(`/admin/merchants/${daSospendere.id}`, { approved: false, motivo_sospensione: motivo }, hdrs());
+    } catch (err) {
+      throw new Error(formatApiError(err));
+    }
+    setDaSospendere(null);
+    toast.success("Negozio sospeso: il commerciante riceve il motivo per email");
+    onRefresh();
+  };
+  const registraContestazione = async (m) => {
+    const nota = (window.prompt(`${m.shop_name} ha contestato la sospensione per email?\n\nScrivi in breve cosa contesta (almeno 10 caratteri, senza dati di altre persone). Parte la scadenza di 10 giorni lavorativi per il riesame.`, "") || "").trim();
+    if (!nota) return;
+    if (nota.length < 10) { toast.error("Scrivi almeno 10 caratteri"); return; }
+    try {
+      const { data } = await api.post(`/admin/merchants/${m.id}/contestazione`, { nota }, hdrs());
+      toast.success(`Contestazione registrata: riesame entro il ${new Date(data.riesame_entro + "T12:00:00").toLocaleDateString("it-IT")} (area Segnalazioni)`);
     } catch (err) { toast.error(formatApiError(err)); }
   };
 
@@ -199,6 +222,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             onSaveEdit={() => saveEdit(m.id)}
             onCancelEdit={cancelEdit}
             onToggleApprove={() => toggleApprove(m)}
+            onContestazione={() => registraContestazione(m)}
             onTogglePagato={() => togglePagato(m)}
             onToggleDiscountActive={() => toggleDiscountActive(m)}
             onApproveInline={() => approveInline(m.discount_id)}
@@ -208,6 +232,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
             onDelDiscount={() => delDiscount(m.discount_id, m.shop_name)}
             onDelMerchant={() => del(m)}
             onViewDiscounts={() => onViewDiscounts?.(m.id)}
+            onCiPensiamoNoi={() => setCiPensiamoNoi(m)}
           />
         ))}
       </div>
@@ -220,6 +245,11 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
           busy={busy}
         />
       )}
+      {ciPensiamoNoi && (
+        <CiPensiamoNoiDialog merchant={ciPensiamoNoi} hdrs={hdrs} onChiudi={() => setCiPensiamoNoi(null)}
+          onSalvata={() => { setCiPensiamoNoi(null); onRefresh(); }} />
+      )}
+      <SospensioneDialog aperta={!!daSospendere} negozio={daSospendere?.shop_name} onChiudi={() => setDaSospendere(null)} onConferma={sospendi} />
       <RifiutoOffertaDialog aperta={!!daRifiutare} titolo={daRifiutare?.titolo} onChiudi={() => setDaRifiutare(null)} onConferma={rejectInline} />
     </Card>
   );
@@ -227,6 +257,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
 
 const STATO_OFFERTA = {
   pending: { testo: "In attesa di approvazione", cls: "bg-amber-400/15 text-amber-800 border-amber-400/40" },
+  awaiting_merchant: { testo: "In attesa di conferma del negozio", cls: "bg-sky-400/15 text-sky-800 border-sky-400/40" },
   approved: { testo: "Approvata", cls: "bg-emerald-400/15 text-emerald-700 border-emerald-400/40" },
   rejected: { testo: "Rifiutata", cls: "bg-red-500/15 text-red-700 border-red-500/40" },
   expired: { testo: "Scaduta", cls: "bg-muted text-muted-foreground border-border" },
@@ -264,11 +295,14 @@ function testoStatoPagamento(sp) {
 function MerchantRow({
   m, hdrs, editing, form, setForm, busy,
   onStartEdit, onSaveEdit, onCancelEdit,
-  onToggleApprove, onTogglePagato, onToggleDiscountActive,
+  onToggleApprove, onContestazione, onTogglePagato, onToggleDiscountActive,
   onApproveInline, onRejectInline, onOpenDiscountEdit,
-  onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts,
+  onForceEdit, onDelDiscount, onDelMerchant, onViewDiscounts, onCiPensiamoNoi,
 }) {
   const stato = STATO_OFFERTA[m.discount_approval] || STATO_OFFERTA.approved;
+  const daConfermare = m.discount_approval === "awaiting_merchant";
+  // «Ci pensiamo noi»: si può preparare l'offerta se il negozio non ne ha una in revisione o approvata
+  const puoPreparare = !m.has_discount || ["awaiting_merchant", "rejected", "expired"].includes(m.discount_approval);
   return (
     <div data-testid={`admin-merchant-${m.id}`} className={`rounded-2xl border p-4 ${m.approved ? "border-border bg-muted" : "border-red-500/40 bg-red-500/5"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -306,6 +340,11 @@ function MerchantRow({
           {m.approved ? "Negozio attivo" : "Negozio sospeso"}
         </span>
       </div>
+      {!m.approved && m.sospensione && (
+        <p data-testid={`admin-merchant-sospensione-${m.id}`} className="mt-2 text-xs text-red-700">
+          Sospeso il {new Date(m.sospensione.data).toLocaleDateString("it-IT")} · Motivo: {m.sospensione.motivo}
+        </p>
+      )}
 
       {m.stato_pagamento && (
         <div data-testid={`admin-merchant-pagamento-${m.id}`} className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -342,16 +381,23 @@ function MerchantRow({
                   <Azione testid={`inline-reject-${m.discount_id}`} onClick={onRejectInline} icon={X} tono="rosso">Rifiuta</Azione>
                 </>
               )}
-              <Azione testid={`edit-discount-${m.discount_id}`} onClick={onOpenDiscountEdit} icon={Pencil}>Modifica</Azione>
+              {!daConfermare && <Azione testid={`edit-discount-${m.discount_id}`} onClick={onOpenDiscountEdit} icon={Pencil}>Modifica</Azione>}
               <Azione testid={`toggle-discount-${m.discount_id}`} onClick={onToggleDiscountActive} icon={m.discount_active ? EyeOff : Eye} tono="giallo">
                 {m.discount_active ? "Nascondi" : "Rendi visibile"}
               </Azione>
-              <Azione testid={`admin-force-edit-${m.discount_id}`} onClick={onForceEdit} icon={Unlock}>Permetti modifica al commerciante</Azione>
+              {!daConfermare && <Azione testid={`admin-force-edit-${m.discount_id}`} onClick={onForceEdit} icon={Unlock}>Permetti modifica al commerciante</Azione>}
               <Azione testid={`admin-delete-discount-${m.discount_id}`} onClick={onDelDiscount} icon={Trash2} tono="rosso">Elimina offerta</Azione>
             </div>
           </>
         ) : (
           <p className="mt-1 text-xs text-muted-foreground">Nessuna offerta caricata.</p>
+        )}
+        {puoPreparare && (
+          <div className="mt-3">
+            <Azione testid={`ci-pensiamo-noi-${m.id}`} onClick={onCiPensiamoNoi} icon={Clock} tono="verde">
+              {daConfermare ? "Ci pensiamo noi: modifica e rimanda l'email" : "Ci pensiamo noi: crea offerta"}
+            </Azione>
+          </div>
         )}
         <button type="button" data-testid={`view-discounts-${m.id}`} onClick={onViewDiscounts} className="mt-2 inline-flex min-h-11 items-center text-xs text-ciano underline-offset-2 hover:underline">
           Storico offerte →
@@ -374,6 +420,9 @@ function MerchantRow({
             <Azione testid={`admin-merchant-toggle-${m.id}`} onClick={onToggleApprove} icon={m.approved ? PauseCircle : PlayCircle} tono={m.approved ? "giallo" : "verde"}>
               {m.approved ? "Sospendi negozio" : "Riattiva negozio"}
             </Azione>
+            {!m.approved && (
+              <Azione testid={`admin-merchant-contestazione-${m.id}`} onClick={onContestazione} icon={Clock}>Registra contestazione ricevuta</Azione>
+            )}
             <Azione testid={`admin-merchant-delete-${m.id}`} onClick={onDelMerchant} icon={Trash2} tono="rosso">Elimina negozio</Azione>
           </>
         )}
