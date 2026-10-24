@@ -6,6 +6,7 @@ description: Regole per testi, grafiche, volantini, video e post pubblici di Sco
 - Colori e stile dell'app (classi `ac-*`); QR sempre verso il sito, con `?fonte=` per capire da dove arrivano (`^[a-z0-9-]{1,40}$`).
 - **Niente** nomi o loghi di marchi di terzi (film, giocattoli, brand), **niente** percentuali, prezzi, «gratis per sempre», «nessuna commissione», «prezzo bloccato».
 - Scrivere «gratuita nella fase di lancio», «Roma e dintorni», **18+**; zone pilota: Garbatella, San Paolo, Marconi.
+- **Storie social senza «18+»** (decisione del titolare del 24/10): nelle storie di Instagram e Facebook non si scrive «18+» né «solo maggiorenni»; resta su sito, modulo della lista d'attesa, volantini e testi legali.
 - Firma «Sconti Roma», senza nomi personali. Ogni messaggio ha un modo semplice per dire no.
 - Font con licenza libera (Google Fonts) e licenze nel repository.
 - Prima di usare crediti ElevenLabs o altri a pagamento: chiedere il permesso al titolare.
