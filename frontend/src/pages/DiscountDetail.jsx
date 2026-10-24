@@ -157,7 +157,7 @@ export default function DiscountDetail() {
   };
 
   return (
-    <main data-testid="discount-detail-page" className="mx-auto max-w-6xl px-6 py-10">
+    <main data-testid="discount-detail-page" className="entra-molla mx-auto max-w-6xl px-6 py-10">
       <button onClick={() => nav(-1)} className="mb-6 flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-terracotta">
         <ArrowLeft size={16} /> Indietro
       </button>
@@ -316,7 +316,7 @@ export default function DiscountDetail() {
               onClick={redeem}
               disabled={alreadyUsed || (usageInfo.used_today && user?.role === "client")}
               size="lg"
-              className={`mt-5 w-full rounded-full py-6 text-lg font-bold text-white hover:scale-[1.02] transition ${alreadyUsed || (usageInfo.used_today && user?.role === "client") ? "bg-muted text-muted-foreground hover:scale-100 cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30"}`}
+              className={`premi mt-5 w-full rounded-full py-6 text-lg font-bold text-white ${alreadyUsed || (usageInfo.used_today && user?.role === "client") ? "bg-muted text-muted-foreground cursor-not-allowed" : "grad-fucsia-viola shadow-lg shadow-fucsia/30 [@media(hover:hover)]:hover:scale-[1.02]"}`}
             >
               {!user ? "Accedi per riscattare" :
                 user.role !== "client" ? "Riservato ai clienti" :
