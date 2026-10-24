@@ -50,7 +50,7 @@ Nella Privacy (#202, #203) non è scritto nulla su Aruba e Google.
 ## Nome e pagina omonima su Facebook (24/10)
 | Punto | Rischio | Cosa sappiamo | Domanda per l'avvocato |
 |---|---|---|---|
-| Pagina Facebook «ScontiRoma.it» di terzi | 🟠 | Pagina pubblica «Gruppo d'acquisto 100% romano», circa 13.900 follower e 5.500 post; ultimi post (solo «ha aggiornato il suo stato») del 31/03/2024, quindi ferma da circa 19 mesi. Il campo «Sito web» indica ancora `www.scontiroma.it`, che oggi è il nostro dominio: con ogni probabilità il dominio era loro, non è stato rinnovato ed è stato registrato dalla società. Non li abbiamo contattati. | Un uso precedente del nome «Sconti Roma» / «ScontiRoma.it» da parte di terzi (marchio di fatto) è un rischio per noi? Conviene chiedere che tolgano il link o proporre di rilevare la pagina? Va fatto prima del deposito del marchio? |
+| Pagina Facebook «ScontiRoma.it» di terzi | 🟠 | Pagina pubblica «Gruppo d'acquisto 100% romano», **creata a luglio 2012**, profilo aggiornato l'ultima volta circa 2 anni fa, circa 13.900 follower e 5.500 post: uso del nome per circa 12 anni; ultimi post (solo «ha aggiornato il suo stato») del 31/03/2024, quindi ferma da circa 19 mesi. Il campo «Sito web» indica ancora `www.scontiroma.it`, che oggi è il nostro dominio: con ogni probabilità il dominio era loro, non è stato rinnovato ed è stato registrato dalla società. Non li abbiamo contattati. | Un uso precedente del nome «Sconti Roma» / «ScontiRoma.it» da parte di terzi (marchio di fatto) è un rischio per noi? Conviene chiedere che tolgano il link o proporre di rilevare la pagina? Va fatto prima del deposito del marchio? |
 
 ## Altri gruppi
 Gruppi 3–8 (punti 13–35): da aggiungere man mano che si chiudono con il titolare.

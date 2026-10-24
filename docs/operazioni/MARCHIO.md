@@ -12,7 +12,7 @@
 | Ricerca web «Sconti Roma» marchio | Fatta, **nessun risultato utile** | Solo guide generiche: non dimostra che il marchio sia libero. |
 | `scontiroma.it` | **Verificato**: risponde (è il nostro sito) | |
 | `.com`, `.eu`, `.net`, `sconti-roma.it` | **DA VERIFICARE** | Non raggiungibili dall'ambiente, ma l'ambiente blocca quasi tutto: non vuol dire «libero». Controllare su un registrar. |
-| Social | Pagina Facebook e Instagram `sconti.roma` già create dal titolare (STATO 13/10) | **24/10: trovata una pagina Facebook di terzi «ScontiRoma.it»** (gruppo d'acquisto, circa 13.900 follower, ferma dal 31/03/2024) che punta ancora a `scontiroma.it`, oggi nostro: probabile vecchio proprietario del dominio. Domanda in `docs/legale/LISTA_PER_AVVOCATO.md`. |
+| Social | Pagina Facebook e Instagram `sconti.roma` già create dal titolare (STATO 13/10) | **24/10: trovata una pagina Facebook di terzi «ScontiRoma.it»** (gruppo d'acquisto creato a luglio 2012, circa 13.900 follower, ferma dal 31/03/2024) che punta ancora a `scontiroma.it`, oggi nostro: probabile vecchio proprietario del dominio. Domanda in `docs/legale/LISTA_PER_AVVOCATO.md`. |
 | Costi UIBM/EUIPO | **DA VERIFICARE** | Cifre sotto da siti di consulenza e dalla mia memoria, non dal tariffario ufficiale. |
 
 ## 1. Distintività: il nome è debole
