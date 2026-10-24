@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Manrope; src: url(manrope-latin-wght-normal.woff2) format("woff2"); font-weight: 200 800; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; }
+body { font-family: Manrope, sans-serif; color: #1A1530; background: #F7F8FA; -webkit-font-smoothing: antialiased; position: relative; }
+.el { position: absolute; will-change: transform, opacity; }
+.rosa { color: #C2185B; }
+/* testata fissa */
+#testa { left: 96px; top: 200px; display: flex; align-items: center; gap: 24px; }
+#testa img { width: 88px; height: 88px; }
+#testa b { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; display: block; }
+#testa i { font-style: normal; font-size: 20px; font-weight: 700; letter-spacing: .18em; color: #00798C; }
+/* scena 1 */
+.t1 { left: 96px; font-size: 156px; line-height: .98; font-weight: 800; letter-spacing: -0.045em; }
+/* scena 2 */
+.carta { width: 600px; border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 40px 80px -40px rgba(26,21,48,.45); }
+.carta img { display: block; width: 100%; height: 400px; object-fit: cover; }
+.carta div { padding: 28px 36px 36px; }
+.carta small { font-size: 22px; font-weight: 700; letter-spacing: .14em; color: #00798C; }
+.carta h3 { margin-top: 8px; font-size: 44px; font-weight: 800; letter-spacing: -0.03em; }
+#etich { left: 120px; top: 470px; background: #1A1530; color: #fff; font-size: 28px; font-weight: 700; padding: 12px 22px; border-radius: 10px; z-index: 5; }
+.t2 { left: 96px; font-size: 92px; line-height: 1.02; font-weight: 800; letter-spacing: -0.04em; }
+/* scena 3 */
+.passo { left: 96px; display: grid; grid-template-columns: 200px 1fr; align-items: center; width: 900px; }
+.passo .n { font-size: 150px; font-weight: 200; letter-spacing: -0.05em; color: #C2185B; line-height: 1; }
+.passo .x { font-size: 64px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; }
+/* scena 4 */
+.t4 { left: 96px; top: 560px; font-size: 128px; line-height: .98; font-weight: 800; letter-spacing: -0.045em; }
+#contatti { left: 96px; top: 1080px; display: grid; gap: 28px; }
+.riga { display: flex; align-items: center; gap: 22px; font-size: 46px; font-weight: 800; letter-spacing: -0.02em; }
+.riga svg { width: 64px; height: 64px; flex: none; }
+.piccola { font-size: 36px; font-weight: 700; color: #5E5875; }
+#sito { left: 96px; top: 1560px; font-size: 40px; font-weight: 800; color: #00798C; }
+</style></head>
+<body>
+<div id="testa" class="el"><img src="logo.svg" alt=""><div><b>Sconti Roma</b><i>ROMA È TUA</i></div></div>
+
+<div id="h1a" class="el t1" style="top:620px">Hai un</div>
+<div id="h1b" class="el t1" style="top:775px">negozio</div>
+<div id="h1c" class="el t1 rosa" style="top:930px">a Roma?</div>
+
+<div id="etich" class="el">Scena di esempio</div>
+<div id="c1" class="el carta" style="left:96px; top:500px"><img src="carne.jpg" alt=""><div><small>RISTORANTI</small><h3>Menù di carne</h3></div></div>
+<div id="c2" class="el carta" style="left:420px; top:860px"><img src="vino.jpg" alt=""><div><small>ENOTECHE</small><h3>Calice di rosso</h3></div></div>
+<div id="t2a" class="el t2" style="top:1420px">Un'offerta al mese.</div>
+<div id="t2b" class="el t2 rosa" style="top:1520px">Le regole le fai tu.</div>
+
+<div id="p1" class="el passo" style="top:560px"><span class="n">01</span><span class="x">Scegli l'offerta</span></div>
+<div id="p2" class="el passo" style="top:820px"><span class="n">02</span><span class="x">I clienti la trovano nell'app</span></div>
+<div id="p3" class="el passo" style="top:1080px"><span class="n">03</span><span class="x">Mostrano il QR al banco</span></div>
+
+<div id="t4" class="el t4">Gratuita<br>nella fase<br><span class="rosa">di lancio.</span></div>
+<div id="contatti" class="el">
+  <div class="riga"><svg viewBox="0 0 24 24" fill="#25D366"><path d="__WA__"/></svg>WhatsApp 352 247 3526</div>
+  <div class="riga"><svg viewBox="0 0 24 24" fill="#E4405F"><path d="__IG__"/></svg><svg viewBox="0 0 24 24" fill="#0866FF"><path d="__FB__"/></svg></div>
+  <div class="riga" style="font-size:42px; line-height:1.15">Seguici su Instagram<br>e Facebook: Sconti Roma</div>
+  <div class="piccola">Roma e dintorni · offerte per maggiorenni</div>
+</div>
+<div id="sito" class="el">scontiroma.it/per-i-commercianti</div>
+
+<script>
+// Molla smorzata (zeta 0.72), si assesta in ~0,5 s; uscite con accelerazione rapida.
+const W = 2 * Math.PI * 1.55 / 0.45, Z = 0.72, WD = W * Math.sqrt(1 - Z * Z);
+const molla = (s) => s <= 0 ? 0 : 1 - Math.exp(-Z * W * s) * (Math.cos(WD * s) + Z * W / WD * Math.sin(WD * s));
+const esci = (s, d = 0.28) => s <= 0 ? 0 : s >= d ? 1 : Math.pow(s / d, 3);
+const $ = (id) => document.getElementById(id);
+function pos(id, opacity, x, y, scala = 1, rot = 0) {
+  const e = $(id); e.style.opacity = Math.max(0, Math.min(1, opacity));
+  e.style.transform = `translate(${x}px, ${y}px) scale(${scala}) rotate(${rot}deg)`;
+}
+// entrata dal basso con la molla, uscita verso l'alto
+function parola(id, t, ent, usc, dy = 120) {
+  const m = molla(t - ent), u = esci(t - usc);
+  pos(id, Math.min(1, (t - ent) / 0.18) * (1 - u), 0, (1 - m) * dy - u * 80, 1, 0);
+}
+window.render = (t) => {
+  pos("testa", Math.min(1, t / 0.3), 0, 0);
+  // scena 1: 0 – 2,4 s
+  parola("h1a", t, 0.15, 2.2); parola("h1b", t, 0.27, 2.24); parola("h1c", t, 0.39, 2.28);
+  // scena 2: 2,4 – 5,4 s
+  const c1 = molla(t - 2.45), c2 = molla(t - 2.6), u2 = esci(t - 5.2);
+  pos("c1", Math.min(1, (t - 2.45) / 0.15) * (1 - u2), -60 * u2, (1 - c1) * 260 - u2 * 120, 0.9 + 0.1 * c1, -4 * c1);
+  pos("c2", Math.min(1, (t - 2.6) / 0.15) * (1 - u2), 60 * u2, (1 - c2) * 260 - u2 * 120, 0.9 + 0.1 * c2, 3 * c2);
+  pos("etich", Math.min(1, (t - 2.9) / 0.15) * (1 - u2), 0, (1 - molla(t - 2.9)) * 40 - u2 * 120, 1, -4);
+  parola("t2a", t, 3.0, 5.2, 80); parola("t2b", t, 3.3, 5.24, 80);
+  // scena 3: 5,4 – 7,8 s
+  parola("p1", t, 5.45, 7.55, 100); parola("p2", t, 5.75, 7.59, 100); parola("p3", t, 6.05, 7.63, 100);
+  // scena 4: 7,8 – 10 s
+  parola("t4", t, 8.0, 99, 120);
+  parola("contatti", t, 8.4, 99, 80);
+  parola("sito", t, 8.65, 99, 60);
+};
+render(0);
+</script>
+</body></html>
