@@ -277,4 +277,4 @@ Chiusa senza unire: #55 (palette calda corallo e miele), perché non è piaciuta
 - 23/10 sera: lista, punto 4: rimessi Aruba e Google/Gmail (non chiusi), tolti per errore con l'unione della #194
 - 23/10: correzione: il riepilogo serale delle notifiche ai negozi calcolava la finestra delle ultime 48 ore con l'ora reale invece che con l'orologio di Roma usato per il «giorno»; il test con la data fissa al 21/10 falliva dal 23/10 e teneva rossa la CI (main compreso)
 - 24/10: reel di 10 secondi per i negozi (senza voce né musica) in `docs/comunicazione/social/reel-2026-10-24/`, approvato dal titolare; pubblicazione su Instagram e Facebook alle 10:00
-- 24/10: decisione del titolare: niente «18+» né «maggiorenni» nei contenuti social (le piattaforme li scambiano per contenuti vietati ai minori); resta su sito, moduli, volantini e testi legali; reel delle 10 rifatto senza la scritta
+- 24/10: decisione del titolare (per sempre): mai «18+» o «solo maggiorenni» nei materiali pubblicitari (social, video, volantini, messaggi); il limite d'età resta solo nei testi legali e nella casella dei moduli del sito; reel delle 10 rifatto senza la scritta
