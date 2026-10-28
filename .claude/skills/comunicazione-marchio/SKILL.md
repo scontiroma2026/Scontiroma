@@ -7,6 +7,7 @@ description: Regole per testi, grafiche, volantini, video e post pubblici di Sco
 - **Niente** nomi o loghi di marchi di terzi (film, giocattoli, brand), **niente** percentuali, prezzi, «gratis per sempre», «nessuna commissione», «prezzo bloccato».
 - Scrivere «gratuita nella fase di lancio», «Roma e dintorni»; zone pilota: Garbatella, San Paolo, Marconi.
 - **Mai «18+», «+18» o «solo maggiorenni»** (decisione del titolare del 24/10, vale per sempre): in nessun materiale pubblicitario (post, storie, reel, video, volantini, locandine, messaggi), perché le piattaforme li scambiano per contenuti vietati ai minori. Il limite d'età resta solo dove è obbligatorio: testi legali e casella di dichiarazione nei moduli di iscrizione del sito.
+- **Firma social sempre presente** (decisione del titolare del 28/10): in ogni post, storia, reel, carosello, video e volantino ci sono sempre «scontiroma.it» con la scritta «app web» e i loghi di Instagram e Facebook con «Seguici: Sconti Roma». Nei caroselli basta nell'ultima slide; nei reel nella chiusura. Il link va anche nel testo del post e nella bio, perché su Instagram le immagini non sono cliccabili.
 - Firma «Sconti Roma», senza nomi personali. Ogni messaggio ha un modo semplice per dire no.
 - Font con licenza libera (Google Fonts) e licenze nel repository.
 - Prima di usare crediti ElevenLabs o altri a pagamento: chiedere il permesso al titolare.
