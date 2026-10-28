@@ -30,6 +30,8 @@ test('Da fare: negozio incompleto, voci con collegamento, poi scompare e resta i
   await autenticatoreVirtuale(page);
   await loginNelBrowser(page, m.email, m.password);
   await page.goto('/merchant/dashboard');
+  // Negli ultimi 7 giorni del mese si apre il caricamento dell'offerta del mese dopo: compare anche quella voce
+  const finestraAperta = (await chiama(request, 'GET', '/merchants/me/next-discount', { token: m.token })).data.window.open;
 
   // Pillola con la scadenza reale (fine del mese in corso)
   await expect(page.getByTestId('stato-offerta')).toHaveText(`Offerta visibile ai clienti fino al ${fineMese()}`);
@@ -42,6 +44,11 @@ test('Da fare: negozio incompleto, voci con collegamento, poi scompare e resta i
   await expect(page.getByTestId('da-fare-faceid')).toBeVisible();
   await expect(page.getByTestId('da-fare-foto')).toHaveCount(0);
   await expect(page.getByTestId('da-fare-ok')).toHaveCount(0);
+  if (finestraAperta) {
+    await expect(page.getByTestId('da-fare-mese-prossimo')).toHaveAttribute('href', '/merchant/discount?tab=next');
+  } else {
+    await expect(page.getByTestId('da-fare-mese-prossimo')).toHaveCount(0);
+  }
   expect(await troppoPiccoli(page, '[data-testid^=da-fare-]')).toEqual([]);
   await page.screenshot({ path: process.env.E2E_SHOT_DIR ? `${process.env.E2E_SHOT_DIR}/dopo-incompleto.png` : undefined, fullPage: true }).catch(() => {});
 
@@ -63,6 +70,10 @@ test('Da fare: negozio incompleto, voci con collegamento, poi scompare e resta i
   const completa = page.waitForResponse((r) => r.url().endsWith('/api/webauthn/register/complete'));
   await page.getByTestId('enroll-biometric-btn').click();
   expect((await completa).status()).toBe(200);
+  // Offerta del mese dopo (solo a fine mese): con «Non rinnovo» la voce sparisce
+  if (finestraAperta) {
+    expect((await chiama(request, 'POST', '/merchants/me/no-renew', { token: m.token, body: { no_renew: true } })).status).toBe(200);
+  }
   await page.goto('/merchant/dashboard');
 
   // Tutto a posto: messaggio positivo, nessun elenco
