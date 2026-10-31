@@ -1,7 +1,0 @@
-# Nel repository: copione, script e documentazione. Video, audio, clip, immagini, fotogrammi e caratteri restano nella cartella privata.
-*.mp4
-*.wav
-*.mp3
-*.png
-*.jpg
-render/fonts/
