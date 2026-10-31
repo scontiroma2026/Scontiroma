@@ -3,7 +3,7 @@
 Ultimo aggiornamento: 14/10/2026. Scritto per iPhone. **Nessun passo è stato eseguito**: è un piano. Nessun dato personale, password o chiave qui (repository pubblico).
 
 Chi: **Titolare** = tu; **Claude** = prepara, controlla, scrive bozze, **non** pubblica, non contatta nessuno, non scrive sul database vero; **Consulente** = legale/privacy; **Commercialista**.
-Riferimenti: `docs/LISTA_LANCIO.md` (le voci numerate), `docs/comunicazione/campagna-prelancio/PIANO_CAMPAGNA.md` (contenuti giorno per giorno), `COSTI_MENSILI.md`, `SICUREZZA_ACCOUNT.md`, `TRIAGE_PR.md`, `EMERGENZE_E_ACCESSI.md` (PR #128).
+Riferimenti: `docs/LISTA_LANCIO.md` (le voci numerate) (contenuti giorno per giorno), `COSTI_MENSILI.md`, `SICUREZZA_ACCOUNT.md`, `TRIAGE_PR.md`, `EMERGENZE_E_ACCESSI.md` (PR #128).
 
 ## 0. Idee fisse (decise)
 - **Nessuna data pubblica.** Il 31/10 è una data **interna**. Soglia per partire: circa **10 negozi con almeno un'offerta pronta**. Se non c'è, il lancio scivola alla settimana dopo senza che nessuno se ne accorga.
