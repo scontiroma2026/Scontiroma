@@ -510,14 +510,14 @@ def test_riepilogo_settimanale_senza_pagamenti_con_interruttore_spento(orologio,
 # ============================================================
 
 @pytest.mark.parametrize("pubblicata_utc,primo_pagamento", [
-    ("2026-10-31T22:59:00+00:00", date(2027, 1, 1)),   # 31/10 23:59 Roma: giorno 31 -> tre mesi dopo
-    ("2026-10-31T23:01:00+00:00", date(2027, 1, 1)),   # 01/11 00:01 Roma: giorno 1 -> due mesi dopo (stesso 1°)
+    ("2026-10-31T22:59:00+00:00", date(2027, 1, 1)),   # 31/10 Roma: +60 = 30/12
+    ("2026-10-31T23:01:00+00:00", date(2027, 1, 1)),   # 01/11 Roma: +60 = 31/12
     ("2026-12-31T22:59:00+00:00", date(2027, 3, 1)),   # fine d'anno
-    ("2026-12-31T23:01:00+00:00", date(2027, 3, 1)),
+    ("2026-12-31T23:01:00+00:00", date(2027, 4, 1)),   # 01/01 Roma: +60 = 02/03
     ("2027-02-28T22:59:00+00:00", date(2027, 5, 1)),
     ("2027-02-28T23:01:00+00:00", date(2027, 5, 1)),
-    ("2026-11-11T22:59:00+00:00", date(2027, 1, 1)),   # 11/11 23:59 Roma: ultimo giorno «due mesi»
-    ("2026-11-11T23:01:00+00:00", date(2027, 2, 1)),   # 12/11 00:01 Roma: già «tre mesi»
+    ("2026-11-11T22:59:00+00:00", date(2027, 2, 1)),   # 11/11 Roma: +60 = 10/01
+    ("2026-11-11T23:01:00+00:00", date(2027, 2, 1)),   # 12/11 Roma: +60 = 11/01
 ])
 def test_inizio_pagamenti_ai_confini(pubblicata_utc, primo_pagamento):
     assert pp.billing_start_date(pubblicata_utc) == primo_pagamento
