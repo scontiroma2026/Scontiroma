@@ -5,7 +5,7 @@ Stato: **per il titolare, da portare al consulente**. Non è un parere legale e 
 Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma. «Testo» = c'è già una frase proposta da validare.
 
 ## 1. Termini e prova gratuita (dettagli: #157 e `docs/legale/PROPOSTA_TERMINI_ALLINEATI.md`)
-1. 🟠 «Circa due mesi» con prova reale da 49 a 81 giorni: bastano la regola e l'esempio scritti nell'art. 3.2?
+1. 🟠 **Aggiornato il 31/10 (decisione del titolare):** «Prova gratuita di 2 mesi (almeno 60 giorni)»; primo pagamento il primo giorno 1 del mese che cade almeno 60 giorni dopo la prima pubblicazione, prova reale da 60 a 90 giorni; tolta la regola «entro l'11 / dal 12». Domanda: «2 mesi» nel titolo è corretto se la prova a volte dura fino a 90 giorni, e i due esempi con le date bastano a spiegarlo? `[DA VALIDARE]`
 2. 🟠 «Disdici quando vuoi», con effetto a fine mese, sconto da rispettare fino a fine mese e mese pagato non rimborsabile (cliente professionista): va bene la formula? La frase è la stessa in Termini, email di benvenuto e guida per i negozi: va bene identica ovunque?
 3. 🟠 Preavviso: i Termini dicevano «30 giorni prima della fine della fase di lancio», l'app scriveva 10 e 3 giorni prima. **Deciso dal titolare (21/10, PR #199 e #169):** email al giorno 30 della prova, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito; i promemoria a 10 e 3 giorni sono stati tolti dal codice.
 4. 🟠 I negozi devono avere la **Partita IVA** (obbligatoria alla registrazione dal 15/10): serve una frase nei Termini e nel Recesso?

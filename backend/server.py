@@ -6033,7 +6033,7 @@ class ApprovaTutteIn(BaseModel):
 @api.post("/admin/discounts/approve-all-pending")
 async def admin_approve_all_pending(payload: ApprovaTutteIn, user: dict = Depends(require_admin_master)):
     """Pre-lancio: approva in un colpo solo tutte le offerte in attesa (il giorno del lancio).
-    Per i negozi alla prima pubblicazione la prova (circa due mesi) parte da questo momento.
+    Per i negozi alla prima pubblicazione la prova (almeno 60 giorni) parte da questo momento.
     Serve la parola di conferma «LANCIA» per evitare tocchi per errore."""
     if (payload.conferma or "").strip().upper() != "LANCIA":
         raise HTTPException(400, "Scrivi LANCIA per confermare")
