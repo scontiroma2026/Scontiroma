@@ -1,37 +1,37 @@
-# Lista «pronto al lancio» di Sconti Roma (aggiornata il 24/10)
+# Lista «pronto al lancio» di Sconti Roma (aggiornata il 31/10)
 
 **Regola del titolare (14/10, rettificata il 15/10):** quando chiede «la lista», si risponde con questa lista **numerata** dopo aver controllato lo stato reale delle PR. I punti chiusi (✅) si **cancellano** dalla lista e la lista si **rinumera**; la storia di ciò che è stato fatto resta in `docs/STATO.md`. I punti nuovi si aggiungono, quelli cambiati si rettificano. Questo file è la fonte: va tenuto allineato.
 
-Lancio previsto il **31/10** (data **non** pubblica: al pubblico si dice «stiamo arrivando»). Prima i negozi, poi i clienti. Il giorno del lancio le offerte in attesa si approvano tutte insieme («Approva tutte»). Decisione sul lancio il **27/10**: minimo circa 10 negozi con un'offerta pronta, altrimenti si sposta di una settimana.
+**Decisione del titolare (31/10):** niente lista d'attesa e niente pre-lancio: l'app resta aperta a tutti (`PRELAUNCH_MODE` spento, come già in produzione; il codice della lista resta spento). Niente data di lancio: si cresce una zona alla volta, prima i negozi. Al 31/10 è iscritto un solo negozio (studio odontoiatrico).
 Legenda: ✅ fatto · ⏳ in corso · ⬜ da fare. Chi: **Utente** = titolare; **Claude**; **Consulente** = legale/privacy; **Commercialista**.
 Repository pubblico: qui mai password, chiavi, ID di recupero né dati di persone reali.
 
 Divisione (richiesta del titolare, 24/10): in ogni parte prima **ciò che fa Claude**, poi **ciò che fai tu**, poi **avvocato, notaio e commercialista**. Lista ricostruita il 24/10 confrontando tutte le versioni precedenti, i «Da fare» di `docs/STATO.md`, `docs/operazioni/PROMEMORIA_DA_RIPRENDERE.md` e tutte le PR aperte.
 
-## A. Prima del lancio (decisione il 27/10, lancio previsto il 31/10)
+## A. Adesso: i primi negozi
 
 ### Claude
-1. ⏳ **Social del fine settimana** (24-25/10, più negozi che clienti): reel negozi sab 10:00 (programmato), storia «3 passi» sab 13:00, storia clienti «lista d'attesa» sab 19:00, reel clienti dom 11:00, post «Hai un negozio?» dom 19:30 (programmato), storia «Ci pensiamo noi» dom 21:00. Sempre con anteprima e «ok» del titolare.
-2. ⏳ **TikTok:** prova con Higgsfield (bozze di TikTok, account gratuito, nessun addebito) appena il titolare collega l'account.
-3. ⬜ **Video corto per i negozi** (circa 55 s, copione proposto il 23/10): aspetta l'OK sul copione; poi voce (crediti ElevenLabs, chiedere il permesso) e musica con licenza; poi sul sito (pagina «Per i commercianti») e sui social.
-4. ⏳ **Materiali per i negozi da chiudere:** #146 (kit, guida, copioni), #218 (risposte pronte alle email), #148 (campagna 19-31/10): riallinearli ai testi legali uniti il 23/10 e portarli al titolare per l'OK.
-5. ⬜ **Ricerca dei negozi:** dalla lista di 232 attività (66 con un canale online) preparare l'elenco dei prossimi da contattare con il messaggio adatto; i messaggi li manda il titolare (mai WhatsApp a suo nome).
-6. ⏳ **Bozze grafiche** in attesa di OK: animazioni (#226) e nuova pagina «Per i commercianti».
-7. ⬜ **Contratti sui dati:** valutare LocationIQ; preparare il testo per il DPO di Aruba.
-8. ⏳ **Controlli:** server due volte al giorno fino al 31/10 (8:47 e 20:47), controllo giornaliero, CI verde su `main`.
-9. ⬜ **27/10:** conteggio di negozi e offerte e proposta «lancio sì/no» (minimo circa 10 negozi con un'offerta pronta).
-10. ⬜ **Riordino delle PR vecchie:** testi legali superati dalle unioni del 23/10 (#40, #80, #92, #95, #116, #147): proposta di chiusura; codice legale ancora da valutare (#100 disdetta, #102 eliminazione negozio, #114 cancellazione automatica dei dati); vecchi video e immagini (#119, #120, #121, #143): chiusura con l'OK del titolare; documenti da decidere (#81, #127, #128, #134).
+1. ⏳ **Primi negozi in una zona** (problema «uovo e gallina»: prima i negozi, poi sono loro a portare i clienti con locandina e social): dalla lista di 232 attività preparare l'elenco dei prossimi da contattare, vicini tra loro, con il messaggio adatto; obiettivo circa 10 negozi con un'offerta. I messaggi li manda il titolare (mai WhatsApp a suo nome).
+2. ⬜ **Offerta dello studio odontoiatrico:** controllarla prima dell'approvazione con le regole sulla pubblicità sanitaria (niente promesse di risultato, niente prezzi civetta); dubbi nella lista per l'avvocato.
+3. ⏳ **Social:** dati al 31/10 (Instagram 7 giorni: 71 persone raggiunte, 210 visite al profilo, 4 clic sul sito, 0 condivisioni): contenuti da far girare (reel, «manda questo al tuo bar preferito»), resoconto ogni domenica; sempre con anteprima e «ok» del titolare.
+4. ⏳ **TikTok:** prova con Higgsfield (bozze, account gratuito, nessun addebito) appena il titolare collega l'account.
+5. ⬜ **Video corto per i negozi** (circa 55 s, copione del 23/10): aspetta l'OK sul copione; voce con crediti ElevenLabs solo con il permesso.
+6. ⏳ **Materiali per i negozi da chiudere:** #146, #218, #148: riallinearli ai testi legali e portarli al titolare per l'OK.
+7. ⏳ **Bozze grafiche** in attesa di OK: animazioni (#226) e nuova pagina «Per i commercianti».
+8. ⬜ **Privacy da iubenda:** aggiungere Cloudflare e AWS e sottolineare i link (testo legale: PR dell'agente `legale`, si unisce solo con il «procedi»).
+9. ⬜ **Contratti sui dati:** valutare LocationIQ; preparare il testo per il DPO di Aruba.
+10. ⬜ **Riordino delle PR vecchie** (quasi tutte testi legali): proposta di chiusura di quelle superate (#95, #116, #147), decisione sul codice legale (#100, #102, #114), chiusura dei vecchi video e immagini (#119, #120, #121, #143) e dei documenti (#127, #128, #134), sempre con l'OK del titolare.
+11. ⏳ **Controlli:** controllo giornaliero e CI verde su `main` (il controllo del server due volte al giorno finisce il 31/10).
 
 ### Tu
-11. ⬜ **Contattare i negozi**, uno alla volta (telefono, visita, messaggi preparati da Claude), con un modo semplice per dire no. Obiettivo: circa 10 negozi con un'offerta entro il 27/10.
-12. ⬜ **Collegare TikTok** a Higgsfield (link mandato da Claude).
-13. ⬜ **Prova da iPhone** sul sito di prova, poi accensione del pre-lancio (`PRELAUNCH_MODE`) e della conferma email dei clienti sul sito vero.
-14. ⬜ **Android vero:** registrazione, QR e fotocamera (il controllo di base è fatto, 18/10).
-15. ⬜ **Email:** Resend Pro (20 $/mese) sì o no prima del lancio: il piano gratuito ha 100 email al giorno, poche per l'avviso di lancio alla lista d'attesa.
-16. ⬜ **Aruba:** scaricare le condizioni dall'area clienti e scrivere al loro DPO (testo preparato da Claude). **privacy@ su Gmail gratuito:** decidere se spostarla su un servizio con contratto sui dati.
-17. ⬜ **Profili social:** togliere «quartiere» dalle bio e dalla copertina Facebook.
+12. ⬜ **Contattare i negozi**, uno alla volta (telefono, visita, messaggi preparati da Claude), con un modo semplice per dire no.
+13. ⬜ **Collegare TikTok** a Higgsfield.
+14. ⬜ **Prova da iPhone e da un Android vero** (registrazione, QR, fotocamera); poi accendere la conferma email dei clienti sul sito vero.
+15. ⬜ **Email:** Resend Pro (20 $/mese) quando le email superano le 100 al giorno del piano gratuito.
+16. ⬜ **Aruba:** condizioni dall'area clienti e lettera al DPO (testo di Claude). **privacy@ su Gmail gratuito:** decidere se spostarla.
+17. ⬜ **Profili social:** bio più chiara con il link (solo 4 clic su 210 visite), togliere «quartiere» da bio e copertina Facebook.
 18. ⬜ **OK in attesa:** copione del video corto, bozze grafiche (#226 e pagina «Per i commercianti»), materiali #146, #218, #148.
-19. ⬜ **Prima di «Approva tutte»:** guardare con Claude le foto e la scheda completa di ogni offerta in attesa.
+19. ⬜ **Prima di approvare un'offerta:** guardare con Claude le foto e la scheda completa.
 
 ### Avvocato
 20. ⬜ **Testi legali:** sono sul sito, chiusi dall'agente `legale` ma **non validati da un avvocato**. Almeno un'ora sui Termini per i negozi; dubbi in `docs/legale/LISTA_PER_AVVOCATO.md`; richiesta di preventivo pronta in `docs/legale/RICHIESTA_PREVENTIVO.md` (la manda il titolare).
@@ -76,8 +76,7 @@ Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubbl
 
 Altre decisioni del 14/10: prima i negozi, ai clienti niente data fissa («stiamo arrivando»); tono neutro (niente Halloween); nessuna pubblicità a pagamento; prova gratuita ripetuta rimandata; un abbonamento per commerciante a prescindere dai punti vendita; chiave anti-abuso «Partita IVA + indirizzo» da fare dopo la partenza.
 
-## Giorno del lancio
+## Prima di farci conoscere ai clienti in una zona
 - [ ] Controlli verdi su `main`, nessuna PR aperta con testi legali non validati.
-- [ ] Tutte le voci di A segnate.
-- [ ] `PRELAUNCH_MODE` e avviso di lancio alla lista d'attesa; «Approva tutte» sulle offerte in attesa.
+- [ ] Circa 10 negozi con un'offerta approvata nella zona.
 - [ ] Controllo giornaliero attivo (dopo il lancio due volte al giorno).
