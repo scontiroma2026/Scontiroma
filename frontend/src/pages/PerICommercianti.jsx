@@ -29,7 +29,7 @@ const PASSI = [
 ];
 
 const FAQ = [
-  { q: "Quanto costa?", a: "Nella fase di lancio è gratis. Poi ti avvisiamo con largo anticipo e non paghi niente senza la tua conferma." },
+  { q: "Quanto costa?", a: "Hai 2 mesi di prova gratuita (almeno 60 giorni) dalla pubblicazione della tua prima offerta. Prima di qualsiasi pagamento ti avvisiamo e non paghi niente senza la tua conferma. I dettagli sono nei Termini, punto 3.2." },
   { q: "Quanto tempo serve?", a: "Pochi minuti per registrarti e creare la prima offerta. Poi una al mese." },
   { q: "Chi decide lo sconto?", a: "Lo decidi tu: prodotto o servizio, sconto, giorni e quante volte al mese." },
   { q: "Come vengo trovato?", a: "Dopo un nostro controllo, la tua offerta compare nell'app per chi abita a Roma e dintorni." },
@@ -55,7 +55,7 @@ export default function PerICommercianti() {
       </p>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
         <TastoWhatsApp testid="cta-whatsapp-alto" dove="alto" />
-        <span className="text-sm text-muted-foreground">Hai domande? Ti rispondiamo noi, senza impegno.</span>
+        <span className="text-sm text-muted-foreground"><strong className="text-foreground">2 mesi di prova gratuita.</strong> Hai domande? Ti rispondiamo noi, senza impegno.</span>
       </div>
 
       <div className="mt-8">
