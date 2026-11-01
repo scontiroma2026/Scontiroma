@@ -13,7 +13,7 @@ sono [NOME E COGNOME], titolare di [RAGIONE SOCIALE / DITTA], con sede a [CITTÀ
 
 **Come funziona il servizio, in breve**
 - I **clienti** (maggiorenni) si iscrivono gratuitamente con email e password e usano gli sconti pubblicati dai negozi (un QR, un'offerta al mese per negozio).
-- I **negozi** si iscrivono con Partita IVA, pubblicano le offerte (che approviamo noi) e hanno una prova gratuita di circa due mesi dalla prima offerta; poi un abbonamento mensile di 4,99 € + IVA, con addebito automatico (carta o PayPal) solo dopo una loro conferma esplicita; disdetta valida dalla fine del mese.
+- I **negozi** si iscrivono con Partita IVA, pubblicano le offerte (che approviamo noi) e hanno una prova gratuita di 2 mesi (almeno 60 giorni, da 60 a 90 giorni) dalla prima pubblicazione dell'offerta, con primo pagamento sempre il 1° del mese; poi un abbonamento mensile di 4,99 € + IVA, con addebito automatico (carta o PayPal) solo dopo una loro conferma esplicita; disdetta valida dalla fine del mese.
 - I pagamenti non sono ancora attivi. Non vendiamo prodotti: facciamo da intermediari tra clienti e negozi.
 - Dati trattati: email, nome, offerte usate, statistiche anonime; fornitori: hosting (Render), database (MongoDB Atlas), invio email (Resend), mappe (LocationIQ), futuri pagamenti (Stripe e PayPal). Abbiamo un banner cookie e un registro del consenso nostri.
 
@@ -63,6 +63,6 @@ Conta più della cifra: la firma del legale, i tempi, e che lavori sulle nostre 
 
 ## E. Prima di inviare
 - [ ] Compilare i campi [tra parentesi] (ragione sociale, sede, contatto): vengono dalla visura camerale.
-- [ ] Il prezzo 4,99 € + IVA e «circa due mesi di prova» sono confermati dal titolare (14/10).
+- [ ] Il prezzo 4,99 € + IVA e «2 mesi di prova (almeno 60 giorni)» sono confermati dal titolare (14/10 il prezzo, 31/10 la prova).
 - [ ] Inviare a 2–3 studi, uno alla volta, senza dati di clienti o negozi.
 - [ ] Non è un parere legale: serve solo a ottenere i preventivi.

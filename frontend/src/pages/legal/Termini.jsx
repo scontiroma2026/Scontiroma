@@ -130,26 +130,28 @@ export default function Termini() {
         <h3 className="font-serif text-xl text-foreground mt-6">3.2 Per i Commercianti</h3>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Prova gratuita di circa due mesi</strong>: nella fase di
-            lancio la partecipazione è gratuita. La prova parte dalla{" "}
+            <strong>Prova gratuita di 2 mesi (almeno 60 giorni)</strong>: nella
+            fase di lancio la partecipazione è gratuita. La prova parte dalla{" "}
             <strong>prima pubblicazione</strong> della tua offerta (il giorno
             in cui viene approvata e diventa visibile, non da quello
-            dell'iscrizione) e prosegue fino alla fine del mese. Il primo
-            pagamento è sempre il <strong>1° del mese</strong>: se la prima
-            offerta è pubblicata <strong>entro l'11</strong> del mese, la prova
-            finisce l'ultimo giorno del mese successivo e si paga dal 1° del
-            mese dopo ancora; se è pubblicata <strong>dal 12 in poi</strong>, la
-            prova finisce l'ultimo giorno del secondo mese successivo.
+            dell'iscrizione) e dura <strong>almeno 60 giorni</strong>, contando
+            anche il giorno della prima pubblicazione (le date sono quelle di
+            Roma). Il primo pagamento è sempre il <strong>1° del mese</strong>:
+            è il primo giorno 1 del mese che arriva almeno 60 giorni dopo la
+            prima pubblicazione. La prova finisce il giorno prima del primo
+            pagamento, quindi dura da 60 a 90 giorni.
           </li>
           <li>
             <strong>Esempio</strong>: ti iscrivi il 3 novembre 2026 e la tua
             prima offerta viene pubblicata il <strong>10 novembre 2026</strong>.
-            La prova gratuita dura fino al <strong>31 dicembre 2026</strong> (52
-            giorni) e il primo pagamento è il <strong>1° gennaio 2027</strong>,
-            poi ogni 1° del mese. Se invece la prima pubblicazione è il 12
-            novembre 2026, la prova dura fino al 31 gennaio 2027 (81 giorni) e
-            il primo pagamento è il 1° febbraio 2027. La data esatta del tuo
-            primo pagamento è sempre indicata nell'area del Commerciante.
+            Sessanta giorni dopo è il 9 gennaio 2027, quindi la prova gratuita
+            dura fino al <strong>31 gennaio 2027</strong> (83 giorni) e il primo
+            pagamento è il <strong>1° febbraio 2027</strong>, poi ogni 1° del
+            mese. Se invece la prima pubblicazione è il 2 ottobre 2026, sessanta
+            giorni dopo è proprio il 1° dicembre 2026: la prova dura fino al 30
+            novembre 2026 (60 giorni) e il primo pagamento è il 1° dicembre
+            2026. La data esatta del tuo primo pagamento è sempre indicata
+            nell'area del Commerciante.
           </li>
           <li>
             <strong>Dopo la prova</strong>: €4,99 al mese + IVA. Ogni

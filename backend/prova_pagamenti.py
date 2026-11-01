@@ -1,9 +1,9 @@
 """Prova gratuita e pagamento mensile dei negozi: funzioni PURE (nessun database, nessun addebito).
 
 Regole (decisioni del titolare, PIANO_LANCIO_COMMERCIANTI.md, sezioni 0, 3-bis e 3-ter):
-  - la prova parte dal PRIMO GIORNO DI PUBBLICAZIONE e dura circa due mesi (da 49 a 81 giorni): si paga
-    sempre il 1° del mese. Se la prima offerta è pubblicata entro l'11 del mese si paga dal 1° di DUE mesi
-    dopo; dal 12 in poi dal 1° di TRE mesi dopo (decisione del titolare, 12/10);
+  - la prova parte dal PRIMO GIORNO DI PUBBLICAZIONE e dura almeno 60 giorni (da 60 a 90): si paga
+    sempre il 1° del mese, il primo 1° che cade almeno 60 giorni dopo la prima pubblicazione
+    (decisione del titolare del 31/10: «2 mesi gratis» garantiti; prima era «entro l'11 / dal 12»);
   - pagamento entro N giorni dal 1° -> offerta subito nel mese corrente; oltre N giorni -> il
     pagamento vale per il mese successivo;
   - «Non rinnovo»: l'offerta resta visibile fino a fine mese, dal 1° successivo decade.
@@ -14,7 +14,7 @@ from typing import Optional, Union
 from zoneinfo import ZoneInfo
 
 ROMA = ZoneInfo("Europe/Rome")
-GIORNO_LIMITE_PUBBLICAZIONE = 11  # entro l'11 del mese: primo pagamento dopo due mesi; dal 12: dopo tre
+GIORNI_PROVA_MINIMI = 60  # «2 mesi gratis»: il primo pagamento non arriva mai prima di 60 giorni
 TOLLERANZA_PREDEFINITA = 5
 
 
@@ -56,12 +56,13 @@ def primo_del_mese_tra(d: date, mesi: int) -> date:
 
 
 def billing_start_date(first_published_at) -> Optional[date]:
-    """Primo giorno in cui si paga: sempre un 1°. Pubblicazione entro l'11 -> 1° di due mesi dopo;
-    dal 12 in poi -> 1° di tre mesi dopo. Prova da 49 a 81 giorni, media circa 66."""
+    """Primo giorno in cui si paga: il primo 1° del mese che cade almeno GIORNI_PROVA_MINIMI giorni
+    dopo la prima pubblicazione. Prova gratuita da 60 a 90 giorni."""
     primo = a_data_roma(first_published_at)
     if primo is None:
         return None
-    return primo_del_mese_tra(primo, 2 if primo.day <= GIORNO_LIMITE_PUBBLICAZIONE else 3)
+    minimo = primo + timedelta(days=GIORNI_PROVA_MINIMI)
+    return minimo if minimo.day == 1 else primo_del_mese_dopo(minimo)
 
 
 def trial_end_date(first_published_at) -> Optional[date]:
