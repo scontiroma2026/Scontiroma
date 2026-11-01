@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
 
 // Video di presentazione per i commercianti. Se il file /video/commercianti.mp4 esiste lo mostra,
-// altrimenti mostra il segnaposto «Video in arrivo». Il sito risponde con la home anche per i
+// altrimenti mostra il segnaposto «Video in arrivo». Video verticale 9:16 (come i reel), largo al massimo come un telefono. Il sito risponde con la home anche per i
 // file mancanti, quindi si controlla il tipo del file e non solo lo stato della risposta.
 export const VIDEO_COMMERCIANTI = "/video/commercianti.mp4";
 
@@ -26,10 +26,11 @@ export default function VideoCommercianti() {
     return (
       <video
         data-testid="video-commercianti"
-        className="aspect-video w-full rounded-2xl border border-border bg-black"
+        className="mx-auto block aspect-[9/16] w-full max-w-[340px] rounded-2xl border border-border bg-black"
         controls
         playsInline
         preload="metadata"
+        poster="/video/commercianti.jpg"
       >
         <source src={VIDEO_COMMERCIANTI} type="video/mp4" />
       </video>

@@ -4,7 +4,23 @@ import api from "@/lib/api";
 import { salvaFonte, registraVisitaFonte } from "@/lib/referral";
 import { Button } from "@/components/ui/button";
 import VideoCommercianti from "@/components/VideoCommercianti";
-import RiquadroCiPensiamoNoi from "@/components/RiquadroCiPensiamoNoi";
+import RiquadroCiPensiamoNoi, { WHATSAPP_NUMERO } from "@/components/RiquadroCiPensiamoNoi";
+import { trackClick } from "@/lib/analytics";
+
+// Dai social arrivano commercianti che leggono ma non si iscrivono (dati admin del 01/11): un invito diretto
+// a scrivere su WhatsApp, con un messaggio già pronto, è più facile di un modulo.
+const WHATSAPP_INFO = `https://wa.me/39${WHATSAPP_NUMERO.replace(/\s/g, "")}?text=${encodeURIComponent("Ciao, ho un negozio e vorrei sapere come funziona Sconti Roma.")}`;
+
+function TastoWhatsApp({ testid, dove }) {
+  return (
+    <a data-testid={testid} href={WHATSAPP_INFO} target="_blank" rel="noreferrer"
+      onClick={() => trackClick(`whatsapp_commercianti_${dove}`)}
+      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 text-base font-extrabold text-white hover:bg-emerald-800">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.4 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.6-.1 1.2Z"/></svg>
+      Scrivici su WhatsApp
+    </a>
+  );
+}
 
 const PASSI = [
   { n: "1", t: "Scegli cosa offrire", d: "Un prodotto o un servizio del tuo negozio, a tua scelta." },
@@ -13,7 +29,7 @@ const PASSI = [
 ];
 
 const FAQ = [
-  { q: "Quanto costa?", a: "Nella fase di lancio è gratis. Poi ti avvisiamo con largo anticipo e non paghi niente senza la tua conferma." },
+  { q: "Quanto costa?", a: "Hai 2 mesi di prova gratuita (almeno 60 giorni) dalla pubblicazione della tua prima offerta. Prima di qualsiasi pagamento ti avvisiamo e non paghi niente senza la tua conferma. I dettagli sono nei Termini, punto 3.2." },
   { q: "Quanto tempo serve?", a: "Pochi minuti per registrarti e creare la prima offerta. Poi una al mese." },
   { q: "Chi decide lo sconto?", a: "Lo decidi tu: prodotto o servizio, sconto, giorni e quante volte al mese." },
   { q: "Come vengo trovato?", a: "Dopo un nostro controllo, la tua offerta compare nell'app per chi abita a Roma e dintorni." },
@@ -37,6 +53,10 @@ export default function PerICommercianti() {
         Sconti Roma porta nel tuo negozio le persone che abitano vicino a te, a Roma e dintorni.
         Pubblichi un'offerta, il cliente la trova nell'app e arriva con il suo QR.
       </p>
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <TastoWhatsApp testid="cta-whatsapp-alto" dove="alto" />
+        <span className="text-sm text-muted-foreground"><strong className="text-foreground">2 mesi di prova gratuita.</strong> Hai domande? Ti rispondiamo noi, senza impegno.</span>
+      </div>
 
       <div className="mt-8">
         <VideoCommercianti />
@@ -55,10 +75,11 @@ export default function PerICommercianti() {
         </ol>
       </section>
 
-      <div className="mt-10 text-center">
+      <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild className="min-h-12 rounded-full grad-fucsia-viola px-8 text-white">
           <Link data-testid="cta-registra-attivita" to="/register?role=merchant">Registra la tua attività</Link>
         </Button>
+        <TastoWhatsApp testid="cta-whatsapp-basso" dove="basso" />
       </div>
 
       <RiquadroCiPensiamoNoi testid="ci-pensiamo-noi-commercianti" className="mt-10" />

@@ -9,6 +9,8 @@ const CLICK_LABELS = {
   qr_generated: "QR sconto generati",
   register_started: "Registrazioni iniziate",
   flyer_print: "Stampa locandina",
+  whatsapp_commercianti_alto: "WhatsApp dalla pagina commercianti (in alto)",
+  whatsapp_commercianti_basso: "WhatsApp dalla pagina commercianti (in basso)",
   discount_click: "Click su uno sconto",
 };
 
