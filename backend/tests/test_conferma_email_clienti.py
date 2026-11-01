@@ -327,7 +327,7 @@ def test_reset_password_vale_come_conferma(_ambiente, monkeypatch):
         await iscrivi(c, "r@example.com")
         assert (await login(c, "r@example.com")).status_code == 403
         await server.db.users.update_one({"email": "r@example.com"}, {"$set": {
-            "reset_token": "tok-reset-prova", "reset_expires": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()}})
+            "reset_token": server._impronta_reset("tok-reset-prova"), "reset_expires": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()}})
         r = await c.post("/api/auth/reset", json={"token": "tok-reset-prova", "new_password": "nuova-password-1"})
         assert r.status_code == 200
         assert (await login(c, "r@example.com", "nuova-password-1")).status_code == 200

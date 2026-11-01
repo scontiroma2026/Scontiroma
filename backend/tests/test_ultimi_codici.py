@@ -38,6 +38,9 @@ def test_ultimi_codici_senza_nome_con_nuovo_e_di_ritorno():
             assert x["discount_title"] == "Pizza e birra"
             assert set(x) == {"id", "code", "status", "created_at", "redeemed_at", "discount_title", "client_type"}
         assert "Nome Da Non Mostrare" not in r.text and cid not in r.text
+        # Il codice di un QR ancora in attesa non si mostra al negozio (non può convalidarlo da solo).
+        assert rows["r3"]["code"] is None and "CCC333" not in r.text
+        assert rows["r1"]["code"] == "AAA111"
     run(body, required=False)
 
 

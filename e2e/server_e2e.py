@@ -57,6 +57,10 @@ os.environ.update({
     # I test iscrivono molti account dallo stesso IP: limiti anti-massa spenti (0 = spento).
     "REGISTRAZIONI_MAX_PER_FINESTRA": "0", "RESET_MAX_PER_CLIENT_10MIN": "0", "RESET_MAX_PER_CLIENT_ORA": "0",
     "CONFERMA_MAX_PER_CLIENT_10MIN": "0", "CONFERMA_MAX_PER_CLIENT_ORA": "0",
+    # Limite per IP sui login sbagliati spento (molti test sbagliano apposta la password dallo stesso IP).
+    "LOGIN_FALLITI_MAX_PER_IP": "0",
+    # Servizio push finto dei test, oltre a quelli ufficiali dei browser.
+    "PUSH_HOST_EXTRA": "push.example.com",
     # Conferma dell'email dei clienti spenta: i test esistenti entrano subito. Quelli dedicati la
     # accendono con /__e2e/conferma-email-obbligatoria e la rispengono alla fine.
     "CLIENT_EMAIL_CONFIRMATION_REQUIRED": "false",
@@ -137,13 +141,26 @@ async def _e2e_seed_demo():
     await seed_demo(server.db, server.hash_password)
 
 
+# Reset password: nel DB c'è solo l'impronta del codice; si tiene a mente l'ultimo codice «spedito».
+_TOKEN_RESET: dict = {}
+_invio_reset_originale = server.send_password_reset
+
+
+async def _invio_reset_e2e(to, name, token):
+    _TOKEN_RESET[str(to).lower()] = token
+    return await _invio_reset_originale(to, name, token)
+
+
+server.send_password_reset = _invio_reset_e2e
+
+
 @server.app.get("/__e2e/reset-token")
 async def _e2e_reset_token(email: str):
-    """Legge dal DB locale il token di reset password (in produzione arriva solo via email)."""
-    u = await server.db.users.find_one({"email": email.lower()})
-    if not u or not u.get("reset_token"):
+    """Ultimo codice di reset password «spedito» a questo indirizzo (in produzione arriva solo via email)."""
+    t = _TOKEN_RESET.get(email.lower())
+    if not t:
         raise HTTPException(404, "nessun token")
-    return {"token": u["reset_token"]}
+    return {"token": t}
 
 
 # Email di conferma: in e2e non parte nessuna email vera. Si tiene a mente l'ultimo token mandato a

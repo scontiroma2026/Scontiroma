@@ -15,3 +15,7 @@ os.environ.setdefault("CONFERMA_MAX_PER_CLIENT_ORA", "0")
 os.environ.setdefault("PRELAUNCH_MODE", "false")
 os.environ.setdefault("WAITLIST_MAX_PER_CLIENT_10MIN", "0")
 os.environ.setdefault("WAITLIST_MAX_PER_CLIENT_ORA", "0")
+# Notifiche push: i test usano un servizio finto (push.example.com) oltre a quelli ufficiali dei browser.
+os.environ.setdefault("PUSH_HOST_EXTRA", "push.example.com")
+# Limite per IP sui login sbagliati: spento nei test esistenti (molti login sbagliati dallo stesso client finto).
+os.environ.setdefault("LOGIN_FALLITI_MAX_PER_IP", "0")
