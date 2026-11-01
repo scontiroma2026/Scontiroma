@@ -2,7 +2,9 @@
 
 Stato: **bozza per il consulente, non unire** (testo legale). Data: 15/10/2026. Ramo `claude/termini-allineati`.
 Legenda rischio: 🔴 alto, da sistemare prima del lancio · 🟠 medio, da valutare col consulente · 🟢 basso.
-**Rischio complessivo: 🟠** (la prova dura da 49 a 81 giorni ma si chiama «circa due mesi»: va spiegata bene; per questo c'è l'esempio con le date).
+> **Superato il 31/10/2026 (decisione del titolare):** la regola «entro l'11 / dal 12» e la prova da 49 a 81 giorni descritte qui sotto non valgono più. Regola nuova (art. 3.2 dei Termini, branch `claude/prova-60-giorni`): «Prova gratuita di 2 mesi (almeno 60 giorni)», primo pagamento il primo giorno 1 del mese che cade almeno 60 giorni dopo la prima pubblicazione (giorni di Roma), prova da 60 a 90 giorni. Esempi nuovi: pubblicazione 10/11/2026 → prova fino al 31/01/2027 (83 giorni), primo pagamento 1/02/2027; pubblicazione 2/10/2026 → prova fino al 30/11/2026 (60 giorni), primo pagamento 1/12/2026. Il resto del documento resta come storia. `[DA VALIDARE]`
+
+**Rischio complessivo (storico, 15/10): 🟠** (la prova dura da 49 a 81 giorni ma si chiama «circa due mesi»: va spiegata bene; per questo c'è l'esempio con le date).
 
 ## 1. Cosa dice ora il testo (proposta `[PROPOSTA]`)
 Art. 3.2 «Per i Commercianti», in ordine:
