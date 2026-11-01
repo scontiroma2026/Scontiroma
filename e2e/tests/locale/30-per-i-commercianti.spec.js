@@ -12,9 +12,14 @@ test('per i commercianti: contenuti, video segnaposto e registrazione', async ({
   await expect(pagina.getByRole('heading', { level: 1 })).toBeVisible();
   for (const n of [1, 2, 3]) await expect(page.getByTestId(`passo-${n}`)).toBeVisible();
   await expect(pagina.locator('details')).not.toHaveCount(0);
-  // Senza il file /video/commercianti.mp4 compare il segnaposto
-  await expect(page.getByTestId('video-segnaposto')).toContainText('Video in arrivo');
-  await expect(page.getByTestId('video-commercianti')).toHaveCount(0);
+  // Il video di presentazione (/video/commercianti.mp4) è nel sito
+  await expect(page.getByTestId('video-commercianti')).toBeVisible();
+  await expect(page.getByTestId('video-segnaposto')).toHaveCount(0);
+  // Invito a scrivere su WhatsApp, con messaggio già pronto, in alto e in basso
+  for (const id of ['cta-whatsapp-alto', 'cta-whatsapp-basso']) {
+    await expect(page.getByTestId(id)).toBeVisible();
+    await expect(page.getByTestId(id)).toHaveAttribute('href', /^https:\/\/wa\.me\/393522473526\?text=/);
+  }
   // Nessuna percentuale, prezzo o promessa vietata
   const testo = await pagina.innerText();
   for (const re of VIETATI) expect(testo, `testo vietato ${re}`).not.toMatch(re);
@@ -25,12 +30,13 @@ test('per i commercianti: contenuti, video segnaposto e registrazione', async ({
   await expect(page.getByTestId('register-page')).toBeVisible();
 });
 
-test('per i commercianti: il video compare se il file esiste', async ({ page }) => {
+test('per i commercianti: senza il file del video compare il segnaposto', async ({ page }) => {
+  // Il sito risponde con la home anche per i file mancanti: si simula così un video assente
   await page.route('**/video/commercianti.mp4', (route) =>
-    route.fulfill({ status: 200, contentType: 'video/mp4', body: Buffer.alloc(16) }));
+    route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html>' }));
   await page.goto('/per-i-commercianti');
-  await expect(page.getByTestId('video-commercianti')).toBeVisible();
-  await expect(page.getByTestId('video-segnaposto')).toHaveCount(0);
+  await expect(page.getByTestId('video-segnaposto')).toContainText('Video in arrivo');
+  await expect(page.getByTestId('video-commercianti')).toHaveCount(0);
 });
 
 test('per i commercianti: link dal footer e dal menu', async ({ page }) => {
