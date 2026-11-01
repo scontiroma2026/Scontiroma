@@ -19,7 +19,7 @@ export default function ResetPassword() {
   const submit = async (e) => {
     e.preventDefault();
     if (pw !== pw2) return toast.error("Le password non corrispondono");
-    if (pw.length < 6) return toast.error("Almeno 6 caratteri");
+    if (pw.length < 8) return toast.error("Almeno 8 caratteri");
     setBusy(true);
     try {
       await api.post("/auth/reset", { token, new_password: pw });
@@ -42,11 +42,11 @@ export default function ResetPassword() {
           </div>
           <div>
             <Label className="text-foreground/80">Nuova password</Label>
-            <PasswordInput data-testid="reset-pw" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
+            <PasswordInput data-testid="reset-pw" required minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
           </div>
           <div>
             <Label className="text-foreground/80">Conferma</Label>
-            <PasswordInput data-testid="reset-pw2" required minLength={6} value={pw2} onChange={(e) => setPw2(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
+            <PasswordInput data-testid="reset-pw2" required minLength={8} value={pw2} onChange={(e) => setPw2(e.target.value)} className="mt-1 bg-muted border-border text-foreground" />
           </div>
           <Button data-testid="reset-submit" type="submit" disabled={busy} className="w-full grad-fucsia-viola text-white rounded-full py-6">
             {busy ? "Salvataggio…" : "Aggiorna password"}

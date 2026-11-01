@@ -19,9 +19,10 @@ async function nuovoQr(request, offerta) {
     token: `${tk.data.code}.${tk.data.slot}.${tk.data.token}` };
 }
 
-async function stato(request, merchantToken, redCode) {
+// Per id: il codice di un QR ancora in attesa non viene mostrato al negozio (correzione del 01/11).
+async function stato(request, merchantToken, redId) {
   const r = await chiama(request, 'GET', '/merchants/me/redemptions', { token: merchantToken });
-  return (r.data.redemptions.find((x) => x.code === redCode) || {}).status;
+  return (r.data.redemptions.find((x) => x.id === redId) || {}).status;
 }
 
 const sbagliato = (codice) => (codice === '0000' ? '1111' : '0000');
@@ -60,7 +61,7 @@ test('codice del negozio: anonimo, ricorda questo telefono, cambio codice', asyn
   await expect(page.getByTestId('shop-code-error')).toContainText('Ti restano 4 tentativi');
   await expect(page.locator('body')).not.toContainText('Giulia');
   await foto(page, '02-codice-errato');
-  expect(await stato(request, m.token, q1.code)).toBe('pending');
+  expect(await stato(request, m.token, q1.id)).toBe('pending');
 
   // 3. Codice giusto + «Ricorda su questo telefono»: sconto valido col nome breve; sul telefono resta solo l'attestato
   await input.fill(codice);
@@ -70,7 +71,7 @@ test('codice del negozio: anonimo, ricorda questo telefono, cambio codice', asyn
   await expect(page.getByText('Giulia P.')).toBeVisible();
   await expect(page.getByTestId('telefono-salvato')).toBeVisible();
   await foto(page, '03-sconto-valido');
-  expect(await stato(request, m.token, q1.code)).toBe('redeemed');
+  expect(await stato(request, m.token, q1.id)).toBe('redeemed');
   const salvato = await page.evaluate(() => localStorage.getItem('sr_codice_negozio_v1'));
   expect(salvato).toBeTruthy();
   expect(salvato).not.toContain(`"${codice}"`);
@@ -108,7 +109,7 @@ test('codice del negozio: anonimo, ricorda questo telefono, cambio codice', asyn
   await expect(page.getByTestId('shop-code-error')).toContainText('è cambiato');
   await expect(page.getByTestId('shop-code-input')).toBeVisible();
   await foto(page, '05-codice-cambiato');
-  expect(await stato(request, m.token, q4.code)).toBe('pending');
+  expect(await stato(request, m.token, q4.id)).toBe('pending');
   expect(JSON.parse(await page.evaluate(() => localStorage.getItem('sr_codice_negozio_v1')))[pj.shop_id]).toBeUndefined();
   await page.getByTestId('shop-code-input').fill(codice === nuovo.data.code ? sbagliato(codice) : codice); // il vecchio
   await page.getByTestId('shop-code-apply').click();
@@ -135,7 +136,7 @@ test('codice del negozio: blocco dopo 5 errori', async ({ page, request }) => {
   await page.getByTestId('shop-code-apply').click();
   await expect(page.getByTestId('shop-code-error')).toContainText('Troppi tentativi');
   await foto(page, '06-bloccato');
-  expect(await stato(request, m.token, q.code)).toBe('pending');
+  expect(await stato(request, m.token, q.id)).toBe('pending');
 });
 
 test('codice del negozio: il commerciante collegato non scrive il codice', async ({ page, request }) => {
@@ -214,7 +215,7 @@ test('codice del negozio: il QR scade mentre si scrive il codice, il permesso br
   await page.getByTestId('shop-code-apply').click();
   await expect(page.getByRole('heading', { name: /SCONTO\s*VALIDO/i })).toBeVisible();
   await expect(page.getByText('Giulia P.')).toBeVisible();
-  expect(await stato(request, m.token, q.code)).toBe('redeemed');
+  expect(await stato(request, m.token, q.id)).toBe('redeemed');
   // Senza permesso lo stesso QR non vale più
   const dopo = await chiama(request, 'POST', '/qr/redeem', { body: { token: q.token, shop_code: codice } });
   expect(dopo.status).toBe(400);
