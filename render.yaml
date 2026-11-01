@@ -99,6 +99,9 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000
     routes:
       # App a pagina singola: ogni indirizzo (/login, /dashboard…) apre index.html
       - type: rewrite

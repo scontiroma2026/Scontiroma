@@ -198,11 +198,11 @@ export default function Register() {
             />
           </div>
           <div>
-            <Label>Password (min 6)</Label>
+            <Label>Password (min 8)</Label>
             <PasswordInput
               data-testid="reg-password"
               required
-              minLength={6}
+              minLength={8}
               autoComplete="new-password"
               value={form.password}
               onChange={update("password")}

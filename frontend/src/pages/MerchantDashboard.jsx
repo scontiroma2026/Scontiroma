@@ -158,7 +158,7 @@ export default function MerchantDashboard() {
                   {redemptions.map((r) => (
                     <li key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm first:pt-0 last:pb-0">
                       <div className="min-w-0">
-                        <div className="font-testo text-base font-extrabold tracking-wider">{r.code}</div>
+                        <div className="font-testo text-base font-extrabold tracking-wider">{r.code || "••••••••"}</div>
                         <div className="mt-0.5 text-xs text-ac-soft" data-testid={`redemption-info-${r.id}`}>
                           {new Date(r.redeemed_at || r.created_at).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                           {" · "}{r.discount_title}

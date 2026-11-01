@@ -159,7 +159,13 @@ def unb64u(s: str) -> bytes:
     pad = 4 - len(s) % 4
     return base64.urlsafe_b64decode(s + ("=" * pad if pad != 4 else ""))
 
-app = FastAPI(title="Sconti Roma API")
+# In produzione (Render imposta RENDER=true) la documentazione delle API non è pubblica: era una mappa
+# completa del server per chi vuole attaccare (finto attacco del 01/11). In locale resta su /docs.
+_DOCS_PUBBLICHE = not os.environ.get("RENDER") or os.environ.get("API_DOCS_PUBBLICHE", "").lower() == "true"
+app = FastAPI(title="Sconti Roma API",
+              docs_url="/docs" if _DOCS_PUBBLICHE else None,
+              redoc_url="/redoc" if _DOCS_PUBBLICHE else None,
+              openapi_url="/openapi.json" if _DOCS_PUBBLICHE else None)
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -257,12 +263,16 @@ def verify_password(pw: str, hashed: str) -> bool:
         return False
 
 
-def create_token(user_id: str, email: str, ttype: str = "access") -> str:
+def create_token(user_id: str, email: str, ttype: str = "access", tv: int = 0) -> str:
+    """tv = versione della sessione dell'account: cambiando la password sale di 1 e tutti i
+    token emessi prima smettono di valere."""
     if ttype == "access":
         exp = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TTL_MIN)
     else:
         exp = datetime.now(timezone.utc) + timedelta(days=REFRESH_TTL_DAYS)
     payload = {"sub": user_id, "email": email, "type": ttype, "exp": exp}
+    if tv:
+        payload["tv"] = int(tv)
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
@@ -278,7 +288,7 @@ _PRIVATE_USER_FIELDS = (
     "reset_token", "reset_expires", "reset_req_log",
     "email_confirmed", "email_confirm_token_hash", "email_confirm_expires", "email_confirm_req_log",
     "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log",
-    "login_failed_attempts", "pin_failed_attempts", "recovery_failed_attempts",
+    "login_failed_attempts", "pin_failed_attempts", "recovery_failed_attempts", "token_version",
     "webauthn_credentials", "webauthn_user_id",
     # PIN rimosso il 03/10: i campi possono restare negli account vecchi finché non rientrano.
     "pin_set", "pin_locked_until",
@@ -313,6 +323,8 @@ async def get_current_user(request: Request) -> dict:
         user = await db.users.find_one({"id": payload["sub"]})
         if not user:
             raise HTTPException(401, "Utente non trovato")
+        if int(payload.get("tv") or 0) != int(user.get("token_version") or 0):
+            raise HTTPException(401, "Sessione scaduta: accedi di nuovo")
         return sanitize_user(user)
     except jwt.ExpiredSignatureError:
         raise HTTPException(401, "Token scaduto")
@@ -440,8 +452,8 @@ async def user_has_active_sub(user_id: str) -> bool:
 # ---------- Pydantic Models ----------
 class RegisterIn(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
-    name: str
+    password: str = Field(min_length=8, max_length=200)
+    name: str = Field(max_length=120)
     role: Literal["client", "merchant"]
     # Merchant only:
     shop_name: Optional[str] = None
@@ -494,18 +506,19 @@ class LoginIn(BaseModel):
 
 
 class DiscountIn(BaseModel):
-    title: str
-    description: str
+    # Limiti di lunghezza: senza, si poteva gonfiare il database con testi enormi (finto attacco del 01/11).
+    title: str = Field(max_length=200)
+    description: str = Field(max_length=5000)
     original_price: float
     discounted_price: float
-    image_url: Optional[str] = None
+    image_url: Optional[str] = Field(None, max_length=3_000_000)  # può essere una foto in data URL
     # Galleria fino a 8 foto. La prima è la copertina (usata come thumbnail nelle liste).
-    image_urls: Optional[List[str]] = None
-    terms: Optional[str] = ""
+    image_urls: Optional[List[str]] = Field(None, max_length=8)
+    terms: Optional[str] = Field("", max_length=3000)
     # Sezioni informative stile Groupon (tutte opzionali)
-    plan_ahead: Optional[str] = ""       # "Pianifica in anticipo" (disdetta, prenotazione)
-    validity_info: Optional[str] = ""    # "Inclusioni ed esclusioni" (giorni/orari validità)
-    additional_info: Optional[str] = ""  # "Informazioni aggiuntive"
+    plan_ahead: Optional[str] = Field("", max_length=3000)       # "Pianifica in anticipo" (disdetta, prenotazione)
+    validity_info: Optional[str] = Field("", max_length=3000)    # "Inclusioni ed esclusioni" (giorni/orari validità)
+    additional_info: Optional[str] = Field("", max_length=3000)  # "Informazioni aggiuntive"
     active: bool = True
     # Numero massimo di volte che uno stesso abbonato può usare lo sconto nel mese in corso.
     # Default 1. Massimo 10 per prevenire abusi.
@@ -541,14 +554,14 @@ class DiscountIn(BaseModel):
 
 
 class MerchantProfileIn(BaseModel):
-    shop_name: Optional[str] = None
-    description: Optional[str] = None
+    shop_name: Optional[str] = Field(None, max_length=120)
+    description: Optional[str] = Field(None, max_length=3000)
     shop_description: Optional[str] = Field(None, max_length=1500)
-    zone: Optional[str] = None
-    category: Optional[str] = None
-    address: Optional[str] = None
-    image_url: Optional[str] = None
-    phone: Optional[str] = None
+    zone: Optional[str] = Field(None, max_length=80)
+    category: Optional[str] = Field(None, max_length=80)
+    address: Optional[str] = Field(None, max_length=300)
+    image_url: Optional[str] = Field(None, max_length=3_000_000)
+    phone: Optional[str] = Field(None, max_length=40)
 
 
 # ---------- Orari del negozio (li scrive il commerciante) ----------
@@ -1543,9 +1556,35 @@ _OLD_PIN_FIELDS = {f: "" for f in (
     "pin_reset_code_hash", "pin_reset_expires", "pin_reset_attempts", "pin_reset_req_log")}
 
 
+_login_falliti_ip: dict = {}
+
+
+def _login_ip_bloccato(ip: str) -> bool:
+    """Troppi accessi sbagliati dallo stesso IP (su qualsiasi account) nell'ultimo quarto d'ora."""
+    massimo = _soglia_env("LOGIN_FALLITI_MAX_PER_IP", 20)
+    if massimo <= 0:
+        return False
+    adesso = time.monotonic()
+    recenti = [t for t in _login_falliti_ip.get(ip, []) if adesso - t < 900]
+    _login_falliti_ip[ip] = recenti
+    return len(recenti) >= massimo
+
+
+def _login_ip_fallito(ip: str) -> None:
+    _login_falliti_ip.setdefault(ip, []).append(time.monotonic())
+    if len(_login_falliti_ip) > 5000:
+        adesso = time.monotonic()
+        for k in [k for k, v in _login_falliti_ip.items() if not v or adesso - v[-1] >= 900]:
+            _login_falliti_ip.pop(k, None)
+
+
 @api.post("/auth/login")
-async def login(payload: LoginIn, response: Response):
+async def login(payload: LoginIn, response: Response, request: Request):
     email = payload.email.lower().strip()
+    ip = hashlib.sha256(_ip_richiesta(request).encode()).hexdigest()[:16]
+    # Limite per IP: chi prova poche password su tanti account diversi si ferma qui.
+    if _login_ip_bloccato(ip):
+        raise HTTPException(429, "Troppi tentativi di accesso. Riprova tra 15 minuti.")
     user = await db.users.find_one({"email": email})
     if user:
         _lock_check(user, "login_locked_until")
@@ -1557,6 +1596,7 @@ async def login(payload: LoginIn, response: Response):
     # di 5 tentativi: la risposta non rivela se l'account esiste.
     ok = verify_password(payload.password, user["password_hash"] if user else _DUMMY_PASSWORD_HASH)
     if not user or not ok:
+        _login_ip_fallito(ip)
         if user:
             await _register_login_failure(email)
         else:
@@ -1568,8 +1608,8 @@ async def login(payload: LoginIn, response: Response):
         {"email": email},
         {"$set": {"login_failed_attempts": 0, "login_locked_until": None}, "$unset": _OLD_PIN_FIELDS},
     )
-    access = create_token(user["id"], user["email"], "access")
-    refresh = create_token(user["id"], user["email"], "refresh")
+    access = create_token(user["id"], user["email"], "access", user.get("token_version") or 0)
+    refresh = create_token(user["id"], user["email"], "refresh", user.get("token_version") or 0)
     set_auth_cookies(response, access, refresh)
     return {"user": sanitize_user(user), "access_token": access}
 
@@ -1609,7 +1649,7 @@ class ForgotIn(BaseModel):
 
 class ResetIn(BaseModel):
     token: str
-    new_password: str = Field(min_length=6)
+    new_password: str = Field(min_length=8, max_length=200)
 
 
 RESET_REQ_MIN_GAP_SEC = 60
@@ -1775,7 +1815,8 @@ async def webauthn_login_begin(payload: WebAuthnLoginBeginIn):
 @api.post("/webauthn/login/complete")
 async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Response):
     cid = payload.credential.get("id")
-    if not cid:
+    # Solo testo: un oggetto come {"$regex": ...} finirebbe dentro la ricerca nel database.
+    if not cid or not isinstance(cid, str) or len(cid) > 1024:
         raise HTTPException(400, "Credenziale non valida")
     u = await db.users.find_one({"webauthn_credentials.credential_id": cid})
     if not u:
@@ -1799,8 +1840,8 @@ async def webauthn_login_complete(payload: WebAuthnCompleteIn, response: Respons
         {"id": u["id"], "webauthn_credentials.credential_id": cid},
         {"$set": {"webauthn_credentials.$.sign_count": v.new_sign_count}, "$unset": _OLD_PIN_FIELDS},
     )
-    access = create_token(u["id"], u["email"], "access")
-    refresh = create_token(u["id"], u["email"], "refresh")
+    access = create_token(u["id"], u["email"], "access", u.get("token_version") or 0)
+    refresh = create_token(u["id"], u["email"], "refresh", u.get("token_version") or 0)
     set_auth_cookies(response, access, refresh)
     return {"user": sanitize_user(u), "access_token": access}
 
@@ -1822,8 +1863,9 @@ async def forgot_password(payload: ForgotIn, request: Request):
     if u and await _reset_request_allowed(u, "reset_req_log"):
         token = secrets.token_urlsafe(32)
         expires = datetime.now(timezone.utc) + timedelta(hours=1)
+        # Nel database solo l'impronta del codice: chi leggesse il database non può usarlo.
         await db.users.update_one({"id": u["id"]}, {"$set": {
-            "reset_token": token, "reset_expires": expires.isoformat(),
+            "reset_token": _impronta_reset(token), "reset_expires": expires.isoformat(),
         }})
         try:
             await send_password_reset(u["email"], u.get("name") or "utente", token)
@@ -1832,9 +1874,15 @@ async def forgot_password(payload: ForgotIn, request: Request):
     return {"ok": True, "message": GENERIC_RESET_MSG}
 
 
+def _impronta_reset(token: str) -> str:
+    return hashlib.sha256(("reset:" + (token or "")).encode()).hexdigest()
+
+
 @api.post("/auth/reset")
 async def reset_password(payload: ResetIn):
-    u = await db.users.find_one({"reset_token": payload.token})
+    if not (payload.token or "").strip():
+        raise HTTPException(400, "Codice non valido")
+    u = await db.users.find_one({"reset_token": _impronta_reset(payload.token)})
     if not u:
         raise HTTPException(400, "Codice non valido")
     try:
@@ -1848,6 +1896,8 @@ async def reset_password(payload: ResetIn):
     await db.users.update_one({"id": u["id"]}, {
         "$set": {"password_hash": hash_password(payload.new_password)},
         "$unset": {"reset_token": "", "reset_expires": ""},
+        # Nuova password: tutte le sessioni aperte prima (anche quelle di un eventuale intruso) scadono.
+        "$inc": {"token_version": 1},
     })
     # Aver ricevuto e usato il link di reset prova che l'indirizzo è suo: vale come conferma.
     if u.get("email_confirmed") is False:
@@ -1871,8 +1921,18 @@ _interesse_richieste: dict = {}
 
 
 def _ip_richiesta(request: Request) -> str:
-    inoltrato = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-    return inoltrato or (request.client.host if request.client else "sconosciuto")
+    """IP vero del client, non quello che il client dichiara.
+    Il primo valore di X-Forwarded-For lo scrive il client stesso: cambiandolo a ogni richiesta si
+    aggiravano i limiti anti-abuso (finto attacco del 01/11). Davanti al server c'è Cloudflare, che
+    scrive CF-Connecting-IP sovrascrivendo quello eventualmente mandato dal client; in mancanza si usa
+    l'ultimo valore di X-Forwarded-For, aggiunto dal proxy di Render."""
+    cf = (request.headers.get("cf-connecting-ip") or "").strip()
+    if cf:
+        return cf
+    catena = [p.strip() for p in (request.headers.get("x-forwarded-for") or "").split(",") if p.strip()]
+    if catena:
+        return catena[-1]
+    return request.client.host if request.client else "sconosciuto"
 
 
 def _interesse_consentito(ip: str) -> bool:
@@ -3322,7 +3382,9 @@ async def merchant_redemptions(user: dict = Depends(require_merchant)):
             returning = bool(first)
         out.append({
             "id": d.get("id"),
-            "code": d.get("code"),
+            # Codice in attesa nascosto: il negozio non deve poter convalidare da solo un uso mai avvenuto
+            # (gonfierebbe le statistiche e toglierebbe al cliente l'uso del mese).
+            "code": d.get("code") if d.get("status") == "redeemed" else None,
             "status": d.get("status"),
             "created_at": d.get("created_at"),
             "redeemed_at": d.get("redeemed_at"),
@@ -3933,6 +3995,11 @@ async def _stripe_evento_negozio(event) -> Optional[dict]:
 async def stripe_webhook(request: Request):
     payload = await request.body()
     sig = request.headers.get("stripe-signature", "")
+    # Con un segreto vuoto o segnaposto (es. «da-impostare») chiunque potrebbe firmare un evento finto:
+    # in quel caso il webhook resta chiuso finché non si imposta il segreto vero di Stripe (whsec_...).
+    if not STRIPE_WEBHOOK_SECRET.startswith("whsec_"):
+        logger.warning("[stripe] webhook rifiutato: STRIPE_WEBHOOK_SECRET mancante o non valido")
+        raise HTTPException(503, "Webhook non configurato")
     try:
         event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
     except Exception:
@@ -4849,9 +4916,25 @@ async def admin_push_chiave_pubblica(user: dict = Depends(require_admin_master))
     return {"public_key": chiavi["public_key"], "iscrizioni": iscritti}
 
 
+# Servizi push ufficiali dei browser: un'iscrizione verso altri indirizzi farebbe contattare al server
+# indirizzi qualsiasi, anche interni (finto attacco del 01/11).
+_PUSH_HOST_UFFICIALI = ("fcm.googleapis.com", "android.googleapis.com", "updates.push.services.mozilla.com",
+                        "web.push.apple.com", "notify.windows.com", "push.services.mozilla.com")
+
+
+def _push_endpoint_valido(endpoint: str) -> bool:
+    try:
+        u = urlparse(endpoint or "")
+    except Exception:
+        return False
+    host = (u.hostname or "").lower()
+    extra = tuple(h.strip().lower() for h in os.environ.get("PUSH_HOST_EXTRA", "").split(",") if h.strip())
+    return u.scheme == "https" and any(host == h or host.endswith("." + h) for h in _PUSH_HOST_UFFICIALI + extra)
+
+
 @api.post("/admin/push/iscrizione")
 async def admin_push_iscrizione(payload: PushIscrizioneIn, user: dict = Depends(require_admin_master)):
-    if not payload.endpoint.startswith("https://"):
+    if not _push_endpoint_valido(payload.endpoint):
         raise HTTPException(422, "Iscrizione non valida")
     now_iso = datetime.now(timezone.utc).isoformat()
     esistente = await db.admin_push_iscrizioni.find_one({"endpoint": payload.endpoint})
@@ -4923,7 +5006,7 @@ async def push_stato(user: dict = Depends(require_push_utente)):
 
 @api.post("/push/iscrizione")
 async def push_iscrizione(payload: PushIscrizioneIn, user: dict = Depends(require_push_utente)):
-    if not payload.endpoint.startswith("https://"):
+    if not _push_endpoint_valido(payload.endpoint):
         raise HTTPException(422, "Iscrizione non valida")
     now_iso = datetime.now(timezone.utc).isoformat()
     esistente = await db.push_iscrizioni.find_one({"endpoint": payload.endpoint}, {"_id": 0, "user_id": 1})
@@ -7784,6 +7867,17 @@ async def ai_enhance_image(payload: ImageEnhanceIn, user: dict = Depends(require
     gemini_key = os.environ.get("GEMINI_API_KEY")
     if not gemini_key:
         raise HTTPException(503, "AI enhancer non configurato (GEMINI_API_KEY mancante)")
+    # Ogni foto ritoccata costa: niente ai negozi sospesi e un tetto al giorno per negozio.
+    if user.get("approved") is False:
+        raise HTTPException(403, "Negozio sospeso")
+    oggi = _rome_day()
+    massimo = _soglia_env("AI_FOTO_MAX_AL_GIORNO", 15)
+    if massimo > 0:
+        uso = await db.ai_usage.find_one_and_update(
+            {"merchant_id": user["id"], "giorno": oggi},
+            {"$inc": {"n": 1}}, upsert=True, return_document=ReturnDocument.AFTER)
+        if (uso or {}).get("n", 0) > massimo:
+            raise HTTPException(429, f"Hai già ritoccato {massimo} foto oggi: riprova domani.")
 
     raw_url = (payload.image_url or "").strip()
     if not raw_url:
@@ -8813,6 +8907,8 @@ async def intestazioni_sicurezza(request: Request, call_next):
     risposta.headers.setdefault("X-Content-Type-Options", "nosniff")
     risposta.headers.setdefault("X-Frame-Options", "DENY")
     risposta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # HSTS: il browser userà sempre e solo HTTPS per questo dominio per un anno.
+    risposta.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
     return risposta
 
 
