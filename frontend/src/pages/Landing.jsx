@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, MapPin, ArrowRight, Heart } from "lucide-react";
 import { useEffect } from "react";
 import BrandMark from "@/components/BrandMark";
-import PrelaunchHome from "@/components/PrelaunchHome";
 import { useAppConfig } from "@/context/ConfigContext";
 
 // Foto di Roma copiate sul nostro sito (frontend/public/foto): nessun servizio esterno
@@ -33,7 +32,7 @@ export default function Landing() {
     registraVisitaFonte(params.get("fonte"), "cliente", (fonte, tipo) => api.post("/fonte/visita", { fonte, tipo }).catch(() => {}));
   }, [params]);
 
-  // Modalità pre-lancio (spenta di norma): al posto della home c'è «Stiamo arrivando» con la lista d'attesa.
+  // (La modalità pre-lancio con la lista d'attesa è stata tolta il 02/11: l'app è aperta a tutti.)
   // Finché il server non ha risposto non si mostra la home vera, per non far vedere a chi arriva prima del lancio
   // un invito a registrarsi che non deve ancora esserci.
   if (!config.loaded) {
@@ -43,7 +42,6 @@ export default function Landing() {
       </main>
     );
   }
-  if (config.prelaunch) return <PrelaunchHome />;
 
   return (
     <main data-testid="landing-page" className="min-h-screen bg-background text-foreground overflow-hidden">
