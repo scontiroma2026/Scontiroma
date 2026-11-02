@@ -276,8 +276,7 @@ async function testoPagina(page, url) {
   });
 }
 
-test('sito pubblico (pre-lancio SPENTO): nessuna promessa vietata, percentuale, marchio o zona pilota', async ({ page, request }) => {
-  await interruttore(request, 'prelancio', false);
+test('sito pubblico: nessuna promessa vietata, percentuale, marchio o zona pilota', async ({ page }) => {
   const trovati = [];
   for (const url of PAGINE_PUBBLICHE) {
     const testo = await testoPagina(page, url);
@@ -288,60 +287,6 @@ test('sito pubblico (pre-lancio SPENTO): nessuna promessa vietata, percentuale, 
     }
   }
   expect(trovati, trovati.join('\n')).toEqual([]);
-});
-
-test('sito pubblico (pre-lancio ACCESO): «stiamo arrivando», 18+, nessuna data, percentuale, marchio o zona pilota', async ({ page, request }) => {
-  await interruttore(request, 'prelancio', true);
-  try {
-    const trovati = [];
-    for (const url of ['/', '/discounts', ...PAGINE_PUBBLICHE.slice(1)]) {
-      const testo = await testoPagina(page, url);
-      if (url === '/') {
-        expect(testo).toMatch(/Stiamo arrivando/i);
-        expect(testo).toContain('maggiorenni (18+)');
-        // l'anno del copyright in fondo («© 2026») non è una data di lancio
-        expect(testo.replace(/©\s*20\d\d/g, '')).not.toMatch(/\b\d{1,2}\s?\/\s?\d{1,2}\b|\b(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\b|\b20\d\d\b/i);
-      }
-      if (url === '/discounts') continue; // il catalogo vuoto è già controllato in 33; qui solo la home e le pagine fisse
-      for (const [re, nome] of VIETATI) {
-        const m = testo.match(re);
-        if (m) trovati.push(`${url}: ${nome} «${m[0]}»`);
-      }
-    }
-    expect(trovati, trovati.join('\n')).toEqual([]);
-    // anche i dati letti dal sito (configurazione pubblica) non contengono date di lancio
-    const cfg = await chiama(request, 'GET', '/config/public');
-    expect(cfg.data.prelaunch_mode).toBe(true);
-    expect(JSON.stringify(cfg.data)).not.toMatch(/launch_date|data_lancio|\b2026-1[0-2]-\d\d\b/);
-  } finally {
-    await interruttore(request, 'prelancio', false);
-  }
-});
-
-test('pre-lancio: i clienti non si registrano (lista d\'attesa), i negozi sì; a pre-lancio spento tutto come prima', async ({ page, request }) => {
-  await interruttore(request, 'prelancio', true);
-  try {
-    await page.goto('/register');
-    await expect(page.getByTestId('register-prelancio')).toContainText('Stiamo arrivando');
-    await expect(page.getByTestId('lista-attesa-reg-form')).toBeVisible();
-    await expect(page.getByTestId('reg-submit')).toHaveCount(0);
-    expect(await scrollOrizzontale(page)).toBeLessThanOrEqual(0);
-    const rifiutato = await chiama(request, 'POST', '/auth/register', { body: {
-      legal_accepted: true, email: unico('pre-cliente'), password: PASSWORD, name: 'Giulia Prova', role: 'client' } });
-    expect(rifiutato.status).toBe(403);
-    // i negozi continuano a registrarsi
-    await page.getByTestId('role-merchant').click();
-    await expect(page.getByTestId('reg-submit')).toBeVisible();
-    await expect(page.getByTestId('register-prelancio')).toHaveCount(0);
-    const negozio = await registra(request, 'merchant');
-    expect(negozio.token).toBeTruthy();
-  } finally {
-    await interruttore(request, 'prelancio', false);
-  }
-  await page.goto('/register');
-  await expect(page.getByTestId('reg-submit')).toBeVisible();
-  const cliente = await registra(request, 'client');
-  expect(cliente.token).toBeTruthy();
 });
 
 test('pagine incorporate nel sito: titolo e descrizione senza zone pilota né percentuali', async ({ request }) => {
@@ -356,23 +301,6 @@ test('pagine incorporate nel sito: titolo e descrizione senza zone pilota né pe
 
 // ---------------------------------------------------------------------------------------------
 // 5. LISTA D'ATTESA: tetto giornaliero e parola AVVISA
-// ---------------------------------------------------------------------------------------------
-test('lista d\'attesa: tetto giornaliero 80 e senza la parola AVVISA non parte nulla', async ({ request }) => {
-  const a = await admin(request);
-  const stato = await chiama(request, 'GET', '/admin/lista-attesa', { token: a.token, headers: a.headers });
-  expect(stato.status).toBe(200);
-  expect(stato.data.avviso.tetto_giornaliero).toBe(80);
-  for (const conferma of ['', 'avvisa tutti', 'LANCIA']) {
-    const r = await chiama(request, 'POST', '/admin/lista-attesa/invia-avviso', { token: a.token, headers: a.headers, body: { conferma } });
-    expect(r.status, `parola «${conferma}»`).toBe(400);
-  }
-  // senza la password master dell'admin la rotta non si apre
-  const senza = await chiama(request, 'POST', '/admin/lista-attesa/invia-avviso', { token: a.token, body: { conferma: 'AVVISA' } });
-  expect([401, 403]).toContain(senza.status);
-});
-
-// ---------------------------------------------------------------------------------------------
-// 6. INTESTAZIONI E ORIGINI (sul server di prova, come vengono viste dal telefono)
 // ---------------------------------------------------------------------------------------------
 test('server: intestazioni di sicurezza e nessun permesso CORS ai siti estranei', async ({ request }) => {
   const ok = await request.get(`${API}/api/`, { headers: { Origin: 'http://localhost:3000' } });

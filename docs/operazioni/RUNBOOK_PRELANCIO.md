@@ -1,5 +1,7 @@
 # Runbook pre-lancio e giorno del lancio (18/10 – 31/10/2026)
 
+> **Superato (02/11):** l'app è aperta a tutti e la lista d'attesa con la modalità pre-lancio è stata tolta. Le parti su lista d'attesa e avviso di lancio non valgono più; il documento resta come storico.
+
 Ultimo aggiornamento: 14/10/2026. Scritto per iPhone. **Nessun passo è stato eseguito**: è un piano. Nessun dato personale, password o chiave qui (repository pubblico).
 
 Chi: **Titolare** = tu; **Claude** = prepara, controlla, scrive bozze, **non** pubblica, non contatta nessuno, non scrive sul database vero; **Consulente** = legale/privacy; **Commercialista**.

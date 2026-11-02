@@ -10,11 +10,6 @@ os.environ.setdefault("RESET_MAX_PER_CLIENT_ORA", "0")
 os.environ.setdefault("CLIENT_EMAIL_CONFIRMATION_REQUIRED", "false")
 os.environ.setdefault("CONFERMA_MAX_PER_CLIENT_10MIN", "0")
 os.environ.setdefault("CONFERMA_MAX_PER_CLIENT_ORA", "0")
-# Lista d'attesa pre-lancio: modalità spenta e limiti per client spenti nei test esistenti; il test dedicato
-# (test_lista_attesa.py) accende e imposta da solo ciò che gli serve. Mai invii veri (RESEND_API_KEY vuota).
-os.environ.setdefault("PRELAUNCH_MODE", "false")
-os.environ.setdefault("WAITLIST_MAX_PER_CLIENT_10MIN", "0")
-os.environ.setdefault("WAITLIST_MAX_PER_CLIENT_ORA", "0")
 # Notifiche push: i test usano un servizio finto (push.example.com) oltre a quelli ufficiali dei browser.
 os.environ.setdefault("PUSH_HOST_EXTRA", "push.example.com")
 # Limite per IP sui login sbagliati: spento nei test esistenti (molti login sbagliati dallo stesso client finto).

@@ -54,14 +54,11 @@ def test_cors_origine_estranea_non_riceve_il_permesso():
 
 def test_valori_predefiniti_sicuri_senza_variabili(monkeypatch):
     """Se su Render una variabile manca, il server deve cadere sul valore prudente."""
-    for nome in ("CLIENT_SUBSCRIPTION_REQUIRED", "MERCHANT_PAYMENT_REQUIRED", "PRELAUNCH_MODE",
-                 "CLIENT_EMAIL_CONFIRMATION_REQUIRED", "WAITLIST_DAILY_CAP"):
+    for nome in ("CLIENT_SUBSCRIPTION_REQUIRED", "MERCHANT_PAYMENT_REQUIRED", "CLIENT_EMAIL_CONFIRMATION_REQUIRED"):
         monkeypatch.delenv(nome, raising=False)
     assert server.client_subscription_required() is False       # nessun pagamento dei clienti
     assert server.merchant_payment_required() is False          # nessun addebito ai commercianti
-    assert server.prelaunch_mode() is False                     # il sito vero non cambia
     assert server.client_email_confirmation_required() is True  # conferma email dei clienti accesa
-    assert server._soglia_env("WAITLIST_DAILY_CAP", 80) == 80   # tetto giornaliero dell'avviso di lancio
 
 
 def test_render_yaml_valori_prudenti_e_nessun_segreto():

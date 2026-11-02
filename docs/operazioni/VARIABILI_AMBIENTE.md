@@ -42,22 +42,19 @@ Legenda: 🔒 = segreto (solo su Render, mai in chat, PR o file) · ⚙️ = non
 
 ### Interruttori di lancio (valori per il 19/10: vedi `PROVA_GENERALE.md`)
 
+> La lista d'attesa e `PRELAUNCH_MODE` sono stati tolti il 02/11: se `PRELAUNCH_MODE` o le variabili `WAITLIST_*` sono ancora su Render, si possono cancellare (non hanno più effetto).
+
 | Nome | Tipo | Valore oggi | Valore al lancio | Senza |
 |---|---|---|---|---|
-| `PRELAUNCH_MODE` | ⚙️ | `true` solo se il titolare decide la campagna dal 19/10 | `false` il giorno del lancio | `false` |
 | `CLIENT_EMAIL_CONFIRMATION_REQUIRED` | ⚙️ | `true` | `true` | **`true`** (acceso anche se la variabile manca) |
 | `CLIENT_SUBSCRIPTION_REQUIRED` | ⚙️ | `false` (già in `render.yaml`) | `false` | `false` |
 | `MERCHANT_PAYMENT_REQUIRED` | ⚙️ | `false` | `false` fino alla conferma esplicita del titolare | `false` |
 | `TRIAL_END_DATE` | ⚙️ | **vuota** (nessuna data per ora) | vuota | nessun banner di fine prova |
 
-### Lista d'attesa e limiti anti-abuso (i valori predefiniti vanno bene: non impostarli)
+### Limiti anti-abuso (i valori predefiniti vanno bene: non impostarli)
 
 | Nome | Predefinito | A cosa serve |
 |---|---|---|
-| `WAITLIST_DAILY_CAP` | `80` | massimo di email «siamo online» al giorno (le altre il giorno dopo); `0` = nessun tetto, **non usarlo** |
-| `WAITLIST_LOTTO` | `20` | email per lotto |
-| `WAITLIST_PAUSA_MESSAGGIO_SEC` / `WAITLIST_PAUSA_LOTTO_SEC` | `0.6` / `3.0` | pause tra un'email e l'altra, per non far arrabbiare il fornitore |
-| `WAITLIST_MAX_PER_CLIENT_10MIN` / `_ORA` | `3` / `5` | iscrizioni alla lista dallo stesso dispositivo |
 | `REGISTRAZIONI_MAX_PER_FINESTRA` / `REGISTRAZIONI_FINESTRA_SEC` | `10` / `600` | registrazioni dallo stesso dispositivo (`0` = spento) |
 | `RESET_MAX_PER_CLIENT_10MIN` / `_ORA` | `3` / `5` | richieste di reset password dallo stesso dispositivo |
 | `CONFERMA_MAX_PER_CLIENT_10MIN` / `_ORA` | `3` / `5` | «Rimanda l'email» di conferma dallo stesso dispositivo |
@@ -99,5 +96,5 @@ Le variabili del sito si leggono **a compilazione**: cambiarle richiede una nuov
 
 - `render.yaml` non contiene valori segreti (test `backend/tests/test_prova_generale.py`).
 - Tutte le variabili lette dal codice sono nell'elenco qui sopra (controllato con una ricerca nel codice).
-- **Non elencate in `render.yaml`** (si impostano a mano nel pannello di Render): `PRELAUNCH_MODE`, `CLIENT_EMAIL_CONFIRMATION_REQUIRED`, `MERCHANT_PAYMENT_REQUIRED`, `REPLY_TO_EMAIL`, `TRIAL_END_DATE`, `PAYPAL_PLAN_ID`. Non le abbiamo aggiunte al file per non sovrascrivere i valori già messi nel pannello alla prossima sincronizzazione.
+- **Non elencate in `render.yaml`** (si impostano a mano nel pannello di Render): `CLIENT_EMAIL_CONFIRMATION_REQUIRED`, `MERCHANT_PAYMENT_REQUIRED`, `REPLY_TO_EMAIL`, `TRIAL_END_DATE`, `PAYPAL_PLAN_ID`. Non le abbiamo aggiunte al file per non sovrascrivere i valori già messi nel pannello alla prossima sincronizzazione.
 - `render.yaml` chiama i servizi `scontiroma-api` / `scontiroma-web`, quelli veri hanno il suffisso `-xqib`: il file è una ricetta di partenza, non lo specchio esatto di ciò che gira. Le nuove intestazioni di sicurezza del sito valgono solo dopo una sincronizzazione del file o inserendole a mano in Render → sito → Headers.
