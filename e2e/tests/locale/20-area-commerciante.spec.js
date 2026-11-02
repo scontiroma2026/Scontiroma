@@ -38,17 +38,17 @@ test('area commerciante: fondo chiaro, Manrope, nessuno scroll orizzontale a 390
         famiglie: [...famiglie].sort(),
         eccesso: document.documentElement.scrollWidth - window.innerWidth,
         manrope: document.fonts.check('400 16px Manrope'),
-        fraunces: document.fonts.check('700 30px Fraunces'),
+        bricolage: document.fonts.check('800 30px "Bricolage Grotesque"'),
       };
     });
 
     expect(r.lumBody, `${url}: fondo ${r.sfondoBody}`).toBeGreaterThan(0.9); // bianco o quasi
     expect(r.lumTesto, `${url}: il testo deve essere scuro`).toBeLessThan(0.1);
-    expect(r.h1, url).toBe('Manrope');
+    expect(r.h1, url).toBe('Bricolage Grotesque');
     expect(r.famiglie, `${url}: famiglie di carattere usate`).toEqual(expect.arrayContaining(['Manrope']));
-    for (const f of r.famiglie) expect(['Fraunces', 'Manrope'], `${url}: carattere inatteso ${f}`).toContain(f);
+    for (const f of r.famiglie) expect(['Bricolage Grotesque', 'Manrope', 'Caveat Brush'], `${url}: carattere inatteso ${f}`).toContain(f);
     expect(r.eccesso, `${url}: scroll orizzontale`).toBeLessThanOrEqual(0);
-    expect(r.manrope).toBe(true); // i titoli sono ora in Manrope: Fraunces non si carica più su queste pagine
+    expect(r.manrope).toBe(true); // testo in Manrope, titoli in Bricolage Grotesque (02/11)
   }
 });
 

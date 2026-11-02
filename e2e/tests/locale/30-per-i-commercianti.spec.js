@@ -96,5 +96,5 @@ test('per i commercianti: 44 px, contrasto, caratteri e niente scroll orizzontal
   expect(r.piccoli, 'elementi sotto i 44 px').toEqual([]);
   expect(r.errori, 'contrasto sotto soglia').toEqual([]);
   expect(r.eccesso).toBeLessThanOrEqual(0);
-  for (const f of r.famiglie) expect(['Fraunces', 'Manrope']).toContain(f);
+  for (const f of r.famiglie) expect(['Bricolage Grotesque', 'Manrope', 'Caveat Brush']).toContain(f);
 });
