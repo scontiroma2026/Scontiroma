@@ -208,3 +208,26 @@ def test_statistiche_per_mese_con_archivio(monkeypatch):
         assert (await c.get("/api/admin/traffic?mese=2999-01", headers=ah)).json()["mese"] == mese
         assert (await c.get("/api/admin/traffic?mese=abc", headers=ah)).json()["mese"] == mese
     run(body)
+
+
+def test_iscrizioni_per_fonte_del_mese_con_archivio(monkeypatch):
+    """Il riquadro «Iscrizioni per fonte» conta il mese in corso (clienti e negozi); i mesi passati nell'archivio."""
+    monkeypatch.setenv("ADMIN_MASTER_PASSWORD", "master-test-123456")
+
+    async def body(c):
+        adesso = datetime.now(timezone.utc)
+        prima = (adesso.replace(day=1) - timedelta(days=10))
+        await utente("client", fonte_iscrizione="instagram", fonte_iscrizione_at=adesso.isoformat())
+        await utente("merchant", shop_name="Bar", fonte_iscrizione="instagram", fonte_iscrizione_at=adesso.isoformat())
+        await utente("client", fonte_iscrizione="volantino-b", fonte_iscrizione_at=prima.isoformat())
+        aid, ah = await utente("admin")
+        mm = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
+        ah = {**ah, "X-Admin-Master": mm.cookies["admin_master_token"]}
+        d = (await c.get("/api/admin/iscrizioni-per-fonte", headers=ah)).json()
+        assert d["mese"] == server.current_month_key()
+        assert d["fonti"] == [{"fonte": "instagram", "clienti": 1, "negozi": 1}]
+        mese_prima = d["archivio"][0]["mese"]
+        d = (await c.get(f"/api/admin/iscrizioni-per-fonte?mese={mese_prima}", headers=ah)).json()
+        assert d["fonti"] == [{"fonte": "volantino-b", "clienti": 1, "negozi": 0}]
+        assert "@" not in str(d)
+    run(body)
