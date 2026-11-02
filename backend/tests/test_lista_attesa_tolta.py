@@ -2,24 +2,41 @@
 modalità pre-lancio, e le iscrizioni rimaste nel database vengono cancellate all'avvio."""
 import asyncio
 import os
+from urllib.parse import urlparse
 
-os.environ.setdefault("TEST_MONGO_URL", "mongomock://x")
-os.environ["MONGO_URL"] = "mongodb://localhost:27017"
-os.environ.setdefault("DB_NAME", "e2e_unit_lista_tolta")
+import pytest
+
+MONGO_URL = os.environ.setdefault("TEST_MONGO_URL", os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+_u = urlparse(MONGO_URL)
+if not (_u.scheme == "mongomock" or (_u.scheme == "mongodb" and (_u.hostname or "") in ("localhost", "127.0.0.1", "::1"))):
+    pytest.exit(f"MONGO_URL non locale ({_u.scheme}://{_u.hostname}): test rifiutati.", returncode=2)
+USE_MOCK = _u.scheme == "mongomock"
+DB_NAME = "e2e_unit_lista_tolta"
+os.environ["MONGO_URL"] = "mongodb://localhost:27017" if USE_MOCK else MONGO_URL
+os.environ.setdefault("DB_NAME", DB_NAME)
 os.environ.setdefault("JWT_SECRET", "test-unit-secret-0123456789abcdef")
 os.environ["RESEND_API_KEY"] = ""
 
 import httpx  # noqa: E402
-import mongomock_motor  # noqa: E402
 
 import server  # noqa: E402
+
+
+async def _db():
+    if USE_MOCK:
+        import mongomock_motor
+        return mongomock_motor.AsyncMongoMockClient()[DB_NAME]
+    from motor.motor_asyncio import AsyncIOMotorClient
+    cli = AsyncIOMotorClient(MONGO_URL)
+    await cli.drop_database(DB_NAME)
+    return cli[DB_NAME]
 
 
 def test_rotte_e_dati_della_lista_tolti(monkeypatch):
     monkeypatch.setenv("PRELAUNCH_MODE", "true")  # anche se la variabile resta su Render, non cambia più nulla
 
     async def main():
-        server.db = mongomock_motor.AsyncMongoMockClient()["e2e_unit_lista_tolta"]
+        server.db = await _db()
         await server.db.waitlist.insert_many([{"id": "a", "email": "a@example.com"}, {"id": "b", "email": "b@example.com"}])
         await server.db.settings.insert_one({"key": "avviso_lancio_automatico", "attivo": True})
         assert await server._togli_lista_attesa() == 2
