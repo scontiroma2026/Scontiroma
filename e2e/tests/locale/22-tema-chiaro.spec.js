@@ -1,4 +1,4 @@
-// Tema chiaro «Bianco vivo» su tutto il sito: fondo chiaro, solo Fraunces e Manrope, nessuno scroll
+// Tema chiaro «Bianco vivo» su tutto il sito: fondo chiaro, solo Bricolage Grotesque, Manrope e l'accento Caveat Brush, nessuno scroll
 // orizzontale a 390 px e testo con contrasto di almeno 4.5:1 (3:1 per i testi grandi).
 // La locandina stampabile (/locandina) è un foglio da stampare e resta fuori da questi controlli.
 const { test, expect, registra, creaOffertaApprovata, loginNelBrowser } = require('../fixtures');
@@ -91,7 +91,7 @@ async function controlla(page, nome) {
   await page.waitForTimeout(400);
   const r = await page.evaluate(misura);
   expect.soft(r.lumFondo, `${nome}: il fondo deve essere chiaro`).toBeGreaterThan(0.9);
-  for (const f of r.famiglie) expect.soft(['Fraunces', 'Manrope'], `${nome}: carattere inatteso ${f}`).toContain(f);
+  for (const f of r.famiglie) expect.soft(['Bricolage Grotesque', 'Manrope', 'Caveat Brush'], `${nome}: carattere inatteso ${f}`).toContain(f);
   expect.soft(r.eccesso, `${nome}: scroll orizzontale`).toBeLessThanOrEqual(0);
   expect.soft(r.errori, `${nome}: contrasto sotto soglia`).toEqual([]);
   expect.soft(r.piccoli, `${nome}: pulsanti o campi sotto i 44 px`).toEqual([]);
@@ -109,7 +109,7 @@ test('tema chiaro: pagine pubbliche', async ({ page, request }) => {
     await controlla(page, url);
   }
   const h1 = await page.goto('/').then(() => page.evaluate(() => getComputedStyle(document.querySelector('h1')).fontFamily));
-  expect(h1).toMatch(/^"?Manrope/);
+  expect(h1).toMatch(/^"?Bricolage Grotesque/);
 });
 
 test('tema chiaro: banner dei cookie e delle stelle', async ({ page, request }) => {

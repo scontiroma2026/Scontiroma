@@ -7,9 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Titoli in Manrope su tutti i telefoni (la classe font-serif resta per compatibilità)
+      // Titoli in Bricolage Grotesque (02/11; la classe font-serif resta per compatibilità)
       fontFamily: {
-        serif: ['Manrope', 'system-ui', 'sans-serif'],
+        serif: ['Bricolage Grotesque', 'Manrope', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',

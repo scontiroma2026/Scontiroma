@@ -5,7 +5,7 @@
  *
  * - Fondo bianco, testo scuro (#1A1530); accenti vivi: fucsia #D81B72, viola #6D4AFF, teal #00798C, verde #127A47.
  * - Pulsanti pieni o a gradiente fucsia-viola con testo bianco.
- * - Due soli caratteri: Fraunces (titoli) e Manrope (testo), ospitati in /fonts (fonts.css).
+ * - Caratteri: Bricolage Grotesque (titoli) e Manrope (testo), più Caveat Brush solo per l'accento «pennello»; in /fonts (fonts.css).
  * - Le variabili qui sotto ridisegnano anche i componenti condivisi (Input, Card, Switch...) senza toccarli.
  *   Nelle pagine si usano i token (text-foreground, text-muted-foreground, bg-muted, border-border...)
  *   o i colori `ac-*` / `fucsia` / `ciano` del file tailwind.config.js: mai bianco/nero sparsi.
@@ -39,11 +39,12 @@ html, body, .App {
   color: #1a1530;
 }
 
-/* Titoli in Manrope (scelta del titolare, 13/10): niente carattere monospazio */
+/* Titoli in Bricolage Grotesque (scelta del titolare, 02/11; prima Manrope), compatti */
 h1, h2, h3, h4 {
-  font-family: 'Manrope', system-ui, sans-serif;
+  font-family: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 .font-testo,
 .font-mono,

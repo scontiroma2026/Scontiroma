@@ -47,7 +47,7 @@ export default function PerICommercianti() {
     <main data-testid="per-i-commercianti-page" className="mx-auto max-w-3xl px-6 py-12 text-foreground">
       <div className="text-xs uppercase tracking-[0.2em] text-gold">Per i commercianti</div>
       <h1 className="mt-2 font-serif text-4xl sm:text-5xl text-foreground">
-        Nuovi clienti vicino al tuo negozio
+        Nuovi clienti <span className="pennello">vicino al tuo negozio</span>
       </h1>
       <p className="mt-4 text-muted-foreground leading-relaxed">
         Sconti Roma porta nel tuo negozio le persone che abitano vicino a te, a Roma e dintorni.
