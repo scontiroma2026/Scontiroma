@@ -30,27 +30,56 @@ function Bars({ days, values, color }) {
   );
 }
 
+/** Menu dell'archivio: i mesi passati con dati. Vuoto = mese in corso. */
+export function ArchivioMesi({ archivio, mese, onScegli, testid }) {
+  if (!archivio || archivio.length === 0) return null;
+  return (
+    <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      Archivio mesi precedenti:
+      <select data-testid={testid} value={mese || ""} onChange={(e) => onScegli(e.target.value || null)}
+        className="min-h-11 rounded-lg border border-border bg-card px-3 text-foreground">
+        <option value="">Mese in corso</option>
+        {archivio.map((a) => <option key={a.mese} value={a.mese}>{a.etichetta}</option>)}
+      </select>
+    </label>
+  );
+}
+
 export default function AdminTraffic({ hdrs }) {
   const [data, setData] = useState(null);
+  const [mese, setMese] = useState(null); // null = mese in corso (riparte ogni 1° del mese)
 
   useEffect(() => {
-    api.get("/admin/traffic", hdrs())
+    setData(null);
+    api.get("/admin/traffic", { ...hdrs(), params: mese ? { mese } : {} })
       .then((r) => setData(r.data))
       .catch((err) => toast.error(formatApiError(err)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- caricamento singolo al mount
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- si ricarica solo cambiando mese
+  }, [mese]);
 
   if (!data) return <div className="text-muted-foreground">Caricamento…</div>;
 
+  const archiviato = Boolean(mese);
   const kpi = [
-    { icon: Users, label: "Visitatori unici oggi", value: data.today.visitors, color: "text-ciano" },
-    { icon: Eye, label: "Aperture app oggi", value: data.today.opens, color: "text-fucsia" },
-    { icon: BarChart3, label: "Pagine viste (30gg)", value: data.totals_30d.pageviews, color: "text-gold" },
-    { icon: MousePointerClick, label: "Aperture (30gg)", value: data.totals_30d.opens, color: "text-emerald-700" },
+    ...(archiviato ? [] : [
+      { icon: Users, label: "Visitatori unici oggi", value: data.today.visitors, color: "text-ciano" },
+      { icon: Eye, label: "Aperture app oggi", value: data.today.opens, color: "text-fucsia" },
+    ]),
+    { icon: BarChart3, label: `Pagine viste (${data.etichetta})`, value: data.totals_mese.pageviews, color: "text-gold" },
+    { icon: MousePointerClick, label: `Aperture (${data.etichetta})`, value: data.totals_mese.opens, color: "text-emerald-700" },
   ];
 
   return (
     <div data-testid="admin-traffic" className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 data-testid="traffic-mese" className="font-serif text-2xl text-foreground">
+          {archiviato ? `Archivio: ${data.etichetta}` : `Mese in corso: ${data.etichetta}`}
+        </h3>
+        <ArchivioMesi archivio={data.archivio} mese={mese} onScegli={setMese} testid="traffic-archivio" />
+      </div>
+      {!archiviato && (
+        <p className="-mt-3 text-xs text-muted-foreground">I numeri ripartono da zero ogni 1° del mese; i mesi passati restano nell'archivio.</p>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpi.map((c) => (
           <Card key={c.label} className="border-border bg-muted p-5">
@@ -64,18 +93,18 @@ export default function AdminTraffic({ hdrs }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-border bg-card p-5">
-          <div className="text-xs uppercase tracking-wider text-ciano">Visitatori unici — ultimi 30 giorni</div>
+          <div className="text-xs uppercase tracking-wider text-ciano">Visitatori unici — giorno per giorno</div>
           <div className="mt-4"><Bars days={data.days} values={data.series.visitors} color="bg-ciano" /></div>
         </Card>
         <Card className="border-border bg-card p-5">
-          <div className="text-xs uppercase tracking-wider text-fucsia">Aperture app — ultimi 30 giorni</div>
+          <div className="text-xs uppercase tracking-wider text-fucsia">Aperture app — giorno per giorno</div>
           <div className="mt-4"><Bars days={data.days} values={data.series.opens} color="bg-fucsia" /></div>
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-border bg-card p-5">
-          <div className="text-xs uppercase tracking-wider text-gold">Pagine più viste (30gg)</div>
+          <div className="text-xs uppercase tracking-wider text-gold">Pagine più viste ({data.etichetta})</div>
           <div className="mt-3 space-y-1.5">
             {data.top_pages.map((p) => (
               <div key={p.path} className="flex items-center justify-between text-sm">
@@ -87,7 +116,7 @@ export default function AdminTraffic({ hdrs }) {
           </div>
         </Card>
         <Card className="border-border bg-card p-5">
-          <div className="text-xs uppercase tracking-wider text-emerald-700">Click chiave (30gg)</div>
+          <div className="text-xs uppercase tracking-wider text-emerald-700">Click chiave ({data.etichetta})</div>
           <div className="mt-3 space-y-1.5">
             {data.clicks.map((c) => (
               <div key={c.name} className="flex items-center justify-between text-sm">
