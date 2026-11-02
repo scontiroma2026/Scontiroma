@@ -4,6 +4,8 @@ Tutto `[DA VALIDARE]`: testi chiusi dall'agente `legale`, non validati da un avv
 
 Legenda: 🔴 prima di accendere il pre-lancio · 🟠 da valutare · 🟢 di conferma.
 
+> **Punto 13 superato il 02/11/2026:** la lista d'attesa è stata tolta (PR #243) e le iscrizioni cancellate. Le righe del punto 13 qui sotto restano solo come storia; i dubbi rimasti sono in `LISTA_PER_AVVOCATO.md`, sezione «Lista d'attesa tolta (02/11)». Il punto 14 (LocationIQ) resta valido.
+
 ## Righe
 
 | Punto | Rischio | Cosa abbiamo scelto | Cosa chiedere all'avvocato |

@@ -1,4 +1,9 @@
-# Lista d'attesa pre-lancio: bozze dei testi (PROPOSTA, DA VALIDARE dal consulente)
+# Lista d'attesa pre-lancio: bozze dei testi (SUPERATO)
+
+> **SUPERATO il 02/11/2026.** Il titolare ha deciso di togliere la lista d'attesa (PR #243, unita): niente più modulo né rotte `/prelaunch/waitlist`, `PRELAUNCH_MODE` tolto, all'avvio il server cancella tutte le iscrizioni rimaste nella collezione `waitlist` e le impostazioni dell'avviso di lancio. La Privacy non descrive più la lista come trattamento attivo (resta solo una frase sulla chiusura e sulla cancellazione, art. 6). Questo file resta solo come storia: **non usare questi testi**. Dubbi residui in `LISTA_PER_AVVOCATO.md`.
+>
+> Rischio: 🟢 documento non più in uso.
+
 
 Stato: **solo proposta. Privacy, Cookie e Termini del sito NON sono stati modificati.** Il testo del consenso qui sotto è invece già mostrato nel modulo (quando `PRELAUNCH_MODE` è acceso): se il consulente lo cambia, si aggiornano insieme il testo nel sito e la costante `WAITLIST_CONSENT_VERSION` in `backend/server.py` (oggi `2026-10-v1`), così ogni iscrizione conserva la versione del testo che la persona ha visto.
 

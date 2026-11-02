@@ -7,7 +7,8 @@ Legenda: 🔴 prima di accendere i pagamenti o il pre-lancio · 🟠 da valutare
 ## Decisioni del titolare già prese (non vanno rimesse in discussione)
 - Calendario email ai negozi (punto 3, 21/10): giorno 30 della prova, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito; niente promemoria a 10 e 3 giorni (PR #199).
 - IVA al 22% (punto 8, 21/10): confermata dal titolare. Resta da decidere chi emette la fattura.
-- Stripe e PayPal titolari autonomi (15/10); lista d'attesa 12 mesi; Partita IVA obbligatoria; nessuna spunta foto per ora.
+- Stripe e PayPal titolari autonomi (15/10); Partita IVA obbligatoria; nessuna spunta foto per ora.
+- Lista d'attesa pre-lancio **tolta** (02/11, PR #243): iscrizioni cancellate all'avvio del server. Le scelte del 21/10 (12 mesi, elenco di esclusione) non valgono più.
 
 ## Dati mancanti (segnaposto nei testi)
 | Dato | Dove serve | Segnaposto |
@@ -48,7 +49,17 @@ Nella Privacy (#202, #203) non è scritto nulla su Aruba e Google.
 | Tema | Rischio | Cosa abbiamo | Cosa chiedere |
 |---|---|---|---|
 | Negozi già iscritti prima delle modifiche ai Termini | 🟠 | All'iscrizione si salvano solo le due caselle spuntate, non la versione del testo visto. Esiste almeno un negozio iscritto il 21/10. | Come comunicare le modifiche (email con preavviso, art. 9 dei Termini; P2B: preavviso minimo da verificare)? Conviene salvare da ora la versione dei Termini accettata? |
-| Lista d'attesa: iscritti con consenso `2026-10-v1` | 🟠 | Hanno visto la frase breve, non l'informativa completa (titolare, 12 mesi, Resend). Non parte nessuna richiesta di nuova conferma. Decisione del titolare (21/10, PR #202): i nuovi iscritti dal modulo con informativa sono registrati con `2026-10-v2`; i già iscritti restano `2026-10-v1`. | Basta l'informativa nell'avviso di lancio e il link per annullare, o serve un nuovo consenso? |
+| ~~Lista d'attesa: iscritti con consenso `2026-10-v1`~~ | 🟢 | **Superato il 02/11**: lista tolta e iscrizioni cancellate (PR #243); nessun avviso di lancio è partito né partirà. | Nessuna domanda: vedi la sezione «Lista d'attesa tolta (02/11)». |
+
+## Lista d'attesa tolta (02/11)
+Decisione del titolare del 02/11: lista d'attesa pre-lancio tolta (PR #243). All'avvio il server cancella tutte le iscrizioni (collezione `waitlist`). Privacy aggiornata in PR `[TESTO LEGALE]` (art. 2, 3, 4 e 6), versione dei testi `2026-11`. Scelte chiuse in modo prudente:
+| Tema | Rischio | Cosa abbiamo scelto | Cosa chiedere |
+|---|---|---|---|
+| Avviso agli ex iscritti | 🟠 | **Nessuna email** agli iscritti per dire che la lista è chiusa: le email sono già cancellate e scrivere servirebbe un dato che non teniamo più; la chiusura è scritta nella Privacy (art. 6). | È sufficiente, o andava mandata un'email di chiusura prima di cancellare? Ormai non è più possibile. |
+| Backup del database e registri di invio delle email | 🟠 | Frase prudente nella Privacy: le copie di sicurezza (backup di Atlas) e i registri di invio di Resend che possono ancora contenere le email si cancellano da soli alla loro scadenza e non vengono usati. Durata dei backup Atlas e dei registri Resend **non verificata**. | Va scritta una durata precisa? Serve cancellare anche dai backup (art. 17 GDPR) o basta non usarli fino alla scadenza? |
+| Data della cancellazione | 🟢 | Nella Privacy: «lista chiusa il 2 novembre 2026», iscrizioni «cancellate dal nostro database». La cancellazione avviene al primo avvio del server con il codice della #243 (deploy su Render). | Il titolare conferma che il deploy è avvenuto (nel log: numero di iscrizioni cancellate)? |
+| Versione dei testi | 🟢 | `LEGAL_VERSION` passa da `2026-10` a `2026-11`: chi si iscrive da ora registra la versione nuova; a chi è già iscritto non si chiede una nuova accettazione (togliere un trattamento non peggiora la sua posizione). | Conferma che non serve una nuova accettazione. |
+| Domanda 13 del consulente | 🟢 | Superata: la lista non esiste più. | Togliere dalla lista dell'incontro. |
 
 ## Nome e pagina omonima su Facebook (24/10)
 | Punto | Rischio | Cosa sappiamo | Domanda per l'avvocato |

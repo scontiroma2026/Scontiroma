@@ -166,7 +166,7 @@ logger = logging.getLogger(__name__)
 # ---------- Constants ----------
 # Versione corrente di Termini, Privacy e Cookie Policy accettati alla registrazione.
 # Unico punto da aggiornare quando cambiano i testi legali (es. "2026-11").
-LEGAL_VERSION = "2026-10"
+LEGAL_VERSION = "2026-11"
 
 # Zone di Roma e dintorni (decisione dell'utente dell'08/10): iscrizione, filtri e mappa.
 # Il menu mostra solo 16 aree (senza i singoli quartieri, che sono troppi). Per ogni area:
