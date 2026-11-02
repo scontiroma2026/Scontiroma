@@ -38,10 +38,10 @@ test('feedback: mai sopra la scansione del commerciante', async ({ page, request
   await expect(page.getByTestId('app-feedback-banner')).toHaveCount(0);
 });
 
-test('font: i titoli usano Manrope', async ({ page }) => {
+test('font: i titoli usano Bricolage Grotesque', async ({ page }) => {
   await page.goto('/');
   // La home mostra prima un titolo di attesa e, appena il server risponde, quello vero: l'asserzione
   // si ripete finché il titolo è stabile (prima leggeva il carattere di un elemento già sostituito).
   await expect(page.getByTestId('landing-caricamento')).toHaveCount(0);
-  await expect(page.locator('h1').first()).toHaveCSS('font-family', /^"?Manrope/);
+  await expect(page.locator('h1').first()).toHaveCSS('font-family', /^"?Bricolage Grotesque/);
 });

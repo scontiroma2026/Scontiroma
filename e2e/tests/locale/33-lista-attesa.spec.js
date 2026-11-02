@@ -82,9 +82,9 @@ test('prelancio acceso: la home dice «Stiamo arrivando» senza data e ha il mod
   const privacy = page.getByTestId('lista-attesa-privacy');
   await expect(privacy).toHaveAttribute('href', '/privacy');
 
-  // tema chiaro, Manrope, controlli da 44 px, testo contrastato, nessuno scroll laterale
+  // tema chiaro, titoli in Bricolage Grotesque, controlli da 44 px, testo contrastato, nessuno scroll laterale
   const font = await page.getByTestId('prelaunch-titolo').evaluate((e) => getComputedStyle(e).fontFamily);
-  expect(font).toMatch(/^"?Manrope/);
+  expect(font).toMatch(/^"?Bricolage Grotesque/);
   const r = await page.evaluate(misura, '[data-testid="prelaunch-home"]');
   expect(r.lumFondo, 'fondo chiaro').toBeGreaterThan(0.9);
   expect(r.errori, 'contrasto sotto soglia').toEqual([]);

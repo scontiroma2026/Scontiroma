@@ -9,11 +9,17 @@
     font-family: 'Manrope', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  /* Titoli in Manrope: la classe resta «font-serif» per non cambiare tutti i componenti */
-  .font-serif { font-family: 'Manrope', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
+  /* Titoli in Bricolage Grotesque (scelta del titolare, 02/11): la classe resta «font-serif» per non cambiare tutti i componenti */
+  .font-serif { font-family: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
 }
 
 @layer utilities {
+  /* Parola chiave «a pennello» su una pennellata gialla: usarla al massimo una volta per pagina */
+  .pennello {
+    font-family: 'Caveat Brush', 'Manrope', cursive; font-weight: 400; letter-spacing: 0;
+    display: inline-block; padding: 0 0.3em; background: #ffd84d; color: #13233f;
+    border-radius: 0.3em 0.9em 0.25em 0.8em / 0.6em 0.25em 0.7em 0.3em; transform: rotate(-2deg);
+  }
   /* Nomi storici, mappati sulla tavolozza chiara (i colori fucsia/ciano/neon... sono in tailwind.config.js) */
   .bg-cream { background-color: #FFFFFF; }
   .bg-parchment { background-color: #F5F6F8; }
