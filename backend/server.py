@@ -5870,9 +5870,27 @@ async def admin_fonti_qr(mese: Optional[str] = None, user: dict = Depends(requir
 
 
 @api.get("/admin/iscrizioni-per-fonte")
-async def admin_iscrizioni_per_fonte(user: dict = Depends(require_admin_master)):
-    """Quante iscrizioni arrivano da ogni volantino o QR di campagna (solo numeri)."""
-    return {"fonti": await _iscrizioni_per_fonte()}
+async def admin_iscrizioni_per_fonte(mese: Optional[str] = None, user: dict = Depends(require_admin_master)):
+    """Quante iscrizioni (clienti e negozi) arrivano da ogni volantino, social o QR di campagna nel mese scelto
+    (predefinito: quello in corso, che riparte ogni 1°). Solo numeri; i mesi passati sono nell'archivio."""
+    mese = _mese_scelto(mese)
+    lo, hi = _limiti_mese_utc(mese)
+    righe: dict = {}
+    for ruolo, campo in (("client", "clienti"), ("merchant", "negozi")):
+        for x in await _iscrizioni_per_fonte(lo, hi, ruolo=ruolo):
+            r = righe.setdefault(x["fonte"], {"fonte": x["fonte"], "clienti": 0, "negozi": 0})
+            r[campo] = x.get("nel_periodo", 0)
+    giorni = []
+    async for u in db.users.find({"fonte_iscrizione": {"$exists": True, "$nin": [None, ""]}},
+                                 {"_id": 0, "fonte_iscrizione_at": 1, "created_at": 1}):
+        quando = u.get("fonte_iscrizione_at") or u.get("created_at") or ""
+        try:
+            giorni.append(datetime.fromisoformat(quando).astimezone(ROME_TZ).date().isoformat())
+        except Exception:
+            pass
+    fonti = sorted((r for r in righe.values() if r["clienti"] or r["negozi"]),
+                   key=lambda r: (-(r["clienti"] + r["negozi"]), r["fonte"]))
+    return {"mese": mese, "etichetta": _etichetta_mese(mese), "fonti": fonti, "archivio": _archivio_mesi(giorni)}
 
 
 # ---------- Riepilogo settimanale per l'admin (cosa funziona e cosa no) ----------

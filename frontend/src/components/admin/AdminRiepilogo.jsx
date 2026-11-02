@@ -3,6 +3,7 @@ import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArchivioMesi } from "@/components/admin/AdminTraffic";
+import IscrizioniPerFonte from "@/components/admin/IscrizioniPerFonte";
 
 /** Riepilogo della settimana: cosa funziona, con il confronto con la settimana prima. Solo numeri. */
 export default function AdminRiepilogo({ hdrs }) {
@@ -59,19 +60,7 @@ export default function AdminRiepilogo({ hdrs }) {
         />
       </Card>
 
-      <Card className="border-border bg-muted p-5">
-        <h3 className="font-serif text-xl text-foreground">Iscrizioni per fonte</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Da volantino, social e altri link con «?fonte=». Le iscrizioni dai QR dei negozi sono nella tabella sopra.</p>
-        {d.fonti.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Nessuna iscrizione con una fonte ancora.</p>
-        ) : (
-          <Tabella
-            testid="riepilogo-fonti"
-            intestazione={["Fonte", "Ora", "Prima"]}
-            righe={d.fonti.map((f) => ({ k: f.fonte, cella: [f.fonte, f.questa, f.precedente], freccia: f.freccia }))}
-          />
-        )}
-      </Card>
+      <IscrizioniPerFonte hdrs={hdrs} testid="riepilogo-fonti" />
 
       <FontiQr hdrs={hdrs} />
 

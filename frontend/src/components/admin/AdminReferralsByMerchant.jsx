@@ -12,6 +12,7 @@ import {
   Store,
 } from "lucide-react";
 import api from "@/lib/api";
+import IscrizioniPerFonte from "@/components/admin/IscrizioniPerFonte";
 
 const fmt = (iso) => {
   if (!iso) return "—";
@@ -32,7 +33,6 @@ export default function AdminReferralsByMerchant({ hdrs }) {
   const [data, setData] = useState(null);
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState({});
-  const [fonti, setFonti] = useState([]);
 
   useEffect(() => {
     api
@@ -41,13 +41,6 @@ export default function AdminReferralsByMerchant({ hdrs }) {
       .catch(() => setData({ error: true }));
   }, [hdrs]);
 
-  // Iscrizioni per fonte di campagna (volantini): solo numeri, nessun dato personale.
-  useEffect(() => {
-    api
-      .get("/admin/iscrizioni-per-fonte", hdrs ? hdrs() : undefined)
-      .then((r) => setFonti(r.data?.fonti || []))
-      .catch(() => setFonti([]));
-  }, [hdrs]);
 
   if (!data) {
     return (
@@ -86,36 +79,8 @@ export default function AdminReferralsByMerchant({ hdrs }) {
         <KPI icon={<CheckCircle2 size={14} className="text-emerald-700" />} label="Abbonamenti attivi" value={totals.total_active ?? 0} testid="kpi-active" />
       </div>
 
-      {/* Iscrizioni per fonte: volantini e QR di campagna (?fonte=…) */}
-      <Card data-testid="admin-fonti-panel" className="border-border bg-muted p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-          <QrCode size={14} /> Iscrizioni per volantino / campagna
-        </div>
-        {fonti.length === 0 ? (
-          <p data-testid="admin-fonti-vuoto" className="text-xs text-muted-foreground">
-            Ancora nessuna iscrizione da volantini. I QR dei volantini contengono ?fonte=volantino-zona.
-          </p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="py-1 pr-2">Fonte</th>
-                <th className="py-1 pr-2">Ultimi 30 giorni</th>
-                <th className="py-1">Totale</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fonti.map((f) => (
-                <tr key={f.fonte} data-testid={`fonte-${f.fonte}`} className="border-t border-border">
-                  <td className="py-1 pr-2 font-mono">{f.fonte}</td>
-                  <td className="py-1 pr-2">{f.ultimi_30_giorni}</td>
-                  <td className="py-1">{f.totale}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
+      {/* Iscrizioni per fonte del mese in corso, con archivio dei mesi passati */}
+      <IscrizioniPerFonte hdrs={hdrs} testid="admin-fonti-panel" />
 
       {/* Search */}
       <div className="flex items-center gap-2">
