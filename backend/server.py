@@ -5802,26 +5802,71 @@ async def fonte_visita(payload: FonteVisitaIn):
     return {"ok": True}
 
 
+# ---------- Statistiche per mese (decisione del titolare del 02/11) ----------
+# Nel pannello si vede il mese in corso, che riparte da zero ogni 1° del mese (ora di Roma); i mesi
+# precedenti restano consultabili nell'archivio. Nessun dato viene cancellato: si filtra per mese.
+_MESE_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+
+
+def _mese_scelto(mese: Optional[str]) -> str:
+    """Mese richiesto (AAAA-MM) oppure quello in corso a Roma. Un mese futuro o non valido vale come quello in corso."""
+    corrente = current_month_key()
+    if mese and _MESE_RE.match(mese) and mese <= corrente:
+        return mese
+    return corrente
+
+
+def _giorni_del_mese(mese: str) -> list:
+    """Giorni (AAAA-MM-GG) del mese; per il mese in corso solo fino a oggi."""
+    anno, m = int(mese[:4]), int(mese[5:7])
+    primo = date(anno, m, 1)
+    dopo = date(anno + (m == 12), (m % 12) + 1, 1)
+    oggi = _rome_now().date()
+    ultimo = min(dopo - timedelta(days=1), oggi)
+    return [(primo + timedelta(days=i)).isoformat() for i in range((ultimo - primo).days + 1)]
+
+
+def _etichetta_mese(mese: str) -> str:
+    return f"{MESI_IT[int(mese[5:7]) - 1]} {mese[:4]}"
+
+
+def _limiti_mese_utc(mese: str) -> tuple:
+    """Inizio e fine (esclusa) del mese di Roma, come istanti UTC ISO."""
+    anno, m = int(mese[:4]), int(mese[5:7])
+    return _istante_roma(date(anno, m, 1)), _istante_roma(date(anno + (m == 12), (m % 12) + 1, 1))
+
+
+def _archivio_mesi(giorni: list) -> list:
+    """Mesi passati (dal più recente) in cui ci sono dati, per il menu dell'archivio."""
+    corrente = current_month_key()
+    mesi = sorted({g[:7] for g in giorni if g and g[:7] < corrente}, reverse=True)
+    return [{"mese": m, "etichetta": _etichetta_mese(m)} for m in mesi]
+
+
 @api.get("/admin/fonti-qr")
-async def admin_fonti_qr(user: dict = Depends(require_admin_master)):
-    """Per ogni volantino o QR di campagna: visite (clienti e negozi) e iscrizioni (clienti e negozi). Solo numeri."""
-    da30 = (_rome_now().date() - timedelta(days=30)).isoformat()
+async def admin_fonti_qr(mese: Optional[str] = None, user: dict = Depends(require_admin_master)):
+    """Per ogni volantino o QR di campagna: visite (clienti e negozi) e iscrizioni (clienti e negozi) del mese scelto
+    (predefinito: quello in corso). Solo numeri."""
+    mese = _mese_scelto(mese)
+    lo, hi = _limiti_mese_utc(mese)
     righe: dict = {}
 
     def riga(f):
-        return righe.setdefault(f, {"fonte": f, "visite_clienti": 0, "visite_negozi": 0, "visite_30_giorni": 0,
+        return righe.setdefault(f, {"fonte": f, "visite_clienti": 0, "visite_negozi": 0,
                                     "clienti_iscritti": 0, "negozi_iscritti": 0})
+    giorni_con_dati = []
     async for v in db.fonte_visite.find({}, {"_id": 0}):
+        giorni_con_dati.append(v.get("giorno", ""))
+        if not v.get("giorno", "").startswith(mese):
+            continue
         r = riga(v["fonte"])
         r["visite_clienti" if v.get("tipo") == "cliente" else "visite_negozi"] += int(v.get("visite") or 0)
-        if v.get("giorno", "") >= da30:
-            r["visite_30_giorni"] += int(v.get("visite") or 0)
-    for x in await _iscrizioni_per_fonte(ruolo="client"):
-        riga(x["fonte"])["clienti_iscritti"] = x["totale"]
-    for x in await _iscrizioni_per_fonte(ruolo="merchant"):
-        riga(x["fonte"])["negozi_iscritti"] = x["totale"]
+    for ruolo, campo in (("client", "clienti_iscritti"), ("merchant", "negozi_iscritti")):
+        for x in await _iscrizioni_per_fonte(lo, hi, ruolo=ruolo):
+            if x.get("nel_periodo"):
+                riga(x["fonte"])[campo] = x["nel_periodo"]
     out = sorted(righe.values(), key=lambda r: (-(r["visite_clienti"] + r["visite_negozi"]), r["fonte"]))
-    return {"fonti": out}
+    return {"mese": mese, "etichetta": _etichetta_mese(mese), "fonti": out, "archivio": _archivio_mesi(giorni_con_dati)}
 
 
 @api.get("/admin/iscrizioni-per-fonte")
@@ -8263,11 +8308,12 @@ async def track_events(payload: TrackIn):
 
 
 @api.get("/admin/traffic")
-async def admin_traffic(user: dict = Depends(require_admin_master)):
-    """Aggregati ultimi 30 giorni: aperture, visitatori unici, pagine viste, click chiave."""
-    days = [(datetime.now(ROME_TZ) - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(29, -1, -1)]
-    start_day = days[0]
-    match30 = {"day": {"$gte": start_day}}
+async def admin_traffic(mese: Optional[str] = None, user: dict = Depends(require_admin_master)):
+    """Aggregati del mese scelto (predefinito: quello in corso, che riparte ogni 1° del mese): aperture,
+    visitatori unici, pagine viste, click chiave. I mesi passati restano nell'archivio."""
+    mese = _mese_scelto(mese)
+    days = _giorni_del_mese(mese)
+    match30 = {"day": {"$gte": days[0], "$lte": days[-1]}}
 
     counts = {d: {"opens": 0, "pageviews": 0, "clicks": 0} for d in days}
     async for r in db.analytics_events.aggregate([
@@ -8303,16 +8349,21 @@ async def admin_traffic(user: dict = Depends(require_admin_master)):
     ]):
         clicks.append({"name": r["_id"] or "?", "count": r["n"]})
 
-    today = days[-1]
+    today = _rome_now().date().isoformat()
+    giorni_con_dati = await db.analytics_events.distinct("day")
     return {
+        "mese": mese,
+        "etichetta": _etichetta_mese(mese),
+        "archivio": _archivio_mesi(giorni_con_dati),
         "days": days,
         "series": {
             "opens": [counts[d]["opens"] for d in days],
             "pageviews": [counts[d]["pageviews"] for d in days],
             "visitors": [visitors[d] for d in days],
         },
-        "today": {"opens": counts[today]["opens"], "visitors": visitors[today], "pageviews": counts[today]["pageviews"]},
-        "totals_30d": {
+        "today": {"opens": counts.get(today, {}).get("opens", 0), "visitors": visitors.get(today, 0),
+                  "pageviews": counts.get(today, {}).get("pageviews", 0)},
+        "totals_mese": {
             "opens": sum(c["opens"] for c in counts.values()),
             "pageviews": sum(c["pageviews"] for c in counts.values()),
         },

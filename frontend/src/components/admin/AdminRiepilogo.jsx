@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { ArchivioMesi } from "@/components/admin/AdminTraffic";
 
 /** Riepilogo della settimana: cosa funziona, con il confronto con la settimana prima. Solo numeri. */
 export default function AdminRiepilogo({ hdrs }) {
@@ -144,19 +145,26 @@ function Tabella({ intestazione, righe, testid }) {
 
 /** Volantini e QR: quante visite e quante iscrizioni (clienti e negozi) per ogni fonte. Solo numeri. */
 function FontiQr({ hdrs }) {
-  const [righe, setRighe] = useState(null);
+  const [dati, setDati] = useState(null);
+  const [mese, setMese] = useState(null); // null = mese in corso (riparte ogni 1° del mese)
   useEffect(() => {
-    api.get("/admin/fonti-qr", hdrs()).then((r) => setRighe(r.data.fonti)).catch(() => setRighe([]));
+    setDati(null);
+    api.get("/admin/fonti-qr", { ...hdrs(), params: mese ? { mese } : {} })
+      .then((r) => setDati(r.data)).catch(() => setDati({ fonti: [], archivio: [] }));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hdrs cambia a ogni render
-  }, []);
+  }, [mese]);
+  const righe = dati ? dati.fonti : null;
   return (
     <Card className="border-border bg-muted p-5" data-testid="fonti-qr">
-      <h3 className="font-serif text-xl text-foreground">Volantini e QR: visite e iscrizioni</h3>
-      <p className="mt-1 text-xs text-muted-foreground">Per ogni link con «?fonte=». Visite = persone che hanno aperto il link (una al giorno per telefono). Solo numeri.</p>
+      <h3 className="font-serif text-xl text-foreground">
+        Volantini e QR: visite e iscrizioni{dati?.etichetta ? ` — ${mese ? "archivio " : ""}${dati.etichetta}` : ""}
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground">Per ogni link con «?fonte=». Visite = persone che hanno aperto il link (una al giorno per telefono). Solo numeri. Ripartono da zero ogni 1° del mese.</p>
+      <div className="mt-2"><ArchivioMesi archivio={dati?.archivio} mese={mese} onScegli={setMese} testid="fonti-qr-archivio" /></div>
       {!righe ? (
         <p className="mt-2 text-sm text-muted-foreground">Caricamento…</p>
       ) : righe.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">Nessuna visita ancora.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Nessuna visita in questo mese.</p>
       ) : (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm text-foreground">

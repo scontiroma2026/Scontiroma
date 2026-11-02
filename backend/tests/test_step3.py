@@ -173,3 +173,38 @@ def test_visite_e_iscrizioni_per_fonte_clienti_e_negozi(monkeypatch):
         assert "@" not in str(d) and "user" not in str(d)
         assert (await c.get("/api/admin/fonti-qr")).status_code in (401, 403)
     run(body)
+
+
+def test_statistiche_per_mese_con_archivio(monkeypatch):
+    """Il pannello mostra il mese in corso (riparte ogni 1°); i mesi passati restano consultabili nell'archivio."""
+    monkeypatch.setenv("ADMIN_MASTER_PASSWORD", "master-test-123456")
+
+    async def body(c):
+        mese = server.current_month_key()
+        anno, m = int(mese[:4]), int(mese[5:7])
+        prima = f"{anno - (m == 1)}-{(m - 2) % 12 + 1:02d}"
+        await server.db.fonte_visite.insert_many([
+            {"fonte": "volantino-a", "tipo": "negozio", "giorno": f"{prima}-15", "visite": 5},
+            {"fonte": "volantino-a", "tipo": "negozio", "giorno": f"{mese}-01", "visite": 2}])
+        await server.db.analytics_events.insert_many([
+            {"vid": "v1", "type": "pageview", "name": "", "path": "/", "day": f"{prima}-10"},
+            {"vid": "v1", "type": "click", "name": "flyer_print", "path": "", "day": f"{prima}-10"},
+            {"vid": "v2", "type": "pageview", "name": "", "path": "/", "day": f"{mese}-01"}])
+        aid, ah = await utente("admin")
+        mm = await c.post("/api/admin/verify-master", json={"password": "master-test-123456"}, headers=ah)
+        ah = {**ah, "X-Admin-Master": mm.cookies["admin_master_token"]}
+        d = (await c.get("/api/admin/fonti-qr", headers=ah)).json()
+        assert d["mese"] == mese and {r["fonte"]: r for r in d["fonti"]}["volantino-a"]["visite_negozi"] == 2
+        assert [a["mese"] for a in d["archivio"]] == [prima]
+        d = (await c.get(f"/api/admin/fonti-qr?mese={prima}", headers=ah)).json()
+        assert d["mese"] == prima and d["fonti"][0]["visite_negozi"] == 5
+        t = (await c.get("/api/admin/traffic", headers=ah)).json()
+        assert t["mese"] == mese and t["totals_mese"]["pageviews"] == 1 and t["clicks"] == []
+        assert t["days"][0] == f"{mese}-01" and [a["mese"] for a in t["archivio"]] == [prima]
+        t = (await c.get(f"/api/admin/traffic?mese={prima}", headers=ah)).json()
+        assert t["totals_mese"]["pageviews"] == 1 and t["clicks"][0]["name"] == "flyer_print"
+        assert t["days"][0] == f"{prima}-01" and len(t["days"]) >= 28
+        # Mese futuro o non valido: vale il mese in corso
+        assert (await c.get("/api/admin/traffic?mese=2999-01", headers=ah)).json()["mese"] == mese
+        assert (await c.get("/api/admin/traffic?mese=abc", headers=ah)).json()["mese"] == mese
+    run(body)
