@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import api, { formatApiError } from "@/lib/api";
 import { togliTutteLeBozze } from "@/lib/bozza";
+import { segnaDispositivoAdmin } from "@/lib/analytics";
 
 const AuthContext = createContext(null);
 
@@ -26,6 +27,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Dove entra l'amministratore il dispositivo non si conta più nelle statistiche
+  useEffect(() => {
+    if (user && user.role === "admin") segnaDispositivoAdmin();
+  }, [user]);
 
   const login = async (email, password) => {
     try {
