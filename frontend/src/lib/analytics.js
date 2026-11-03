@@ -4,6 +4,18 @@ import { hasFunctionalConsent } from "@/components/CookieBanner";
 // Analytics first-party ANONIMA: vid casuale non collegato all'account,
 // nessun dato personale, eventi batchati e inviati al nostro backend.
 const VID_KEY = "sr_vid";
+// Telefono/computer su cui è entrato l'amministratore: non si conta nelle statistiche,
+// così il pannello mostra solo le persone vere (decisione del titolare del 03/11).
+const ADMIN_KEY = "sr_dispositivo_admin";
+
+export function segnaDispositivoAdmin() {
+  try { localStorage.setItem(ADMIN_KEY, "1"); } catch (_) { /* storage bloccato: niente */ }
+  queue = [];
+}
+
+export function isDispositivoAdmin() {
+  try { return localStorage.getItem(ADMIN_KEY) === "1"; } catch (_) { return false; }
+}
 
 function vid() {
   try {
@@ -39,6 +51,8 @@ function flush() {
 function enqueue(ev) {
   // Statistiche (anche i clic) solo con il consenso ai cookie funzionali.
   if (!hasFunctionalConsent()) return;
+  if (isDispositivoAdmin()) return;
+  if (ev.type === "pageview" && /^\/admin(\/|$)/.test(ev.path)) return;
   queue.push(ev);
   if (queue.length >= 15) {
     flush();
