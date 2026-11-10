@@ -34,6 +34,7 @@ os.environ["RESEND_API_KEY"] = ""
 import httpx  # noqa: E402
 
 import server  # noqa: E402
+from _rotte import tutte_le_rotte  # noqa: E402
 
 WEBHOOK_SECRET = "whsec_test_unit_interruttore"
 
@@ -239,12 +240,14 @@ def test_pagamento_finto_rimosso():
         assert await server.db.subscriptions.count_documents({}) == 0
     for required in (False, True):
         run(body, required=required)
-    paths = {getattr(rt, "path", "") for rt in server.app.routes}
+    paths = {getattr(rt, "path", "") for rt in tutte_le_rotte(server.app)}
+    assert "/api/auth/login" in paths  # l'elenco delle rotte non è vuoto
     assert "/api/subscription/subscribe" not in paths
 
 
 def test_simulazioni_admin_rimosse():
-    paths = {getattr(rt, "path", "") for rt in server.app.routes}
+    paths = {getattr(rt, "path", "") for rt in tutte_le_rotte(server.app)}
+    assert "/api/auth/login" in paths  # l'elenco delle rotte non è vuoto
     assert "/api/admin/simulate-renewal/{user_id}" not in paths
     assert "/api/admin/simulate-payment-failed/{user_id}" not in paths
 

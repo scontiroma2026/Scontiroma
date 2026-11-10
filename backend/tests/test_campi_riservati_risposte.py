@@ -34,6 +34,7 @@ os.environ["RESEND_API_KEY"] = ""
 import httpx  # noqa: E402
 
 import server  # noqa: E402
+from _rotte import tutte_le_rotte  # noqa: E402
 
 
 def run(test_body):
@@ -147,7 +148,7 @@ def test_nessuna_risposta_contiene_campi_riservati(monkeypatch):
         ruoli = {"anonimo": {}, "cliente": client["h"], "commerciante": merchant["h"], "admin": admin_h}
 
         controllate = 0
-        for route in server.app.routes:
+        for route in tutte_le_rotte(server.app):
             if "GET" not in (getattr(route, "methods", None) or set()) or route.path in SKIP:
                 continue
             path = route.path.format(**params)
