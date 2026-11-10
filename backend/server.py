@@ -161,6 +161,9 @@ api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+# Il driver del database (pymongo recente) a livello DEBUG scrive nei log i comandi completi, dati compresi
+# (codice del negozio, email...). Lo teniamo a WARNING qualunque sia il livello generale dei log.
+logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 
 # ---------- Constants ----------

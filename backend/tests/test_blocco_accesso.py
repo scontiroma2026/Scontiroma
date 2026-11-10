@@ -27,6 +27,7 @@ os.environ["RESEND_API_KEY"] = ""
 import httpx  # noqa: E402
 
 import server  # noqa: E402
+from _rotte import tutte_le_rotte  # noqa: E402
 
 PASSWORD = "password-giusta-123"
 
@@ -91,7 +92,8 @@ def test_password_giusta_azzera_i_tentativi():
 
 
 def test_rotte_del_pin_tolte():
-    paths = {getattr(rt, "path", "") for rt in server.app.routes}
+    paths = {getattr(rt, "path", "") for rt in tutte_le_rotte(server.app)}
+    assert "/api/auth/login" in paths  # l'elenco delle rotte non è vuoto
     for p in ("/api/auth/pin", "/api/auth/pin-login", "/api/auth/pin-forgot", "/api/auth/pin-reset"):
         assert p not in paths
 
