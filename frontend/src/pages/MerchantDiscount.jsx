@@ -14,6 +14,7 @@ import { Scheda, TONI, ErroreRiprova, Scheletro } from "@/components/AreaUI";
 import RiquadroBozza from "@/components/RiquadroBozza";
 import BannerOffertaPreparata from "@/components/BannerOffertaPreparata";
 import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
+import { offertePronte } from "@/lib/offertePronte";
 
 const EMPTY_FORM = {
   title: "", description: "", original_price: "", discounted_price: "",
@@ -195,6 +196,13 @@ export default function MerchantDiscount() {
 
   const upd = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
+  // Offerta pronta: riempie i testi, i prezzi restano da scrivere al commerciante
+  const usaPronta = (o) => {
+    setForm((f) => ({ ...f, title: o.titolo, description: o.description, terms: o.terms, validity_info: o.validity_info || f.validity_info }));
+    toast.success("Offerta pronta inserita: scrivi i prezzi, aggiungi una foto e controlla i testi.");
+    setTimeout(() => document.getElementById("disc-original")?.focus(), 50);
+  };
+
   const status = isNext ? nextOffer?.approval_status : existing?.approval_status;
   const locked = !isNext && existing?.locked_this_month;
   const windowClosed = isNext && win && !win.open;
@@ -343,6 +351,28 @@ export default function MerchantDiscount() {
 
         {bozza.inAttesa && !readOnly && (
           <RiquadroBozza fotoPerse={bozza.fotoPerse} onRiprendi={bozza.riprendi} onScarta={bozza.scarta} />
+        )}
+
+        {!isNext && !existing && loaded && !erroreCarica && !readOnly && (
+          <div data-testid="offerte-pronte" className="mb-4 rounded-2xl border border-ac-line bg-white p-4">
+            <div className="font-serif text-xl font-bold leading-tight text-ac-ink">Parti da un'offerta pronta</div>
+            <p className="mt-1 text-sm leading-relaxed text-ac-soft">
+              Tocca un'idea: riempiamo i testi per te. Poi scrivi i prezzi, aggiungi una foto e cambia quello che vuoi.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {offertePronte(user?.category).map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  data-testid={`offerta-pronta-${o.id}`}
+                  onClick={() => usaPronta(o)}
+                  className="min-h-11 rounded-full border-2 border-ac-campo bg-white px-4 text-sm font-extrabold text-ac-ink transition hover:border-ac-rosa"
+                >
+                  {o.titolo}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         <Scheda className="!p-4 sm:!p-6">

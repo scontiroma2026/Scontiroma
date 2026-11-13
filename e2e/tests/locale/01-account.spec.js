@@ -25,11 +25,13 @@ test('registrazione commerciante dal sito', async ({ page, request }) => {
   await page.getByTestId('reg-email').fill(email);
   await page.getByTestId('reg-password').fill(PASSWORD);
   await page.getByTestId('reg-shop').fill("Osteria dell'Esempio");
+  await page.getByTestId('reg-category').selectOption('Ristorante');
+  // Passo 1 di 2 completo: avanti ai dati dell'attività
+  await page.getByTestId('reg-avanti').click();
   await page.getByTestId('reg-address-input').fill("Via dell'Esempio 1, Roma");
   await page.getByTestId('reg-phone').fill('+39 06 0000000');
   await page.getByTestId('reg-partita-iva').fill('12345678903');
   await page.getByTestId('reg-zone').selectOption('Garbatella');
-  await page.getByTestId('reg-category').selectOption('Ristorante');
   await page.getByTestId('legal-accept').click();
   // I commercianti approvano anche, a parte, le clausole specifiche dei Termini (artt. 7, 9, 10)
   await expect(page.getByTestId('reg-submit')).toBeDisabled();
@@ -53,6 +55,12 @@ test('registrazione commerciante senza Partita IVA: il server rifiuta e il modul
   expect(sbagliata.status).toBe(422);
   expect(sbagliata.data.detail).toContain('non risulta corretta');
   await page.goto('/register?role=merchant');
+  await page.getByTestId('reg-name').fill('Luca');
+  await page.getByTestId('reg-email').fill(unico('piva'));
+  await page.getByTestId('reg-password').fill(PASSWORD);
+  await page.getByTestId('reg-shop').fill('Negozio senza IVA');
+  await page.getByTestId('reg-category').selectOption('Ristorante');
+  await page.getByTestId('reg-avanti').click();
   const campo = page.getByTestId('reg-partita-iva');
   await expect(campo).toHaveAttribute('required', '');
   await expect(page.getByText('obbligatoria, 11 cifre')).toBeVisible();
