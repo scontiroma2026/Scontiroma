@@ -1,6 +1,6 @@
 // Bozza dell'offerta (quello che il commerciante scrive resta anche cambiando pagina) e menu a
 // tendina che si richiudono dopo la scelta. Screenshot a 390 px in BOZZA_SHOTS (fuori dal repository).
-const { test, expect, registra, loginNelBrowser } = require('../fixtures');
+const { test, expect, registra, loginNelBrowser, unico, PASSWORD } = require('../fixtures');
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -153,13 +153,21 @@ test('menu a tendina: dopo la scelta il menu si chiude e il valore resta imposta
 
 test('menu a tendina: iscrizione commerciante, zona e categoria si chiudono dopo la scelta', async ({ page }) => {
   await page.goto('/register?role=merchant');
-  for (const [id, valore] of [['reg-zone', 'Garbatella'], ['reg-category', 'Ristorante']]) {
+  // Categoria nel passo 1, zona nel passo 2 (iscrizione in 2 passi)
+  const scegli = async (id, valore) => {
     const sel = page.getByTestId(id);
     await sel.focus();
     await sel.selectOption(valore);
     await expect(sel).toHaveValue(valore);
     await expect.poll(() => aperto(page)).toBe(false);
-  }
+  };
+  await page.getByTestId('reg-name').fill('Luca');
+  await page.getByTestId('reg-email').fill(unico('menu'));
+  await page.getByTestId('reg-password').fill(PASSWORD);
+  await page.getByTestId('reg-shop').fill('Negozio dei menu');
+  await scegli('reg-category', 'Ristorante');
+  await page.getByTestId('reg-avanti').click();
+  await scegli('reg-zone', 'Garbatella');
   // Un ritorno a capo nella pagina (altro campo) non riapre né cambia il valore scelto
   await page.getByTestId('reg-phone').fill('+39 06 0000000');
   await page.getByTestId('reg-partita-iva').fill('12345678903');
