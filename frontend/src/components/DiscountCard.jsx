@@ -1,7 +1,8 @@
 import { trackClick } from "@/lib/analytics";
+import { isOmaggio } from "@/lib/offerta";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { MapPin, ArrowRight, Zap, TrendingUp } from "lucide-react";
+import { MapPin, ArrowRight, Zap, TrendingUp, Gift } from "lucide-react";
 import StarRating from "@/components/StarRating";
 import CuorePreferito from "@/components/CuorePreferito";
 import { FotoOfferta } from "@/components/NoPhoto";
@@ -9,7 +10,8 @@ import BadgeNuovaOfferta from "@/components/BadgeNuovaOfferta";
 
 export default function DiscountCard({ discount }) {
   const m = discount.merchant || {};
-  const savings = (discount.original_price - discount.discounted_price).toFixed(2);
+  const omaggio = isOmaggio(discount);
+  const savings = omaggio ? null : (discount.original_price - discount.discounted_price).toFixed(2);
   const sales = discount.sales_this_month ?? 0;
   return (
     <Link to={`/discounts/${discount.id}`} data-testid={`discount-card-${discount.id}`} className="group block" onClick={() => trackClick("discount_click")}>
@@ -22,7 +24,7 @@ export default function DiscountCard({ discount }) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full grad-fucsia-viola px-3 py-1.5 text-xs font-bold text-white shadow-lg glow-fucsia">
-            <Zap size={12} /> −{discount.percent_off}%
+            {omaggio ? <><Gift size={12} /> Omaggio</> : <><Zap size={12} /> −{discount.percent_off}%</>}
           </div>
           <BadgeNuovaOfferta isNew={discount.is_new} isNewShop={discount.is_new_shop} className="absolute bottom-3 left-3" />
           <CuorePreferito merchantId={m.id} className="absolute right-3 top-3" />
@@ -50,6 +52,12 @@ export default function DiscountCard({ discount }) {
             <StarRating avg={discount.rating_avg} count={discount.rating_count} size={13} />
           )}
           <div className="flex items-end justify-between pt-2 border-t border-border">
+            {omaggio ? (
+              <div data-testid={`omaggio-${discount.id}`}>
+                <div className="font-serif text-2xl text-fucsia">In omaggio</div>
+                <div className="text-xs uppercase tracking-wider text-neon">Per chi arriva da Sconti Roma</div>
+              </div>
+            ) : (
             <div>
               <div className="flex items-baseline gap-2">
                 <span className="font-serif text-3xl text-fucsia">€{discount.discounted_price.toFixed(2)}</span>
@@ -57,6 +65,7 @@ export default function DiscountCard({ discount }) {
               </div>
               <div className="text-xs uppercase tracking-wider text-neon">Risparmi €{savings}</div>
             </div>
+            )}
             <ArrowRight size={18} className="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-fucsia" />
           </div>
         </div>

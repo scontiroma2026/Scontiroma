@@ -503,8 +503,11 @@ class DiscountIn(BaseModel):
     # Limiti di lunghezza: senza, si poteva gonfiare il database con testi enormi (finto attacco del 01/11).
     title: str = Field(max_length=200)
     description: str = Field(max_length=5000)
-    original_price: float
-    discounted_price: float
+    # «sconto» (prezzo pieno e scontato) oppure «omaggio»: un regalo o un'esperienza per i clienti
+    # di Sconti Roma senza toccare i prezzi (per i locali che non vogliono fare sconti, 13/11).
+    offer_type: Literal["sconto", "omaggio"] = "sconto"
+    original_price: Optional[float] = None
+    discounted_price: Optional[float] = None
     image_url: Optional[str] = Field(None, max_length=3_000_000)  # può essere una foto in data URL
     # Galleria fino a 8 foto. La prima è la copertina (usata come thumbnail nelle liste).
     image_urls: Optional[List[str]] = Field(None, max_length=8)
@@ -520,7 +523,14 @@ class DiscountIn(BaseModel):
 
     @model_validator(mode="after")
     def _prezzi_validi(self):
+        if self.offer_type == "omaggio":
+            # Omaggio: nessun prezzo, nemmeno se arriva dal modulo
+            self.original_price = None
+            self.discounted_price = None
+            return self
         # Lo sconto deve essere uno sconto vero: prezzi positivi e scontato minore del pieno.
+        if self.original_price is None or self.discounted_price is None:
+            raise ValueError("Inserisci il prezzo pieno e il prezzo scontato")
         if self.original_price <= 0 or self.discounted_price <= 0:
             raise ValueError("I prezzi devono essere maggiori di zero")
         if self.discounted_price >= self.original_price:
@@ -1174,7 +1184,7 @@ NEXT_OFFER_WINDOW_DAYS = 7
 MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
            "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
 
-DISCOUNT_CONTENT_FIELDS = ("title", "description", "original_price", "discounted_price",
+DISCOUNT_CONTENT_FIELDS = ("title", "description", "offer_type", "original_price", "discounted_price",
                            "image_url", "image_urls", "terms", "plan_ahead", "validity_info",
                            "additional_info", "active", "max_uses_per_month")
 
@@ -2899,6 +2909,9 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
 # ---------- Offerta Mese Prossimo (merchant) ----------
 def _enrich_next(nd: dict) -> dict:
     d = {k: v for k, v in nd.items() if k != "_id"}
+    if d.get("offer_type") == "omaggio":
+        d["percent_off"] = None
+        return d
     try:
         d["percent_off"] = round(((d["original_price"] - d["discounted_price"]) / d["original_price"]) * 100)
     except Exception:
@@ -6574,6 +6587,7 @@ async def _esegui_rollover(month: str, now_iso: str) -> dict:
         mid = nd["merchant_id"]
         handled.add(mid)
         content = {k: nd.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in nd}
+        content.setdefault("offer_type", "sconto")  # offerte salvate prima del tipo «omaggio»
         st = nd.get("approval_status") or "pending"
         if st == "approved":
             sets = {**content, "updated_at": now_iso, "approval_status": "approved",

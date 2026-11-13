@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isOmaggio } from "@/lib/offerta";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,7 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
         shop_name: m.shop_name,
         title: d.title || "",
         description: d.description || "",
+        offer_type: d.offer_type || "sconto",
         original_price: d.original_price ?? "",
         discounted_price: d.discounted_price ?? "",
         terms: d.terms || "",
@@ -78,7 +80,11 @@ export default function AdminMerchantsTable({ merchants, hdrs, onRefresh, onForc
         image_url: discEdit.image_url,
         active: discEdit.active,
       };
-      if (isNaN(payload.original_price) || isNaN(payload.discounted_price) || payload.discounted_price >= payload.original_price) {
+      if (isOmaggio(discEdit)) {
+        // Omaggio: nessun prezzo da salvare
+        delete payload.original_price;
+        delete payload.discounted_price;
+      } else if (isNaN(payload.original_price) || isNaN(payload.discounted_price) || payload.discounted_price >= payload.original_price) {
         toast.error("Verifica i prezzi (scontato < originale)");
         setBusy(false);
         return;
@@ -562,6 +568,7 @@ function DiscountEditModal({ discEdit, setDiscEdit, onSave, busy }) {
             <Label className="text-muted-foreground text-xs">Descrizione</Label>
             <Input value={discEdit.description} onChange={(e) => setDiscEdit({ ...discEdit, description: e.target.value })} className="bg-muted border-border text-foreground" />
           </div>
+          {!isOmaggio(discEdit) && (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-muted-foreground text-xs">Prezzo originale (€)</Label>
@@ -572,6 +579,7 @@ function DiscountEditModal({ discEdit, setDiscEdit, onSave, busy }) {
               <Input data-testid="admin-disc-discounted" type="number" step="0.01" value={discEdit.discounted_price} onChange={(e) => setDiscEdit({ ...discEdit, discounted_price: e.target.value })} className="bg-muted border-border text-foreground" />
             </div>
           </div>
+          )}
           <div>
             <Label className="text-muted-foreground text-xs">Termini</Label>
             <Input value={discEdit.terms} onChange={(e) => setDiscEdit({ ...discEdit, terms: e.target.value })} className="bg-muted border-border text-foreground" />

@@ -1,4 +1,5 @@
 import { GIORNI } from "@/components/MerchantHours";
+import { isOmaggio } from "@/lib/offerta";
 import { renderBold } from "@/lib/renderBold";
 
 /**
@@ -46,7 +47,7 @@ export default function SchedaCompleta({ offerta, negozio, id }) {
   const o = offerta;
   const n = negozio;
   const campiOfferta = o ? [
-    o.title, o.description, o.original_price, o.discounted_price, o.terms, o.plan_ahead, o.validity_info, o.additional_info,
+    o.title, o.description, ...(isOmaggio(o) ? [] : [o.original_price, o.discounted_price]), o.terms, o.plan_ahead, o.validity_info, o.additional_info,
   ] : [];
   const campiNegozio = n ? [
     n.shop_name, n.name, n.email, n.phone, n.piva, n.category, n.zone, n.address, n.shop_description, n.image_url, n.orari?.giorni?.length ? 1 : null,
@@ -68,9 +69,13 @@ export default function SchedaCompleta({ offerta, negozio, id }) {
           <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2"><Campo etichetta="Titolo" valore={o.title} id={`sc-titolo-${id}`} /></div>
             <div className="sm:col-span-2"><Campo etichetta="Descrizione" valore={o.description} id={`sc-descrizione-${id}`} /></div>
+            {isOmaggio(o) ? (
+              <Campo etichetta="Tipo di offerta" valore="Omaggio (senza prezzi)" />
+            ) : (<>
             <Campo etichetta="Prezzo pieno" valore={euro(o.original_price)} />
             <Campo etichetta="Prezzo scontato" valore={euro(o.discounted_price)} />
             <Campo etichetta="Sconto" valore={o.percent_off != null ? `−${o.percent_off}%` : null} />
+            </>)}
             <Campo etichetta="Usi al mese per cliente" valore={`${o.max_uses_per_month || 1}`} />
             <div className="sm:col-span-2"><Campo etichetta="Termini e condizioni" valore={o.terms} id={`sc-termini-${id}`} /></div>
             <div className="sm:col-span-2"><Campo etichetta="Pianifica in anticipo" valore={o.plan_ahead} /></div>

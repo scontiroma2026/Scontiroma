@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { isOmaggio } from "@/lib/offerta";
 import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -112,11 +113,15 @@ export default function MerchantDashboard() {
                     <div className="min-w-0">
                       <h3 className="break-words font-serif text-[21px] leading-tight">{discount.title}</h3>
                       <div className="mt-1.5 flex items-baseline gap-2 text-base">
+                        {isOmaggio(discount) ? (
+                          <strong className="font-extrabold text-ac-rosa">In omaggio</strong>
+                        ) : (<>
                         <strong className="font-extrabold text-ac-rosa">€{discount.discounted_price.toFixed(2)}</strong>
                         <span className="text-ac-mute line-through">€{discount.original_price.toFixed(2)}</span>
+                        </>)}
                       </div>
                     </div>
-                    <span className="ac-grad shrink-0 rounded-[10px] px-3 py-1.5 text-sm font-extrabold text-white">−{discount.percent_off}%</span>
+                    <span className="ac-grad shrink-0 rounded-[10px] px-3 py-1.5 text-sm font-extrabold text-white">{isOmaggio(discount) ? "🎁 Omaggio" : `−${discount.percent_off}%`}</span>
                   </div>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <Link to="/merchant/discount" className={`${CLASSE_BASE_SECONDARIO} ${CLASSE_BORDO.rosa} min-h-[46px] flex-1`}>

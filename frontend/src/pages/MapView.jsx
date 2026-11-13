@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { isOmaggio } from "@/lib/offerta";
 import { Link } from "react-router-dom";
 import { MapContainer, Marker, Popup, ZoomControl, useMap, CircleMarker } from "react-leaflet";
 import L from "leaflet";
@@ -234,7 +235,7 @@ export default function MapView() {
                         />
                       </div>
                       <div className="absolute right-2 top-2 rounded-full bg-fucsia px-2 py-1 text-xs font-bold text-white shadow-lg">
-                        −{d.percent_off}%
+                        {isOmaggio(d) ? "🎁 Omaggio" : `−${d.percent_off}%`}
                       </div>
                     </div>
                     <div className="p-3">
@@ -247,10 +248,14 @@ export default function MapView() {
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">{d.merchant.shop_name}</div>
                       <div className="mt-2 flex items-baseline justify-between">
+                        {isOmaggio(d) ? (
+                          <span className="font-serif text-xl text-fucsia">In omaggio</span>
+                        ) : (
                         <div>
                           <span className="font-serif text-xl text-fucsia">€{d.discounted_price.toFixed(2)}</span>
                           <span className="ml-2 text-xs text-muted-foreground line-through">€{d.original_price.toFixed(2)}</span>
                         </div>
+                        )}
                         <ArrowRight size={14} className="text-fucsia" />
                       </div>
                     </div>
