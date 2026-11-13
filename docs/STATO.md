@@ -63,11 +63,12 @@ Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #68 | Admin: nome e cognome completi dei clienti nel Registro Frodi e in Feedback App (solo admin con master password; commercianti vedono «Nome C.») | 08/10 |
 | #69 | Zona senza offerte: scheda «Stiamo arrivando nella tua zona» con «Vedi le offerte nelle altre zone» e «Fammi sapere quando arrivate» (contatore anonimo per zona nella collezione `interesse_zona`, un voto per zona e per browser, limite di 10 richieste/ora per IP, nessun dato personale); tabella «Interesse per zona» nel tab «Fase di lancio» dell'admin. Ramo `claude/stiamo-arrivando` | 09/10 |
 | #70 | Admin, «Stato dei servizi»: nuova riga «Indirizzi (LocationIQ)» (giallo senza chiave, verde se risponde, rosso se rifiutata) | 09/10 |
+| #246 | Sicurezza: librerie con vulnerabilità note aggiornate (server: `pip-audit` da 55 a 0; sito: `yarn audit` da 113 a 90), log del driver del database a WARNING | 10/11 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #246 | Sicurezza, 10/11: aggiornate le librerie con vulnerabilità note. Server: fastapi 0.110→0.162, starlette 0.37→1.3, PyJWT 2.13→2.15, pymongo 4.6→4.18 con motor 3.3→3.7, aiohttp, cryptography, urllib3, certifi, pyasn1, multidict, dnspython (`pip-audit`: da 55 segnalazioni a 0). Sito: axios 1.18→1.21, react-router 7.15→7.18, follow-redirects 1.16.2 (`yarn audit`: da 113 a 90; le restanti sono negli strumenti di compilazione di react-scripts). Nessuna modifica al codice. Ramo `claude/aggiorna-librerie-sicurezza` | Controlli verdi |
+| #247 | Iscrizione facile per i negozi, 13/11 (mossa 2 del modello scalabile): iscrizione del commerciante in 2 passi (1: nome, email, password, nome e categoria del negozio; 2: indirizzo, telefono, Partita IVA, zona e consensi, invariati), pulsante «Scrivici su WhatsApp» per chi vuole aiuto, e alla prima offerta un riquadro «Parti da un'offerta pronta» con idee per categoria che riempiono solo i testi (i prezzi li scrive sempre il commerciante). Nessuna modifica al server né ai testi legali. Ramo `claude/iscrizione-negozio-facile` | Controlli verdi |
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 | #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |

@@ -1,6 +1,6 @@
 // Testi legali allineati alle regole della fase di lancio: niente 2,99 €, niente PIN,
 // niente rinnovo automatico né abbonamento clienti; fornitori della mappa elencati.
-const { test, expect } = require('../fixtures');
+const { test, expect, passoUnoNegozio } = require('../fixtures');
 
 const PAGINE = { '/privacy': 'privacy-policy-page', '/termini': 'termini-page', '/recesso': 'recesso-page', '/cookies': 'cookie-policy-page' };
 const VIETATI = [/2,99/, /\bPIN\b/, /rinnovo automatico/i, /abbonat[io]/i, /gratis per sempre/i, /nessuna commissione/i];
@@ -75,7 +75,7 @@ test('privacy e termini: titolare identificato, nessun riferimento alla piattafo
 });
 
 test('iscrizione commerciante: seconda casella per le clausole specifiche', async ({ page }) => {
-  await page.goto('/register?role=merchant');
+  await passoUnoNegozio(page);
   await expect(page.getByTestId('legal-specific')).toBeVisible();
   await page.goto('/register');
   await expect(page.getByTestId('legal-specific')).toHaveCount(0);

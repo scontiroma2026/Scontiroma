@@ -14,6 +14,9 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
 import ZoneOptions from "@/components/ZoneOptions";
 import RimandaConferma from "@/components/RimandaConferma";
+import { WHATSAPP_NUMERO } from "@/components/RiquadroCiPensiamoNoi";
+
+const WHATSAPP_AIUTO = `https://wa.me/39${WHATSAPP_NUMERO.replace(/\s/g, "")}?text=${encodeURIComponent("Ciao, vorrei iscrivere il mio negozio a Sconti Roma: mi aiutate?")}`;
 
 export default function Register() {
   const { register } = useAuth();
@@ -44,6 +47,10 @@ export default function Register() {
   const [daConfermare, setDaConfermare] = useState(null); // email del cliente appena iscritto, in attesa del link
   // Ricorda credenziali su questo dispositivo (default: attivo, come UX consumer)
   const [rememberCreds, setRememberCreds] = useState(true);
+  // Commercianti: iscrizione in 2 passi (1: chi sei e accesso, 2: dati dell'attività e consensi)
+  const [passo, setPasso] = useState(1);
+  const passoDue = role === "merchant" && passo === 2;
+  const mostraPassoUno = role !== "merchant" || passo === 1;
 
   useEffect(() => {
     api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneAree(r.data.areas || []); });
@@ -57,6 +64,13 @@ export default function Register() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (role === "merchant" && passo === 1) {
+      // Primo passo completo (il browser ha già controllato i campi obbligatori): avanti
+      trackClick("register_merchant_step1");
+      setPasso(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     trackClick("register_started");
     if (!acceptedLegal) {
       toast.error("Devi dichiarare di avere almeno 18 anni e accettare Termini, Privacy e Cookie Policy per continuare");
@@ -138,7 +152,7 @@ export default function Register() {
           <button
             type="button"
             data-testid="role-client"
-            onClick={() => setRole("client")}
+            onClick={() => { setRole("client"); setPasso(1); }}
             className={`rounded-md py-2 text-sm transition ${role === "client" ? "bg-card border border-border text-terracotta shadow" : "text-muted-foreground"}`}
           >
             Sono un cliente
@@ -146,14 +160,33 @@ export default function Register() {
           <button
             type="button"
             data-testid="role-merchant"
-            onClick={() => setRole("merchant")}
+            onClick={() => { setRole("merchant"); setPasso(1); }}
             className={`rounded-md py-2 text-sm transition ${role === "merchant" ? "bg-card border border-border text-terracotta shadow" : "text-muted-foreground"}`}
           >
             Sono un commerciante
           </button>
         </div>
 
+        {role === "merchant" && (
+          <div data-testid="reg-passo" className="mt-5">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+              <span>Passo {passo} di 2</span>
+              <span>{passo === 1 ? "Tu e il tuo negozio" : "Dati dell'attività"}</span>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-1.5" aria-hidden="true">
+              <div className="h-1.5 rounded-full bg-fucsia" />
+              <div className={`h-1.5 rounded-full ${passo === 2 ? "bg-fucsia" : "bg-muted"}`} />
+            </div>
+            {passo === 1 && (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Ci vogliono 2 minuti. Dopo l'iscrizione scegli un'offerta già pronta e la sistemi come vuoi.
+              </p>
+            )}
+          </div>
+        )}
+
         <form onSubmit={submit} className="mt-6 space-y-4">
+          {mostraPassoUno && (<>
           {role === "client" ? (
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -204,6 +237,25 @@ export default function Register() {
                 <Input data-testid="reg-shop" required value={form.shop_name} onChange={update("shop_name")} className="mt-1" />
               </div>
               <div>
+                <Label>Categoria</Label>
+                <select
+                  data-testid="reg-category"
+                  value={form.category}
+                  onChange={update("category")}
+                  required
+                  className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
+                >
+                  <option value="">Seleziona…</option>
+                  {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          </>)}
+
+          {passoDue && (
+            <>
+              <div>
                 <AddressAutocomplete
                   label="Indirizzo attività"
                   helperText="es. Via del Corso 100, 00186 Roma"
@@ -239,37 +291,23 @@ export default function Register() {
                   className="mt-1"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Zona</Label>
-                  <select
-                    data-testid="reg-zone"
-                    value={form.zone}
-                    onChange={update("zone")}
-                    required
-                    className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
-                  >
-                    <option value="">Seleziona…</option>
-                    <ZoneOptions areas={zoneAree} zones={zones} />
-                  </select>
-                </div>
-                <div>
-                  <Label>Categoria</Label>
-                  <select
-                    data-testid="reg-category"
-                    value={form.category}
-                    onChange={update("category")}
-                    required
-                    className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
-                  >
-                    <option value="">Seleziona…</option>
-                    {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
+              <div>
+                <Label>Zona</Label>
+                <select
+                  data-testid="reg-zone"
+                  value={form.zone}
+                  onChange={update("zone")}
+                  required
+                  className="mt-1 w-full rounded-md border border-input bg-card border border-border px-3 py-2 text-sm"
+                >
+                  <option value="">Seleziona…</option>
+                  <ZoneOptions areas={zoneAree} zones={zones} />
+                </select>
               </div>
             </>
           )}
 
+          {(role === "client" || passoDue) && (<>
           {/* GDPR legal checkbox */}
           <div className="rounded-xl border border-border bg-muted p-3 space-y-3">
             <label className="flex items-start gap-3 cursor-pointer">
@@ -342,7 +380,37 @@ export default function Register() {
           <Button data-testid="reg-submit" type="submit" disabled={loading || !acceptedLegal || (role === "merchant" && !acceptedSpecific)} className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
             {loading ? "Creazione…" : "Crea account"}
           </Button>
+          {passoDue && (
+            <button
+              type="button"
+              data-testid="reg-indietro"
+              onClick={() => setPasso(1)}
+              className="flex min-h-11 w-full items-center justify-center text-sm text-muted-foreground hover:underline"
+            >
+              ← Torna al passo 1
+            </button>
+          )}
+          </>)}
+
+          {role === "merchant" && passo === 1 && (
+            <Button data-testid="reg-avanti" type="submit" className="w-full grad-fucsia-viola text-white hover:scale-105 transition">
+              Avanti
+            </Button>
+          )}
         </form>
+
+        {role === "merchant" && (
+          <a
+            data-testid="reg-whatsapp"
+            href={WHATSAPP_AIUTO}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackClick("register_merchant_whatsapp")}
+            className="mt-4 flex min-h-11 items-center justify-center rounded-xl border border-border text-sm font-semibold text-foreground hover:underline"
+          >
+            Preferisci farti aiutare? Scrivici su WhatsApp
+          </a>
+        )}
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Hai già un account?{" "}

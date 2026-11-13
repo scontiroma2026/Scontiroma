@@ -110,4 +110,16 @@ async function loginNelBrowser(page, email, password) {
   expect(st).toBe(200);
 }
 
-module.exports = { test, expect, API, WEB, PASSWORD, MERCHANT, unico, chiama, registra, login, admin, creaOffertaApprovata, firmaStripe, webhookCheckoutCompletato, loginNelBrowser };
+// Iscrizione commerciante dal sito: compila il passo 1 di 2 e passa ai dati dell'attività
+async function passoUnoNegozio(page, { shop = 'Negozio di prova', category = 'Ristorante' } = {}) {
+  await page.goto('/register?role=merchant');
+  await page.getByTestId('reg-name').fill('Luca');
+  await page.getByTestId('reg-email').fill(unico('passo1'));
+  await page.getByTestId('reg-password').fill(PASSWORD);
+  await page.getByTestId('reg-shop').fill(shop);
+  await page.getByTestId('reg-category').selectOption(category);
+  await page.getByTestId('reg-avanti').click();
+  await expect(page.getByTestId('reg-passo')).toContainText('Passo 2 di 2');
+}
+
+module.exports = { test, expect, API, WEB, PASSWORD, MERCHANT, unico, chiama, registra, login, admin, creaOffertaApprovata, firmaStripe, webhookCheckoutCompletato, loginNelBrowser, passoUnoNegozio };

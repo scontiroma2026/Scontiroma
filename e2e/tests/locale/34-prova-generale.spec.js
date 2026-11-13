@@ -112,11 +112,13 @@ test('commerciante: registrazione, offerta con foto, approvazione e «Non rinnov
   await page.getByTestId('reg-email').fill(email);
   await page.getByTestId('reg-password').fill(PASSWORD);
   await page.getByTestId('reg-shop').fill('Bottega di prova');
+  await page.getByTestId('reg-category').selectOption('Ristorante');
+  // Passo 1 di 2 completo: avanti ai dati dell'attività
+  await page.getByTestId('reg-avanti').click();
   await page.getByTestId('reg-address-input').fill("Via dell'Esempio 1, Roma");
   await page.getByTestId('reg-phone').fill('+39 06 0000000');
   await page.getByTestId('reg-partita-iva').fill('12345678903');
   await page.getByTestId('reg-zone').selectOption('Garbatella');
-  await page.getByTestId('reg-category').selectOption('Ristorante');
   await page.getByTestId('legal-accept').click();
   await page.getByTestId('legal-specific').click();
   await page.getByTestId('reg-submit').click();
