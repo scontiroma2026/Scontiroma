@@ -24,6 +24,15 @@ test('per i commercianti: contenuti, video segnaposto e registrazione', async ({
   const testo = await pagina.innerText();
   for (const re of VIETATI) expect(testo, `testo vietato ${re}`).not.toMatch(re);
   expect(testo).toContain('Roma e dintorni');
+  // In cima: prima «Iscrivi il tuo negozio», poi WhatsApp per le domande; l'omaggio è spiegato nella pagina
+  const alto = page.getByTestId('cta-registra-alto');
+  await expect(alto).toBeVisible();
+  await expect(alto).toHaveAttribute('href', '/register?role=merchant');
+  const yAlto = (await alto.boundingBox()).y;
+  expect(yAlto).toBeLessThanOrEqual((await page.getByTestId('cta-whatsapp-alto').boundingBox()).y);
+  expect(yAlto).toBeLessThan((await page.getByTestId('video-commercianti').boundingBox()).y);
+  await expect(page.getByTestId('commercianti-prova')).toContainText('2 mesi di prova gratuita');
+  expect(testo).toContain('omaggio');
   // Bottone verso la registrazione commerciante
   await page.getByTestId('cta-registra-attivita').click();
   await expect(page).toHaveURL(/\/register\?role=merchant/);
@@ -91,7 +100,7 @@ test('per i commercianti: 44 px, contrasto, caratteri e niente scroll orizzontal
         const val = rapporto(sopra(colore, f), f);
         if (val < (grande ? 3 : 4.5)) errori.push(`${el.tagName} «${el.textContent.trim().slice(0, 30)}» ${val.toFixed(2)}`);
       }
-      if (el.matches('button, a[data-testid="cta-registra-attivita"], summary') && rc.height < 43.5) piccoli.push(`${el.tagName} ${Math.round(rc.height)}px`);
+      if (el.matches('button, a[data-testid="cta-registra-attivita"], a[data-testid="cta-registra-alto"], summary') && rc.height < 43.5) piccoli.push(`${el.tagName} ${Math.round(rc.height)}px`);
     }
     return { errori, piccoli, famiglie: [...famiglie], eccesso: document.documentElement.scrollWidth - window.innerWidth };
   });
