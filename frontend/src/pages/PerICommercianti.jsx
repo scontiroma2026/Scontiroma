@@ -24,14 +24,15 @@ function TastoWhatsApp({ testid, dove }) {
 }
 
 const PASSI = [
-  { n: "1", t: "Scegli cosa offrire", d: "Un prodotto o un servizio del tuo negozio, a tua scelta." },
+  { n: "1", t: "Scegli cosa offrire", d: "Uno sconto su un prodotto o un servizio, oppure un omaggio: scegli tu." },
   { n: "2", t: "Decidi le regole", d: "Tu stabilisci lo sconto, i giorni in cui vale e quante volte al mese." },
   { n: "3", t: "Il cliente mostra il QR", d: "In negozio inquadri il QR dal telefono e applichi lo sconto." },
 ];
 
 const FAQ = [
   { q: "Quanto costa?", a: "Hai 2 mesi di prova gratuita (almeno 60 giorni) dalla pubblicazione della tua prima offerta. Prima di qualsiasi pagamento ti avvisiamo e non paghi niente senza la tua conferma. I dettagli sono nei Termini, punto 3.2." },
-  { q: "Quanto tempo serve?", a: "Pochi minuti per registrarti e creare la prima offerta. Poi una al mese." },
+  { q: "Quanto tempo serve?", a: "Due minuti per iscriverti dal telefono. Per la prima offerta puoi partire da un'idea già pronta e cambiare quello che vuoi. Poi una al mese." },
+  { q: "Devo per forza fare uno sconto?", a: "No. Puoi offrire un omaggio a chi arriva con l'app, per esempio il dolce della casa o un calice di benvenuto. I tuoi prezzi restano quelli di sempre." },
   { q: "Chi decide lo sconto?", a: "Lo decidi tu: prodotto o servizio, sconto, giorni e quante volte al mese." },
   { q: "Come vengo trovato?", a: "Dopo un nostro controllo, la tua offerta compare nell'app per chi abita a Roma e dintorni." },
   { q: "Che dati vedo dei clienti?", a: "Alla scansione vedi nome e iniziale del cognome, l'ora, l'offerta e se il cliente è nuovo o di ritorno." },
@@ -54,10 +55,16 @@ export default function PerICommercianti() {
         Sconti Roma porta nel tuo negozio le persone che abitano vicino a te, a Roma e dintorni.
         Pubblichi un'offerta, il cliente la trova nell'app e arriva con il suo QR.
       </p>
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+      {/* Prima l'iscrizione (chi arriva dal volantino o da un messaggio vuole iscriversi da solo), poi WhatsApp per le domande */}
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Button asChild className="min-h-12 rounded-full grad-fucsia-viola px-8 text-base font-extrabold text-white">
+          <Link data-testid="cta-registra-alto" to="/register?role=merchant" onClick={() => trackClick("registra_commercianti_alto")}>Iscrivi il tuo negozio</Link>
+        </Button>
         <TastoWhatsApp testid="cta-whatsapp-alto" dove="alto" />
-        <span className="text-sm text-muted-foreground"><strong className="text-foreground">2 mesi di prova gratuita.</strong> Hai domande? Ti rispondiamo noi, senza impegno.</span>
       </div>
+      <p data-testid="commercianti-prova" className="mt-3 text-sm text-muted-foreground">
+        <strong className="text-foreground">2 mesi di prova gratuita.</strong> Ti iscrivi in due minuti dal telefono. Hai domande? Scrivici, ti rispondiamo senza impegno.
+      </p>
 
       <div className="mt-8">
         <VideoCommercianti />
@@ -78,7 +85,7 @@ export default function PerICommercianti() {
 
       <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild className="min-h-12 rounded-full grad-fucsia-viola px-8 text-white">
-          <Link data-testid="cta-registra-attivita" to="/register?role=merchant">Registra la tua attività</Link>
+          <Link data-testid="cta-registra-attivita" to="/register?role=merchant" onClick={() => trackClick("registra_commercianti_basso")}>Registra la tua attività</Link>
         </Button>
         <TastoWhatsApp testid="cta-whatsapp-basso" dove="basso" />
       </div>

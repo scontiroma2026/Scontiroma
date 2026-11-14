@@ -11,6 +11,10 @@ const CLICK_LABELS = {
   flyer_print: "Stampa locandina",
   whatsapp_commercianti_alto: "WhatsApp dalla pagina commercianti (in alto)",
   whatsapp_commercianti_basso: "WhatsApp dalla pagina commercianti (in basso)",
+  registra_commercianti_alto: "«Iscrivi il tuo negozio» dalla pagina commercianti (in alto)",
+  registra_commercianti_basso: "«Registra la tua attività» dalla pagina commercianti (in basso)",
+  register_merchant_step1: "Iscrizione negozio: passo 1 completato",
+  register_merchant_whatsapp: "WhatsApp dall'iscrizione negozio",
   discount_click: "Click su uno sconto",
 };
 
