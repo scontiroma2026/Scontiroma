@@ -71,7 +71,7 @@ Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| (nuova) | Obiettivo «10 iscritti», 14/11: regola di contatto aggiornata (le email ai negozi non partono da Resend, che vieta le email non richieste: le manda il titolare da una casella normale) e lista di lancio riallineata al punto di partenza del 14/11. Solo documenti. Ramo `claude/obiettivo-dieci-iscritti` | OK del titolare |
+| #250 | Obiettivo «10 iscritti», 14/11: regola di contatto aggiornata (le email ai negozi non partono da Resend, che vieta le email non richieste: le manda il titolare da una casella normale) e lista di lancio riallineata al punto di partenza del 14/11. Solo documenti. Ramo `claude/obiettivo-dieci-iscritti` | OK del titolare |
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 | #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
