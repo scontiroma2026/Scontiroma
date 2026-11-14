@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isOmaggio } from "@/lib/offerta";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,9 +107,13 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                 </div>
                 <div className="font-serif text-xl text-foreground mt-1">{d.title}</div>
                 <div className="mt-2 flex items-baseline gap-2 text-sm">
+                  {isOmaggio(d) ? (
+                    <span className="text-fucsia font-bold text-lg">🎁 Omaggio (senza prezzi)</span>
+                  ) : (<>
                   <span className="text-fucsia font-bold text-lg">€{d.discounted_price?.toFixed(2)}</span>
                   <span className="text-muted-foreground line-through">€{d.original_price?.toFixed(2)}</span>
                   <span className="ml-2 text-neon text-xs">−{d.percent_off}%</span>
+                  </>)}
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span

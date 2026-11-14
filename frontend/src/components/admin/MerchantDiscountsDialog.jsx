@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isOmaggio } from "@/lib/offerta";
 import api from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, History, Check, Clock, X, Phone } from "lucide-react";
@@ -94,7 +95,9 @@ export default function MerchantDiscountsDialog({ merchantId, open, onOpenChange
                       </div>
                       <div className="text-xs text-muted-foreground mt-1 line-clamp-1">{d.description}</div>
                       <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                        <span>€ {Number(d.original_price||0).toFixed(2)} → <span className="text-fucsia font-semibold">€ {Number(d.discounted_price||0).toFixed(2)}</span></span>
+                        {isOmaggio(d)
+                          ? <span className="text-fucsia font-semibold">🎁 Omaggio</span>
+                          : <span>€ {Number(d.original_price||0).toFixed(2)} → <span className="text-fucsia font-semibold">€ {Number(d.discounted_price||0).toFixed(2)}</span></span>}
                         <span>· {d.redemptions_count} redemption</span>
                         <span
                           data-testid={`disc-uses-${d.id}`}

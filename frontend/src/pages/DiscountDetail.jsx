@@ -1,4 +1,5 @@
 import { trackClick } from "@/lib/analytics";
+import { isOmaggio } from "@/lib/offerta";
 import { CLASSE_WHATSAPP, DATI_WHATSAPP } from "@/components/TastoWhatsApp";
 import BadgeNuovaOfferta from "@/components/BadgeNuovaOfferta";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -141,14 +142,17 @@ export default function DiscountDetail() {
   }
 
   const m = discount.merchant || {};
-  const savings = (discount.original_price - discount.discounted_price).toFixed(2);
+  const omaggio = isOmaggio(discount);
+  const savings = omaggio ? null : (discount.original_price - discount.discounted_price).toFixed(2);
 
   // Condividi con un amico: menu di condivisione del telefono, altrimenti WhatsApp.
   // Il link passa da una pagina con l'anteprima (foto, titolo, prezzo) e porta all'offerta.
   const condividi = async () => {
     const link = `${API}/share/o/${discount.id}`;
     const euro = (v) => Number(v).toFixed(2).replace(".", ",");
-    const testo = `Guarda questo sconto su Sconti Roma: ${discount.title}${m.shop_name ? ` da ${m.shop_name}` : ""}, €${euro(discount.discounted_price)} invece di €${euro(discount.original_price)}`;
+    const testo = omaggio
+      ? `Guarda questa offerta su Sconti Roma: ${discount.title}${m.shop_name ? ` da ${m.shop_name}` : ""}, in omaggio`
+      : `Guarda questo sconto su Sconti Roma: ${discount.title}${m.shop_name ? ` da ${m.shop_name}` : ""}, €${euro(discount.discounted_price)} invece di €${euro(discount.original_price)}`;
     trackClick("share_offer");
     if (navigator.share) {
       try { await navigator.share({ title: discount.title, text: testo, url: link }); } catch (e) { /* annullato */ }
@@ -180,7 +184,7 @@ export default function DiscountDetail() {
                   className="h-full w-full object-cover transition-opacity duration-300"
                 />
                 <div className="absolute left-4 top-4 rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-white shadow-lg">
-                  −{discount.percent_off}%
+                  {omaggio ? "🎁 Omaggio" : `−${discount.percent_off}%`}
                 </div>
                 <CuorePreferito merchantId={m.id} className="absolute right-4 top-4" />
                 {hasMulti && (
@@ -268,6 +272,12 @@ export default function DiscountDetail() {
               )}
             </div>
             <div className="bg-muted p-5">
+              {omaggio ? (
+                <>
+                  <div data-testid="omaggio-dettaglio" className="font-serif text-4xl font-bold text-fucsia">In omaggio</div>
+                  <div className="mt-1 text-sm text-muted-foreground">Per chi arriva da Sconti Roma: mostra il QR alla cassa.</div>
+                </>
+              ) : (<>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="text-lg text-muted-foreground line-through">€{discount.original_price.toFixed(2)}</span>
                 <span data-testid="discounted-price" className="font-serif text-4xl font-bold text-fucsia">€{discount.discounted_price.toFixed(2)}</span>
@@ -276,6 +286,7 @@ export default function DiscountDetail() {
                 </span>
               </div>
               <div className="mt-1 text-sm text-muted-foreground">Risparmi <strong className="text-foreground">€{savings}</strong> con Sconti Roma</div>
+              </>)}
 
             {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
             {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (

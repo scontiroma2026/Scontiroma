@@ -65,6 +65,7 @@ Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #70 | Admin, «Stato dei servizi»: nuova riga «Indirizzi (LocationIQ)» (giallo senza chiave, verde se risponde, rosso se rifiutata) | 09/10 |
 | #246 | Sicurezza: librerie con vulnerabilità note aggiornate (server: `pip-audit` da 55 a 0; sito: `yarn audit` da 113 a 90), log del driver del database a WARNING | 10/11 |
 | #247 | Iscrizione facile per i negozi: iscrizione del commerciante in 2 passi, pulsante «Scrivici su WhatsApp», «Parti da un'offerta pronta» alla prima offerta | 13/11 |
+| #248 | Offerta «Omaggio»: oltre allo sconto il negozio può scegliere un regalo o un'esperienza senza prezzi (campo `offer_type`), «In omaggio» in catalogo, dettaglio, mappa, area negozio e admin; offerte pronte di tipo omaggio | 14/11 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |

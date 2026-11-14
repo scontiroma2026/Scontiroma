@@ -1,9 +1,18 @@
 // Offerte già pronte da cui il commerciante parte alla prima offerta.
+// Quelle con `tipo: "omaggio"` sono regali o esperienze senza prezzi (per chi non vuole fare sconti).
 // Riempiono solo titolo, descrizione e condizioni: i prezzi li scrive sempre il commerciante
 // (il prezzo originale deve essere il più basso praticato negli ultimi 30 giorni).
 // Testi neutri: nessuna promessa di risultati, nessun marchio di terzi.
 
 const COMUNI = [
+  {
+    id: "omaggio-benvenuto",
+    tipo: "omaggio",
+    titolo: "Omaggio di benvenuto",
+    description: "Un **piccolo omaggio della casa** per chi viene a trovarci con Sconti Roma.",
+    terms: "Con un acquisto. Uno per cliente.",
+    validity_info: "",
+  },
   {
     id: "benvenuto",
     titolo: "Prima visita scontata",
@@ -15,6 +24,22 @@ const COMUNI = [
 
 const PER_CATEGORIA = {
   "Ristorante": [
+    {
+      id: "dolce-casa",
+      tipo: "omaggio",
+      titolo: "Dolce della casa in omaggio",
+      description: "Con la cena, il **dolce della casa** te lo offriamo noi.",
+      terms: "Con la cena. Uno per persona. Prenotazione consigliata.",
+      validity_info: "Dal lunedì al giovedì.",
+    },
+    {
+      id: "calice-benvenuto",
+      tipo: "omaggio",
+      titolo: "Calice di benvenuto",
+      description: "Un **calice della casa** per iniziare la serata.",
+      terms: "Con la cena. Uno per persona.",
+      validity_info: "",
+    },
     {
       id: "pranzo",
       titolo: "Menu pranzo a prezzo speciale",
@@ -66,6 +91,14 @@ const PER_CATEGORIA = {
   ],
   "Beauty & SPA": [
     {
+      id: "trattamento-omaggio",
+      tipo: "omaggio",
+      titolo: "Trattamento in omaggio",
+      description: "Con un servizio, un **trattamento veloce** (es. maschera o massaggio alla testa) te lo offriamo noi.",
+      terms: "Con un servizio a prezzo pieno. Su appuntamento.",
+      validity_info: "",
+    },
+    {
       id: "piega",
       titolo: "Taglio e piega",
       description: "**Taglio e piega** a un prezzo speciale. Su appuntamento.",
@@ -99,6 +132,14 @@ const PER_CATEGORIA = {
     },
   ],
   "Vino & Gastronomia": [
+    {
+      id: "assaggio-omaggio",
+      tipo: "omaggio",
+      titolo: "Assaggio della casa",
+      description: "Un **assaggio dei nostri prodotti** offerto da noi, per conoscerci.",
+      terms: "Uno per cliente.",
+      validity_info: "",
+    },
     {
       id: "degustazione",
       titolo: "Degustazione",

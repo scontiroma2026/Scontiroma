@@ -17,14 +17,16 @@ import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
 import { offertePronte } from "@/lib/offertePronte";
 
 const EMPTY_FORM = {
+  offer_type: "sconto",
   title: "", description: "", original_price: "", discounted_price: "",
   image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
   plan_ahead: "", validity_info: "", additional_info: "",
 };
 
 const formFrom = (d) => ({
+  offer_type: d.offer_type === "omaggio" ? "omaggio" : "sconto",
   title: d.title, description: d.description,
-  original_price: d.original_price, discounted_price: d.discounted_price,
+  original_price: d.original_price ?? "", discounted_price: d.discounted_price ?? "",
   image_url: d.image_url || "",
   image_urls: Array.isArray(d.image_urls) ? d.image_urls : (d.image_url ? [d.image_url] : []),
   terms: d.terms || "", active: d.active,
@@ -171,10 +173,14 @@ export default function MerchantDiscount() {
         discounted_price: parseFloat(form.discounted_price),
         max_uses_per_month: parseInt(form.max_uses_per_month, 10) || 1,
       };
-      if (isNaN(payload.original_price) || isNaN(payload.discounted_price)) {
+      if (form.offer_type === "omaggio") {
+        // Omaggio: nessun prezzo
+        payload.original_price = null;
+        payload.discounted_price = null;
+      } else if (isNaN(payload.original_price) || isNaN(payload.discounted_price)) {
         toast.error("Inserisci prezzi validi"); setLoading(false); return;
       }
-      if (payload.discounted_price >= payload.original_price) {
+      if (form.offer_type !== "omaggio" && payload.discounted_price >= payload.original_price) {
         toast.error("Il prezzo scontato deve essere inferiore all'originale"); setLoading(false); return;
       }
       if (isNext) {
@@ -198,9 +204,14 @@ export default function MerchantDiscount() {
 
   // Offerta pronta: riempie i testi, i prezzi restano da scrivere al commerciante
   const usaPronta = (o) => {
-    setForm((f) => ({ ...f, title: o.titolo, description: o.description, terms: o.terms, validity_info: o.validity_info || f.validity_info }));
-    toast.success("Offerta pronta inserita: scrivi i prezzi, aggiungi una foto e controlla i testi.");
-    setTimeout(() => document.getElementById("disc-original")?.focus(), 50);
+    const tipo = o.tipo === "omaggio" ? "omaggio" : "sconto";
+    setForm((f) => ({ ...f, offer_type: tipo, title: o.titolo, description: o.description, terms: o.terms, validity_info: o.validity_info || f.validity_info }));
+    if (tipo === "omaggio") {
+      toast.success("Omaggio inserito: aggiungi una foto e controlla i testi.");
+    } else {
+      toast.success("Offerta pronta inserita: scrivi i prezzi, aggiungi una foto e controlla i testi.");
+      setTimeout(() => document.getElementById("disc-original")?.focus(), 50);
+    }
   };
 
   const status = isNext ? nextOffer?.approval_status : existing?.approval_status;
@@ -368,7 +379,7 @@ export default function MerchantDiscount() {
                   onClick={() => usaPronta(o)}
                   className="min-h-11 rounded-full border-2 border-ac-campo bg-white px-4 text-sm font-extrabold text-ac-ink transition hover:border-ac-rosa"
                 >
-                  {o.titolo}
+                  {o.tipo === "omaggio" ? "🎁 " : ""}{o.titolo}
                 </button>
               ))}
             </div>
@@ -378,6 +389,32 @@ export default function MerchantDiscount() {
         <Scheda className="!p-4 sm:!p-6">
           <fieldset data-testid="disc-form" data-loaded={loaded ? "1" : "0"} disabled={readOnly || !loaded} className={readOnly || !loaded ? "opacity-60" : ""}>
             <form onSubmit={submit} className="space-y-5">
+              <div>
+                <div className={ETICHETTA}>Tipo di offerta</div>
+                <div className="mt-1.5 grid grid-cols-2 gap-2" role="group" aria-label="Tipo di offerta">
+                  {[["sconto", "Sconto", "Prezzo speciale"], ["omaggio", "🎁 Omaggio", "Un regalo o un'esperienza"]].map(([v, t, sotto]) => (
+                    <button
+                      key={v}
+                      type="button"
+                      data-testid={`disc-tipo-${v}`}
+                      aria-pressed={form.offer_type === v}
+                      onClick={() => setForm((f) => ({ ...f, offer_type: v }))}
+                      disabled={readOnly}
+                      className={`min-h-14 rounded-xl border-2 px-2 py-2 text-left transition ${
+                        form.offer_type === v ? "border-ac-rosa bg-ac-rosa text-white" : "border-ac-campo bg-white text-ac-ink hover:border-ac-rosa"
+                      }`}
+                    >
+                      <span className="block text-sm font-extrabold">{t}</span>
+                      <span className={`block text-xs ${form.offer_type === v ? "text-white/90" : "text-ac-mute"}`}>{sotto}</span>
+                    </button>
+                  ))}
+                </div>
+                {form.offer_type === "omaggio" && (
+                  <p data-testid="disc-omaggio-aiuto" className={AIUTO}>
+                    Non cambi i tuoi prezzi: offri qualcosa in più a chi arriva da Sconti Roma. Per esempio un calice di benvenuto, il dolce della casa, un assaggio dello chef o un posto riservato. Scrivi nelle condizioni se serve un acquisto (es. «con la cena»).
+                  </p>
+                )}
+              </div>
               <div>
                 <Label htmlFor="disc-title" className={ETICHETTA}>Titolo offerta</Label>
                 <Input id="disc-title" data-testid="disc-title" required value={form.title} onChange={upd("title")} className={CAMPO} placeholder="Es. Menu degustazione di pesce" />
@@ -389,6 +426,7 @@ export default function MerchantDiscount() {
                   Suggerimento: racchiudi le parole chiave tra doppi asterischi per il <strong className="text-ac-ink">grassetto</strong> — es. <code className="rounded bg-ac-tint px-1 font-bold text-ac-viola">**forno a legna**</code>
                 </p>
               </div>
+              {form.offer_type !== "omaggio" && (
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label htmlFor="disc-original" className={ETICHETTA}>Prezzo originale (€)</Label>
@@ -403,6 +441,7 @@ export default function MerchantDiscount() {
                   <Input id="disc-discounted" data-testid="disc-discounted" type="number" inputMode="decimal" step="0.01" required value={form.discounted_price} onChange={upd("discounted_price")} className={CAMPO} />
                 </div>
               </div>
+              )}
               <div>
                 <div className={ETICHETTA}>Foto dell'offerta <span className="text-xs font-semibold text-ac-mute">(fino a 8, la 1ª è la copertina)</span></div>
                 <p className={`${AIUTO} mb-3`}>
