@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { CLASSE_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
 import { salvaFonte, registraVisitaFonte } from "@/lib/referral";
@@ -15,8 +16,8 @@ function TastoWhatsApp({ testid, dove }) {
   return (
     <a data-testid={testid} href={WHATSAPP_INFO} target="_blank" rel="noreferrer"
       onClick={() => trackClick(`whatsapp_commercianti_${dove}`)}
-      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 text-base font-extrabold text-white hover:bg-emerald-800">
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.4 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.6-.1 1.2Z"/></svg>
+      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-base font-extrabold ${CLASSE_WHATSAPP}`}>
+      <IconaWhatsApp />
       Scrivici su WhatsApp
     </a>
   );
