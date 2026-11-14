@@ -1,5 +1,8 @@
 """Avvisi di scadenza delle offerte e «Non rinnovo» (nessun rinnovo automatico).
 
+Dal 14/11 ogni offerta ha la sua data di fine (durata scelta dal negozio): qui l'offerta di prova è
+online dal 2 al 31 ottobre 2026 (30 giorni), così i giorni dei promemoria restano facili da leggere.
+
 Il giorno è fissato sostituendo `server._rome_now`; le email sono sostituite da funzioni
 che le registrano, quindi non parte nessuna email vera.
 Gira in-process contro un MongoDB LOCALE o l'emulatore: rifiuta database remoti.
@@ -37,7 +40,7 @@ def posta(monkeypatch):
     """Registra le email invece di inviarle."""
     inviate = {"promemoria": [], "scaduta": [], "admin": []}
 
-    async def promemoria(to, name, shop, label, days_left):
+    async def promemoria(to, name, shop, label, days_left, prolungabile=True):
         inviate["promemoria"].append((to, days_left))
 
     async def scaduta(to, name, shop, no_renew=False):
@@ -87,27 +90,28 @@ async def commerciante(shop="Negozio di prova", offerta=True):
         await server.db.discounts.insert_one({
             "id": str(uuid.uuid4()), "merchant_id": uid, "title": "Offerta di ottobre", "description": "x",
             "original_price": 20.0, "discounted_price": 10.0, "active": True, "approval_status": "approved",
-            "locked_month": "2026-10", "created_at": now, "updated_at": now})
+            "locked_month": "2026-10", "valid_from": "2026-10-02", "valid_until": "2026-10-31",
+            "duration_days": 30, "created_at": now, "updated_at": now})
     return {"id": uid, "email": email, "h": {"Authorization": f"Bearer {server.create_token(uid, email)}"}}
 
 
 async def offerta_prossima(mid, status="pending"):
     now = datetime.now(timezone.utc).isoformat()
     await server.db.next_discounts.insert_one({
-        "id": str(uuid.uuid4()), "merchant_id": mid, "target_month": "2026-11", "title": "Offerta di novembre",
+        "id": str(uuid.uuid4()), "merchant_id": mid, "title": "Offerta di novembre",
         "description": "x", "original_price": 20.0, "discounted_price": 12.0, "active": True,
         "approval_status": status, "created_at": now, "updated_at": now})
 
 
 # ---------- Promemoria al commerciante ----------
 
-def test_finestra_chiusa_nessun_promemoria(monkeypatch, posta):
-    giorno(monkeypatch, 2026, 10, 20)
+def test_lontano_dalla_fine_nessun_promemoria(monkeypatch, posta):
+    giorno(monkeypatch, 2026, 10, 20)   # mancano 12 giorni: i promemoria partono negli ultimi 7
 
     async def body(_c):
         await commerciante()
         res = await server._run_next_offer_reminders()
-        assert res == {"window_open": False, "sent": 0}
+        assert res == {"checked": 0, "sent": 0, "admin_summary": False}
     run(body)
     assert posta["promemoria"] == [] and posta["admin"] == []
 
@@ -115,14 +119,14 @@ def test_finestra_chiusa_nessun_promemoria(monkeypatch, posta):
 def test_tre_promemoria_uno_per_fase(monkeypatch, posta):
     async def body(_c):
         m = await commerciante()
-        for d, fase in ((25, "apertura"), (26, "apertura"), (29, "tre_giorni"), (30, "tre_giorni"), (31, "ultimo_giorno")):
+        for d, inviati in ((25, 1), (26, 0), (29, 1), (30, 0), (31, 1)):
             giorno(monkeypatch, 2026, 10, d)
             res = await server._run_next_offer_reminders()
-            assert res["stage"] == fase
+            assert res["sent"] == inviati, (d, res)
             res2 = await server._run_next_offer_reminders()  # stesso giorno: niente doppioni
             assert res2["sent"] == 0
-        u = await server.db.users.find_one({"id": m["id"]})
-        assert u["next_offer_reminders"] == {"month": "2026-11", "stages": ["apertura", "tre_giorni", "ultimo_giorno"]}
+        off = await server.db.discounts.find_one({"merchant_id": m["id"]})
+        assert off["reminders"] == {"until": "2026-10-31", "stages": ["apertura", "tre_giorni", "ultimo_giorno"]}
     run(body)
     assert [d for _, d in posta["promemoria"]] == [7, 3, 1]
 
@@ -163,6 +167,8 @@ def test_stato_rinnovo_e_non_rinnovo(monkeypatch, posta):
         st = (await c.get("/api/merchants/me/renewal-status", headers=m["h"])).json()
         assert st["window"]["open"] is True and st["current_active"] is True
         assert st["expires_on"] == "31 ottobre" and st["next_status"] is None and st["no_renew"] is False
+        # mancano 5 giorni (oggi compreso): avviso acceso; lo sconto può stare online 90 giorni in tutto
+        assert st["days_left"] == 5 and st["expiring"] is True and st["max_extend_days"] == 60
 
         st = (await c.post("/api/merchants/me/no-renew", json={"no_renew": True}, headers=m["h"])).json()
         assert st["no_renew"] is True
@@ -185,8 +191,8 @@ def test_non_rinnovo_ritira_e_archivia_offerta_caricata(monkeypatch, posta):
 
         # Il 1° novembre non riparte nulla e arriva l'email "terminata" con la scelta Non rinnovo
         giorno(monkeypatch, 2026, 11, 1, h=0)
-        res = await server._run_month_rollover()
-        assert res["month"] == "2026-11" and res["expired"] == 1 and res["promoted"] == 0
+        res = await server._run_cambio_offerte()
+        assert res["giorno"] == "2026-11-01" and res["expired"] == 1 and res["promoted"] == 0
         d = await server.db.discounts.find_one({"merchant_id": m["id"]})
         assert d["approval_status"] == "expired" and d["active"] is False
         st = (await c.get("/api/merchants/me/renewal-status", headers=m["h"])).json()
@@ -196,7 +202,7 @@ def test_non_rinnovo_ritira_e_archivia_offerta_caricata(monkeypatch, posta):
 
 
 def test_con_non_rinnovo_non_si_carica_finche_non_si_annulla(monkeypatch, posta):
-    """Decisione del titolare (15/10): con «Non rinnovo» il caricamento del mese dopo è spento;
+    """Decisione del titolare (15/10): con «Non rinnovo» la prossima offerta non si può preparare;
     si riaccende solo annullando la scelta."""
     giorno(monkeypatch, 2026, 10, 28)
     corpo = {"title": "Offerta di novembre", "description": "Una descrizione dell'offerta",
@@ -230,31 +236,40 @@ def test_solo_commercianti(monkeypatch, posta):
     run(body)
 
 
-# ---------- Passaggio di mese ----------
+# ---------- Cambio offerte della notte ----------
 
-def test_rollover_usa_il_mese_di_roma(monkeypatch, posta):
-    """Il 1° alle 00:05 di Roma in UTC è ancora il mese prima: il passaggio non va saltato."""
-    async def body(_c):
-        await server.db.rollover_runs.insert_one({"month": "2026-10", "ran_at": "2026-10-01T00:05:00+02:00"})
+def test_cambio_offerte_usa_il_giorno_di_roma(monkeypatch, posta):
+    """Alle 00:05 di Roma in UTC è ancora il giorno prima: il cambio non va saltato. L'ultimo giorno
+    l'offerta è ancora online; il giorno dopo scade, una volta sola."""
+    async def body(c):
+        await server.db.reminder_claims.create_index("key", unique=True)
         m = await commerciante()
+        giorno(monkeypatch, 2026, 10, 31, h=23)
+        assert (await server._run_cambio_offerte())["expired"] == 0
+        assert len((await c.get("/api/discounts")).json()["discounts"]) == 1
         giorno(monkeypatch, 2026, 11, 1, h=0)
-        res = await server._run_month_rollover()
-        assert res["skipped"] is False and res["month"] == "2026-11" and res["expired"] == 1
-        assert (await server._run_month_rollover())["skipped"] is True
+        res = await server._run_cambio_offerte()
+        assert res["skipped"] is False and res["giorno"] == "2026-11-01" and res["expired"] == 1
+        assert (await server._run_cambio_offerte())["skipped"] is True
         assert (await server.db.discounts.find_one({"merchant_id": m["id"]}))["approval_status"] == "expired"
     run(body)
     assert len(posta["scaduta"]) == 1 and posta["scaduta"][0][1] is False
 
 
-def test_rollover_offerta_approvata_nessuna_email(monkeypatch, posta):
+def test_prossima_offerta_approvata_va_online_nessuna_email(monkeypatch, posta):
     async def body(_c):
         m = await commerciante()
         await offerta_prossima(m["id"], "approved")
+        giorno(monkeypatch, 2026, 10, 31, h=23)
+        assert (await server._run_cambio_offerte())["promoted"] == 0   # quella di ottobre va rispettata fino al 31
         giorno(monkeypatch, 2026, 11, 1, h=0)
-        res = await server._run_month_rollover()
+        res = await server._run_cambio_offerte(force=True)
         assert res["promoted"] == 1 and res["expired"] == 0
         d = await server.db.discounts.find_one({"merchant_id": m["id"]})
-        assert d["title"] == "Offerta di novembre" and d["locked_month"] == "2026-11"
+        assert d["title"] == "Offerta di novembre" and d["approval_status"] == "approved"
+        # la durata (30 giorni, quella predefinita) parte dal giorno in cui va online
+        assert d["valid_from"] == "2026-11-01" and d["valid_until"] == "2026-11-30"
+        assert await server.db.next_discounts.count_documents({"merchant_id": m["id"]}) == 0
     run(body)
     assert posta["scaduta"] == []
 
@@ -269,7 +284,7 @@ def test_riepilogo_admin_una_volta(monkeypatch, posta):
         await offerta_prossima(rifiutata["id"], "rejected")
         await commerciante("Mancante")
         nr = await commerciante("Non rinnova")
-        await server.db.users.update_one({"id": nr["id"]}, {"$set": {"no_renew_month": "2026-11"}})
+        await server.db.discounts.update_one({"merchant_id": nr["id"]}, {"$set": {"no_renew": True}})
 
         giorno(monkeypatch, 2026, 10, 27)  # 5 giorni alla fine: ancora presto
         assert (await server._run_next_offer_reminders())["admin_summary"] is False
@@ -282,4 +297,4 @@ def test_riepilogo_admin_una_volta(monkeypatch, posta):
     a = posta["admin"][0]
     assert a["to"] == "admin@example.com"
     assert a["pending"] == ["In attesa"] and a["rejected"] == ["Rifiutata"]
-    assert a["missing"] == ["Mancante"] and a["no_renew"] == ["Non rinnova"]
+    assert a["missing"] == ["Mancante (fino al 31 ottobre)"] and a["no_renew"] == ["Non rinnova (fino al 31 ottobre)"]

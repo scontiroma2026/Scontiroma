@@ -1,4 +1,6 @@
-"""Dashboard commerciante: scadenza dell'offerta (valid_until) e flag «non rinnovo» nell'offerta del mese dopo.
+"""Dashboard commerciante: scadenza dell'offerta (valid_until) e flag «non rinnovo» nella prossima offerta.
+Dal 14/11 la data di fine è quella scelta dal negozio; le offerte approvate prima (solo `locked_month`)
+valgono ancora fino alla fine del loro mese.
 Server in-process su database locale o emulatore: rifiuta database remoti."""
 import asyncio
 import os
@@ -59,11 +61,38 @@ async def scadenza(c, h):
     return (await c.get("/api/merchants/me/discount", headers=h)).json()["discount"]["valid_until"]
 
 
-def test_offerta_approvata_scade_a_fine_mese():
+def test_offerta_approvata_scade_a_fine_mese(monkeypatch):
+    """Offerta approvata prima della durata libera: vale fino alla fine del mese di approvazione."""
+    monkeypatch.setattr(server, "_rome_now", lambda: datetime(2026, 10, 20, 10, 0, tzinfo=ZoneInfo("Europe/Rome")))
+
     async def body(c):
         mid, h = await negozio()
         await server.db.discounts.insert_one(offerta(mid, mese="2026-10"))
         assert await scadenza(c, h) == "2026-10-31"
+    run(body)
+
+
+def test_offerta_con_la_sua_durata(monkeypatch):
+    """Durata scelta dal negozio: la data di fine è quella salvata, con i giorni che restano (oggi compreso)."""
+    monkeypatch.setattr(server, "_rome_now", lambda: datetime(2026, 11, 18, 10, 0, tzinfo=ZoneInfo("Europe/Rome")))
+
+    async def body(c):
+        mid, h = await negozio()
+        await server.db.discounts.insert_one(offerta(mid, mese="2026-11", valid_from="2026-11-14", valid_until="2026-11-20"))
+        d = (await c.get("/api/merchants/me/discount", headers=h)).json()["discount"]
+        assert d["valid_until"] == "2026-11-20" and d["days_left"] == 3 and d["no_end"] is False
+        assert d["locked"] is True and d["locked_this_month"] is True
+        # omaggio senza scadenza: nessuna data, ma l'offerta è online e bloccata
+        await server.db.discounts.delete_many({})
+        await server.db.discounts.insert_one(offerta(mid, mese="2026-11", offer_type="omaggio", open_ended=True,
+                                                     valid_from="2026-11-14", valid_until=None))
+        d = (await c.get("/api/merchants/me/discount", headers=h)).json()["discount"]
+        assert d["valid_until"] is None and d["days_left"] is None and d["no_end"] is True and d["locked"] is True
+        # il giorno dopo la fine: non è più online e si può modificare
+        await server.db.discounts.delete_many({})
+        await server.db.discounts.insert_one(offerta(mid, mese="2026-11", valid_from="2026-11-01", valid_until="2026-11-17"))
+        d = (await c.get("/api/merchants/me/discount", headers=h)).json()["discount"]
+        assert d["valid_until"] is None and d["locked"] is False
     run(body)
 
 
@@ -110,11 +139,19 @@ def test_mese_di_blocco_illeggibile_non_rompe_la_risposta():
     run(body)
 
 
-def test_next_discount_dice_se_non_rinnova():
+def test_next_discount_dice_se_non_rinnova(monkeypatch):
+    monkeypatch.setattr(server, "_rome_now", lambda: datetime(2026, 11, 18, 10, 0, tzinfo=ZoneInfo("Europe/Rome")))
+
     async def body(c):
         mid, h = await negozio()
         r = (await c.get("/api/merchants/me/next-discount", headers=h)).json()
-        assert r["no_renew"] is False and r["next_discount"] is None and "window" in r
-        await server.db.users.update_one({"id": mid}, {"$set": {"no_renew_month": r["window"]["next_month"]}})
+        # senza un'offerta online la prossima non si prepara: si usa il modulo normale
+        assert r["no_renew"] is False and r["next_discount"] is None and r["window"]["open"] is False
+        await server.db.discounts.insert_one(offerta(mid, mese="2026-11", valid_from="2026-11-14", valid_until="2026-11-20"))
+        r = (await c.get("/api/merchants/me/next-discount", headers=h)).json()
+        assert r["no_renew"] is False and r["window"]["open"] is True
+        # la prossima parte il giorno dopo la fine di quella online
+        assert r["window"]["starts_on"] == "2026-11-21" and r["window"]["starts_on_label"] == "21 novembre"
+        await server.db.discounts.update_one({"merchant_id": mid}, {"$set": {"no_renew": True}})
         assert (await c.get("/api/merchants/me/next-discount", headers=h)).json()["no_renew"] is True
     run(body)
