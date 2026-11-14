@@ -137,6 +137,9 @@ def run(body):
             cli = AsyncIOMotorClient(MONGO_URL)
             await cli.drop_database(DB_NAME)
             server.db = cli[DB_NAME]
+        # Come in produzione (on_startup): senza questo indice unico le prenotazioni non sono atomiche e due
+        # passaggi nello stesso istante mandano la stessa email due volte (test instabile del 14/11).
+        await server.db.reminder_claims.create_index("key", unique=True)
         transport = httpx.ASGITransport(app=server.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
             await body(c)
@@ -598,3 +601,58 @@ def test_codice_di_fine_mese(orologio, posta, creato, quando, valido):
             # l'uso conta per il mese di creazione
             assert (await server.db.redemptions.find_one({"code": "ABCD2345"}))["month_key"] == creato
     run(body)
+
+
+def test_prenotazione_atomica_una_sola_volta(monkeypatch):
+    """`_prenota`: vero solo per il primo; chi arriva nello stesso istante riceve falso, mai un errore."""
+    async def body(_c):
+        assert await server._prenota("prova_chiave") is True
+        assert await server._prenota("prova_chiave") is False
+        # stessa chiave inserita da un altro passaggio nello stesso istante: il database risponde «chiave doppia»
+        with pytest.raises(server.DuplicateKeyError):
+            await server.db.reminder_claims.insert_one({"key": "prova_chiave"})
+        await server._libera_prenotazione("prova_chiave")
+        assert await server._prenota("prova_chiave") is True
+
+        # la stessa risposta durante un `upsert` in gara: `_prenota` dice «falso», non solleva l'errore
+        class CollezioneInGara:
+            async def update_one(self, *a, **k):
+                raise server.DuplicateKeyError("chiave doppia")
+
+        class DbInGara:
+            reminder_claims = CollezioneInGara()
+
+        vero = server.db
+        monkeypatch.setattr(server, "db", DbInGara())
+        try:
+            assert await server._prenota("altra_chiave") is False
+        finally:
+            monkeypatch.setattr(server, "db", vero)
+    run(body)
+
+
+def test_riepiloghi_e_cambio_mese_passano_dalla_prenotazione(orologio, posta):
+    """Riepilogo del mese, riepilogo della settimana e cambio mese lasciano la loro chiave in `reminder_claims`
+    (indice unico): è quella che ferma il secondo passaggio, non il solo segno in `settings`/`rollover_runs`."""
+    async def body(_c):
+        await negozio("A", "2026-10")
+        orologio("2026-10-29", 9, 30)
+        await server._run_next_offer_reminders()
+        assert await server.db.reminder_claims.find_one({"key": "admin_month_summary_2026-11"})
+        # un secondo passaggio che non vede ancora il segno in `settings` viene fermato dalla prenotazione
+        await server.db.settings.delete_one({"key": "admin_month_summary_2026-11"})
+        await server._run_next_offer_reminders()
+
+        orologio("2026-11-02", 8, 0)
+        assert (await server._run_riepilogo_settimanale())["sent"] == 1
+        assert await server.db.reminder_claims.find_one({"key": "riepilogo_settimanale_2026-10-26"})
+        await server.db.settings.delete_one({"key": "riepilogo_settimanale_2026-10-26"})
+        assert (await server._run_riepilogo_settimanale())["skipped"] == "gia_inviato"
+
+        assert (await server._run_month_rollover())["skipped"] is False
+        assert await server.db.reminder_claims.find_one({"key": "rollover_2026-11"})
+        await server.db.rollover_runs.delete_one({"month": "2026-11"})
+        assert (await server._run_month_rollover())["skipped"] is True
+    run(body)
+    assert len(posta["admin"]) == 1
+
