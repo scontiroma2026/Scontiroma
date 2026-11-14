@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { isOmaggio } from "@/lib/offerta";
 import api, { formatApiError } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -260,9 +261,13 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
         )}
         <div className="mt-3 font-serif text-2xl text-foreground">{nd.title}</div>
         <div className="mt-3 flex flex-wrap items-baseline gap-2">
+          {isOmaggio(nd) ? (
+            <span className="text-fucsia font-bold text-xl">🎁 Omaggio (senza prezzi)</span>
+          ) : (<>
           <span className="text-fucsia font-bold text-xl">€{nd.discounted_price?.toFixed(2)}</span>
           <span className="text-muted-foreground line-through">€{nd.original_price?.toFixed(2)}</span>
           <span className="text-neon text-sm">−{nd.percent_off}%</span>
+          </>)}
           <span className="ml-3 rounded-full border border-fucsia/40 bg-muted px-2.5 py-0.5 text-xs text-fucsia font-semibold">🔁 {nd.max_uses_per_month || 1}× al mese per cliente</span>
           <span className={`rounded-full px-2.5 py-0.5 text-xs ${nd.active ? "bg-ciano/15 text-ciano border border-ciano/40" : "bg-muted text-muted-foreground border border-border"}`}>
             {nd.active ? "● attiva nel catalogo" : "○ non attiva"}
@@ -322,7 +327,11 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
         discounted_price: parseFloat(f.discounted_price),
         max_uses_per_month: parseInt(f.max_uses_per_month, 10) || 1,
       };
-      if (isNaN(payload.original_price) || isNaN(payload.discounted_price) || payload.discounted_price >= payload.original_price) {
+      if (isOmaggio(nd)) {
+        // Omaggio: nessun prezzo da salvare
+        delete payload.original_price;
+        delete payload.discounted_price;
+      } else if (isNaN(payload.original_price) || isNaN(payload.discounted_price) || payload.discounted_price >= payload.original_price) {
         toast.error("Verifica i prezzi (scontato < originale)");
         setBusy(false);
         return;
@@ -354,6 +363,7 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
             <Label className="text-muted-foreground text-xs">Descrizione</Label>
             <Textarea data-testid="admin-next-description" value={f.description} onChange={upd("description")} rows={3} className="bg-muted border-border text-foreground" />
           </div>
+          {!isOmaggio(nd) && (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-muted-foreground text-xs">Prezzo originale (€)</Label>
@@ -364,6 +374,7 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
               <Input data-testid="admin-next-discounted" type="number" step="0.01" value={f.discounted_price} onChange={upd("discounted_price")} className="bg-muted border-border text-foreground" />
             </div>
           </div>
+          )}
           <div>
             <Label className="text-muted-foreground text-xs">Termini e condizioni</Label>
             <Textarea value={f.terms} onChange={upd("terms")} rows={2} className="bg-muted border-border text-foreground" />

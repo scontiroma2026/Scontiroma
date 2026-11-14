@@ -23,3 +23,13 @@ def test_sconto_valido():
 def test_prezzi_non_validi(o, s):
     with pytest.raises(ValidationError):
         offerta(o, s)
+
+
+def test_sconto_senza_prezzi_rifiutato():
+    with pytest.raises(ValidationError):
+        server.DiscountIn(title="T", description="D")
+
+
+def test_omaggio_senza_prezzi_valido_e_prezzi_tolti():
+    o = server.DiscountIn(title="T", description="D", offer_type="omaggio", original_price=30, discounted_price=10)
+    assert o.offer_type == "omaggio" and o.original_price is None and o.discounted_price is None
