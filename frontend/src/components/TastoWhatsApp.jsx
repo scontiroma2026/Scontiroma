@@ -1,11 +1,13 @@
 import { WHATSAPP_PATH } from "@/lib/socialGlyphs";
 
-// Colori veri di WhatsApp (come l'icona dell'iPhone): verde chiaro sfumato e scritta scura,
-// così il pulsante si riconosce subito e non sembra un'imitazione (richiesta del titolare, 14/11).
-// La scritta scura su questo verde ha un contrasto di circa 9:1.
-export const CLASSE_WHATSAPP = "bg-gradient-to-b from-[#61FD7D] to-[#25CF43] text-slate-900 shadow-md shadow-emerald-500/30 [@media(hover:hover)]:hover:brightness-105";
+// Colori ufficiali di WhatsApp (decisione del titolare, 14/11): fondo #25D366, #128C7E al passaggio
+// del dito/mouse, scritta e icona bianche #FFFFFF, perché il pulsante si riconosca subito e non sembri un falso.
+// Il bianco su #25D366 ha contrasto basso (circa 2:1): i test del contrasto saltano solo gli elementi
+// con `data-marchio-whatsapp` (DATI_WHATSAPP), per questa scelta del titolare.
+export const CLASSE_WHATSAPP = "bg-[#25D366] text-white font-extrabold shadow-md shadow-emerald-500/30 [@media(hover:hover)]:hover:bg-[#128C7E] active:bg-[#128C7E]";
+export const DATI_WHATSAPP = { "data-marchio-whatsapp": "" };
 
-/** Glifo ufficiale di WhatsApp (simple-icons, CC0), del colore del testo. */
+/** Glifo ufficiale di WhatsApp (simple-icons, CC0), bianco come il testo. */
 export function IconaWhatsApp({ size = 20 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" className="shrink-0">

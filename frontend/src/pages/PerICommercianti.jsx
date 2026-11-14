@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { CLASSE_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
+import { CLASSE_WHATSAPP, DATI_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
 import { salvaFonte, registraVisitaFonte } from "@/lib/referral";
@@ -16,7 +16,7 @@ function TastoWhatsApp({ testid, dove }) {
   return (
     <a data-testid={testid} href={WHATSAPP_INFO} target="_blank" rel="noreferrer"
       onClick={() => trackClick(`whatsapp_commercianti_${dove}`)}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-base font-extrabold ${CLASSE_WHATSAPP}`}>
+      {...DATI_WHATSAPP} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-base font-extrabold ${CLASSE_WHATSAPP}`}>
       <IconaWhatsApp />
       Scrivici su WhatsApp
     </a>

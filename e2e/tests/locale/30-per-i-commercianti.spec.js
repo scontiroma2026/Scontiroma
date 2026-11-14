@@ -83,6 +83,8 @@ test('per i commercianti: 44 px, contrasto, caratteri e niente scroll orizzontal
       if (rc.width === 0 || rc.height === 0 || el.closest('svg, [aria-hidden="true"]')) continue;
       if ([...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) {
         famiglie.add(cs.fontFamily.split(',')[0].replace(/["']/g, '').trim());
+        // Pulsanti WhatsApp: colori ufficiali bianco su #25D366 per decisione del titolare (14/11), contrasto basso voluto
+        if (el.closest('[data-marchio-whatsapp]')) continue;
         const colore = rgba(cs.color);
         const f = fondo(el);
         const grande = parseFloat(cs.fontSize) >= 24 || (parseFloat(cs.fontSize) >= 18.66 && +cs.fontWeight >= 700);
