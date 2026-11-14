@@ -1,5 +1,5 @@
 import { trackClick } from "@/lib/analytics";
-import { CLASSE_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
+import { CLASSE_WHATSAPP, DATI_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -407,7 +407,7 @@ export default function Register() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackClick("register_merchant_whatsapp")}
-            className={`mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold ${CLASSE_WHATSAPP}`}
+            {...DATI_WHATSAPP} className={`mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold ${CLASSE_WHATSAPP}`}
           >
             <IconaWhatsApp size={18} />
             Serve aiuto? Scrivici su WhatsApp

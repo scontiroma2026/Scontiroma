@@ -57,6 +57,8 @@ function misura() {
       if (el.closest('[data-solo-stampa], .leaflet-container')) continue;
       famiglie.add(prima(cs.fontFamily));
       if (cs.webkitTextFillColor === 'rgba(0, 0, 0, 0)' || cs.color === 'rgba(0, 0, 0, 0)') continue; // testo a gradiente (.text-grad)
+      // Pulsanti WhatsApp: colori ufficiali bianco su #25D366 per decisione del titolare (14/11), contrasto basso voluto
+      if (el.closest('[data-marchio-whatsapp]')) continue;
       const colore = rgba(cs.color);
       const fondiEl = fondi(el);
       if (!colore || !fondiEl) continue;

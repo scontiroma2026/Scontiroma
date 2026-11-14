@@ -1,5 +1,5 @@
 import { trackClick } from "@/lib/analytics";
-import { CLASSE_WHATSAPP } from "@/components/TastoWhatsApp";
+import { CLASSE_WHATSAPP, DATI_WHATSAPP } from "@/components/TastoWhatsApp";
 import BadgeNuovaOfferta from "@/components/BadgeNuovaOfferta";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -418,7 +418,7 @@ export default function DiscountDetail() {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="btn-whatsapp-merchant"
-                    className={`${CONTACT_BTN} ${CLASSE_WHATSAPP}`}
+                    {...DATI_WHATSAPP} className={`${CONTACT_BTN} ${CLASSE_WHATSAPP}`}
                   >
                     <WhatsAppIcon />
                     Scrivi su WhatsApp

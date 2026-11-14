@@ -1,5 +1,5 @@
 import { Clock } from "lucide-react";
-import { CLASSE_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
+import { CLASSE_WHATSAPP, DATI_WHATSAPP, IconaWhatsApp } from "@/components/TastoWhatsApp";
 
 // «Ci pensiamo noi» (decisione del titolare del 18/10): per chi ha poco tempo l'offerta la inseriamo noi,
 // gratuitamente; il negozio la controlla e la conferma dall'email. Testi secondo la skill comunicazione-marchio.
@@ -22,7 +22,7 @@ export default function RiquadroCiPensiamoNoi({ testid = "ci-pensiamo-noi", clas
           </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <a data-testid={`${testid}-whatsapp`} href={WHATSAPP_LINK} target="_blank" rel="noreferrer"
-              className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold ${CLASSE_WHATSAPP}`}>
+              {...DATI_WHATSAPP} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-extrabold ${CLASSE_WHATSAPP}`}>
               <IconaWhatsApp size={18} />
               Scrivici su WhatsApp: {WHATSAPP_NUMERO}
             </a>
