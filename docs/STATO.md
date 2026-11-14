@@ -65,11 +65,12 @@ Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 | #70 | Admin, «Stato dei servizi»: nuova riga «Indirizzi (LocationIQ)» (giallo senza chiave, verde se risponde, rosso se rifiutata) | 09/10 |
 | #246 | Sicurezza: librerie con vulnerabilità note aggiornate (server: `pip-audit` da 55 a 0; sito: `yarn audit` da 113 a 90), log del driver del database a WARNING | 10/11 |
 | #247 | Iscrizione facile per i negozi: iscrizione del commerciante in 2 passi, pulsante «Scrivici su WhatsApp», «Parti da un'offerta pronta» alla prima offerta | 13/11 |
+| #248 | Offerta «Omaggio»: oltre allo sconto il negozio può scegliere un regalo o un'esperienza senza prezzi (campo `offer_type`), «In omaggio» in catalogo, dettaglio, mappa, area negozio e admin; offerte pronte di tipo omaggio | 14/11 |
 
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
-| #248 | Offerta «Omaggio», 13/11: oltre allo sconto il negozio può scegliere un omaggio (regalo o esperienza, es. calice di benvenuto, dolce della casa) senza prezzi, per i locali che non vogliono abbassare i prezzi. Server: campo `offer_type` («sconto» predefinito, «omaggio» senza prezzi), le offerte già salvate restano sconti. Sito: scelta «Sconto / 🎁 Omaggio» nel modulo, «In omaggio» al posto dei prezzi in catalogo, dettaglio, mappa, area negozio e pannello admin; offerte pronte di tipo omaggio. Ramo `claude/offerta-omaggio` | Controlli verdi |
+| #249 | Pulsanti WhatsApp con i colori ufficiali, 14/11 (decisione del titolare: il verde scuro sembrava un falso): fondo #25D366, #128C7E al passaggio, scritta e icona bianche #FFFFFF, glifo ufficiale, in «Per i commercianti» (in alto e in basso), «Ci pensiamo noi», iscrizione negozio («Serve aiuto? Scrivici su WhatsApp») e pagina dell'offerta. Il bianco su #25D366 ha contrasto basso (circa 2:1): i test del contrasto saltano solo i pulsanti con `data-marchio-whatsapp`, per questa scelta. Ramo `claude/colori-whatsapp` | Controlli verdi |
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
 | #71 | Server Health: con chiave Resend «solo invio» la riga Email non è più rossa («HTTP 401») ma verde con la nota «chiave solo invio»; chiave non valida resta rossa «chiave rifiutata». Ramo `claude/health-resend-solo-invio` | Controllo da iPhone; nessun testo legale |
