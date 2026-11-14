@@ -68,6 +68,7 @@ Aggiornato: 14/10/2026 — ultimo commit in `main`: `fe9f1d6` (unione della #64)
 ## PR aperte
 | PR | Cosa | Aspetta |
 |---|---|---|
+| (nuova) | Pulsanti WhatsApp con i colori veri, 14/11 (richiesta del titolare: il verde scuro sembrava un falso): sfumatura verde chiara come l'icona di WhatsApp, scritta scura (contrasto circa 9:1) e glifo ufficiale, uguali in «Per i commercianti» (in alto e in basso), «Ci pensiamo noi», iscrizione negozio («Serve aiuto? Scrivici su WhatsApp») e pagina dell'offerta. Ramo `claude/colori-whatsapp` | Controlli verdi |
 | #247 | Iscrizione facile per i negozi, 13/11 (mossa 2 del modello scalabile): iscrizione del commerciante in 2 passi (1: nome, email, password, nome e categoria del negozio; 2: indirizzo, telefono, Partita IVA, zona e consensi, invariati), pulsante «Scrivici su WhatsApp» per chi vuole aiuto, e alla prima offerta un riquadro «Parti da un'offerta pronta» con idee per categoria che riempiono solo i testi (i prezzi li scrive sempre il commerciante). Nessuna modifica al server né ai testi legali. Ramo `claude/iscrizione-negozio-facile` | Controlli verdi |
 | #40 | Sede legale del titolare (Via Tasso 5/B, Ariano Irpino) e ambito «Roma e dintorni» nei Termini | OK del titolare e del consulente; manca la PEC (facoltativa) |
 | #41 | Kit per contattare i commercianti: messaggi WhatsApp, Instagram, Facebook, email, telefonata (`docs/commercianti/MESSAGGI.md`) | Il consulente deve vedere le regole d'uso e i testi |
