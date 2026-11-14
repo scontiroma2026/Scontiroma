@@ -1,4 +1,4 @@
-# Lista «pronto al lancio» di Sconti Roma (aggiornata il 31/10)
+# Lista «pronto al lancio» di Sconti Roma (aggiornata il 14/11)
 
 **Regola del titolare (14/10, rettificata il 15/10):** quando chiede «la lista», si risponde con questa lista **numerata** dopo aver controllato lo stato reale delle PR. I punti chiusi (✅) si **cancellano** dalla lista e la lista si **rinumera**; la storia di ciò che è stato fatto resta in `docs/STATO.md`. I punti nuovi si aggiungono, quelli cambiati si rettificano. Questo file è la fonte: va tenuto allineato.
 
@@ -11,8 +11,8 @@ Divisione (richiesta del titolare, 24/10): in ogni parte prima **ciò che fa Cla
 ## A. Adesso: i primi negozi
 
 ### Claude
-1. ⏳ **Primi negozi in una zona** (problema «uovo e gallina»: prima i negozi, poi sono loro a portare i clienti con locandina e social): dalla lista di 232 attività preparare l'elenco dei prossimi da contattare, vicini tra loro, con il messaggio adatto; obiettivo circa 10 negozi con un'offerta. I messaggi li manda il titolare (mai WhatsApp a suo nome).
-2. ⬜ **Offerta dello studio odontoiatrico:** controllarla prima dell'approvazione con le regole sulla pubblicità sanitaria (niente promesse di risultato, niente prezzi civetta); dubbi nella lista per l'avvocato.
+1. ⏳ **Primi negozi in una zona** (problema «uovo e gallina»: prima i negozi, poi sono loro a portare i clienti con locandina e social): **obiettivo del titolare del 14/11: almeno 10 iscritti**. Al 14/11: 0 offerte online, 1 negozio vero iscritto. Pronto l'elenco privato (fuori dal repository) dei primi 20 negozi di Garbatella con canale pubblico e messaggio; ogni giorno 3 negozi, uno alla volta, più le visite di persona. I messaggi li manda il titolare (mai WhatsApp a suo nome; le email mai da Resend).
+2. ⬜ **Offerta dello studio odontoiatrico (in attesa di approvazione dal 21/10, è l'unica offerta):** controllarla prima dell'approvazione con le regole sulla pubblicità sanitaria (niente promesse di risultato, niente prezzi civetta); dubbi nella lista per l'avvocato.
 3. ⏳ **Social:** dati al 31/10 (Instagram 7 giorni: 71 persone raggiunte, 210 visite al profilo, 4 clic sul sito, 0 condivisioni): contenuti da far girare (reel, «manda questo al tuo bar preferito»), resoconto ogni domenica; sempre con anteprima e «ok» del titolare.
 4. ⏳ **TikTok:** prova con Higgsfield (bozze, account gratuito, nessun addebito) appena il titolare collega l'account.
 5. ⬜ **Video corto per i negozi** (circa 55 s, copione del 23/10): aspetta l'OK sul copione; voce con crediti ElevenLabs solo con il permesso.
