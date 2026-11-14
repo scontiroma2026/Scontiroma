@@ -938,12 +938,36 @@ def _breve(testo: str, n: int = 60) -> str:
     return testo if len(testo) <= n else testo[: n - 1].rstrip() + "…"
 
 
+async def _prenota(chiave: str, giorni: int = 60) -> bool:
+    """«Prenotazione» atomica di un invio o di un lavoro programmato: True solo per il primo che arriva.
+
+    Passa dall'indice unico di `reminder_claims.key` (creato all'avvio). Un `upsert` su una collezione senza
+    indice unico non basta: due scritture nello stesso istante (due copie del server accese insieme, o il job
+    e il recupero all'avvio) possono inserire entrambe, e l'email parte due volte."""
+    try:
+        r = await db.reminder_claims.update_one(
+            {"key": chiave},
+            {"$setOnInsert": {"key": chiave,
+                              "expires_at": datetime.now(timezone.utc) + timedelta(days=giorni)}}, upsert=True)
+    except DuplicateKeyError:
+        return False   # un altro passaggio ha inserito la stessa chiave nello stesso istante
+    return r.upserted_id is not None
+
+
+async def _libera_prenotazione(chiave: str) -> None:
+    """Toglie una prenotazione dopo un errore, così il lavoro si può ritentare."""
+    await db.reminder_claims.delete_one({"key": chiave})
+
+
 async def _prenota_push(chiave: str, user_id: Optional[str], giorni: int = 60) -> bool:
     """Prenotazione atomica: True solo la prima volta per quella chiave (due server insieme non mandano doppioni)."""
-    r = await db.push_inviati.update_one(
-        {"chiave": chiave},
-        {"$setOnInsert": {"chiave": chiave, "user_id": user_id,
-                          "expires_at": datetime.now(timezone.utc) + timedelta(days=giorni)}}, upsert=True)
+    try:
+        r = await db.push_inviati.update_one(
+            {"chiave": chiave},
+            {"$setOnInsert": {"chiave": chiave, "user_id": user_id,
+                              "expires_at": datetime.now(timezone.utc) + timedelta(days=giorni)}}, upsert=True)
+    except DuplicateKeyError:
+        return False
     return r.upserted_id is not None
 
 
@@ -5674,16 +5698,19 @@ async def _run_riepilogo_settimanale(oggi: Optional[date] = None) -> dict:
         return {"sent": 0, "skipped": "nessun_destinatario"}
     da, a = _settimana_conclusa(oggi or _rome_now().date())
     chiave = f"riepilogo_settimanale_{da.isoformat()}"
-    res = await db.settings.update_one({"key": chiave}, {"$setOnInsert": {
-        "key": chiave, "claimed_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
-    if res.upserted_id is None:
+    # Il segno in `settings` dice «già inviato» (anche per le settimane passate); la prenotazione atomica
+    # passa da `_prenota`, perché `settings` non ha un indice unico.
+    if await db.settings.find_one({"key": chiave}) or not await _prenota(chiave):
         return {"sent": 0, "skipped": "gia_inviato"}
+    await db.settings.update_one({"key": chiave}, {"$setOnInsert": {
+        "key": chiave, "claimed_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     try:
         riepilogo = await _riepilogo_settimanale(da, a)
         await send_admin_riepilogo_settimanale(to, riepilogo)
     except Exception as e:
         logging.error(f"[riepilogo-settimanale] invio non riuscito: {e}")
         await db.settings.delete_one({"key": chiave})   # si potrà ritentare
+        await _libera_prenotazione(chiave)
         return {"sent": 0, "skipped": "errore"}
     return {"sent": 1, "settimana": da.isoformat()}
 
@@ -6563,15 +6590,17 @@ async def _run_month_rollover(force: bool = False) -> dict:
     else:
         # Il mese si «prenota» in un colpo solo (atomico): il job delle 00:05 e il recupero all'avvio, o due
         # copie del server accese insieme, non possono passare entrambi (niente offerte archiviate o email doppie).
-        claim = await db.rollover_runs.update_one(
-            {"month": month}, {"$setOnInsert": {"month": month, "ran_at": now_iso}}, upsert=True)
-        if claim.upserted_id is None:
+        # `rollover_runs` dice «già fatto»; la prenotazione atomica passa da `_prenota` (indice unico).
+        if await db.rollover_runs.find_one({"month": month}) or not await _prenota(f"rollover_{month}", giorni=400):
             return {"skipped": True, "month": month}
+        await db.rollover_runs.update_one(
+            {"month": month}, {"$setOnInsert": {"month": month, "ran_at": now_iso}}, upsert=True)
     try:
         return await _esegui_rollover(month, now_iso)
     except Exception:
         if not force:
             await db.rollover_runs.delete_one({"month": month})  # si potrà ritentare (al riavvio o col job)
+            await _libera_prenotazione(f"rollover_{month}")
         raise
 
 
@@ -6671,11 +6700,7 @@ async def _run_next_offer_reminders() -> dict:
             continue
         # «Prenotazione» atomica prima dell'invio: due copie del server accese insieme (per esempio durante un
         # aggiornamento) o due passaggi in parallelo non mandano la stessa email due volte.
-        prenota = await db.reminder_claims.update_one(
-            {"key": f"offerta_{nm}_{mid}_{stage}"},
-            {"$setOnInsert": {"key": f"offerta_{nm}_{mid}_{stage}",
-                              "expires_at": datetime.now(timezone.utc) + timedelta(days=60)}}, upsert=True)
-        if prenota.upserted_id is None:
+        if not await _prenota(f"offerta_{nm}_{mid}_{stage}"):
             continue
         try:
             await send_next_offer_reminder(m["email"], m.get("name") or "",
@@ -6687,7 +6712,7 @@ async def _run_next_offer_reminders() -> dict:
                 "next_offer_reminder_month": nm}})
             sent += 1
         except Exception as e:
-            await db.reminder_claims.delete_one({"key": f"offerta_{nm}_{mid}_{stage}"})  # si potrà ritentare
+            await _libera_prenotazione(f"offerta_{nm}_{mid}_{stage}")  # si potrà ritentare
             logging.error(f"[next-offer-reminder] send failed merchant={mid[:8]}: {e}")
     admin_summary = await _send_admin_month_summary(nm, window["next_month_label"], days_left, actives)
     return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm,
@@ -6724,15 +6749,17 @@ async def _send_admin_month_summary(nm: str, label: str, days_left: int, actives
             continue
         m = await db.users.find_one({"id": mid}, {"no_renew_month": 1})
         (no_renew if (m or {}).get("no_renew_month") == nm else missing).append(await shop(mid))
-    # Prenotazione atomica prima dell'invio (due passaggi insieme non mandano due email).
-    claim = await db.settings.update_one({"key": key}, {"$setOnInsert": {"key": key}}, upsert=True)
-    if claim.upserted_id is None:
+    # Prenotazione atomica prima dell'invio (due passaggi insieme non mandano due email): passa da
+    # `_prenota`, perché `settings` non ha un indice unico e lì due `upsert` insieme inseriscono entrambi.
+    if not await _prenota(key):
         return False
+    await db.settings.update_one({"key": key}, {"$setOnInsert": {"key": key}}, upsert=True)
     try:
         await send_admin_month_summary(to, label, pending, rejected, missing, no_renew)
     except Exception as e:
         logging.error(f"[admin-summary] send failed: {e}")
         await db.settings.delete_one({"key": key})  # si potrà ritentare
+        await _libera_prenotazione(key)
         return False
     await db.settings.update_one({"key": key}, {"$set": {"sent_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     return True
