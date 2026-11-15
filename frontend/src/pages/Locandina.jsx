@@ -468,7 +468,7 @@ export default function Locandina() {
                     marginBottom: "1mm",
                   }}
                 >
-                  {ref ? "Inquadra e scopri l'offerta di questo mese" : "Inquadra e iscriviti"}
+                  {ref ? "Inquadra e scopri la nostra offerta" : "Inquadra e iscriviti"}
                 </div>
                 <div
                   style={{

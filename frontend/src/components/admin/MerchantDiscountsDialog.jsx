@@ -91,7 +91,7 @@ export default function MerchantDiscountsDialog({ merchantId, open, onOpenChange
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className="font-medium text-foreground truncate">{d.title}</div>
                         {statusPill(d)}
-                        {d.locked_month && <span className="text-xs text-muted-foreground font-mono">🔒 {d.locked_month}</span>}
+                        {d.locked && <span className="text-xs text-muted-foreground font-mono">🔒 {d.valid_until ? `fino al ${d.valid_until.split("-").reverse().join("/")}` : "senza scadenza"}</span>}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1 line-clamp-1">{d.description}</div>
                       <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground flex-wrap">

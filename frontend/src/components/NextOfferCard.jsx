@@ -1,28 +1,35 @@
 import { Link } from "react-router-dom";
-import { CalendarPlus, CheckCircle2, XCircle, Clock, CalendarClock } from "lucide-react";
+import { CalendarPlus, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Scheda, Pillola, CLASSE_BASE_SECONDARIO, CLASSE_BORDO, CLASSE_PRIMARIO } from "@/components/AreaUI";
+import { dataIt } from "@/lib/durata";
 
-/** Card "Offerta mese prossimo" per la MerchantDashboard. `data` è la risposta di /merchants/me/next-discount (la carica la dashboard, che la usa anche per «Da fare»). */
+/**
+ * Card «Prossima offerta» per la MerchantDashboard: l'offerta che andrà online quando finisce quella di adesso.
+ * `data` è la risposta di /merchants/me/next-discount (la carica la dashboard, che la usa anche per «Da fare»).
+ * Compare solo con un'offerta online: senza, il negozio usa il modulo normale («La tua offerta»).
+ */
 export const NextOfferCard = ({ data }) => {
   if (!data) return null;
   const { next_discount: nd, window: win, no_renew: noRenew } = data;
-  const label = win?.next_month_label || "il mese prossimo";
+  if (!win?.open && !nd) return null;
+  const parteIl = win?.starts_on ? dataIt(win.starts_on) : "";
+  const quando = parteIl ? `il ${parteIl}` : "appena approvata";
 
   const statusBadge = () => {
     if (!nd) return null;
     if (nd.approval_status === "approved")
-      return <Pillola tono="verde"><CheckCircle2 size={14} aria-hidden="true" /> Approvata — attiva dal 1°</Pillola>;
+      return <Pillola tono="verde"><CheckCircle2 size={14} aria-hidden="true" /> Approvata — online {parteIl ? `dal ${parteIl}` : "a breve"}</Pillola>;
     if (nd.approval_status === "rejected")
       return <Pillola tono="rosso"><XCircle size={14} aria-hidden="true" /> Rifiutata — da modificare</Pillola>;
     return <Pillola tono="ambra"><Clock size={14} aria-hidden="true" /> In revisione</Pillola>;
   };
 
-  const primario = !nd && win?.open;
+  const primario = !nd && win?.days_left != null && win.days_left <= 7;
 
   return (
     <Scheda
       data-testid="next-offer-card"
-      titolo={`Offerta mese prossimo · ${label}`}
+      titolo="Prossima offerta"
       tono="teal"
       icona={<CalendarPlus size={15} />}
     >
@@ -33,16 +40,11 @@ export const NextOfferCard = ({ data }) => {
         </div>
       ) : noRenew ? (
         <p data-testid="next-offer-no-renew" className="text-sm leading-relaxed text-ac-soft">
-          Hai scelto di <strong className="text-ac-ink">non rinnovare</strong>: non serve caricare l'offerta di {label}. Se cambi idea, annulla la scelta dal riquadro in alto.
-        </p>
-      ) : win?.open ? (
-        <p className="text-sm leading-relaxed text-ac-soft">
-          La finestra è <strong className="text-ac-teal">aperta</strong>: carica ora l'offerta di {label}. Se non la carichi, dal 1° il negozio resterà senza offerta attiva.
+          Hai scelto di <strong className="text-ac-ink">non rinnovare</strong>: non serve preparare la prossima offerta. Se cambi idea, annulla la scelta dal riquadro in alto.
         </p>
       ) : (
-        <p className="flex items-start gap-2 text-sm leading-relaxed text-ac-soft">
-          <CalendarClock size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-ac-teal" />
-          <span>La finestra di caricamento apre il <strong className="text-ac-ink">{win?.opens_on}</strong> (ultimi 7 giorni del mese).</span>
+        <p className="text-sm leading-relaxed text-ac-soft">
+          Puoi prepararla <strong className="text-ac-teal">quando vuoi</strong>: andrà online {quando}{parteIl ? ", quando finisce quella di adesso" : ""}. Se non la prepari e non prolunghi, alla scadenza il negozio resta senza offerta.
         </p>
       )}
       {noRenew && !nd ? (
@@ -51,7 +53,7 @@ export const NextOfferCard = ({ data }) => {
           aria-disabled="true"
           className="mt-4 inline-flex min-h-[46px] w-full cursor-not-allowed items-center justify-center rounded-2xl bg-ac-tint px-5 text-sm font-extrabold text-ac-soft"
         >
-          Carica offerta di {label}
+          Prepara la prossima offerta
         </span>
       ) : (
       <Link
@@ -59,7 +61,7 @@ export const NextOfferCard = ({ data }) => {
         data-testid="next-offer-cta"
         className={`mt-4 w-full ${primario ? CLASSE_PRIMARIO : `${CLASSE_BASE_SECONDARIO} ${CLASSE_BORDO.teal} min-h-[46px]`}`}
       >
-        {nd ? "Modifica offerta" : win?.open ? `Carica offerta di ${label}` : "Vedi dettagli"}
+        {nd ? "Modifica la prossima offerta" : "Prepara la prossima offerta"}
       </Link>
       )}
     </Scheda>

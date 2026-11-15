@@ -17,6 +17,8 @@ export function ConfigProvider({ children }) {
         aiEnhance: !!data.ai_enhance_enabled,
         // Data di fine prova dei commercianti: c'è solo se impostata su Render (TRIAL_END_DATE)
         trialEndLabel: data.trial_end_label || null,
+        // Durata dell'offerta: massimi per sconto e omaggio (il modulo li legge da qui)
+        offerDuration: data.offer_duration || null,
       }))
       .catch(() => setConfig({ loaded: true, subscriptionRequired: false, aiEnhance: false }));
   }, []);

@@ -47,6 +47,7 @@ export default function ConfermaOfferta() {
   const righe = o ? [
     ["Descrizione", o.description],
     ["Giorni e orari", o.validity_info],
+    ["Durata", o.durata ? `${o.durata}, dal giorno in cui va online` : ""],
     ["Utilizzi al mese", usi === 1 ? "1 volta per cliente" : `${usi} volte per cliente`],
     ["Condizioni", o.terms],
     ["Prenotazione", o.plan_ahead],

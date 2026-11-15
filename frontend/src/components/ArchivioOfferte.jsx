@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Archive } from "lucide-react";
 import { Pillola, Scheda, Scheletro, StatoVuoto, ErroreRiprova } from "@/components/AreaUI";
+import { dataIt } from "@/lib/durata";
 
 const TONO_STATO = { Scaduta: "viola", Rifiutata: "rosso", Ritirata: "ambra", Eliminata: "rosso" };
 const nomeMese = (m) => {
@@ -10,8 +11,13 @@ const nomeMese = (m) => {
   return new Date(a, mm - 1, 1).toLocaleDateString("it-IT", { month: "long", year: "numeric" });
 };
 
-/** Le offerte passate del commerciante, con «Riusa» che le copia nel modulo del mese prossimo. */
-export default function ArchivioOfferte({ onRiusa, finestraAperta, monthLabel }) {
+// Quando è stata online: «dal 14 novembre al 20 novembre» (offerte con la loro durata) oppure il mese (offerte di prima)
+const periodo = (v) => (v.valid_from && v.valid_until
+  ? `dal ${dataIt(v.valid_from)} al ${dataIt(v.valid_until)}`
+  : v.valid_from ? `dal ${dataIt(v.valid_from)}` : nomeMese(v.mese));
+
+/** Le offerte passate del commerciante, con «Riusa» che le copia nel modulo (prossima offerta, se ce n'è una online). */
+export default function ArchivioOfferte({ onRiusa, versoProssima, riusabile = true }) {
   const [voci, setVoci] = useState(null);
   const [errore, setErrore] = useState(false);
 
@@ -34,8 +40,10 @@ export default function ArchivioOfferte({ onRiusa, finestraAperta, monthLabel })
   return (
     <div data-testid="archivio-offerte" className="space-y-4">
       <p className="text-sm leading-relaxed text-ac-soft">
-        Le tue offerte passate. «Riusa» la copia nell'offerta di {monthLabel}: la puoi cambiare prima di inviarla.
-        {!finestraAperta && " Potrai riusarle quando si apre il caricamento dell'offerta del mese prossimo (ultimi 7 giorni del mese)."}
+        Le tue offerte passate. «Riusa» la copia {versoProssima ? "nella prossima offerta" : "nel modulo dell'offerta"}: la puoi cambiare prima di inviarla.
+        {!riusabile && (versoProssima
+          ? " Hai scelto «Non rinnovo»: per riusarle annulla prima la scelta dalla pagina principale."
+          : " Adesso la tua offerta è online e bloccata.")}
       </p>
       {errore && <ErroreRiprova onRiprova={carica}>Non riusciamo a caricare l'archivio. Riprova tra un attimo.</ErroreRiprova>}
       {!errore && voci.length === 0 && (
@@ -48,7 +56,7 @@ export default function ArchivioOfferte({ onRiusa, finestraAperta, monthLabel })
               <div className="break-words font-serif text-xl font-bold leading-tight">{v.title}</div>
               <div className="mt-1 text-sm text-ac-soft">
                 {[
-                  nomeMese(v.mese),
+                  periodo(v),
                   v.discounted_price != null && `€${Number(v.discounted_price).toFixed(2)} invece di €${Number(v.original_price).toFixed(2)}`,
                   v.utilizzi > 0 && `usata da ${v.utilizzi} ${v.utilizzi === 1 ? "cliente" : "clienti"}`,
                 ].filter(Boolean).join(" · ")}
@@ -60,11 +68,11 @@ export default function ArchivioOfferte({ onRiusa, finestraAperta, monthLabel })
           <button
             type="button"
             data-testid={`riusa-${v.archivio_id}`}
-            disabled={!finestraAperta}
+            disabled={!riusabile}
             onClick={() => onRiusa(v.archivio_id)}
             className="ac-grad mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-5 text-sm font-extrabold text-white transition hover:brightness-105 disabled:opacity-45 sm:w-auto"
           >
-            {v.stato === "Rifiutata" ? "Correggi e riusa" : "Riusa per il mese prossimo"}
+            {v.stato === "Rifiutata" ? "Correggi e riusa" : versoProssima ? "Riusa come prossima offerta" : "Riusa"}
           </button>
         </Scheda>
       ))}

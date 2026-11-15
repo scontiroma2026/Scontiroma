@@ -753,7 +753,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <p style="{_P}">Ciao {name},</p>
 <p style="{_P}">grazie per aver iscritto <strong>{shop_name}</strong>. Ecco come si parte:</p>
 <ol style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">
-<li>crea la tua offerta del mese dalla dashboard;</li>
+<li>crea la tua offerta dalla dashboard e scegli quanto dura;</li>
 <li>la controlliamo e, dopo l'approvazione, compare tra gli sconti;</li>
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
@@ -820,7 +820,7 @@ async def send_preferito_nuova_offerta(to: str, name: str, shop_name: str, zone:
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuova offerta da {shop_name}</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">uno dei tuoi negozi preferiti{f" a {zone}" if zone else ""} ha pubblicato l'offerta del mese:
+<p style="margin:0 0 16px;color:#d4d4d8">uno dei tuoi negozi preferiti{f" a {zone}" if zone else ""} ha pubblicato una nuova offerta:
 <strong style="color:#00E5FF">"{title}"</strong>{prezzi}.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/discounts/{_esc(discount_id)}" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Guarda l'offerta</a>
@@ -926,6 +926,7 @@ async def send_ci_pensiamo_noi(to: str, name: str, shop_name: str, offerta: dict
         _riga("Descrizione", offerta.get("description")),
         _riga("Prezzo", prezzi),
         _riga("Giorni e orari", offerta.get("validity_info")),
+        _riga("Durata", f"{offerta['durata']}, dal giorno in cui va online" if offerta.get("durata") else ""),
         _riga("Utilizzi al mese", "1 volta per cliente" if usi == 1 else f"{usi} volte per cliente"),
         _riga("Condizioni", offerta.get("terms")),
         _riga("Prenotazione", offerta.get("plan_ahead")),

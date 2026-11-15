@@ -123,6 +123,13 @@ export default function AdminPending({ pending, hdrs, onRefresh }) {
                   >
                     🔁 {d.max_uses_per_month || 1}× al mese per cliente
                   </span>
+                  <span
+                    data-testid={`pending-durata-${d.id}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-ciano/40 bg-muted px-2.5 py-0.5 text-xs text-ciano font-semibold"
+                    title="Durata scelta dal negozio: parte dal giorno in cui approvi"
+                  >
+                    ⏳ dura {d.durata || "30 giorni"}
+                  </span>
                   {d.category && (
                     <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                       {d.category}

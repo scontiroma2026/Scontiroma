@@ -1,5 +1,6 @@
 import { trackClick } from "@/lib/analytics";
 import { isOmaggio } from "@/lib/offerta";
+import { scrittaValidita } from "@/lib/durata";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { MapPin, ArrowRight, Zap, TrendingUp, Gift } from "lucide-react";
@@ -48,6 +49,9 @@ export default function DiscountCard({ discount }) {
             {discount.title}
           </h3>
           <p className="text-sm text-muted-foreground">{m.shop_name}</p>
+          {scrittaValidita(discount) && (
+            <p data-testid={`valida-fino-${discount.id}`} className="text-xs font-semibold text-muted-foreground">{scrittaValidita(discount)}</p>
+          )}
           {discount.rating_count > 0 && (
             <StarRating avg={discount.rating_avg} count={discount.rating_count} size={13} />
           )}

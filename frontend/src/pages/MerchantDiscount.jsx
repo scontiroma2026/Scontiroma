@@ -15,12 +15,16 @@ import RiquadroBozza from "@/components/RiquadroBozza";
 import BannerOffertaPreparata from "@/components/BannerOffertaPreparata";
 import { useBozza, chiaveBozza, togliBozza } from "@/lib/bozza";
 import { offertePronte } from "@/lib/offertePronte";
+import SceltaDurata from "@/components/SceltaDurata";
+import { DURATA_PREDEFINITA, MAX_SCONTO, campiDurata, dataIt } from "@/lib/durata";
 
 const EMPTY_FORM = {
   offer_type: "sconto",
   title: "", description: "", original_price: "", discounted_price: "",
   image_url: "", image_urls: [], terms: "", active: true, max_uses_per_month: 1,
   plan_ahead: "", validity_info: "", additional_info: "",
+  // Durata scelta dal negozio: giorni, oppure una data di fine, oppure (solo omaggio) senza scadenza
+  duration_days: DURATA_PREDEFINITA, end_date: "", open_ended: false,
 };
 
 const formFrom = (d) => ({
@@ -34,6 +38,9 @@ const formFrom = (d) => ({
   plan_ahead: d.plan_ahead || "",
   validity_info: d.validity_info || "",
   additional_info: d.additional_info || "",
+  duration_days: d.duration_days || DURATA_PREDEFINITA,
+  end_date: d.end_date || "",
+  open_ended: Boolean(d.open_ended) && d.offer_type === "omaggio",
 });
 
 // Bozza locale: solo questi campi dell'offerta (nessun dato personale o riservato), foto a parte
@@ -133,7 +140,7 @@ export default function MerchantDiscount() {
   // ---- Bozza: scheda = offerta del mese / mese prossimo / nuova ----
   const scheda = isNext ? "next" : (existing ? "current" : "nuova");
   const chiave = user?.id ? chiaveBozza(user.id, scheda) : null;
-  const bloccataDaOrdine = isNext ? Boolean(win && !win.open) : Boolean(existing?.locked_this_month);
+  const bloccataDaOrdine = isNext ? Boolean(win && !win.open) : Boolean(existing?.locked);
   const bozza = useBozza({
     chiave,
     valore: soloCampiOfferta(form),
@@ -148,20 +155,26 @@ export default function MerchantDiscount() {
     })),
   });
 
-  // «Riusa» dall'archivio: copia l'offerta passata nel modulo del mese prossimo (da controllare e inviare)
+  // «Riusa» dall'archivio: copia l'offerta passata nel modulo (da controllare e inviare). Con un'offerta
+  // online va nella «Prossima offerta», altrimenti nel modulo dell'offerta.
   const riusa = async (archivioId) => {
     try {
       const { data } = await api.get(`/merchants/me/archive/${archivioId}`);
-      setMode("next");
-      setBase(nextOffer ? formFrom(nextOffer) : (existing ? formFrom(existing) : EMPTY_FORM));
+      const versoProssima = Boolean(win?.open);
+      setMode(versoProssima ? "next" : "current");
+      setBase(versoProssima
+        ? (nextOffer ? formFrom(nextOffer) : (existing ? formFrom(existing) : EMPTY_FORM))
+        : (existing ? formFrom(existing) : EMPTY_FORM));
       setForm(formFrom({ ...data.offerta, active: true }));
-      toast.success("Offerta copiata: controllala e inviala per il mese prossimo.");
+      toast.success(versoProssima ? "Offerta copiata nella prossima offerta: controllala e inviala." : "Offerta copiata: controllala e inviala.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       toast.error(formatApiError(e));
     }
   };
-  const monthLabel = win?.next_month_label || "il mese prossimo";
+  // Quando parte la prossima offerta: il giorno dopo la fine di quella online (o appena approvata, se non ha scadenza)
+  const parteIl = win?.starts_on ? dataIt(win.starts_on) : "";
+  const quandoParte = parteIl ? `il ${parteIl}, quando finisce quella di adesso` : "appena la approviamo, al posto di quella di adesso";
 
   const submit = async (e) => {
     e.preventDefault();
@@ -172,7 +185,12 @@ export default function MerchantDiscount() {
         original_price: parseFloat(form.original_price),
         discounted_price: parseFloat(form.discounted_price),
         max_uses_per_month: parseInt(form.max_uses_per_month, 10) || 1,
+        ...campiDurata(form),
       };
+      if (form.offer_type !== "omaggio" && payload.open_ended) {
+        // uno sconto ha sempre una fine
+        Object.assign(payload, { open_ended: false, duration_days: DURATA_PREDEFINITA });
+      }
       if (form.offer_type === "omaggio") {
         // Omaggio: nessun prezzo
         payload.original_price = null;
@@ -185,7 +203,7 @@ export default function MerchantDiscount() {
       }
       if (isNext) {
         await api.post("/merchants/me/next-discount", payload);
-        toast.success(`Offerta di ${monthLabel} inviata! Attende approvazione dell'amministratore.`);
+        toast.success("Prossima offerta inviata! Attende approvazione dell'amministratore.");
       } else {
         await api.post("/merchants/me/discount", payload);
         toast.success("Offerta inviata! Attende approvazione dell'amministratore.");
@@ -215,7 +233,8 @@ export default function MerchantDiscount() {
   };
 
   const status = isNext ? nextOffer?.approval_status : existing?.approval_status;
-  const locked = !isNext && existing?.locked_this_month;
+  const locked = !isNext && existing?.locked;
+  const fineOnline = existing?.valid_until ? dataIt(existing.valid_until) : "";
   const windowClosed = isNext && win && !win.open;
   const nonRinnovo = isNext && noRenew && !nextOffer;
   const readOnly = isNext ? (windowClosed || nonRinnovo) : locked;
@@ -232,13 +251,13 @@ export default function MerchantDiscount() {
         <div className="mx-auto max-w-3xl px-4 pb-5 pt-6 sm:px-6">
           <div className="text-xs font-extrabold uppercase tracking-[0.12em] text-ac-viola">Il tuo sconto</div>
           <h1 className="mt-1.5 text-[30px] leading-[1.1] sm:text-4xl">
-            {isNext ? `Offerta di ${monthLabel}` : (existing ? "La tua offerta" : "Crea la tua offerta")}
+            {isNext ? "Prossima offerta" : (existing ? "La tua offerta" : "Crea la tua offerta")}
           </h1>
         </div>
       </section>
 
       <div className="mx-auto max-w-3xl px-4 pb-10 pt-4 sm:px-6">
-        {/* Tab: offerta corrente vs mese prossimo */}
+        {/* Tab: offerta di adesso, prossima offerta, archivio */}
         <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Quale offerta">
           <button
             type="button"
@@ -247,7 +266,7 @@ export default function MerchantDiscount() {
             onClick={() => switchMode("current")}
             className={tab(!isNext && mode !== "archivio", "ac-grad")}
           >
-            Offerta del mese
+            La tua offerta
           </button>
           <button
             type="button"
@@ -257,8 +276,8 @@ export default function MerchantDiscount() {
             className={tab(isNext, "bg-ac-teal")}
           >
             <CalendarPlus size={16} className="mr-1.5" aria-hidden="true" />
-            Mese prossimo{win ? <span className="hidden sm:inline">{` · ${monthLabel}`}</span> : null}
-            {nextOffer && <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-ac-rosa" aria-label="Offerta già caricata" />}
+            Prossima offerta{parteIl ? <span className="hidden sm:inline">{` · dal ${parteIl}`}</span> : null}
+            {nextOffer && <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-ac-rosa" aria-label="Prossima offerta già preparata" />}
           </button>
           <button
             type="button"
@@ -273,7 +292,7 @@ export default function MerchantDiscount() {
         </div>
 
         {mode === "archivio" ? (
-          <ArchivioOfferte onRiusa={riusa} finestraAperta={Boolean(win?.open)} monthLabel={monthLabel} />
+          <ArchivioOfferte onRiusa={riusa} versoProssima={Boolean(win?.open)} riusabile={win?.open ? !noRenew : !existing?.locked} />
         ) : (<>
 
         {erroreCarica && (
@@ -298,12 +317,13 @@ export default function MerchantDiscount() {
           </Avviso>
         )}
         {!isNext && status === "approved" && locked && (
-          <Avviso testid="banner-locked" tono="rosa" icona={<Lock size={20} />} titolo="Offerta attiva per questo mese">
-            Negli <strong className="text-ac-ink">ultimi 7 giorni del mese</strong> potrai caricare qui l'offerta per {monthLabel} dal tab "Mese prossimo". Se hai un errore grave, contatta l'amministratore per uno sblocco.
+          <Avviso testid="banner-locked" tono="rosa" icona={<Lock size={20} />} titolo={fineOnline ? `Offerta online fino al ${fineOnline}` : "Offerta online, senza scadenza"}>
+            Finché è online non si può modificare. {fineOnline ? <>Dalla pagina principale puoi <strong className="text-ac-ink">prolungarla</strong>, oppure </> : <>Per cambiarla </>}
+            prepara quando vuoi la prossima dalla scheda «Prossima offerta». Se c'è un errore grave scrivici: possiamo sbloccarla.
           </Avviso>
         )}
         {!isNext && status === "expired" && (
-          <Avviso testid="banner-expired" tono="ambra" icona={<CalendarClock size={20} />} titolo="Offerta scaduta a fine mese">
+          <Avviso testid="banner-expired" tono="ambra" icona={<CalendarClock size={20} />} titolo="Offerta terminata">
             Il tuo negozio è senza offerta attiva. Compila e invia una nuova offerta per tornare visibile nel catalogo.
           </Avviso>
         )}
@@ -323,34 +343,34 @@ export default function MerchantDiscount() {
           </Avviso>
         )}
 
-        {/* ---- Banner offerta mese prossimo ---- */}
+        {/* ---- Banner prossima offerta ---- */}
         {isNext && windowClosed && (
-          <Avviso testid="banner-next-closed" tono="ambra" icona={<CalendarClock size={20} />} titolo="Finestra di caricamento chiusa">
-            Potrai caricare l'offerta di <strong className="text-ac-ink">{monthLabel}</strong> a partire dal <strong className="text-ac-ink">{win?.opens_on}</strong>, negli ultimi 7 giorni del mese.
+          <Avviso testid="banner-next-closed" tono="ambra" icona={<CalendarClock size={20} />} titolo="Adesso non hai un'offerta online">
+            La prossima offerta si prepara mentre ne hai una online, così parte da sola quando quella finisce. Per pubblicare adesso usa la scheda <strong className="text-ac-ink">«La tua offerta»</strong>.
           </Avviso>
         )}
         {nonRinnovo && !windowClosed && (
           <Avviso testid="banner-next-no-renew" tono="ambra" icona={<CalendarClock size={20} />} titolo="Hai scelto di non rinnovare">
-            Il caricamento dell'offerta di <strong className="text-ac-ink">{monthLabel}</strong> è spento. Se cambi idea, torna alla pagina principale e tocca «Annulla, voglio rinnovare».
+            La prossima offerta è spenta. Se cambi idea, torna alla pagina principale e tocca «Annulla, voglio rinnovare».
           </Avviso>
         )}
         {isNext && !windowClosed && !nonRinnovo && !nextOffer && (
-          <Avviso testid="banner-next-new" tono="teal" icona={<CalendarPlus size={20} />} titolo={`Prepara l'offerta di ${monthLabel}`}>
-            Il modulo è precompilato con l'offerta attuale: modifica quello che vuoi. Dopo l'approvazione dell'amministratore, <strong className="text-ac-ink">il 1° del mese sostituirà automaticamente</strong> l'offerta corrente. Se non la carichi, il negozio resterà senza offerta.
+          <Avviso testid="banner-next-new" tono="teal" icona={<CalendarPlus size={20} />} titolo="Prepara la prossima offerta">
+            Il modulo è precompilato con l'offerta di adesso: cambia quello che vuoi. Dopo il nostro controllo andrà online <strong className="text-ac-ink">{quandoParte}</strong>. Non c'è un giorno entro cui farlo: puoi prepararla quando vuoi.
           </Avviso>
         )}
         {isNext && !windowClosed && nextOffer?.approval_status === "pending" && (
-          <Avviso testid="banner-next-pending" tono="ambra" icona={<Clock size={20} />} titolo={`Offerta di ${monthLabel} in revisione`}>
-            L'amministratore la sta esaminando. Una volta approvata, diventerà attiva automaticamente il 1° del mese. Puoi ancora modificarla.
+          <Avviso testid="banner-next-pending" tono="ambra" icona={<Clock size={20} />} titolo="Prossima offerta in revisione">
+            La stiamo controllando. Una volta approvata andrà online {quandoParte}. Puoi ancora modificarla.
           </Avviso>
         )}
         {isNext && !windowClosed && nextOffer?.approval_status === "approved" && (
-          <Avviso testid="banner-next-approved" tono="verde" icona={<CheckCircle2 size={20} />} titolo={`Offerta di ${monthLabel} approvata ✓`}>
-            Il 1° del mese sostituirà automaticamente l'offerta corrente. Se la modifichi ora, tornerà in revisione.
+          <Avviso testid="banner-next-approved" tono="verde" icona={<CheckCircle2 size={20} />} titolo="Prossima offerta approvata ✓">
+            Andrà online {quandoParte}. Se la modifichi ora, tornerà in revisione.
           </Avviso>
         )}
         {isNext && !windowClosed && nextOffer?.approval_status === "rejected" && (
-          <Avviso testid="banner-next-rejected" tono="rosso" icona={<XCircle size={20} />} titolo={`Offerta di ${monthLabel} rifiutata`}>
+          <Avviso testid="banner-next-rejected" tono="rosso" icona={<XCircle size={20} />} titolo="Prossima offerta rifiutata">
             Modifica i dati e ri-invia per una nuova revisione.
             {nextOffer?.approval_note && (
               <span className="mt-2 block rounded-xl border border-ac-rosso/30 bg-white p-3 text-ac-ink">
@@ -398,7 +418,10 @@ export default function MerchantDiscount() {
                       type="button"
                       data-testid={`disc-tipo-${v}`}
                       aria-pressed={form.offer_type === v}
-                      onClick={() => setForm((f) => ({ ...f, offer_type: v }))}
+                      onClick={() => setForm((f) => ({
+                        ...f, offer_type: v,
+                        ...(v === "sconto" ? { open_ended: false, duration_days: Math.min(Number(f.duration_days) || DURATA_PREDEFINITA, MAX_SCONTO) } : {}),
+                      }))}
                       disabled={readOnly}
                       className={`min-h-14 rounded-xl border-2 px-2 py-2 text-left transition ${
                         form.offer_type === v ? "border-ac-rosa bg-ac-rosa text-white" : "border-ac-campo bg-white text-ac-ink hover:border-ac-rosa"
@@ -442,6 +465,13 @@ export default function MerchantDiscount() {
                 </div>
               </div>
               )}
+              <SceltaDurata
+                form={form}
+                onChange={(campi) => setForm((f) => ({ ...f, ...campi }))}
+                disabled={readOnly}
+                parteIl={isNext ? parteIl : ""}
+                subitoDopoApprovazione={isNext && !parteIl}
+              />
               <div>
                 <div className={ETICHETTA}>Foto dell'offerta <span className="text-xs font-semibold text-ac-mute">(fino a 8, la 1ª è la copertina)</span></div>
                 <p className={`${AIUTO} mb-3`}>
@@ -465,7 +495,7 @@ export default function MerchantDiscount() {
               </div>
               <div>
                 <Label htmlFor="disc-terms" className={ETICHETTA}>Termini e condizioni (Fine print)</Label>
-                <Textarea id="disc-terms" data-testid="disc-terms" value={form.terms} onChange={upd("terms")} className={AREA} rows={2} placeholder="Es. Utilizzabile entro il mese. Max 1 coupon a persona." />
+                <Textarea id="disc-terms" data-testid="disc-terms" value={form.terms} onChange={upd("terms")} className={AREA} rows={2} placeholder="Es. Uno per cliente. Non cumulabile con altre promozioni." />
               </div>
 
               {/* Sezioni informative stile Groupon (opzionali) */}
@@ -540,11 +570,11 @@ export default function MerchantDiscount() {
                 }`}
               >
                 {isNext
-                  ? (windowClosed ? <><Lock size={16} aria-hidden="true" /> Finestra chiusa — apre il {win?.opens_on}</>
-                    : nonRinnovo ? <><Lock size={16} aria-hidden="true" /> Non rinnovo: caricamento spento</>
+                  ? (windowClosed ? <><Lock size={16} aria-hidden="true" /> Serve un'offerta online</>
+                    : nonRinnovo ? <><Lock size={16} aria-hidden="true" /> Non rinnovo: prossima offerta spenta</>
                     : loading ? "Salvataggio…"
-                    : nextOffer ? `Aggiorna offerta di ${monthLabel} (torna in revisione)` : `Invia offerta di ${monthLabel} (in revisione)`)
-                  : (readOnly ? <><Lock size={16} aria-hidden="true" /> Modifiche bloccate questo mese</>
+                    : nextOffer ? "Aggiorna la prossima offerta (torna in revisione)" : "Invia la prossima offerta (in revisione)")
+                  : (readOnly ? <><Lock size={16} aria-hidden="true" /> Offerta online: modifiche bloccate</>
                     : loading ? "Salvataggio…"
                     : status === "awaiting_merchant" ? "Salva le mie modifiche e invia in revisione"
                     : existing ? "Aggiorna e ri-invia in revisione" : "Pubblica (in revisione)")}

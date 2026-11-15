@@ -3023,6 +3023,11 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
         data = payload.cleaned()
         if not data.get("title") or not data.get("description"):
             raise HTTPException(422, "Titolo e descrizione sono obbligatori")
+        if (existing.get("approval_status") == "approved" and "valid_until" in existing
+                and not existing.get("force_editable") and _offerta_finita(existing)):
+            # Offerta arrivata alla data di fine ma non ancora passata dal cambio offerte della notte:
+            # prima di sovrascriverla va nell'archivio, come le altre scadute
+            await _archivia(existing, "expired_no_replacement")
         data["updated_at"] = now_iso
         data["approval_status"] = "pending"
         data["approval_note"] = ""
@@ -6526,7 +6531,7 @@ CPN_TESTO_CONFERMA = ("Confermando dichiari che i dati dell'offerta sono corrett
 # revisione (l'ha inviata il negozio) o approvata (è online o bloccata per il mese).
 _CPN_SOSTITUIBILI = (STATO_ATTESA_NEGOZIO, "rejected", "expired")
 _CPN_CAMPI_OFFERTA = ("title", "description", "original_price", "discounted_price", "image_url", "image_urls",
-                      "terms", "plan_ahead", "validity_info", "additional_info", "max_uses_per_month")
+                      "terms", "plan_ahead", "validity_info", "additional_info", "max_uses_per_month", "duration_days")
 
 
 def _cpn_link(path: str) -> str:

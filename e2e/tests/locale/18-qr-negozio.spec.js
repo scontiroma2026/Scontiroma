@@ -45,7 +45,7 @@ test('locandina: QR verso la pagina del negozio, nome e testi nuovi', async ({ p
   await expect(page.getByTestId('affiliate-badge-text')).toContainText(`${MERCHANT.shop_name} aderisce a Sconti Roma`);
   const testo = await page.locator('body').innerText();
   expect(testo).toContain('Iscrizione gratuita');
-  expect(testo.toLowerCase()).toContain("inquadra e scopri l'offerta di questo mese");   // il testo è in maiuscolo nella stampa
+  expect(testo.toLowerCase()).toContain("inquadra e scopri la nostra offerta");   // il testo è in maiuscolo nella stampa
   expect(testo).not.toMatch(/affiliato|fase di lancio|30 secondi/i);
   // «Roma e dintorni» al posto di «quartiere»; titoli in Manrope (scelta del titolare, 13/10)
   expect(testo).toContain('Gli sconti di Roma e dintorni.');

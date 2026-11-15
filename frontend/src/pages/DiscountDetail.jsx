@@ -1,5 +1,6 @@
 import { trackClick } from "@/lib/analytics";
 import { isOmaggio } from "@/lib/offerta";
+import { scrittaValidita } from "@/lib/durata";
 import { CLASSE_WHATSAPP, DATI_WHATSAPP } from "@/components/TastoWhatsApp";
 import BadgeNuovaOfferta from "@/components/BadgeNuovaOfferta";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -287,6 +288,12 @@ export default function DiscountDetail() {
               </div>
               <div className="mt-1 text-sm text-muted-foreground">Risparmi <strong className="text-foreground">€{savings}</strong> con Sconti Roma</div>
               </>)}
+              {/* Fino a quando vale: la durata la sceglie il negozio (niente scritta se non ha scadenza) */}
+              {scrittaValidita(discount) && (
+                <div data-testid="valida-fino" className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <Clock size={15} aria-hidden="true" className="shrink-0 text-ciano" /> {scrittaValidita(discount)}
+                </div>
+              )}
 
             {/* Contatore utilizzi mensili (solo per abbonati / clienti registrati) */}
             {user?.role === "client" && (usageInfo.max_uses > 1 || alreadyUsed) && (
