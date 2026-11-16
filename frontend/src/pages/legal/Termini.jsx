@@ -6,7 +6,7 @@ export default function Termini() {
       <LegalLayout
         kicker="Documento legale"
         title="Termini e Condizioni d'Uso"
-        updatedAt="Ottobre 2026"
+        updatedAt="Novembre 2026"
       >
         <p>
           I presenti Termini e Condizioni ("Termini") disciplinano l'accesso e
@@ -48,12 +48,15 @@ export default function Termini() {
             i Commercianti sono scritte in questi Termini, in italiano e in
             modo semplice. Le modifiche si comunicano come indicato all'art. 9.
           </li>
+          {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: con la durata scelta dal negozio le offerte cambiano spesso; si precisa che l'ordine segue la data della prima offerta del negozio (codice: `list_discounts`, ordinamento per `created_at`, che non cambia con «Prolunga» o con la prossima offerta). Art. 5 Reg. UE 2019/1150 da verificare. */}
           <li>
             <strong>Ordine delle offerte.</strong> Le offerte sono mostrate
-            dalla più recente alla meno recente. Se il Cliente attiva la
-            posizione, sono mostrate dalla più vicina. Nessun Commerciante
-            può pagare per comparire prima o in evidenza: oggi non esistono
-            corsie a pagamento.
+            dalla più recente alla meno recente, secondo la data in cui il
+            negozio ha creato la sua prima offerta: prolungare l'offerta,
+            cambiarla o prepararne un'altra non cambia la posizione. Se il
+            Cliente attiva la posizione, sono mostrate dalla più vicina.
+            Nessun Commerciante può pagare per comparire prima o in evidenza:
+            oggi non esistono corsie a pagamento.
           </li>
           <li>
             <strong>Motivazioni.</strong> Se rifiutiamo un'offerta, ne
@@ -168,21 +171,29 @@ export default function Termini() {
             pagamento parte solo dopo che hai letto il riepilogo (importo, data
             del primo pagamento, regole di disdetta), hai dato la tua conferma
             espressa e hai scelto carta o PayPal. Se non confermi, non paghi
-            nulla e la tua offerta non viene più pubblicata. Finché i
-            pagamenti non sono attivati non viene addebitato alcun importo.
+            nulla e, dal giorno dopo la fine della prova, la tua offerta non
+            si vede più, anche se la data di fine che hai scelto è
+            successiva. Finché i pagamenti non sono attivati non viene
+            addebitato alcun importo.
           </li>
+          {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: durata scelta dal negozio (decisione del titolare del 14/11). Regole di prezzo, prova e pagamento invariate; adattate solo le parole che davano per scontata l'offerta del mese. Codice dei pagamenti spento e non toccato (`prova_pagamenti.offer_visible_for_payment_core`: un'offerta si vede solo nei mesi pagati; con la disdetta, dal 1° del mese dopo non si vede più anche se la sua data di fine è successiva). Scelta prudente: scriverlo chiaro; dubbio nella lista per l'avvocato. */}
           <li>
-            <strong>Pagamento e pubblicazione</strong>: il pagamento si fa dal
-            1° al 5 del mese. Prima si paga, poi l'offerta del mese viene
-            approvata e pubblicata: se il pagamento arriva dopo il 5, l'offerta
-            è pubblicata dal mese successivo.
+            <strong>Pagamento e pubblicazione</strong>: dopo la prova il
+            pagamento si fa dal 1° al 5 di ogni mese. Prima si paga, poi
+            l'offerta viene approvata e pubblicata. Se il pagamento arriva
+            dopo il 5, vale per il mese successivo: fino ad allora l'offerta
+            non si vede. Questo vale anche per un'offerta che dura più mesi: si
+            vede solo nei mesi pagati e la sua data di fine non si sposta.
           </li>
           <li>
             <strong>Disdetta</strong>: disdici quando vuoi, porti avanti solo
-            l'offerta che è in corso a fine mese. La disdetta ha effetto alla
-            fine del mese in corso: fino all'ultimo giorno i Clienti possono
-            usare lo sconto già pubblicato e devi rispettarlo; dal 1° del mese
-            successivo non c'è nessun nuovo addebito.
+            l'offerta che è in corso, fino a fine mese. La disdetta ha effetto
+            alla fine del mese in corso: fino all'ultimo giorno i Clienti
+            possono usare l'offerta già pubblicata e devi rispettarla; dal 1°
+            del mese successivo l'offerta non si vede più, anche se la data di
+            fine che hai scelto è successiva, e non c'è nessun nuovo addebito.
+            La disdetta del pagamento è una cosa diversa da «Non rinnovo»
+            (art. 5).
           </li>
           <li>
             <strong>Mese pagato non rimborsabile</strong>: l'importo del mese
@@ -200,9 +211,31 @@ export default function Termini() {
             Gli sconti sono <strong>personali e non trasferibili</strong>. Ogni
             codice QR è generato in tempo reale e legato al tuo account.
           </li>
+          {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: limiti d'uso, scadenza e codici con la durata scelta dal negozio. Codice: `create_redemption` (utilizzi contati per esercente e mese di calendario, anche se l'offerta cambia), `_codice_di_mese_scaduto` (codice valido nel mese in cui nasce, fino alle 02:00 del 1° del mese dopo), `_offerta_del_codice_finita` (codice non usato non vale dopo la fine dell'offerta, fino alle 02:00 del giorno dopo, salvo nuova offerta già online). */}
           <li>
-            Puoi utilizzare ogni singolo sconto <strong>una sola volta al
-            mese</strong> per esercente, salvo diversa indicazione.
+            Puoi utilizzare lo sconto di ogni esercente <strong>una sola volta
+            al mese</strong> (mese di calendario), salvo diversa indicazione:
+            il Commerciante può consentire più utilizzi e il numero lo vedi
+            nella pagina dell'offerta. Il conteggio vale per esercente, anche
+            se nel corso del mese l'offerta cambia.
+          </li>
+          <li>
+            <strong>Fino a quando vale.</strong> Ogni offerta ha la durata
+            scelta dal Commerciante e indica fino a quando vale («Valida fino
+            al …»): l'ultimo giorno è compreso. Un omaggio può anche non avere
+            una scadenza: in quel caso vale finché resta online. Un'offerta
+            può finire prima della data indicata, per esempio se il
+            Commerciante lascia Sconti Roma o se l'offerta viene sospesa o
+            tolta (per un errore grave o per una violazione di questi
+            Termini).
+          </li>
+          <li>
+            <strong>Codici non usati.</strong> Un codice QR non ancora usato
+            smette di valere alla fine del mese in cui è stato creato oppure,
+            se arriva prima, alla fine dell'offerta, a meno che il Commerciante
+            abbia già messo online una nuova offerta: in quel caso il codice
+            vale per l'offerta online in quel momento. In entrambi i casi c'è
+            tempo fino alle 02:00 (ora di Roma) del giorno dopo.
           </li>
           <li>
             Se il Commerciante consente <strong>più utilizzi nello stesso
@@ -227,34 +260,52 @@ export default function Termini() {
             singolo esercente: le condizioni di erogazione dipendono dal
             Commerciante.
           </li>
+          <li>
+            Le regole di questo articolo valgono anche per gli{" "}
+            <strong>omaggi</strong> (un regalo o un'esperienza offerti dal
+            Commerciante, senza prezzi).
+          </li>
         </ul>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">5. Obblighi dei Commercianti</h2>
         <p>
           I Commercianti che aderiscono alla piattaforma si impegnano a:
         </p>
+        {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: obblighi riallineati alla durata scelta dal negozio (tolti «per l'intero mese di validità», «le offerte sono mensili» e «Non modificare l'offerta prima del 1° del mese successivo»). Le regole sulla durata sono nel riquadro «Durata delle offerte» qui sotto. */}
         <ul className="list-disc pl-6 space-y-2">
-          <li>Rispettare lo sconto pubblicato per l'intero mese di validità.</li>
           <li>
-            Sapere che le offerte sono <strong>mensili e non si rinnovano
-            automaticamente</strong>: ogni offerta termina l'ultimo giorno del
-            mese. Per continuare il Commerciante carica l'offerta del mese
-            successivo, che viene pubblicata dopo l'approvazione; in
-            alternativa può scegliere «Non rinnovo». Prima della scadenza
-            riceve dei promemoria via email.
+            Rispettare l'offerta pubblicata per tutta la sua durata, fino alla
+            data di fine compresa (per un omaggio senza scadenza, finché resta
+            online), e accettare i codici dei Clienti finché valgono (art. 4).
+          </li>
+          <li>
+            Conoscere e rispettare le regole sulla durata delle offerte scritte
+            qui sotto: in particolare le offerte <strong>non si rinnovano da
+            sole</strong> e, finché sono online, non si modificano e non si
+            accorciano.
           </li>
           <li>
             Fornire informazioni veritiere su attività, prodotto, prezzo e
             zona.
           </li>
-          {/* [PROPOSTA][DA VALIDARE dal consulente] Punto 23: prezzo precedente (testo da #147 sez. 13, adattato). Norma (art. 17-bis Codice del Consumo), eccezioni e sentenza C-330/23 da verificare. */}
+          {/* [PROPOSTA][DA VALIDARE dal consulente] Punto 23: prezzo precedente (testo da #147 sez. 13, adattato). Norma (art. 17-bis Codice del Consumo), eccezioni e sentenza C-330/23 da verificare. 16/11: aggiunta la regola per «Prolunga» e per lo sconto ripresentato come nuova offerta (lettura più prudente della stessa frase: contano i 30 giorni prima della nuova pubblicazione). */}
           <li data-testid="termini-prezzo-30-giorni">
             Garantire che il <strong>prezzo pieno indicato</strong> nell'offerta
             è il prezzo più basso che hai applicato a quel prodotto o servizio
             nei 30 giorni precedenti la pubblicazione dello sconto. Se non puoi
-            garantirlo, non indicare un prezzo pieno più alto.
+            garantirlo, non indicare un prezzo pieno più alto. Se prolunghi lo
+            sconto con «Prolunga» conta la sua prima pubblicazione; se lo
+            ripresenti come nuova offerta contano i 30 giorni prima della nuova
+            pubblicazione, compresi i giorni in cui era già scontato.
           </li>
-          <li>Non modificare l'offerta prima del 1° del mese successivo.</li>
+          {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: la durata e le date le sceglie il negozio, quindi tocca a lui rispettare le regole sulle vendite promozionali e sui saldi (Lazio e Roma Capitale: periodi e settori da verificare) e, per gli omaggi, la disciplina delle manifestazioni a premio (D.P.R. 430/2001, da verificare). */}
+          <li>
+            Rispettare le regole sulle vendite promozionali e sui saldi (per
+            esempio i periodi in cui alcuni settori non possono fare vendite
+            promozionali prima dei saldi) e, se offri un omaggio, quelle sulle
+            manifestazioni a premio: la durata e le date dell'offerta le
+            scegli tu.
+          </li>
           <li>
             Emettere regolare scontrino / fattura secondo la normativa fiscale
             italiana.
@@ -275,20 +326,94 @@ export default function Termini() {
           </li>
         </ul>
 
+        {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: regole della durata scelta dal negozio (decisione del titolare del 14/11), scritte sul codice della PR #253: `DiscountIn._durata_valida`, `_validita` (durata dal giorno in cui va online, date di Roma, ultimo giorno compreso; sconto al massimo DURATA_MAX_SCONTO_GIORNI = 90, omaggio 365 o senza scadenza), `_offerta_bloccata` e `admin_force_edit` (sblocco: torna in revisione), `merchant_extend_discount` («Prolunga» senza nuova approvazione, avviso all'admin), `_stato_prossima` e `_cambia_offerta_negozio` (prossima offerta), `_run_next_offer_reminders` (promemoria 7, 3 e 1 giorno prima), `merchant_set_no_renew` («Non rinnovo» ritira la prossima e ferma i promemoria; non tocca il pagamento), `_fine_offerta` (offerte approvate prima: regola del mese). Il massimo di 90 giorni e la «Prolunga» senza nuova approvazione sono nella lista per l'avvocato. */}
+        <h3 className="font-serif text-xl text-foreground mt-6">Durata delle offerte</h3>
+        <ul className="list-disc pl-6 space-y-2">
+          <li>
+            <strong>Quanto dura.</strong> La durata la scegli tu quando crei
+            l'offerta: 7, 14, 30, 60 o 90 giorni oppure fino a un giorno
+            preciso; se non scegli, dura 30 giorni. Uno sconto può restare
+            online al massimo 90 giorni di fila; un omaggio fino a 365 giorni
+            oppure senza scadenza. La durata parte dal giorno in cui l'offerta
+            va online (il giorno in cui la approviamo oppure, per la prossima
+            offerta, il giorno dopo la fine di quella in corso), con le date di
+            Roma; l'ultimo giorno è compreso.
+          </li>
+          <li>
+            <strong>Le offerte non si rinnovano da sole.</strong> Alla data di
+            fine l'offerta termina e, se non c'è una prossima offerta
+            approvata, il negozio non compare più tra gli sconti finché non ne
+            pubblichi un'altra. Se non hai preparato la prossima offerta e non
+            hai scelto «Non rinnovo», ti avvisiamo per email 7, 3 e 1 giorno
+            prima della fine (solo se l'offerta dura più di così); quando
+            l'offerta è terminata ti mandiamo un'email.
+          </li>
+          <li>
+            <strong>Offerta online bloccata.</strong> Finché è online,
+            l'offerta non si modifica e non si accorcia fino alla sua data di
+            fine: i Clienti l'hanno vista con quella data. Se c'è un errore
+            grave (per esempio un prezzo sbagliato o un prodotto finito),
+            scrivi a partner@scontiroma.it: possiamo sbloccarla. In quel caso
+            l'offerta torna in revisione e non si vede finché non la approviamo
+            di nuovo; se la sblocchiamo di nostra iniziativa, ti scriviamo il
+            motivo.
+          </li>
+          <li>
+            <strong>«Prolunga».</strong> Puoi allungare l'offerta online con
+            un tocco, senza una nuova approvazione: resta identica e vale più a
+            lungo, entro il massimo (90 giorni in tutto per uno sconto, 365 per
+            un omaggio, contati dal giorno in cui è andata online). Prolungando
+            confermi che prezzi e condizioni sono ancora veri. Riceviamo un
+            avviso e possiamo comunque controllarla. Se avevi scelto «Non
+            rinnovo», la proroga annulla la scelta.
+          </li>
+          <li>
+            <strong>«Prossima offerta».</strong> Mentre un'offerta è online
+            puoi preparare la prossima quando vuoi. La controlliamo come ogni
+            offerta e, se la approviamo, va online da sola il giorno dopo la
+            fine di quella in corso (subito, se quella in corso è un omaggio
+            senza scadenza). Se alla fine dell'offerta in corso la prossima non
+            è ancora approvata, il negozio resta senza offerta visibile finché
+            non la approviamo.
+          </li>
+          <li>
+            <strong>«Non rinnovo».</strong> Con «Non rinnovo» l'offerta online
+            termina alla sua data di fine, i promemoria si fermano e
+            l'eventuale prossima offerta già preparata viene ritirata. Puoi
+            annullare la scelta finché l'offerta è online. «Non rinnovo» non è
+            la disdetta del pagamento (art. 3.2): serve solo a non far
+            continuare l'offerta.
+          </li>
+          <li>
+            <strong>Omaggio senza scadenza.</strong> Resta online finché non lo
+            sostituisci con la prossima offerta, non ci chiedi di toglierlo
+            (partner@scontiroma.it) o non elimini l'account.
+          </li>
+          <li>
+            Le offerte approvate prima di questo aggiornamento dei Termini
+            valgono, come allora, fino all'ultimo giorno del mese in cui sono
+            state approvate.
+          </li>
+        </ul>
+
         <div className="mt-6 rounded-xl border border-neon/30 bg-neon/5 p-5">
           <h3 className="font-serif text-lg text-foreground flex items-center gap-2">
             <span className="text-neon">✎</span> Modifiche o rimozione del negozio
           </h3>
+          {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: allineato al codice. `gdpr_delete_account` + `_erase_user_data` cancellano subito account, offerta online, prossima offerta, archivio e codici dei Clienti presso il negozio; i dati di pagamento con obbligo di legge restano anonimi. Il testo di prima («visibile fino all'ultimo giorno del mese, rimosso dal 1° del mese successivo») descriveva la PR #102, mai unita. Punto 5 della lista per l'avvocato. */}
           <p className="mt-2 text-sm">
             Il Commerciante può in qualsiasi momento, dal proprio profilo,{" "}
             <strong>modificare</strong> i propri dati, scegliere{" "}
-            <strong>«Non rinnovo»</strong> per l'offerta del mese oppure{" "}
-            <strong>eliminare l'account</strong>: se hai un'offerta in
-            corso, il negozio resta visibile fino all'ultimo giorno del mese
-            (i Clienti possono usare lo sconto) e viene rimosso dalla
-            piattaforma e dalla mappa dal 1° del mese successivo; senza offerte
-            in corso la rimozione è immediata. I dati collegati vengono poi
-            cancellati.
+            <strong>«Non rinnovo»</strong> per l'offerta online (termina alla
+            sua data di fine) oppure <strong>eliminare l'account</strong>.
+            L'eliminazione è immediata: il negozio, l'offerta online,
+            l'eventuale prossima offerta e l'archivio spariscono subito dalla
+            piattaforma e dalla mappa, e i codici dei Clienti non ancora usati
+            non valgono più. I dati collegati vengono cancellati subito,
+            tranne quelli che la Privacy Policy indica come conservati più a
+            lungo (per esempio i dati di pagamento richiesti dalla legge, in
+            forma anonima). Se vuoi che i Clienti possano usare la tua offerta
+            fino alla sua data di fine, elimina l'account dopo quella data.
           </p>
           <p className="mt-2 text-sm">
             Per <strong>sospendere temporaneamente</strong> l'esposizione dello
@@ -301,8 +426,8 @@ export default function Termini() {
               partner@scontiroma.it
             </a>
             : rispondiamo entro 5 giorni lavorativi e ti confermiamo via email
-            la data di applicazione. Le offerte già mostrate ai Clienti nel mese
-            in corso possono essere completate solo se il negozio non viene
+            la data di applicazione. Un'offerta già mostrata ai Clienti può
+            continuare fino alla sua data di fine solo se il negozio non viene
             rimosso.
           </p>
           <p className="mt-2 text-xs text-muted-foreground">

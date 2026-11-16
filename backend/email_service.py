@@ -319,7 +319,7 @@ async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
 <p style="margin:0 0 16px;color:#d4d4d8">La prova gratuita di <strong>{shop_name}</strong> su Sconti Roma termina il <strong style="color:#00E5FF">{end_label}</strong>.</p>
 <p style="margin:0 0 16px;color:#d4d4d8">Per continuare, <strong>aggiungi il metodo di pagamento e conferma</strong>: così la tua offerta resta pubblicata. Senza conferma, dal giorno dopo l'offerta non verrà più pubblicata e non riceverai nessun addebito.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Se non vuoi continuare, non devi fare nulla: la disdetta ha effetto a fine mese e puoi sempre scegliere «Non rinnovo» dalla tua dashboard.</p>
+<p style="margin:0 0 24px;color:#d4d4d8">Se non vuoi continuare e non hai ancora confermato, non devi fare nulla: non paghi niente. Se hai già confermato, puoi disdire quando vuoi dalla scheda «Pagamento» della tua area: la disdetta ha effetto a fine mese.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
 </div>
@@ -758,7 +758,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
 <p style="{_P}"><strong>Quanto costa:</strong> durante la fase di lancio è gratuito. Dopo, il prezzo previsto è di <strong>4,99 € al mese + IVA</strong>. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma.</p>
-<p style="{_P}"><strong>Disdetta:</strong> disdici quando vuoi, porti avanti solo l'offerta che è in corso a fine mese. Per non continuare, scegli «Non rinnovo».</p>
+<p style="{_P}"><strong>Disdetta:</strong> disdici quando vuoi, porti avanti solo l'offerta che è in corso, fino a fine mese. Per non far continuare un'offerta, scegli «Non rinnovo»: finisce alla sua data di fine e non riparte.</p>
 <div style="text-align:center;margin:24px 0"><a href="{APP_URL}/merchant/discount" style="{_BTN}">Crea la tua offerta</a></div>
 """
     return await _send(to, f"Benvenuto in {BRAND}: crea la tua prima offerta", _shell(inner))

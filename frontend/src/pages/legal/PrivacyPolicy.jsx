@@ -6,7 +6,7 @@ export default function PrivacyPolicy() {
       <LegalLayout
         kicker="Documento legale"
         title="Privacy Policy"
-        updatedAt="Ottobre 2026"
+        updatedAt="Novembre 2026"
       >
         <p>
           La presente Privacy Policy descrive come <strong>Sconti Roma</strong> (di
@@ -168,7 +168,8 @@ export default function PrivacyPolicy() {
                 <td className="border border-border p-2">Consenso esplicito (art. 6.1.a GDPR)</td>
               </tr>
               <tr>
-                <td className="border border-border p-2">Avvisi via email quando un negozio preferito pubblica l'offerta del mese (al massimo uno per negozio al mese)</td>
+                {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: con la durata scelta dal negozio non c'è più «l'offerta del mese». Stessa finalità e stesso limite (`_avvisa_preferiti`: al massimo un avviso per cliente, negozio e mese); la «Prolunga» non manda avvisi. */}
+                <td className="border border-border p-2">Avvisi via email quando un negozio preferito pubblica una nuova offerta (al massimo uno per negozio al mese)</td>
                 <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), revocabile dall'app con «Non avvisarmi più»</td>
               </tr>
               <tr>
