@@ -24,7 +24,7 @@ export default function VistaPreferiti() {
         <div data-testid="avvisi-banner" className="mb-6 flex flex-wrap items-start gap-3 rounded-2xl border border-ciano/30 bg-ciano/10 p-4">
           <Bell className="mt-0.5 shrink-0 text-ciano" size={20} />
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-foreground">Vuoi un'email quando i tuoi negozi preferiti pubblicano l'offerta del mese? Al massimo una per negozio al mese.</p>
+            <p className="text-sm text-foreground">Vuoi un'email quando i tuoi negozi preferiti pubblicano una nuova offerta? Al massimo una per negozio al mese.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button data-testid="avvisi-si" onClick={() => impostaAvvisi(true)} className="bg-ciano text-white hover:bg-ciano/90">Sì, avvisami</Button>
               <Button variant="outline" onClick={() => setChiusoBanner(true)} className="border-border text-foreground hover:bg-muted">No grazie</Button>

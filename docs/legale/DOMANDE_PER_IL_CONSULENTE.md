@@ -9,7 +9,7 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 2. 🟠 «Disdici quando vuoi», con effetto a fine mese, sconto da rispettare fino a fine mese e mese pagato non rimborsabile (cliente professionista): va bene la formula? La frase è la stessa in Termini, email di benvenuto e guida per i negozi: va bene identica ovunque?
 3. 🟠 Preavviso: i Termini dicevano «30 giorni prima della fine della fase di lancio», l'app scriveva 10 e 3 giorni prima. **Deciso dal titolare (21/10, PR #199 e #169):** email al giorno 30 della prova, 7 giorni prima del primo pagamento, 3 giorni prima di ogni addebito; i promemoria a 10 e 3 giorni sono stati tolti dal codice.
 4. 🟠 I negozi devono avere la **Partita IVA** (obbligatoria alla registrazione dal 15/10): serve una frase nei Termini e nel Recesso?
-5. 🟠 Eliminazione dell'account del negozio: subito o dal 1° del mese dopo (#102)?
+5. 🟠 Eliminazione dell'account del negozio: subito o dal 1° del mese dopo (#102)? **16/11:** il codice cancella subito (la #102 non è stata unita) e i Termini ora dicono così; con la durata libera l'alternativa sarebbe «fino alla data di fine dell'offerta» (vedi 36-44).
 
 ## 2. Pagamenti e schermata di pagamento (dettagli: #147 sezione 7; email #169)
 6. 🔴 Addebito automatico mensile con una sola conferma iniziale (con riepilogo): basta anche per i professionisti? Serve la seconda casella?
@@ -54,6 +54,17 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 
 ## 8. Società e dati aziendali (dettagli: #40)
 35. 🟢 Sede legale, PEC e civico nei testi pubblici (art. 2250 c.c., D.Lgs. 70/2003): `[PROPOSTA - DA VALIDARE]` inseriti il 23/10/2026 dalla visura camerale (EUROLINEA S.r.l.s., Via Tasso 5/B, 83031 Ariano Irpino (AV), CF e P.IVA 03240220644, REA AV-313674, capitale 3.000,00 €, PEC eurolineasrls@alpec.it) in Privacy, Termini, Cookie, Recesso e piè di pagina. Da validare la forma.
+
+## 9. Durata dell'offerta scelta dal negozio (16/11; dettagli: `LISTA_PER_AVVOCATO.md`, sezione omonima, e `PROPOSTA_DURATA_LIBERA.md`)
+36. 🟠 Uno sconto resta online al massimo **90 giorni di fila** (prezzo pieno = il più basso dei 30 giorni prima della pubblicazione, art. 17-bis Codice del Consumo): 90 giorni va bene o serve meno? Vale anche per i servizi e per uno sconto riservato agli iscritti? Lo stesso sconto ripresentato subito dopo è una nuova riduzione?
+37. 🟠 **Vendite promozionali e saldi** (Lazio, Roma Capitale): basta la clausola che mette la responsabilità sul negozio, che sceglie durata e date?
+38. 🟠 **Omaggio**, anche «senza scadenza»: rientra nelle manifestazioni a premio (D.P.R. 430/2001)? Chi è il promotore? È ammesso senza scadenza?
+39. 🟢 **«Prolunga»** senza nuova approvazione: basta che il negozio confermi (implicitamente) che prezzi e condizioni sono ancora veri?
+40. 🟢 **Codici non usati** che scadono con l'offerta (fino alle 02:00 del giorno dopo): basta l'informazione nei Termini e sulla scheda? Serve un'email ai clienti (art. 9, 15 giorni)?
+41. 🟠 **Disdetta del pagamento** con un'offerta che finisce dopo la fine del mese (pagamenti spenti): l'offerta che sparisce prima della data mostrata ai clienti è un problema? Meglio limitare la durata all'ultimo mese pagato o tenerla fino alla sua data?
+42. 🟢 **«Non rinnovo»** separato dalla disdetta del pagamento: la distinzione è chiara?
+43. 🟠 **Preavviso ai negozi già iscritti** (art. 3 Reg. UE 2019/1150 e art. 9 dei Termini, 30 giorni): l'email pronta va bene? Chi pubblica prima una nuova offerta rinuncia al preavviso?
+44. 🟠 Le nuove clausole (offerta bloccata fino alla data di fine; sblocco, sospensione o rimozione da parte di Sconti Roma) vanno nell'**approvazione specifica** (artt. 1341-1342 c.c.)?
 
 ## Cosa serve da parte del titolare prima dell'incontro
 - Visura camerale (punto 3 della lista) e dati dell'azienda.

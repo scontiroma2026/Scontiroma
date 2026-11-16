@@ -47,13 +47,40 @@ test('termini: prova, esempio, disdetta e zona allineati alla decisione del tito
   await expect(t).toContainText('2 ottobre 2026');
   await expect(t).toContainText('30 novembre 2026 (60 giorni)');
   await expect(t).toContainText('1° dicembre 2026');
-  await expect(t).toContainText('disdici quando vuoi, porti avanti solo l\'offerta che è in corso a fine mese');
+  // frase del titolare sulla disdetta, adattata alla durata scelta dal negozio (16/11): «fino a fine mese»
+  await expect(t).toContainText('disdici quando vuoi, porti avanti solo l\'offerta che è in corso, fino a fine mese');
   await expect(t).toContainText('Mese pagato non rimborsabile');
   await expect(t).toContainText('Roma e dintorni');
   await expect(t).toContainText('almeno 18 anni');
   for (const v of [/circa due mesi/i, /entro l'11/, /dal 12 in poi/, /81 giorni/, /dal 61/, /nessun vincolo/i, /prezzo bloccato/i, /Garbatella/, /San Paolo/, /Marconi/]) {
     expect(await t.innerText(), `Termini contiene ${v}`).not.toMatch(v);
   }
+});
+
+test('termini, recesso e privacy: offerta con la durata scelta dal negozio (decisione del titolare del 14/11)', async ({ page }) => {
+  await page.goto('/termini');
+  const t = page.getByTestId('termini-page');
+  await expect(t).toContainText('7, 14, 30, 60 o 90 giorni');
+  await expect(t).toContainText('al massimo 90 giorni di fila');
+  await expect(t).toContainText('Prolunga');
+  await expect(t).toContainText('Prossima offerta');
+  await expect(t).toContainText('non è la disdetta del pagamento');
+  await expect(t).toContainText('anche se la data di fine che hai scelto è successiva');
+  await expect(t).toContainText('fino alle 02:00 (ora di Roma) del giorno dopo');
+  await expect(t).toContainText('L\'eliminazione è immediata');
+  await expect(t).toContainText('Ultimo aggiornamento: Novembre 2026');
+  const testo = await t.innerText();
+  for (const v of [/offerte sono mensili/i, /l'offerta del mese/i, /prima del 1° del mese successivo/i, /per l'intero mese di validità/i, /rimosso dalla piattaforma e dalla mappa dal 1°/i]) {
+    expect(testo, `Termini contiene ${v}`).not.toMatch(v);
+  }
+  await page.goto('/recesso');
+  const r = page.getByTestId('recesso-page');
+  await expect(r).toContainText('termina alla sua data di fine');
+  await expect(r).not.toContainText('termina l\'ultimo giorno del mese');
+  await page.goto('/privacy');
+  const p = page.getByTestId('privacy-policy-page');
+  await expect(p).toContainText('pubblica una nuova offerta');
+  await expect(p).not.toContainText('l\'offerta del mese');
 });
 
 test('iscrizione: dichiarazione dei 18 anni', async ({ page }) => {

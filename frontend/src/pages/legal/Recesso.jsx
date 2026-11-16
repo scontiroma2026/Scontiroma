@@ -6,7 +6,7 @@ export default function Recesso() {
       <LegalLayout
         kicker="Diritti del consumatore"
         title="Diritto di Recesso"
-        updatedAt="Ottobre 2026"
+        updatedAt="Novembre 2026"
       >
         <p>
           Durante la <strong>fase di lancio</strong> Sconti Roma è gratuito per
@@ -30,14 +30,19 @@ export default function Recesso() {
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">2. Commercianti</h2>
+        {/* [PROPOSTA][DA VALIDARE dal consulente] 16/11: durata scelta dal negozio. «Non rinnovo» fa finire l'offerta alla sua data di fine (non più a fine mese) e non è la disdetta del pagamento; l'eliminazione dell'account è immediata (`gdpr_delete_account`). */}
         <p>
           I Commercianti aderiscono come professionisti e non come
           consumatori. Durante la fase di lancio non pagano nulla; dopo, il
           pagamento parte solo con la loro conferma espressa (vedi{" "}
           <a href="/termini" className="text-fucsia hover:underline">Termini e Condizioni</a>, art. 3.2).
-          Possono smettere in qualsiasi momento scegliendo{" "}
-          <strong>«Non rinnovo»</strong> dalla propria area: l'offerta in corso
-          termina l'ultimo giorno del mese e non riparte.
+          Possono smettere in qualsiasi momento: scegliendo{" "}
+          <strong>«Non rinnovo»</strong> dalla propria area, l'offerta online
+          termina alla sua data di fine e non riparte. Quando i pagamenti
+          saranno attivi, la disdetta del pagamento si fa a parte e ha effetto
+          a fine mese (Termini, art. 3.2). Possono anche eliminare l'account:
+          in quel caso il negozio e l'offerta spariscono subito (Termini,
+          art. 5).
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">3. Servizi a pagamento futuri</h2>
