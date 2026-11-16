@@ -12,6 +12,8 @@ const CLICK_LABELS = {
   whatsapp_commercianti_alto: "WhatsApp dalla pagina commercianti (in alto)",
   whatsapp_commercianti_basso: "WhatsApp dalla pagina commercianti (in basso)",
   discount_click: "Click su uno sconto",
+  invito_attiva: "Invito al negozio: «Attiva la pagina»",
+  invito_whatsapp: "Invito al negozio: WhatsApp",
 };
 
 function Bars({ days, values, color }) {

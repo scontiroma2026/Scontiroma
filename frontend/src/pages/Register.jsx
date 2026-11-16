@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { leggiReferral, salvaReferral, leggiFonte, salvaFonte } from "@/lib/referral";
+import { leggiInvito, trovaValore } from "@/lib/invito";
 import PasswordInput from "@/components/PasswordInput";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { LEGAL_LINKS } from "@/components/LegalFooter";
@@ -25,13 +26,15 @@ export default function Register() {
   const [params] = useSearchParams();
 
   const [role, setRole] = useState(params.get("role") === "merchant" ? "merchant" : "client");
+  // Invito personale («La vostra pagina è pronta»): nome, categoria e zona del negozio arrivano dal link
+  const invito = leggiInvito(params);
   const [form, setForm] = useState({
     email: "",
     password: "",
     first_name: "",
     last_name: "",
     name: "", // usato solo per merchant (nome referente)
-    shop_name: "",
+    shop_name: params.get("role") === "merchant" ? invito.nome : "",
     zone: "",
     category: "",
     phone: "",
@@ -54,8 +57,19 @@ export default function Register() {
   const mostraPassoUno = role !== "merchant" || passo === 1;
 
   useEffect(() => {
-    api.get("/zones").then((r) => { setZones(r.data.zones || []); setZoneAree(r.data.areas || []); });
-    api.get("/categories").then((r) => setCategories(r.data.categories || []));
+    // Categoria e zona dell'invito si compilano solo se esistono davvero negli elenchi del server
+    api.get("/zones").then((r) => {
+      setZones(r.data.zones || []);
+      setZoneAree(r.data.areas || []);
+      const zona = trovaValore((r.data.areas || []).map((a) => a.value), invito.zona) || trovaValore(r.data.zones, invito.zona);
+      if (zona) setForm((f) => (f.zone ? f : { ...f, zone: zona }));
+    });
+    api.get("/categories").then((r) => {
+      setCategories(r.data.categories || []);
+      const categoria = trovaValore(r.data.categories, invito.categoria);
+      if (categoria) setForm((f) => (f.category ? f : { ...f, category: categoria }));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Il negozio da cui arriva il cliente (?ref=) si ricorda anche se prima guarda gli sconti
@@ -91,12 +105,14 @@ export default function Register() {
       // Referral tracking (?ref=merchant_id) — priorità URL, poi localStorage
       const ref = params.get("ref") || leggiReferral();
       if (ref) payload.referred_by = ref;
-      const fonte = leggiFonte();
-      if (fonte) payload.fonte = fonte;
     } else {
       // Per il merchant usiamo il campo unico `name` (referente)
       delete payload.first_name; delete payload.last_name;
     }
+    // Volantino, QR, messaggio o invito da cui arriva chi si iscrive (clienti E negozi: il server lo conta per
+    // entrambi). Prima partiva solo per i clienti, quindi le iscrizioni dei negozi dai link non si vedevano.
+    const fonte = leggiFonte();
+    if (fonte) payload.fonte = fonte;
     const res = await register(payload);
     setLoading(false);
     if (!res.ok) return toast.error(res.error);

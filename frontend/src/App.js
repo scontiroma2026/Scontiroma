@@ -18,6 +18,7 @@ import Termini from "@/pages/legal/Termini";
 import Recesso from "@/pages/legal/Recesso";
 import Support from "@/pages/Support";
 import PerICommercianti from "@/pages/PerICommercianti";
+import InvitoNegozio from "@/pages/InvitoNegozio";
 import Locandina from "@/pages/Locandina";
 import AdminMasterReset from "@/pages/AdminMasterReset";
 import Landing from "@/pages/Landing";
@@ -84,6 +85,7 @@ function App() {
             <Route path="/recesso" element={<Recesso />} />
             <Route path="/support" element={<Support />} />
             <Route path="/per-i-commercianti" element={<PerICommercianti />} />
+            <Route path="/invito" element={<InvitoNegozio />} />
             <Route path="/locandina" element={<Locandina />} />
           </Routes>
           <LegalFooter />
