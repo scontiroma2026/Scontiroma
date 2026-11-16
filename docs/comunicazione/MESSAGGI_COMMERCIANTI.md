@@ -48,3 +48,13 @@ Non si pubblica in nessun gruppo senza il «sì» scritto degli amministratori, 
 Prima di chiamare: verifica del Registro delle opposizioni sul numero (vedi `REGOLA_CONTATTO_NEGOZI.md`).
 > «Buongiorno, chiamo da Sconti Roma. Ha un minuto? Stiamo lanciando un'app che porta clienti vicini ai negozi di Roma e dintorni. L'attività pubblica un'offerta al mese, il cliente arriva con un QR e lo si inquadra con il telefono. C'è una prova gratuita di circa due mesi. Se non vuole essere richiamato me lo dica e non la chiamiamo più. Possiamo mandarvi un video di un minuto su WhatsApp?»
 > → se dice sì, il numero l'ha dato lui e il WhatsApp va bene.
+
+## 6. Instagram o email con la «pagina pronta» (invito personale)
+Si usa al posto del §2 o del §3, **un negozio per volta** e solo verso il canale pubblico dell'attività. Il link lo prepara Claude per ogni negozio e porta a un'anteprima **non pubblica** (non salva nulla e non compare nell'app): `https://scontiroma.it/invito?n=NOME&c=CATEGORIA&z=ZONA&o=IDEA&fonte=ig-dm` (per l'email `fonte=email-negozi`).
+> Ciao! Siamo **Sconti Roma**, un'app che porta clienti ai negozi di Roma e dintorni.
+> Abbiamo preparato un'anteprima della pagina di [NOME NEGOZIO], con un'idea di offerta: [LINK INVITO]
+> Non è pubblica: la attivate voi, se vi va, in due minuti dal telefono. Testo, foto e prezzo li decidete voi.
+> Prova gratuita di circa due mesi, poi 4,99 € al mese + IVA. Si può disdire quando si vuole: si porta avanti solo l'offerta in corso a fine mese, e il mese già pagato non si rimborsa. Nessun addebito senza la vostra conferma.
+> Se non vi interessa scrivete NO e non vi contattiamo più 🙂
+
+Nel link: `n` = nome dell'insegna (come la scrive il negozio); `c` = categoria (`ristorante`, `bar`, `pizzeria`, `gelateria`, `beauty`, `sport`, `shopping`, `cultura`, `vino`, `servizi`); `z` = zona dell'app (es. `Garbatella`); `o` = idea di offerta, uno degli id di `frontend/src/lib/offertePronte.js` della stessa categoria (es. `colazione`, `coppetta`, `dolce-casa`); se manca si mostra la prima. Solo dati pubblici dell'attività, mai nomi di persone. La frase sui costi segue la regola qui sopra: se cambiano i Termini, cambia anche qui.
