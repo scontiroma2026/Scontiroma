@@ -25,14 +25,14 @@ function TastoWhatsApp({ testid, dove }) {
 
 const PASSI = [
   { n: "1", t: "Scegli cosa offrire", d: "Un prodotto o un servizio del tuo negozio, a tua scelta." },
-  { n: "2", t: "Decidi le regole", d: "Tu stabilisci lo sconto, i giorni in cui vale e quante volte al mese." },
+  { n: "2", t: "Decidi le regole", d: "Tu stabilisci lo sconto, quanto dura e quante volte ogni cliente può usarlo." },
   { n: "3", t: "Il cliente mostra il QR", d: "In negozio inquadri il QR dal telefono e applichi lo sconto." },
 ];
 
 const FAQ = [
   { q: "Quanto costa?", a: "Hai 2 mesi di prova gratuita (almeno 60 giorni) dalla pubblicazione della tua prima offerta. Prima di qualsiasi pagamento ti avvisiamo e non paghi niente senza la tua conferma. I dettagli sono nei Termini, punto 3.2." },
-  { q: "Quanto tempo serve?", a: "Pochi minuti per registrarti e creare la prima offerta. Poi una al mese." },
-  { q: "Chi decide lo sconto?", a: "Lo decidi tu: prodotto o servizio, sconto, giorni e quante volte al mese." },
+  { q: "Quanto tempo serve?", a: "Pochi minuti per registrarti e creare la prima offerta. Quanto dura lo decidi tu, da pochi giorni a tre mesi: prima della fine ti avvisiamo e la prolunghi con un tocco." },
+  { q: "Chi decide lo sconto?", a: "Lo decidi tu: prodotto o servizio, sconto, quanto dura e quante volte ogni cliente può usarlo." },
   { q: "Come vengo trovato?", a: "Dopo un nostro controllo, la tua offerta compare nell'app per chi abita a Roma e dintorni." },
   { q: "Che dati vedo dei clienti?", a: "Alla scansione vedi nome e iniziale del cognome, l'ora, l'offerta e se il cliente è nuovo o di ritorno." },
 ];

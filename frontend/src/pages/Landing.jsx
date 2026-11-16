@@ -169,7 +169,7 @@ export default function Landing() {
               {[
                 { n: "Gratis", l: "fase di lancio" },
                 { n: "16", l: "zone tra Roma e dintorni" },
-                { n: "1", l: "offerta al mese" },
+                { n: "Tu", l: "scegli quanto dura l'offerta" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
                 <div key={s.l} className="rounded-2xl border border-white bg-white p-5">
@@ -193,8 +193,8 @@ export default function Landing() {
             { q: "Quanto costa Sconti Roma?", a: "Per ora Sconti Roma è gratuito per chi usa gli sconti: registrarti e usare le offerte non costa nulla e non ti chiediamo dati di pagamento. Se in futuro cambiasse qualcosa te lo diremo con almeno 30 giorni di anticipo, e nessun pagamento partirà senza la tua conferma." },
             { q: "Come funziona uno sconto?", a: "Registrati, scegli un negozio, apri l'offerta e premi «Mostra QR Code». Mostri il QR al banco, il commerciante lo scansiona e paghi il prezzo scontato." },
             { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e usi scorretti: il codice è unico e vale solo per pochi secondi, così il commerciante sa che lo sconto è davvero tuo." },
-            { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
-            { q: "Le offerte cambiano?", a: "Sì: ogni mese i commercianti possono pubblicare un'offerta nuova. Prima di comparire, ogni offerta viene controllata da noi." },
+            { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta alla volta e decide quanto dura: su ogni offerta trovi fino a quando vale. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
+            { q: "Le offerte cambiano?", a: "Sì: ogni negozio decide quanto dura la sua offerta e quando cambiarla. Su ogni offerta trovi scritto fino a quando vale. Prima di comparire, ogni offerta viene controllata da noi." },
             { q: "In quali zone funziona?", a: "In tutta Roma, dal centro alla periferia, e nelle zone appena fuori città. Se nella tua zona ci sono ancora poche offerte, ricontrolla più avanti: i commercianti ne pubblicano di nuove ogni mese." },
             { q: "Come accedo all'app?", a: "Con email e password: il telefono può ricordarle per te. Se vuoi, attiva il Face ID dalla sezione «Sicurezza» del tuo account ed entri con un tocco. Dopo 5 tentativi sbagliati l'accesso si blocca per 15 minuti; se hai dimenticato la password usa «Password dimenticata?»." },
             { q: "Come cancello il mio account?", a: "Dalla pagina del tuo account, con il pulsante «Elimina il mio account». Per qualsiasi problema scrivici dalla pagina Assistenza, in fondo a ogni pagina." },
@@ -202,7 +202,7 @@ export default function Landing() {
           { titolo: "Per i commercianti", voci: [
             { q: "Come partecipo con il mio negozio?", a: "Registrati come commerciante e crea la tua offerta: la controlliamo e, dopo l'approvazione, il tuo negozio compare tra gli sconti." },
             { q: "Quanto costa per i commercianti?", a: "Durante la fase di lancio partecipare è gratuito. Dopo, il prezzo previsto è di 4,99 € al mese + IVA. Ti avviseremo prima della fine della prova e non ti addebiteremo nulla senza la tua conferma." },
-            { q: "Come funziona l'offerta del mese?", a: "Hai un'offerta al mese. Negli ultimi 7 giorni del mese puoi caricare quella del mese successivo: ti avvisiamo nella dashboard e per email. L'offerta non si rinnova da sola: se non carichi la nuova, il 1° del mese quella attuale scade. Se non vuoi continuare, scegli «Non rinnovo»." },
+            { q: "Quanto dura la mia offerta?", a: "Lo decidi tu quando la crei: da pochi giorni a tre mesi (un omaggio anche senza scadenza). Hai un'offerta online alla volta e, finché è online, non si può modificare. Prima della fine ti avvisiamo nella tua area e per email: puoi prolungarla con un tocco o preparare la prossima, che parte da sola quando finisce quella di adesso. L'offerta non si rinnova da sola: se non fai nulla, alla data di fine termina. Se non vuoi continuare, scegli «Non rinnovo»." },
             { q: "Come verifico lo sconto di un cliente?", a: "Dalla tua dashboard premi «Scansiona codice» e inquadra il QR del cliente: vedi subito se lo sconto è valido. Lo stesso QR non può essere usato due volte." },
           ]},
         ].map((g) => (

@@ -207,8 +207,22 @@ async def send_master_reset(to: str, token: str) -> Optional[str]:
     return await _send(to, "Reset Master Password — Sconti Roma", _shell(inner))
 
 
-async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str, foto_scartate: Optional[list] = None) -> Optional[str]:
+async def send_merchant_approved(to: str, name: str, shop_name: str, discount_title: str, foto_scartate: Optional[list] = None,
+                                 fino_al: str = "", parte_il: str = "") -> Optional[str]:
+    """Offerta approvata. `fino_al`: ultimo giorno di validità («30 novembre»; vuoto = senza scadenza).
+    `parte_il`: per la prossima offerta, il giorno in cui andrà online (quando finisce quella di adesso)."""
     name, shop_name, discount_title = _esc(name), _esc(shop_name), _esc(discount_title)
+    fino_al, parte_il = _esc(fino_al), _esc(parte_il)
+    if parte_il:
+        stato = (f'è stata <strong style="color:#22c55e">approvata</strong>: andrà online il <strong>{parte_il}</strong>, '
+                 "quando finisce l'offerta di adesso. Non devi fare altro.")
+        dopo = "Fino a quel giorno resta online l'offerta di adesso."
+    else:
+        stato = ('è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti i clienti di Sconti Roma'
+                 + (f", fino al <strong>{fino_al}</strong>." if fino_al else "."))
+        dopo = ("Finché è online non si può modificare. Prima della fine ti avvisiamo: potrai prolungarla con un tocco "
+                "o preparare la prossima." if fino_al else
+                "Finché è online non si può modificare: per cambiarla prepara la prossima offerta dalla tua area.")
     scartate = ""
     if foto_scartate:
         righe = "".join(f"<li>Foto {int(n)}: {_esc(motivo)}</li>" for n, motivo in foto_scartate)
@@ -216,8 +230,8 @@ async def send_merchant_approved(to: str, name: str, shop_name: str, discount_ti
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta approvata ✓</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> è stata <strong style="color:#22c55e">approvata</strong> ed è ora visibile a tutti i clienti di Sconti Roma.</p>
-{scartate}<p style="margin:0 0 24px;color:#d4d4d8">Ricorda che potrai modificarla il 1° del mese prossimo.</p>
+<p style="margin:0 0 16px;color:#d4d4d8">La tua offerta <strong style="color:#00E5FF">"{discount_title}"</strong> per <strong>{shop_name}</strong> {stato}</p>
+{scartate}<p style="margin:0 0 24px;color:#d4d4d8">{dopo}</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Vai alla dashboard</a>
 </div>
@@ -273,21 +287,27 @@ async def send_merchant_reactivated(to: str, name: str, shop_name: str) -> Optio
     return await _send(to, "Account riattivato — Sconti Roma", _shell(inner))
 
 
-async def send_next_offer_reminder(to: str, name: str, shop_name: str, month_label: str, days_left: int = 7) -> Optional[str]:
-    name, shop_name, month_label = _esc(name), _esc(shop_name), _esc(month_label)
+async def send_next_offer_reminder(to: str, name: str, shop_name: str, fine_label: str, days_left: int = 7,
+                                   prolungabile: bool = True) -> Optional[str]:
+    """Promemoria prima della fine dell'offerta. `fine_label`: ultimo giorno di validità («30 novembre»);
+    `days_left`: giorni che restano, oggi compreso; `prolungabile`: si può ancora allungare con un tocco."""
+    name, shop_name, fine_label = _esc(name), _esc(shop_name), _esc(fine_label)
+    giorni = "oggi" if days_left <= 1 else f"tra {days_left} giorni"
+    come = ("<strong style=\"color:#00E5FF\">Prolungala con un tocco</strong> (resta uguale, senza una nuova approvazione) "
+            "oppure prepara la prossima offerta." if prolungabile else
+            "<strong style=\"color:#00E5FF\">Prepara la prossima offerta</strong>.")
     inner = f"""
-<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La tua offerta scadrà tra {days_left} giorni ⏳</h2>
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La tua offerta finisce {giorni} ⏳</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">L'offerta di <strong>{shop_name}</strong> su Sconti Roma è valida solo fino alla fine del mese. La finestra di caricamento è aperta: <strong style="color:#00E5FF">inserisci ora la nuova offerta per {month_label}</strong>.</p>
-<p style="margin:0 0 24px;color:#d4d4d8">Se non carichi la nuova offerta entro la fine del mese, il tuo negozio resterà <strong style="color:#FF2E93">senza offerta attiva</strong> finché non ne pubblichi una.</p>
+<p style="margin:0 0 16px;color:#d4d4d8">L'offerta di <strong>{shop_name}</strong> su Sconti Roma vale fino al <strong>{fine_label}</strong>. {come}</p>
+<p style="margin:0 0 24px;color:#d4d4d8">Se non fai nulla, dal giorno dopo il tuo negozio resta <strong style="color:#FF2E93">senza offerta</strong> finché non ne pubblichi una.</p>
 <div style="text-align:center;margin:24px 0">
-<a href="{APP_URL}/merchant/discount?tab=next" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Carica l'offerta di {month_label}</a>
+<a href="{APP_URL}/merchant/dashboard" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Apri la tua area</a>
 </div>
-<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">L'offerta nuova sarà revisionata dall'amministratore e diventerà attiva il 1° del mese.</p>
-<p style="margin:12px 0 0;color:#a1a1aa;font-size:13px">Non vuoi continuare il mese prossimo? Nella tua dashboard scegli <strong>«Non rinnovo»</strong>: l'offerta terminerà a fine mese, non riparte da sola e non riceverai altri promemoria.</p>
+<p style="margin:16px 0 0;color:#a1a1aa;font-size:13px">La prossima offerta viene controllata da noi e va online quando finisce quella di adesso.</p>
+<p style="margin:12px 0 0;color:#a1a1aa;font-size:13px">Non vuoi continuare? Nella tua area scegli <strong>«Non rinnovo»</strong>: l'offerta termina il {fine_label}, non riparte da sola e non riceverai altri promemoria.</p>
 """
-    giorni = "1 giorno" if days_left == 1 else f"{days_left} giorni"
-    return await _send(to, f"La tua offerta scade tra {giorni} — carica quella di {month_label}", _shell(inner))
+    return await _send(to, f"La tua offerta finisce {giorni} — Sconti Roma", _shell(inner))
 
 
 async def send_merchant_trial_reminder(to: str, name: str, shop_name: str, days_left: int, end_label: str) -> Optional[str]:
@@ -332,11 +352,11 @@ async def send_esito_segnalazione(to: str, esito: str, motivazione: str) -> Opti
 
 
 async def send_offer_expired(to: str, name: str, shop_name: str, no_renew: bool = False) -> Optional[str]:
-    """Il 1° del mese: l'offerta del commerciante è scaduta perché non c'era quella nuova.
+    """Il giorno dopo la data di fine: l'offerta del commerciante è terminata e non c'era la prossima.
     Nessun rinnovo automatico: il negozio torna visibile solo con una nuova offerta approvata."""
     name, shop_name = _esc(name), _esc(shop_name)
     motivo = ("Come hai scelto, l'offerta non è stata rinnovata." if no_renew
-              else "Non era stata caricata l'offerta per il nuovo mese, quindi quella precedente è scaduta.")
+              else "L'offerta è arrivata alla sua data di fine e non ne era stata preparata un'altra.")
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La tua offerta è terminata</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
@@ -351,23 +371,24 @@ async def send_offer_expired(to: str, name: str, shop_name: str, no_renew: bool 
 
 async def send_admin_month_summary(to: str, month_label: str, pending: list, rejected: list,
                                    missing: list, no_renew: list) -> Optional[str]:
-    """Riepilogo per l'admin negli ultimi giorni del mese: cosa approvare prima del 1°."""
+    """Riepilogo per l'admin (al massimo uno a settimana): offerte che stanno per finire e prossime da approvare.
+    `month_label` non si usa più (le offerte non sono più mensili): resta per chi chiama con il vecchio ordine."""
     def blocco(titolo: str, nomi: list) -> str:
         voci = "".join(f"<li>{_esc(n)}</li>" for n in nomi) or "<li>nessuno</li>"
         return (f'<h3 style="margin:16px 0 6px;color:#fff;font-size:16px">{titolo} ({len(nomi)})</h3>'
                 f'<ul style="margin:0;padding-left:18px;color:#d4d4d8">{voci}</ul>')
     inner = f"""
-<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerte di {_esc(month_label)}: riepilogo</h2>
-<p style="margin:0 0 8px;color:#d4d4d8">Le offerte in attesa vanno approvate entro la fine del mese: il 1° le offerte senza sostituzione scadono.</p>
-{blocco("Da approvare (caricate, in attesa)", pending)}
-{blocco("Rifiutate (il commerciante deve ricaricarle)", rejected)}
-{blocco("Non ancora caricate (offerta attiva in scadenza)", missing)}
+<h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerte in scadenza: riepilogo</h2>
+<p style="margin:0 0 8px;color:#d4d4d8">Le prossime offerte in attesa vanno approvate prima che finisca quella online: alla data di fine le offerte senza una prossima approvata scadono.</p>
+{blocco("Prossime offerte da approvare", pending)}
+{blocco("Prossime offerte rifiutate (il commerciante deve correggerle)", rejected)}
+{blocco("Finiscono tra pochi giorni senza una prossima offerta", missing)}
 {blocco("Hanno scelto «Non rinnovo»", no_renew)}
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/admin" style="display:inline-block;padding:14px 32px;background:#FF2E93;color:#fff;text-decoration:none;font-weight:700;border-radius:9999px">Apri il pannello admin</a>
 </div>
 """
-    return await _send(to, f"Offerte di {month_label}: {len(pending)} da approvare", _shell(inner))
+    return await _send(to, f"Offerte in scadenza: {len(missing)} senza prossima, {len(pending)} da approvare", _shell(inner))
 
 
 async def send_monthly_discounts_notification(to: str, name: str, cta_url: Optional[str] = None) -> Optional[str]:
@@ -732,7 +753,7 @@ async def send_welcome_merchant(to: str, name: str, shop_name: str) -> Optional[
 <p style="{_P}">Ciao {name},</p>
 <p style="{_P}">grazie per aver iscritto <strong>{shop_name}</strong>. Ecco come si parte:</p>
 <ol style="margin:0 0 16px;padding-left:20px;color:#d4d4d8">
-<li>crea la tua offerta del mese dalla dashboard;</li>
+<li>crea la tua offerta dalla dashboard e scegli quanto dura;</li>
 <li>la controlliamo e, dopo l'approvazione, compare tra gli sconti;</li>
 <li>quando un cliente ti mostra il QR, lo inquadri e applichi lo sconto.</li>
 </ol>
@@ -757,7 +778,7 @@ async def send_admin_new_merchant(to: str, shop_name: str, category: str, zone: 
 
 async def send_admin_new_offer(to: str, shop_name: str, title: str, next_month: str = "") -> Optional[str]:
     """Avviso all'admin: c'è un'offerta da approvare (nuova o modificata)."""
-    quando = f" per {_esc(next_month)}" if next_month else ""
+    quando = f" ({_esc(next_month)})" if next_month else ""   # es. «prossima offerta, dal 15 dicembre»
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Offerta da approvare{quando}</h2>
 <p style="{_P}"><strong>{_esc(shop_name or 'Un negozio')}</strong> ha inviato l'offerta <strong style="color:#00E5FF">"{_esc(title)}"</strong>.</p>
@@ -799,7 +820,7 @@ async def send_preferito_nuova_offerta(to: str, name: str, shop_name: str, zone:
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">Nuova offerta da {shop_name}</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>
-<p style="margin:0 0 16px;color:#d4d4d8">uno dei tuoi negozi preferiti{f" a {zone}" if zone else ""} ha pubblicato l'offerta del mese:
+<p style="margin:0 0 16px;color:#d4d4d8">uno dei tuoi negozi preferiti{f" a {zone}" if zone else ""} ha pubblicato una nuova offerta:
 <strong style="color:#00E5FF">"{title}"</strong>{prezzi}.</p>
 <div style="text-align:center;margin:24px 0">
 <a href="{APP_URL}/discounts/{_esc(discount_id)}" style="display:inline-block;padding:12px 28px;background:#00E5FF;color:#0b0b0f;text-decoration:none;font-weight:700;border-radius:9999px">Guarda l'offerta</a>
@@ -905,6 +926,7 @@ async def send_ci_pensiamo_noi(to: str, name: str, shop_name: str, offerta: dict
         _riga("Descrizione", offerta.get("description")),
         _riga("Prezzo", prezzi),
         _riga("Giorni e orari", offerta.get("validity_info")),
+        _riga("Durata", f"{offerta['durata']}, dal giorno in cui va online" if offerta.get("durata") else ""),
         _riga("Utilizzi al mese", "1 volta per cliente" if usi == 1 else f"{usi} volte per cliente"),
         _riga("Condizioni", offerta.get("terms")),
         _riga("Prenotazione", offerta.get("plan_ahead")),

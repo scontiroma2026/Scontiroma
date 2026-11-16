@@ -4,6 +4,7 @@ Server in-process su database locale o emulatore: rifiuta database remoti."""
 import asyncio
 import os
 import uuid
+from datetime import date, timedelta
 from urllib.parse import urlparse
 
 import pytest
@@ -58,6 +59,14 @@ async def inserisci(coll):
            "original_price": 40, "discounted_price": 20, "active": True, "approval_status": "pending",
            "max_uses_per_month": 2, "image_url": FOTO[0], "image_urls": list(FOTO)}
     await server.db[coll].insert_one(dict(doc))
+    if coll == "next_discounts":
+        # la prossima offerta esiste solo accanto a un'offerta online (qui senza scadenza vicina):
+        # approvata, aspetta la fine di quella di adesso
+        fine = (date.today() + timedelta(days=20)).isoformat()
+        await server.db.discounts.insert_one({
+            "id": str(uuid.uuid4()), "merchant_id": mid, "title": "Offerta di adesso", "description": "x",
+            "original_price": 30, "discounted_price": 15, "active": True, "approval_status": "approved",
+            "valid_from": date.today().isoformat(), "valid_until": fine})
     return doc["id"]
 
 

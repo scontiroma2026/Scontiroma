@@ -55,7 +55,7 @@ Usa **il sito di prova**, non quello vero. Account di prova con email tue invent
 | 1 | «Per i commercianti» → registrati con Partita IVA di prova valida (`12345678903`) e le due spunte | Entri subito (nessuna conferma email) |
 | 2 | «Nuova offerta»: titolo, descrizione, prezzo pieno e scontato, una foto dal rullino | La foto compare nella galleria; dopo l'invio: «In attesa di approvazione» |
 | 3 | Admin approva (vedi sotto) → ricarica l'area commerciante | Offerta approvata; il cliente la vede |
-| 4 | Il riquadro arancione compare negli ultimi 7 giorni del mese (sul sito di prova: admin → «Prossimo Mese» → apri la finestra a mano). Tocca «Non rinnovo» → conferma → «Annulla» | Prima «non rinnovo» registrato, poi di nuovo «scade a fine mese» |
+| 4 | Il riquadro arancione compare negli ultimi 7 giorni dell'offerta (sul sito di prova: crea un'offerta che dura «1 settimana», così compare subito dopo l'approvazione). Tocca «Prolunga» → «1 settimana»; poi «Non rinnovo» → conferma → «Annulla» | Con «Prolunga» la data di fine si sposta senza nuova approvazione; prima «non rinnovo» registrato, poi di nuovo «non si rinnova da sola» |
 | 5 | «I tuoi clienti» | Con pochi dati: messaggio «dati insufficienti», nessuna cifra inventata |
 
 ### Admin

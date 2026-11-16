@@ -4,7 +4,8 @@ Non fanno parte del server: li carica solo e2e/server_e2e.py, che rifiuta di par
 se il database non è locale. Così non possono mai comparire in produzione.
 """
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 SEED_MERCHANTS = [
     {"email": "trattoria@scontiroma.it", "name": "Marco Rossi", "shop_name": "Trattoria da Marco",
@@ -122,6 +123,7 @@ async def seed_demo(db, hash_password):
         if not await db.discounts.find_one({"merchant_id": merchant_id}):
             d = m["discount"]
             now_iso = datetime.now(timezone.utc).isoformat()
+            oggi_roma = datetime.now(ZoneInfo("Europe/Rome")).date()
             await db.discounts.insert_one({
                 "id": str(uuid.uuid4()),
                 "merchant_id": merchant_id,
@@ -136,7 +138,11 @@ async def seed_demo(db, hash_password):
                 "updated_at": now_iso,
                 "approval_status": "approved",
                 "approved_at": now_iso,
-                "locked_month": datetime.now(timezone.utc).strftime("%Y-%m"),
+                "locked_month": oggi_roma.strftime("%Y-%m"),
+                # Durata scelta dal negozio (qui 30 giorni da oggi, giorno di Roma)
+                "duration_days": 30,
+                "valid_from": oggi_roma.isoformat(),
+                "valid_until": (oggi_roma + timedelta(days=29)).isoformat(),
                 "approval_note": "",
                 "force_editable": False,
             })

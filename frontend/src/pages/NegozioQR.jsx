@@ -61,7 +61,7 @@ export default function NegozioQR() {
         <MapPin size={14} /> {[n.zone, n.category].filter(Boolean).join(" · ")}
       </div>
 
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">L'offerta di questo mese</h2>
+      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-muted-foreground">L'offerta di adesso</h2>
       <div className="mt-3">
         {dati.discount ? (
           <DiscountCard discount={dati.discount} />

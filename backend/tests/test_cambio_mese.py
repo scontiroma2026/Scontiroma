@@ -1,8 +1,10 @@
-"""Prova del cambio mese (punto 17): 31/10 -> 01/11 e gli altri passaggi delicati (30/11 -> 01/12,
-31/12 -> 01/01, fine febbraio anche bisestile, 30/09 -> 01/10 con l'ora legale), sempre con l'orologio finto
-all'ora di Roma. Controlla: offerta del mese che scade, offerta del mese dopo che diventa quella corrente,
-«Non rinnovo» rispettato, nessun addebito con gli interruttori spenti, nessun doppio invio di email
-(promemoria, avviso di scadenza, riepilogo per l'admin, riepilogo settimanale, avvisi ai preferiti).
+"""Prova del cambio offerte (ex «cambio mese», punto 17). Dal 14/11 ogni offerta ha la sua data di fine,
+scelta dal negozio: qui le offerte finiscono nei giorni delicati di sempre (31/10, 30/11, 31/12, fine febbraio
+anche bisestile, 30/09 con l'ora legale) e il cambio avviene la notte dopo, sempre con l'orologio finto
+all'ora di Roma. Controlla: offerta che scade, prossima offerta che va online al suo posto, «Non rinnovo»
+rispettato, nessun addebito con gli interruttori spenti, nessun doppio invio di email (promemoria, avviso
+di scadenza, riepilogo per l'admin, riepilogo settimanale, avvisi ai preferiti).
+Le offerte approvate prima della durata libera (solo `locked_month`) seguono ancora la regola del mese.
 
 Database locale finto (mongomock), nessuna email vera, nessuna chiamata a Stripe/PayPal.
 """
@@ -35,7 +37,7 @@ import server  # noqa: E402
 ROME = ZoneInfo("Europe/Rome")
 UTC = timezone.utc
 
-# (ultimo giorno del mese, primo giorno del mese dopo)
+# (ultimo giorno di validità dell'offerta, giorno dopo)
 TRANSIZIONI = [
     ("2026-10-31", "2026-11-01"),   # il caso del lancio
     ("2026-11-30", "2026-12-01"),
@@ -78,7 +80,7 @@ def posta(monkeypatch):
     monkeypatch.delenv("CLIENT_SUBSCRIPTION_REQUIRED", raising=False)
     inviate = {"promemoria": [], "scaduta": [], "admin": [], "settimanale": [], "preferiti": [], "prova": [], "grace": []}
 
-    async def promemoria(to, name, shop, label, days_left):
+    async def promemoria(to, name, shop, label, days_left, prolungabile=True):
         await asyncio.sleep(0)  # cede il turno: così due passaggi in parallelo si incrociano davvero
         inviate["promemoria"].append((to, days_left))
 
@@ -154,28 +156,34 @@ def _token(uid, email):
     return jwt.encode({"sub": uid, "email": email, "type": "access", "exp": exp}, server.JWT_SECRET, algorithm=server.JWT_ALGORITHM)
 
 
-async def negozio(nome, mese_corrente=None, titolo=None, prossimo=None, no_renew_mese=None):
-    """Un negozio con (se richiesto) l'offerta approvata del mese corrente e/o quella del mese dopo."""
+async def negozio(nome, fino_al=None, titolo=None, prossimo=None):
+    """Un negozio con (se richiesto) l'offerta approvata online e/o la prossima offerta già preparata.
+    `fino_al`: «AAAA-MM-GG» = offerta di 30 giorni che finisce quel giorno; «AAAA-MM» = offerta approvata
+    prima della durata libera (vale fino alla fine di quel mese). `prossimo`: stato della prossima offerta."""
     uid = str(uuid.uuid4())
     email = f"negozio.{uid[:8]}@example.com"
-    doc = {"id": uid, "email": email, "name": "Prova", "role": "merchant", "shop_name": nome,
-           "zone": "Garbatella", "category": "Ristorante", "approved": True,
-           "created_at": datetime.now(UTC).isoformat()}
-    if no_renew_mese:
-        doc["no_renew_month"] = no_renew_mese
-    await server.db.users.insert_one(doc)
+    await server.db.users.insert_one({
+        "id": uid, "email": email, "name": "Prova", "role": "merchant", "shop_name": nome,
+        "zone": "Garbatella", "category": "Ristorante", "approved": True,
+        "created_at": datetime.now(UTC).isoformat()})
     ora = "2026-01-10T10:00:00+00:00"
-    if mese_corrente:
-        await server.db.discounts.insert_one({
-            "id": str(uuid.uuid4()), "merchant_id": uid, "title": titolo or f"Offerta {nome}", "description": "x",
-            "original_price": 20.0, "discounted_price": 10.0, "active": True, "approval_status": "approved",
-            "locked_month": mese_corrente, "created_at": ora, "updated_at": ora})
+    if fino_al:
+        doc = {"id": str(uuid.uuid4()), "merchant_id": uid, "title": titolo or f"Offerta {nome}", "description": "x",
+               "original_price": 20.0, "discounted_price": 10.0, "active": True, "approval_status": "approved",
+               "created_at": ora, "updated_at": ora}
+        if len(fino_al) == 7:
+            doc["locked_month"] = fino_al
+        else:
+            inizio = date.fromisoformat(fino_al) - timedelta(days=29)
+            doc.update({"valid_from": inizio.isoformat(), "valid_until": fino_al, "duration_days": 30,
+                        "locked_month": inizio.strftime("%Y-%m")})
+        await server.db.discounts.insert_one(doc)
     if prossimo:
-        mese_dopo, stato = prossimo
+        stato = prossimo[1] if isinstance(prossimo, tuple) else prossimo
         await server.db.next_discounts.insert_one({
-            "id": str(uuid.uuid4()), "merchant_id": uid, "target_month": mese_dopo, "title": f"Prossima {nome}",
+            "id": str(uuid.uuid4()), "merchant_id": uid, "title": f"Prossima {nome}",
             "description": "x", "original_price": 20.0, "discounted_price": 12.0, "active": True,
-            "approval_status": stato, "created_at": ora, "updated_at": ora})
+            "duration_days": 30, "approval_status": stato, "created_at": ora, "updated_at": ora})
     return {"id": uid, "email": email, "h": {"Authorization": f"Bearer {_token(uid, email)}"}}
 
 
@@ -216,7 +224,7 @@ def test_mezzanotte_di_roma(orologio, prima, dopo, mese_prima, mese_dopo):
 
 
 def test_pianificazione_dei_lavori_a_ora_di_roma(orologio):
-    """Il passaggio parte l'1 alle 00:05 di Roma (anche con ora legale) e perdona un ritardo di ore."""
+    """Il cambio offerte parte ogni notte alle 00:05 di Roma (anche con ora legale) e perdona un ritardo di ore."""
     async def body(_c):
         server._start_scheduler()
         try:
@@ -224,12 +232,14 @@ def test_pianificazione_dei_lavori_a_ora_di_roma(orologio):
             # basta: un CronTrigger senza fuso usa quello del computer, su Render UTC = 1-2 ore di ritardo).
             for j in server._scheduler.get_jobs():
                 assert str(j.trigger.timezone) == "Europe/Rome", j.id
-            job = server._scheduler.get_job("month_rollover")
+            assert server._scheduler.get_job("month_rollover") is None   # il passaggio mensile non esiste più
+            job = server._scheduler.get_job("cambio_offerte")
             assert job.misfire_grace_time == 6 * 3600 and job.coalesce is True
-            for da, atteso in (("2026-10-20T10:00:00+00:00", "2026-10-31T23:05:00+00:00"),   # 01/11 00:05 CET
-                               ("2026-09-20T10:00:00+00:00", "2026-09-30T22:05:00+00:00"),   # 01/10 00:05 CEST
-                               ("2026-12-20T10:00:00+00:00", "2026-12-31T23:05:00+00:00"),   # 01/01 00:05 CET
-                               ("2027-02-10T10:00:00+00:00", "2027-02-28T23:05:00+00:00")):  # 01/03 00:05 CET
+            for da, atteso in (("2026-10-31T10:00:00+00:00", "2026-10-31T23:05:00+00:00"),   # 01/11 00:05 CET
+                               ("2026-10-20T10:00:00+00:00", "2026-10-20T22:05:00+00:00"),   # 21/10 00:05 CEST
+                               ("2026-09-30T10:00:00+00:00", "2026-09-30T22:05:00+00:00"),   # 01/10 00:05 CEST
+                               ("2026-12-31T10:00:00+00:00", "2026-12-31T23:05:00+00:00"),   # 01/01 00:05 CET
+                               ("2027-02-28T10:00:00+00:00", "2027-02-28T23:05:00+00:00")):  # 01/03 00:05 CET
                 prossimo = job.trigger.get_next_fire_time(None, datetime.fromisoformat(da))
                 assert prossimo.astimezone(UTC) == datetime.fromisoformat(atteso)
             promemoria = server._scheduler.get_job("next_offer_reminders_daily")
@@ -244,24 +254,24 @@ def test_pianificazione_dei_lavori_a_ora_di_roma(orologio):
 
 
 # ============================================================
-# Il passaggio di mese, per ogni confine
+# Il cambio di offerta, per ogni confine delicato
 # ============================================================
 
 @pytest.mark.parametrize("ultimo,primo", TRANSIZIONI)
-def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
-    corrente, dopo = ultimo[:7], primo[:7]
+def test_cambio_offerta_completo(orologio, posta, ultimo, primo):
+    dopo = primo[:7]
 
     async def body(c):
-        a = await negozio("A scade", corrente)                                    # nessuna offerta nuova: scade
-        b = await negozio("B rinnova", corrente, prossimo=(dopo, "approved"))     # nuova approvata: subentra
-        cc = await negozio("C non rinnova", corrente)                             # sceglie «Non rinnovo»
-        d = await negozio("D in attesa", corrente, prossimo=(dopo, "pending"))    # nuova non ancora approvata
-        e = await negozio("E nuovo", None, prossimo=(dopo, "approved"))           # prima offerta, già approvata
+        a = await negozio("A scade", ultimo)                              # nessuna offerta nuova: scade
+        b = await negozio("B rinnova", ultimo, prossimo="approved")      # prossima approvata: subentra
+        cc = await negozio("C non rinnova", ultimo)                       # sceglie «Non rinnovo»
+        d = await negozio("D in attesa", ultimo, prossimo="pending")     # prossima non ancora approvata
+        e = await negozio("E senza offerta", None, prossimo="approved")  # prossima rimasta senza offerta online
 
-        # --- ultimi 7 giorni del mese: un promemoria per fase (7, 3, 1 giorni), mai doppioni ---
+        # --- ultimi 7 giorni dell'offerta: un promemoria per fase (7, 3, 1 giorni), mai doppioni ---
         for giorno in giorni_finestra(ultimo):
             orologio(giorno, 9, 30)
-            if giorno == giorni_finestra(ultimo)[0]:   # appena si apre la finestra C sceglie «Non rinnovo»
+            if giorno == giorni_finestra(ultimo)[0]:   # al primo avviso C sceglie «Non rinnovo»
                 r = await c.post("/api/merchants/me/no-renew", json={"no_renew": True}, headers=cc["h"])
                 assert r.status_code == 200 and r.json()["no_renew"] is True
             await server._run_next_offer_reminders()
@@ -269,29 +279,33 @@ def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
         assert {to for to, _ in posta["promemoria"]} == {a["email"]}, "promemoria solo ad A"
         assert [g for _, g in posta["promemoria"]] == [7, 3, 1]
         assert len(posta["admin"]) == 1, "un solo riepilogo per l'admin"
-        assert posta["admin"][0]["missing"] == ["A scade"]
-        assert posta["admin"][0]["no_renew"] == ["C non rinnova"]
+        fino = f"(fino al {server._giorno_it(ultimo)})"
+        assert posta["admin"][0]["missing"] == [f"A scade {fino}"]
+        assert posta["admin"][0]["no_renew"] == [f"C non rinnova {fino}"]
         assert posta["admin"][0]["pending"] == ["D in attesa"]
 
-        # --- ultimo secondo del mese: le offerte del mese si vedono ancora ---
+        # --- ultimo secondo dell'ultimo giorno: le offerte si vedono ancora ---
         orologio(ultimo, 23, 59, 59)
         assert await titoli_pubblici(c) == {"Offerta A scade", "Offerta B rinnova", "Offerta C non rinnova", "Offerta D in attesa"}
 
-        # --- 1° alle 00:05 di Roma: scattano insieme job e recupero all'avvio (e un terzo tentativo) ---
+        # --- il giorno dopo alle 00:05 di Roma: scattano insieme job e recupero all'avvio (e un terzo tentativo) ---
         orologio(primo, 0, 5)
-        esiti = await asyncio.gather(server._run_month_rollover(), server._run_month_rollover())
-        esiti.append(await server._run_month_rollover())
+        esiti = await asyncio.gather(server._run_cambio_offerte(), server._run_cambio_offerte())
+        esiti.append(await server._run_cambio_offerte())
         eseguiti = [x for x in esiti if not x["skipped"]]
         assert len(eseguiti) == 1, esiti
-        assert eseguiti[0]["month"] == dopo
+        assert eseguiti[0]["giorno"] == primo and eseguiti[0]["errors"] == 0
         assert (eseguiti[0]["promoted"], eseguiti[0]["migrated_pending"], eseguiti[0]["expired"]) == (2, 1, 2)
         await server.attendi_lavori_in_background()
 
-        # offerte del mese dopo: B ed E sono online, A e C scadute, D aspetta l'approvazione
-        assert await titoli_pubblici(c) == {"Prossima B rinnova", "Prossima E nuovo"}
+        # offerte nuove: B ed E sono online, A e C scadute, D aspetta l'approvazione
+        assert await titoli_pubblici(c) == {"Prossima B rinnova", "Prossima E senza offerta"}
+        fine_nuova = (date.fromisoformat(primo) + timedelta(days=29)).isoformat()
         for chi in (b, e):
             doc = await server.db.discounts.find_one({"merchant_id": chi["id"]})
             assert doc["approval_status"] == "approved" and doc["locked_month"] == dopo and doc["active"] is True
+            # la durata della prossima offerta (30 giorni) parte dal giorno in cui va online
+            assert doc["valid_from"] == primo and doc["valid_until"] == fine_nuova
         for chi in (a, cc):
             doc = await server.db.discounts.find_one({"merchant_id": chi["id"]})
             assert doc["approval_status"] == "expired" and doc["active"] is False and doc["locked_month"] is None
@@ -301,15 +315,15 @@ def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
 
         # archivio: ogni vecchia versione una sola volta
         motivi = sorted([x["archive_reason"] async for x in server.db.discounts_archive.find({})])
-        assert motivi == sorted(["replaced_by_next_month"] * 2 + ["expired_no_replacement"] * 2)
+        assert motivi == sorted(["replaced_by_next_offer"] * 2 + ["expired_no_replacement"] * 2)
 
         # email di scadenza: una sola a testa; C riceve quella con la scelta «Non rinnovo» rispettata
         assert sorted(posta["scaduta"]) == sorted([(a["email"], False), (cc["email"], True)])
 
-        # il 1° la finestra è chiusa: niente promemoria né riepilogo
+        # il giorno dopo le offerte nuove hanno 30 giorni davanti: niente promemoria né riepilogo
         orologio(primo, 9, 30)
         res = await server._run_next_offer_reminders()
-        assert res == {"window_open": False, "sent": 0}
+        assert res == {"checked": 0, "sent": 0, "admin_summary": False}
         assert len(posta["promemoria"]) == 3 and len(posta["admin"]) == 1
 
         # chi ha l'offerta nuova non può modificarla; chi è scaduto può caricarne una
@@ -320,9 +334,10 @@ def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
             "title": "Di nuovo", "description": "descrizione", "original_price": 20, "discounted_price": 10})
         assert r.status_code == 200, r.text
         st = (await c.get("/api/merchants/me/renewal-status", headers=cc["h"])).json()
-        assert st["current_expired"] is True and st["window"]["open"] is False and st["window"]["current_month"] == dopo
+        assert st["current_expired"] is True and st["window"]["open"] is False and st["expires_on"] is None
         d_b = (await c.get("/api/merchants/me/discount", headers=b["h"])).json()["discount"]
-        assert d_b["locked_this_month"] is True
+        assert d_b["locked"] is True and d_b["locked_this_month"] is True and d_b["valid_until"] == fine_nuova
+        assert d_b["days_left"] == 30 and d_b["no_end"] is False
 
         # niente addebiti, niente pagamenti, nessun promemoria di prova o di grazia
         assert posta["prova"] == [] and posta["grace"] == []
@@ -336,17 +351,21 @@ def test_passaggio_di_mese_completo(orologio, posta, ultimo, primo):
     run(body)
 
 
-def test_non_rinnovo_poi_il_mese_dopo_si_riparte(orologio, posta):
-    """«Non rinnovo» vale per UN mese: dopo, chi ricarica un'offerta torna a ricevere i promemoria."""
+def test_non_rinnovo_poi_con_l_offerta_nuova_si_riparte(orologio, posta):
+    """«Non rinnovo» vale per UN'offerta: chi poi ne pubblica una nuova torna a ricevere i promemoria."""
     async def body(c):
-        n = await negozio("Ex non rinnova", "2026-10")
-        await c.post("/api/merchants/me/no-renew", json={"no_renew": True}, headers=n["h"])
+        n = await negozio("Ex non rinnova", "2026-10-31")
+        orologio("2026-10-28", 10)
+        r = await c.post("/api/merchants/me/no-renew", json={"no_renew": True}, headers=n["h"])
+        assert r.status_code == 200 and r.json()["no_renew"] is True
         orologio("2026-11-01", 0, 5)
-        await server._run_month_rollover()
-        assert (await server.db.users.find_one({"id": n["id"]}))["no_renew_month"] == "2026-11"
-        # a novembre il negozio carica e ottiene un'offerta nuova (approvata a mano dall'admin)
-        await server.db.discounts.update_one({"merchant_id": n["id"]}, {"$set": {
-            "approval_status": "approved", "active": True, "locked_month": "2026-11"}})
+        assert (await server._run_cambio_offerte())["expired"] == 1
+        # a novembre il negozio invia un'offerta nuova e l'admin la approva: dura 30 giorni da oggi
+        r = await c.post("/api/merchants/me/discount", headers=n["h"], json={
+            "title": "Di nuovo", "description": "descrizione", "original_price": 20, "discounted_price": 10})
+        assert r.status_code == 200, r.text
+        nuova = await server._approva_offerta(r.json()["discount"]["id"])
+        assert nuova["valid_from"] == "2026-11-01" and nuova["valid_until"] == "2026-11-30" and nuova["no_renew"] is False
         for giorno in giorni_finestra("2026-11-30"):
             orologio(giorno, 9, 30)
             await server._run_next_offer_reminders()
@@ -356,7 +375,7 @@ def test_non_rinnovo_poi_il_mese_dopo_si_riparte(orologio, posta):
 
 def test_non_rinnovo_non_vale_se_si_annulla_prima_della_fine(orologio, posta):
     async def body(c):
-        n = await negozio("Ci ripensa", "2026-10")
+        n = await negozio("Ci ripensa", "2026-10-31")
         orologio("2026-10-29", 10)
         await c.post("/api/merchants/me/no-renew", json={"no_renew": True}, headers=n["h"])
         orologio("2026-10-31", 20)
@@ -364,53 +383,72 @@ def test_non_rinnovo_non_vale_se_si_annulla_prima_della_fine(orologio, posta):
         await server._run_next_offer_reminders()
         assert [g for _, g in posta["promemoria"]] == [1]
         orologio("2026-11-01", 0, 5)
-        res = await server._run_month_rollover()
+        res = await server._run_cambio_offerte()
         assert res["expired"] == 1
     run(body)
     assert posta["scaduta"][0][1] is False
 
 
-def test_server_spento_il_primo_riparte_e_recupera_una_volta(orologio, posta):
-    """Se il server dormiva alle 00:05, al risveglio (anche ore dopo) il passaggio avviene una volta sola."""
+def test_server_spento_di_notte_riparte_e_recupera_una_volta(orologio, posta):
+    """Se il server dormiva alle 00:05, al risveglio (anche ore dopo) il cambio avviene una volta sola."""
     async def body(c):
-        a = await negozio("A", "2026-10")
-        b = await negozio("B", "2026-10", prossimo=("2026-11", "approved"))
+        await negozio("A", "2026-10-31")
+        await negozio("B", "2026-10-31", prossimo="approved")
         orologio("2026-11-01", 7, 40)
-        assert (await server._run_month_rollover())["expired"] == 1
-        assert (await server._run_month_rollover())["skipped"] is True
+        assert (await server._run_cambio_offerte())["expired"] == 1
+        assert (await server._run_cambio_offerte())["skipped"] is True
         assert await titoli_pubblici(c) == {"Prossima B"}
         assert len(posta["scaduta"]) == 1
     run(body)
 
 
-def test_passaggio_fallito_si_puo_ritentare(orologio, posta, monkeypatch):
+def test_server_spento_per_giorni_l_offerta_finita_non_si_vede(orologio, posta):
+    """Anche se il lavoro della notte non è passato, l'offerta finita non si vede e non dà codici."""
+    async def body(c):
+        n = await negozio("A", "2026-10-31")
+        d = await server.db.discounts.find_one({"merchant_id": n["id"]})
+        cid = str(uuid.uuid4())
+        await server.db.users.insert_one({"id": cid, "email": "cliente@example.com", "name": "C", "role": "client"})
+        h = {"Authorization": f"Bearer {_token(cid, 'cliente@example.com')}"}
+        orologio("2026-10-31", 23, 30)
+        assert await titoli_pubblici(c) == {"Offerta A"}
+        orologio("2026-11-03", 12)          # nessun cambio offerte da tre giorni
+        assert await titoli_pubblici(c) == set()
+        r = await c.post(f"/api/redemptions/create/{d['id']}", headers=h)
+        assert r.status_code == 403 and "terminata" in r.json()["detail"]
+        assert (await c.get(f"/api/negozio/{n['id']}")).json()["discount"] is None
+    run(body)
+
+
+def test_cambio_fallito_per_un_negozio_si_puo_ritentare(orologio, posta, monkeypatch):
     async def body(_c):
-        await negozio("A", "2026-10")
+        await negozio("A", "2026-10-31")
         orologio("2026-11-01", 0, 5)
         originale = server._archivia
 
         async def rotto(*a, **k):
             raise RuntimeError("database momentaneamente non raggiungibile")
         monkeypatch.setattr(server, "_archivia", rotto)
-        with pytest.raises(RuntimeError):
-            await server._run_month_rollover()
-        assert await server.db.rollover_runs.count_documents({"month": "2026-11"}) == 0
+        res = await server._run_cambio_offerte()
+        assert res["errors"] == 1 and res["expired"] == 0
+        # la giornata non resta «prenotata»: al prossimo passaggio (riavvio o pulsante) si riprova
+        assert await server.db.reminder_claims.find_one({"key": "cambio_offerte_2026-11-01"}) is None
         monkeypatch.setattr(server, "_archivia", originale)
-        res = await server._run_month_rollover()
-        assert res["skipped"] is False and res["expired"] == 1
+        res = await server._run_cambio_offerte()
+        assert res["skipped"] is False and res["expired"] == 1 and res["errors"] == 0
     run(body)
 
 
-def test_avviso_ai_preferiti_una_volta_per_mese(orologio, posta):
+def test_avviso_ai_preferiti_una_volta_sola(orologio, posta):
     async def body(c):
-        b = await negozio("B", "2026-10", prossimo=("2026-11", "approved"))
+        b = await negozio("B", "2026-10-31", prossimo="approved")
         cid = str(uuid.uuid4())
         await server.db.users.insert_one({"id": cid, "email": "cliente@example.com", "name": "C", "role": "client",
                                           "preferiti": [b["id"]], "consents": {"avvisi_preferiti": True}})
         orologio("2026-11-01", 0, 5)
-        await asyncio.gather(server._run_month_rollover(), server._run_month_rollover())
+        await asyncio.gather(server._run_cambio_offerte(), server._run_cambio_offerte())
         await server.attendi_lavori_in_background()
-        await server._run_month_rollover()
+        await server._run_cambio_offerte()
         await server.attendi_lavori_in_background()
     run(body)
     assert posta["preferiti"] == ["cliente@example.com"]
@@ -419,8 +457,8 @@ def test_avviso_ai_preferiti_una_volta_per_mese(orologio, posta):
 def test_promemoria_in_parallelo_non_si_duplicano(orologio, posta):
     """Due copie del server accese insieme (per esempio durante un aggiornamento) alle 9:30."""
     async def body(_c):
-        await negozio("A", "2026-10")
-        await negozio("B", "2026-10")
+        await negozio("A", "2026-10-31")
+        await negozio("B", "2026-10-31")
         orologio("2026-10-29", 9, 30)
         await asyncio.gather(*[server._run_next_offer_reminders() for _ in range(4)])
     run(body)
@@ -429,7 +467,7 @@ def test_promemoria_in_parallelo_non_si_duplicano(orologio, posta):
 
 def test_promemoria_non_partito_si_ritenta(orologio, posta, monkeypatch):
     async def body(_c):
-        n = await negozio("A", "2026-10")
+        n = await negozio("A", "2026-10-31")
         orologio("2026-10-25", 9, 30)
 
         async def rotto(*a, **k):
@@ -631,16 +669,16 @@ def test_prenotazione_atomica_una_sola_volta(monkeypatch):
     run(body)
 
 
-def test_riepiloghi_e_cambio_mese_passano_dalla_prenotazione(orologio, posta):
-    """Riepilogo del mese, riepilogo della settimana e cambio mese lasciano la loro chiave in `reminder_claims`
-    (indice unico): è quella che ferma il secondo passaggio, non il solo segno in `settings`/`rollover_runs`."""
+def test_riepiloghi_e_cambio_offerte_passano_dalla_prenotazione(orologio, posta):
+    """Riepilogo delle scadenze, riepilogo della settimana e cambio offerte lasciano la loro chiave in
+    `reminder_claims` (indice unico): è quella che ferma il secondo passaggio, non il solo segno in `settings`."""
     async def body(_c):
-        await negozio("A", "2026-10")
+        await negozio("A", "2026-10-31")
         orologio("2026-10-29", 9, 30)
         await server._run_next_offer_reminders()
-        assert await server.db.reminder_claims.find_one({"key": "admin_month_summary_2026-11"})
+        assert await server.db.reminder_claims.find_one({"key": "admin_scadenze_2026-10-29"})
         # un secondo passaggio che non vede ancora il segno in `settings` viene fermato dalla prenotazione
-        await server.db.settings.delete_one({"key": "admin_month_summary_2026-11"})
+        await server.db.settings.delete_one({"key": "admin_scadenze_ultimo"})
         await server._run_next_offer_reminders()
 
         orologio("2026-11-02", 8, 0)
@@ -649,10 +687,23 @@ def test_riepiloghi_e_cambio_mese_passano_dalla_prenotazione(orologio, posta):
         await server.db.settings.delete_one({"key": "riepilogo_settimanale_2026-10-26"})
         assert (await server._run_riepilogo_settimanale())["skipped"] == "gia_inviato"
 
-        assert (await server._run_month_rollover())["skipped"] is False
-        assert await server.db.reminder_claims.find_one({"key": "rollover_2026-11"})
-        await server.db.rollover_runs.delete_one({"month": "2026-11"})
-        assert (await server._run_month_rollover())["skipped"] is True
+        assert (await server._run_cambio_offerte())["skipped"] is False
+        assert await server.db.reminder_claims.find_one({"key": "cambio_offerte_2026-11-02"})
+        assert (await server._run_cambio_offerte())["skipped"] is True
+        assert (await server._run_cambio_offerte(force=True))["skipped"] is False   # il pulsante dell'admin lo ripete
     run(body)
     assert len(posta["admin"]) == 1
 
+
+def test_offerta_di_prima_della_durata_libera_segue_ancora_il_mese(orologio, posta):
+    """Un'offerta approvata con la regola di prima (solo `locked_month`) vale fino alla fine di quel mese."""
+    async def body(c):
+        n = await negozio("Vecchia", "2026-10")
+        orologio("2026-10-31", 23, 59)
+        assert await titoli_pubblici(c) == {"Offerta Vecchia"}
+        d = (await c.get("/api/merchants/me/discount", headers=n["h"])).json()["discount"]
+        assert d["valid_until"] == "2026-10-31" and d["locked"] is True
+        orologio("2026-11-01", 0, 5)
+        assert await titoli_pubblici(c) == set()
+        assert (await server._run_cambio_offerte())["expired"] == 1
+    run(body)

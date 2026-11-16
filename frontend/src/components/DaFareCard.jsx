@@ -6,7 +6,7 @@ import { Scheda } from "@/components/AreaUI";
 
 /**
  * Cosa manca al negozio o va controllato, in parole semplici. Nessuna chiamata al server:
- * usa i dati che la dashboard ha già (utente, offerta, offerta del mese dopo).
+ * usa i dati che la dashboard ha già (utente, offerta, prossima offerta).
  * Ogni voce porta alla schermata giusta; se è tutto a posto l'elenco sparisce.
  */
 export function calcolaVoci({ user, discount, next }) {
@@ -19,7 +19,7 @@ export function calcolaVoci({ user, discount, next }) {
     voci.push({ id: "preparata", tono: "rosa", to: "/merchant/discount", titolo: "Conferma l'offerta preparata da noi", sotto: "Controllala e confermala, oppure modificala" });
   } else if (discount.approval_status === "rejected") {
     voci.push({ id: "rifiutata", tono: "rosa", to: "/merchant/discount", titolo: "Correggi l'offerta rifiutata", sotto: "Modificala e rimandala in revisione" });
-  } else if (!foto && !discount.locked_this_month) {  // approvata e bloccata fino al 1° del mese: la foto non si può cambiare
+  } else if (!foto && !(discount.locked ?? discount.locked_this_month)) {  // approvata e online: bloccata fino alla sua data di fine, la foto non si può cambiare
     voci.push({ id: "foto", tono: "rosa", to: "/merchant/discount", titolo: "Aggiungi una foto all'offerta", sotto: "Si vede nella scheda che trovano i clienti" });
   }
 
@@ -30,10 +30,12 @@ export function calcolaVoci({ user, discount, next }) {
     voci.push({ id: "orari", tono: "viola", href: "#negozio", titolo: "Inserisci gli orari di apertura", sotto: "Così i clienti vedono «Aperto ora» o «Chiuso»" });
   }
 
-  // Offerta del mese dopo: solo quando si può caricare e non si è scelto «Non rinnovo»
+  // Offerta che sta per finire (ultimi 7 giorni): prolungarla o preparare la prossima, se non si è scelto «Non rinnovo»
   const win = next?.window;
-  if (discount?.approval_status === "approved" && win?.open && !next?.next_discount && !next?.no_renew) {
-    voci.push({ id: "mese-prossimo", tono: "teal", to: "/merchant/discount?tab=next", titolo: `Prepara l'offerta di ${win.next_month_label || "il mese prossimo"}`, sotto: "Senza una nuova offerta, a fine mese la tua esce dall'elenco" });
+  if (discount?.approval_status === "approved" && win?.open && win.days_left != null && win.days_left <= 7
+      && !next?.next_discount && !next?.no_renew) {
+    const quando = win.days_left === 1 ? "oggi è l'ultimo giorno" : `finisce tra ${win.days_left} giorni`;
+    voci.push({ id: "prossima-offerta", tono: "teal", to: "/merchant/discount?tab=next", titolo: "Prolunga l'offerta o prepara la prossima", sotto: `La tua ${quando}: dopo esce dall'elenco` });
   }
 
   if ((user?.biometric_devices || 0) === 0 && browserSupportsWebAuthn()) {

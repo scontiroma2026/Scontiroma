@@ -499,6 +499,25 @@ class LoginIn(BaseModel):
     password: str
 
 
+# ---------- Durata dell'offerta: la sceglie il negozio (decisione del titolare, 14/11) ----------
+# L'offerta non vale più «fino a fine mese»: dura i giorni scelti dal negozio, contati dal giorno in cui va
+# online (date di Roma). Scelte prudenti finché non le valida l'avvocato: uno sconto dura al massimo
+# DURATA_MAX_SCONTO_GIORNI di fila (il prezzo pieno è quello dei 30 giorni prima della pubblicazione: uno
+# sconto senza fine non sarebbe più uno sconto); un omaggio può anche non avere scadenza.
+DURATA_PREDEFINITA_GIORNI = 30
+GIORNI_AVVISO_SCADENZA = 7   # da quanti giorni prima della fine il negozio vede l'avviso e riceve i promemoria
+DURATA_MAX_SCONTO_GIORNI = 90
+DURATA_MAX_OMAGGIO_GIORNI = 365
+
+
+def _durata_massima(tipo: Optional[str]) -> int:
+    return DURATA_MAX_OMAGGIO_GIORNI if tipo == "omaggio" else DURATA_MAX_SCONTO_GIORNI
+
+
+def _oggi_roma() -> date:
+    return _rome_now().date()
+
+
 class DiscountIn(BaseModel):
     # Limiti di lunghezza: senza, si poteva gonfiare il database con testi enormi (finto attacco del 01/11).
     title: str = Field(max_length=200)
@@ -520,6 +539,39 @@ class DiscountIn(BaseModel):
     # Numero massimo di volte che uno stesso abbonato può usare lo sconto nel mese in corso.
     # Default 1. Massimo 10 per prevenire abusi.
     max_uses_per_month: int = Field(default=1, ge=1, le=10)
+    # Durata scelta dal negozio (14/11): giorni dal giorno in cui l'offerta va online, oppure una data di
+    # fine, oppure (solo omaggio) nessuna scadenza. Senza nessuna scelta: DURATA_PREDEFINITA_GIORNI.
+    duration_days: Optional[int] = Field(default=None, ge=1, le=366)
+    end_date: Optional[str] = Field(default=None, max_length=10)   # «AAAA-MM-GG», giorno di Roma
+    open_ended: bool = False
+
+    @model_validator(mode="after")
+    def _durata_valida(self):
+        massimo = _durata_massima(self.offer_type)
+        if self.open_ended:
+            if self.offer_type != "omaggio":
+                raise ValueError("Uno sconto ha sempre una data di fine: scegli quanto dura")
+            self.duration_days = None
+            self.end_date = None
+            return self
+        if self.end_date:
+            try:
+                fine = date.fromisoformat(self.end_date)
+            except ValueError:
+                raise ValueError("Data di fine non valida")
+            oggi = _oggi_roma()
+            if fine < oggi:
+                raise ValueError("La data di fine è già passata")
+            if (fine - oggi).days + 1 > massimo:
+                raise ValueError(f"L'offerta può durare al massimo {massimo} giorni")
+            self.end_date = fine.isoformat()
+            self.duration_days = None
+            return self
+        if self.duration_days is None:
+            self.duration_days = DURATA_PREDEFINITA_GIORNI
+        if self.duration_days > massimo:
+            raise ValueError(f"L'offerta può durare al massimo {massimo} giorni")
+        return self
 
     @model_validator(mode="after")
     def _prezzi_validi(self):
@@ -1009,7 +1061,7 @@ def _push_esito_offerta(merchant_id: Optional[str], titolo_offerta: str, approva
     if approvata:
         _push_utente_in_background(
             merchant_id, f"Offerta approvata: {t}",
-            "Sarà online dal 1° del mese prossimo." if mese_dopo else "Ora i clienti la vedono su Sconti Roma.",
+            "Andrà online quando finisce l'offerta di adesso." if mese_dopo else "Ora i clienti la vedono su Sconti Roma.",
             "/merchant/dashboard", label="offerta-approvata")
     else:
         _push_utente_in_background(
@@ -1122,27 +1174,25 @@ def _push_promo_in_background(d: dict) -> None:
 
 async def _run_push_offerte_in_scadenza() -> dict:
     """Ogni giorno (10:05, Roma): «La tua offerta scade tra 3 giorni» ai commercianti con l'offerta online che
-    non hanno ancora caricato quella del mese dopo né scelto «Non rinnovo». Una sola volta per offerta e mese."""
+    non hanno ancora preparato la prossima né scelto «Non rinnovo». Una sola volta per offerta e data di fine."""
     if not push_utenti_attivo():
         return {"spento": True, "inviate": 0}
     oggi = _rome_now().date()
-    nm = next_month_key()
-    caricate = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
+    caricate = set(await db.next_discounts.distinct("merchant_id"))
     iscritti = set(await db.push_iscrizioni.distinct("user_id"))
     inviate = 0
     for d in await db.discounts.find({"approval_status": "approved", "active": True}, {"_id": 0}).to_list(None):
         fino = _offerta_valida_fino_al(d)
         if not fino or d.get("merchant_id") in caricate or d.get("merchant_id") not in iscritti:
             continue
-        if (date.fromisoformat(fino) - oggi).days != 3:
+        if (date.fromisoformat(fino) - oggi).days != 3 or d.get("no_renew"):
             continue
-        m = await db.users.find_one({"id": d.get("merchant_id")}, {"_id": 0, "id": 1, "no_renew_month": 1})
-        if not m or m.get("no_renew_month") == nm:
+        if not await db.users.find_one({"id": d.get("merchant_id")}, {"_id": 0, "id": 1}):
             continue
         if not await _prenota_push(f"scade3:{d['id']}:{fino}", d.get("merchant_id")):
             continue
         await _invia_push_utente(d["merchant_id"], "La tua offerta scade tra 3 giorni",
-                                 "Carica l'offerta del mese prossimo per restare visibile.", "/merchant/dashboard")
+                                 "Prolungala o prepara la prossima per restare visibile.", "/merchant/dashboard")
         inviate += 1
     return {"inviate": inviate}
 
@@ -1203,17 +1253,96 @@ async def _run_push_sconti_in_scadenza() -> dict:
 
 
 # ---------- Offerta Mese Prossimo: helpers ----------
-NEXT_OFFER_WINDOW_DAYS = 7
 
 MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
            "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
 
 DISCOUNT_CONTENT_FIELDS = ("title", "description", "offer_type", "original_price", "discounted_price",
                            "image_url", "image_urls", "terms", "plan_ahead", "validity_info",
-                           "additional_info", "active", "max_uses_per_month")
+                           "additional_info", "active", "max_uses_per_month",
+                           "duration_days", "end_date", "open_ended")
+
+
+
+def _giorno_it(giorno) -> str:
+    """«30 novembre» (con l'anno solo se non è quello in corso) da una data o da «AAAA-MM-GG»."""
+    if isinstance(giorno, str):
+        giorno = date.fromisoformat(giorno)
+    anno = "" if giorno.year == _oggi_roma().year else f" {giorno.year}"
+    return f"{giorno.day} {MESI_IT[giorno.month - 1]}{anno}"
+
+
+def _validita(d: dict, inizio: date) -> tuple:
+    """(valid_from, valid_until) come «AAAA-MM-GG» per un'offerta che va online il giorno `inizio`.
+    valid_until None = senza scadenza (solo omaggio). La durata non supera mai il massimo del tipo di offerta."""
+    if d.get("open_ended") and d.get("offer_type") == "omaggio":
+        return inizio.isoformat(), None
+    fine = None
+    if d.get("end_date"):
+        try:
+            fine = date.fromisoformat(d["end_date"])
+        except (TypeError, ValueError):
+            fine = None
+    if fine is None or fine < inizio:
+        giorni = int(d.get("duration_days") or DURATA_PREDEFINITA_GIORNI)
+        fine = inizio + timedelta(days=max(1, giorni) - 1)
+    ultimo = inizio + timedelta(days=_durata_massima(d.get("offer_type")) - 1)
+    return inizio.isoformat(), min(fine, ultimo).isoformat()
+
+
+def _durata_in_parole(d: dict) -> str:
+    """Come il negozio ha scelto la durata, per email e pannello admin (offerta non ancora online)."""
+    if d.get("open_ended") and d.get("offer_type") == "omaggio":
+        return "senza scadenza"
+    if d.get("end_date"):
+        try:
+            return f"fino al {_giorno_it(d['end_date'])}"
+        except (TypeError, ValueError):
+            pass
+    giorni = int(d.get("duration_days") or DURATA_PREDEFINITA_GIORNI)
+    return "1 giorno" if giorni == 1 else f"{giorni} giorni"
+
+
+def _fine_offerta(d: dict) -> Optional[str]:
+    """Ultimo giorno di validità salvato sull'offerta («AAAA-MM-GG»); None = senza scadenza.
+    Le offerte approvate prima della durata libera (senza `valid_until`) seguono la regola di allora:
+    valgono fino all'ultimo giorno del mese di approvazione."""
+    if "valid_until" in d:
+        return d.get("valid_until") or None
+    mese = d.get("locked_month") or current_month_key()
+    try:
+        anno, m = (int(x) for x in mese.split("-"))
+        return f"{anno:04d}-{m:02d}-{calendar.monthrange(anno, m)[1]:02d}"
+    except Exception:
+        return None
+
+
+def _offerta_finita(d: dict, oggi: Optional[date] = None) -> bool:
+    """Vero se la data di fine è passata (giorno di Roma). Un'offerta senza scadenza non finisce mai da sola."""
+    if "valid_until" not in d:  # regola di prima: finisce con il mese in cui è stata approvata
+        mese = d.get("locked_month")
+        return bool(mese) and mese < current_month_key()
+    fine = d.get("valid_until")
+    return bool(fine) and fine < (oggi or _oggi_roma()).isoformat()
+
+
+def _offerta_online(d: Optional[dict], oggi: Optional[date] = None) -> bool:
+    """Approvata, attiva e non ancora finita: è l'offerta che i clienti vedono adesso."""
+    return bool(d and d.get("approval_status") == "approved" and d.get("active") is not False
+                and not _offerta_finita(d, oggi))
+
+
+def _giorni_rimasti(d: dict, oggi: Optional[date] = None) -> Optional[int]:
+    """Giorni di validità che restano, oggi compreso (1 = ultimo giorno). None se non ha scadenza."""
+    fine = _fine_offerta(d)
+    if not fine:
+        return None
+    return (date.fromisoformat(fine) - (oggi or _oggi_roma())).days + 1
+
 
 MOTIVI_ARCHIVIO = {
     "replaced_by_next_month": "Scaduta",
+    "replaced_by_next_offer": "Scaduta",
     "expired_no_replacement": "Scaduta",
     "withdrawn_no_renew": "Ritirata",
     "rejected": "Rifiutata",
@@ -1241,26 +1370,23 @@ def month_label_it(key: str) -> str:
     return f"{MESI_IT[int(m) - 1]} {y}"
 
 
-async def next_offer_window() -> dict:
-    """Finestra caricamento offerta mese prossimo: ultimi 7 giorni del mese corrente.
-    Override manuale admin via db.settings {key: 'next_offer_window_override'}."""
-    now = _rome_now()
-    last_day = calendar.monthrange(now.year, now.month)[1]
-    opens_day = last_day - (NEXT_OFFER_WINDOW_DAYS - 1)
-    is_open = now.day >= opens_day
-    override = await db.settings.find_one({"key": "next_offer_window_override"})
-    overridden = bool(override and isinstance(override.get("value"), bool))
-    if overridden:
-        is_open = override["value"]
-    nk = next_month_key()
+async def _stato_prossima(merchant_id: str, cur: Optional[dict] = None) -> dict:
+    """Quando il negozio può preparare la «prossima offerta» e quando andrebbe online. Serve un'offerta online
+    adesso (altrimenti si usa il modulo normale): la prossima parte il giorno dopo la fine di quella in corso;
+    se quella in corso non ha scadenza, appena approvata. Niente più finestra degli ultimi 7 giorni."""
+    if cur is None:
+        cur = await db.discounts.find_one({"merchant_id": merchant_id})
+    online = _offerta_online(cur)
+    fine = _fine_offerta(cur) if online else None
+    inizio = (date.fromisoformat(fine) + timedelta(days=1)).isoformat() if fine else None
     return {
-        "open": is_open,
-        "overridden": overridden,
-        "opens_on": f"{opens_day:02d}/{now.month:02d}/{now.year}",
-        "days_to_month_end": last_day - now.day,
-        "current_month": current_month_key(),
-        "next_month": nk,
-        "next_month_label": month_label_it(nk),
+        "open": online,
+        "current_until": fine,
+        "current_until_label": _giorno_it(fine) if fine else None,
+        "days_left": _giorni_rimasti(cur) if online else None,
+        "starts_on": inizio,
+        "starts_on_label": _giorno_it(inizio) if inizio else None,
+        "senza_scadenza": bool(online and not fine),
     }
 
 
@@ -2133,9 +2259,17 @@ async def enrich_discount(d: dict) -> dict:
     # «Nuovo su Sconti Roma»: il negozio ha pubblicato per la prima volta da meno di NEW_SHOP_DAYS giorni
     d["is_new_shop"] = bool(d.get("approval_status") == "approved" and merchant
                             and _is_new_shop(await _prima_pubblicazione_cache(merchant)))
-    d["locked_this_month"] = (d.get("approval_status") == "approved"
-                              and d.get("locked_month") == current_month_key()
-                              and not d.get("force_editable", False))
+    # Validità: `valid_until` è l'ultimo giorno in cui i clienti vedono l'offerta (None = non visibile o senza
+    # scadenza); `locked` dice al negozio che non può modificarla finché non finisce.
+    online, bloccata = _offerta_online(d), _offerta_bloccata(d)
+    fino, rimasti = _offerta_valida_fino_al(d), _giorni_rimasti(d)
+    d["valid_until"] = fino if online else None
+    d["valid_from"] = d.get("valid_from") if online else None
+    d["days_left"] = rimasti if online else None
+    d["no_end"] = bool(online and fino is None)
+    d["durata"] = _durata_in_parole(d)
+    d["locked"] = bloccata
+    d["locked_this_month"] = bloccata   # nome di prima: lo leggono le pagine rimaste in memoria nei telefoni
     return d
 
 
@@ -2549,7 +2683,7 @@ async def top_merchants(limit: int = 3):
         d = await db.discounts.find_one({
             "merchant_id": mid, "active": True, "approval_status": "approved",
         })
-        if not d:
+        if not d or _offerta_finita(d):
             continue
         item = await enrich_discount(d)
         item["sales_this_month"] = row["sales"]
@@ -2564,7 +2698,7 @@ async def list_discounts(zone: Optional[str] = None, category: Optional[str] = N
     sospesi = await _merchant_sospesi()
     out = []
     for d in docs:
-        if d.get("merchant_id") in sospesi:
+        if d.get("merchant_id") in sospesi or _offerta_finita(d):
             continue
         item = await enrich_discount(d)
         m = item.get("merchant")
@@ -2596,6 +2730,8 @@ async def _payload_negozio(m: dict) -> dict:
     """Nome del negozio e offerta del mese in corso, uguali per `/negozio/<id>` e `/q/<codice>`.
     Nessun dato personale: solo nome, quartiere, categoria e l'offerta già visibile a tutti."""
     d = await db.discounts.find_one({"merchant_id": m["id"], "active": True, "approval_status": "approved"})
+    if d and _offerta_finita(d):
+        d = None
     return {
         "negozio": {"id": m["id"], "shop_name": m.get("shop_name") or m.get("name"),
                     "zone": m.get("zone"), "category": m.get("category"),
@@ -2699,7 +2835,7 @@ def _euro(v) -> str:
 async def _offerta_pubblica(discount_id: str) -> Optional[dict]:
     """Solo offerte visibili a tutti: approvate, attive, di negozi non sospesi."""
     d = await db.discounts.find_one({"id": discount_id, "active": True, "approval_status": "approved"})
-    if not d or d.get("merchant_id") in await _merchant_sospesi():
+    if not d or _offerta_finita(d) or d.get("merchant_id") in await _merchant_sospesi():
         return None
     return d
 
@@ -2778,7 +2914,7 @@ async def preferiti_elenco(user: dict = Depends(require_client)):
     offerte = []
     for d in await db.discounts.find({"merchant_id": {"$in": ids}, "active": True,
                                       "approval_status": "approved"}).to_list(MAX_PREFERITI):
-        if d.get("merchant_id") not in sospesi:
+        if d.get("merchant_id") not in sospesi and not _offerta_finita(d):
             offerte.append(await enrich_discount(d))
     return {"merchant_ids": ids, "offerte": offerte,
             "avvisi": bool((user.get("consents") or {}).get("avvisi_preferiti"))}
@@ -2851,16 +2987,22 @@ async def _avvisa_preferiti(d: dict) -> int:
 
 # ---------- Merchant Routes ----------
 def _offerta_valida_fino_al(d: dict):
-    """Ultimo giorno in cui l'offerta si vede ai clienti, come «AAAA-MM-GG»: la fine del mese di
-    approvazione (le offerte scadono il 1° del mese dopo). None se l'offerta non è visibile."""
+    """Ultimo giorno in cui l'offerta si vede ai clienti, come «AAAA-MM-GG». None se l'offerta non è
+    visibile oppure non ha scadenza (omaggio «finché non la cambio»)."""
     if d.get("approval_status") != "approved" or d.get("active") is False:
         return None
-    mese = d.get("locked_month") or current_month_key()
-    try:
-        anno, m = (int(x) for x in mese.split("-"))
-        return f"{anno:04d}-{m:02d}-{calendar.monthrange(anno, m)[1]:02d}"
-    except Exception:
-        return None
+    return _fine_offerta(d)
+
+
+def _offerta_bloccata(d: Optional[dict]) -> bool:
+    """Un'offerta approvata non si modifica e non si accorcia finché non finisce: i clienti l'hanno vista con
+    quella data. L'admin può sbloccarla (`force_editable`); per cambiarla il negozio prepara la prossima."""
+    return bool(d and d.get("approval_status") == "approved" and not d.get("force_editable", False)
+                and not _offerta_finita(d))
+
+
+MSG_OFFERTA_BLOCCATA = ("La tua offerta è online e non si può modificare fino alla sua data di fine. "
+                        "Puoi prolungarla oppure preparare la prossima offerta.")
 
 
 @api.get("/merchants/me/discount")
@@ -2868,29 +3010,31 @@ async def merchant_get_discount(user: dict = Depends(require_merchant)):
     d = await db.discounts.find_one({"merchant_id": user["id"]})
     if not d:
         return {"discount": None}
-    out = await enrich_discount(d)
-    out["valid_until"] = _offerta_valida_fino_al(d)  # campo in più: i client vecchi lo ignorano
-    return {"discount": out}
+    return {"discount": await enrich_discount(d)}
 
 
 @api.post("/merchants/me/discount")
 async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(require_merchant)):
     existing = await db.discounts.find_one({"merchant_id": user["id"]})
     now_iso = datetime.now(timezone.utc).isoformat()
-    month_key = current_month_key()
     if existing:
-        # Locked if approved this month unless admin override flag set
-        if (existing.get("approval_status") == "approved"
-                and existing.get("locked_month") == month_key
-                and not existing.get("force_editable", False)):
-            raise HTTPException(423, "Offerta attiva per questo mese. Potrai inserire o modificare la nuova offerta a partire dal 1° del mese prossimo.")
+        if _offerta_bloccata(existing):
+            raise HTTPException(423, MSG_OFFERTA_BLOCCATA)
         data = payload.cleaned()
         if not data.get("title") or not data.get("description"):
             raise HTTPException(422, "Titolo e descrizione sono obbligatori")
+        if (existing.get("approval_status") == "approved" and "valid_until" in existing
+                and not existing.get("force_editable") and _offerta_finita(existing)):
+            # Offerta arrivata alla data di fine ma non ancora passata dal cambio offerte della notte:
+            # prima di sovrascriverla va nell'archivio, come le altre scadute
+            await _archivia(existing, "expired_no_replacement")
         data["updated_at"] = now_iso
         data["approval_status"] = "pending"
         data["approval_note"] = ""
         data["locked_month"] = None
+        data["valid_from"] = None
+        data["valid_until"] = None
+        data["no_renew"] = False
         data["approved_at"] = None
         data["force_editable"] = False
         data["expired_at"] = None
@@ -2919,6 +3063,8 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
             "approval_status": "pending",
             "approval_note": "",
             "locked_month": None,
+            "valid_from": None,
+            "valid_until": None,
             "approved_at": None,
             "force_editable": False,
         })
@@ -2930,9 +3076,52 @@ async def merchant_upsert_discount(payload: DiscountIn, user: dict = Depends(req
     return {"discount": await enrich_discount(d)}
 
 
-# ---------- Offerta Mese Prossimo (merchant) ----------
+class ProlungaIn(BaseModel):
+    days: int = Field(ge=1, le=366)
+
+
+@api.post("/merchants/me/discount/extend")
+async def merchant_extend_discount(payload: ProlungaIn, user: dict = Depends(require_merchant)):
+    """«Prolunga»: l'offerta online resta uguale e vale più a lungo, senza una nuova approvazione (il testo è
+    quello già approvato). In tutto non può superare la durata massima del suo tipo, contata dal giorno in cui
+    è andata online: oltre, va ripresentata come offerta nuova."""
+    d = await db.discounts.find_one({"merchant_id": user["id"]})
+    if not _offerta_online(d):
+        raise HTTPException(409, "Non hai un'offerta online da prolungare.")
+    fine = _fine_offerta(d)
+    if not fine:
+        raise HTTPException(409, "La tua offerta non ha una scadenza: non serve prolungarla.")
+    oggi = _oggi_roma()
+    try:
+        inizio = date.fromisoformat(d.get("valid_from") or "")
+    except ValueError:
+        inizio = oggi
+    massimo = _durata_massima(d.get("offer_type"))
+    ultimo = inizio + timedelta(days=massimo - 1)
+    nuova = date.fromisoformat(fine) + timedelta(days=payload.days)
+    if nuova > ultimo:
+        if date.fromisoformat(fine) >= ultimo:
+            raise HTTPException(409, f"Questa offerta è già online da {massimo} giorni, il massimo: "
+                                     "per continuare prepara la prossima offerta.")
+        raise HTTPException(409, f"Puoi prolungarla al massimo fino al {_giorno_it(ultimo)} "
+                                 f"({massimo} giorni in tutto).")
+    nd = await db.next_discounts.find_one({"merchant_id": user["id"]})
+    if nd and nd.get("end_date") and nd["end_date"] <= nuova.isoformat():
+        raise HTTPException(409, f"Hai già preparato la prossima offerta, che finisce il {_giorno_it(nd['end_date'])}: "
+                                 "modifica prima quella.")
+    await db.discounts.update_one({"id": d["id"]}, {"$set": {
+        "valid_until": nuova.isoformat(), "valid_from": inizio.isoformat(), "no_renew": False,
+        "extended_at": datetime.now(timezone.utc).isoformat(), "updated_at": datetime.now(timezone.utc).isoformat()}})
+    _push_admin_in_background(f"Offerta prolungata: {user.get('shop_name') or 'negozio'}",
+                              f"Ora vale fino al {_giorno_it(nuova)}", "admin-offerta-prolungata")
+    d = await db.discounts.find_one({"id": d["id"]})
+    return {"discount": await enrich_discount(d)}
+
+
+# ---------- Prossima offerta (merchant) ----------
 def _enrich_next(nd: dict) -> dict:
     d = {k: v for k, v in nd.items() if k != "_id"}
+    d["durata"] = _durata_in_parole(d)
     if d.get("offer_type") == "omaggio":
         d["percent_off"] = None
         return d
@@ -2945,38 +3134,42 @@ def _enrich_next(nd: dict) -> dict:
 
 @api.get("/merchants/me/next-discount")
 async def merchant_get_next_discount(user: dict = Depends(require_merchant)):
-    window = await next_offer_window()
-    nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
-    u = await db.users.find_one({"id": user["id"]}) or {}
-    return {"next_discount": _enrich_next(nd) if nd else None, "window": window,
-            "no_renew": u.get("no_renew_month") == window["next_month"]}
+    cur = await db.discounts.find_one({"merchant_id": user["id"]})
+    nd = await db.next_discounts.find_one({"merchant_id": user["id"]})
+    return {"next_discount": _enrich_next(nd) if nd else None,
+            "window": await _stato_prossima(user["id"], cur),
+            "no_renew": bool(cur and cur.get("no_renew") and _offerta_online(cur))}
 
 
 @api.post("/merchants/me/next-discount")
 async def merchant_upsert_next_discount(payload: DiscountIn, user: dict = Depends(require_merchant)):
-    window = await next_offer_window()
+    cur = await db.discounts.find_one({"merchant_id": user["id"]})
+    window = await _stato_prossima(user["id"], cur)
     if not window["open"]:
-        raise HTTPException(423, f"La finestra per caricare l'offerta di {window['next_month_label']} si apre il {window['opens_on']} (ultimi 7 giorni del mese).")
-    if user.get("no_renew_month") == window["next_month"]:
-        raise HTTPException(409, f"Hai scelto «Non rinnovo»: per caricare l'offerta di {window['next_month_label']} annulla prima la scelta.")
+        raise HTTPException(423, "La prossima offerta si prepara quando ne hai una online: adesso usa il modulo dell'offerta.")
+    if cur.get("no_renew"):
+        raise HTTPException(409, "Hai scelto «Non rinnovo»: per preparare la prossima offerta annulla prima la scelta.")
     data = payload.cleaned()
     if not data.get("title") or not data.get("description"):
         raise HTTPException(422, "Titolo e descrizione sono obbligatori")
+    if data.get("end_date") and window["starts_on"] and data["end_date"] < window["starts_on"]:
+        raise HTTPException(422, f"La prossima offerta parte il {window['starts_on_label']}: scegli una data di fine successiva.")
     now_iso = datetime.now(timezone.utc).isoformat()
     data.update({"approval_status": "pending", "approval_note": "", "approved_at": None, "updated_at": now_iso})
-    existing = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
+    existing = await db.next_discounts.find_one({"merchant_id": user["id"]})
     if not existing or existing.get("approval_status") != "pending":
+        quando = ("prossima offerta, " + (f"dal {window['starts_on_label']}" if window["starts_on_label"]
+                                          else "online appena approvata"))
         if _admin_notify_to():
             _email_in_background(send_admin_new_offer(_admin_notify_to(), user.get("shop_name") or "", data.get("title") or "",
-                                                      window["next_month_label"]), "admin-offerta-mese-prossimo")
+                                                      quando), "admin-prossima-offerta")
         _push_admin_in_background(f"Offerta da approvare: {user.get('shop_name') or 'negozio'}",
-                                  f"Mese di {window['next_month_label']}", "admin-offerta-mese-prossimo")
+                                  quando.capitalize(), "admin-prossima-offerta")
     if existing:
         await db.next_discounts.update_one({"id": existing["id"]}, {"$set": data})
         nd = await db.next_discounts.find_one({"id": existing["id"]})
     else:
-        data.update({"id": str(uuid.uuid4()), "merchant_id": user["id"],
-                     "target_month": window["next_month"], "created_at": now_iso})
+        data.update({"id": str(uuid.uuid4()), "merchant_id": user["id"], "created_at": now_iso})
         await db.next_discounts.insert_one(data)
         nd = data
     return {"next_discount": _enrich_next(nd), "window": window}
@@ -2986,45 +3179,50 @@ class NoRenewIn(BaseModel):
     no_renew: bool
 
 
-def _current_offer_end_label() -> str:
-    now = _rome_now()
-    last = calendar.monthrange(now.year, now.month)[1]
-    return f"{last} {MESI_IT[now.month - 1]}"
-
-
 @api.get("/merchants/me/renewal-status")
 async def merchant_renewal_status(user: dict = Depends(require_merchant)):
-    """Stato del rinnovo per il banner della dashboard. Nessun rinnovo automatico:
-    se a fine mese non c'è l'offerta del mese dopo, quella attuale scade."""
-    window = await next_offer_window()
+    """Stato della scadenza per il banner della dashboard. Nessun rinnovo automatico: alla data di fine
+    l'offerta termina, a meno che il negozio la prolunghi o abbia preparato la prossima."""
     cur = await db.discounts.find_one({"merchant_id": user["id"]})
-    nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": window["next_month"]})
-    u = await db.users.find_one({"id": user["id"]})
+    nd = await db.next_discounts.find_one({"merchant_id": user["id"]})
+    window = await _stato_prossima(user["id"], cur)
+    online = window["open"]
+    massimo = _durata_massima((cur or {}).get("offer_type"))
+    prolungabile = 0
+    if online and window["current_until"]:
+        try:
+            inizio = date.fromisoformat(cur.get("valid_from") or "")
+            prolungabile = max(0, (inizio + timedelta(days=massimo - 1) - date.fromisoformat(window["current_until"])).days)
+        except ValueError:
+            prolungabile = 0
     return {
         "window": window,
-        "current_active": bool(cur and cur.get("active") and cur.get("approval_status") == "approved"),
+        "current_active": online,
         "current_expired": bool(cur and cur.get("approval_status") == "expired"),
-        "expires_on": _current_offer_end_label(),
+        "expires_on": window["current_until_label"],
+        "days_left": window["days_left"],
+        "expiring": bool(online and window["days_left"] is not None and window["days_left"] <= GIORNI_AVVISO_SCADENZA),
+        "max_extend_days": prolungabile,
         "next_status": nd.get("approval_status") if nd else None,
-        "no_renew": (u or {}).get("no_renew_month") == window["next_month"],
+        "no_renew": bool(online and cur.get("no_renew")),
     }
 
 
 @api.post("/merchants/me/no-renew")
 async def merchant_set_no_renew(payload: NoRenewIn, user: dict = Depends(require_merchant)):
-    """«Non rinnovo»: l'offerta attuale termina a fine mese e i promemoria si fermano.
-    Se l'offerta del mese dopo era già stata caricata viene ritirata (e archiviata),
-    così il 1° del mese non riparte nulla. Si può annullare fino alla fine del mese."""
-    window = await next_offer_window()
-    nm = window["next_month"]
+    """«Non rinnovo»: l'offerta online termina alla sua data di fine e i promemoria si fermano.
+    Se la prossima offerta era già stata preparata viene ritirata (e archiviata), così alla scadenza
+    non riparte nulla. Si può annullare finché l'offerta è online. Non tocca l'abbonamento: la disdetta
+    del pagamento resta una scelta a parte."""
+    cur = await db.discounts.find_one({"merchant_id": user["id"]})
+    if not _offerta_online(cur):
+        raise HTTPException(409, "Non hai un'offerta online.")
     if payload.no_renew:
-        nd = await db.next_discounts.find_one({"merchant_id": user["id"], "target_month": nm})
+        nd = await db.next_discounts.find_one({"merchant_id": user["id"]})
         if nd:
             await _archivia(nd, "withdrawn_no_renew")
             await db.next_discounts.delete_one({"id": nd["id"]})
-        await db.users.update_one({"id": user["id"]}, {"$set": {"no_renew_month": nm}})
-    else:
-        await db.users.update_one({"id": user["id"]}, {"$unset": {"no_renew_month": ""}})
+    await db.discounts.update_one({"id": cur["id"]}, {"$set": {"no_renew": bool(payload.no_renew)}})
     return await merchant_renewal_status(user)
 
 
@@ -3064,7 +3262,19 @@ async def merchant_archive(user: dict = Depends(require_merchant)):
             await db.discounts_archive.update_one({"_id": d["_id"]}, {"$set": {"archivio_id": d["archivio_id"]}})
         mese = d.get("locked_month") or d.get("target_month") or ""
         utilizzi = 0
-        if mese:
+        dal, al = d.get("valid_from"), d.get("valid_until")
+        if dal:
+            # Offerta con la sua durata: gli utilizzi si contano dal giorno in cui è andata online a quando
+            # è finita nell'archivio (l'id dell'offerta resta lo stesso da una versione all'altra).
+            try:
+                inizio = datetime.combine(date.fromisoformat(dal), datetime.min.time(),
+                                          tzinfo=ZoneInfo("Europe/Rome")).astimezone(timezone.utc).isoformat()
+                utilizzi = await db.redemptions.count_documents({
+                    "discount_id": d.get("id"), "status": "redeemed",
+                    "redeemed_at": {"$gte": inizio, "$lte": d.get("archived_at") or inizio}})
+            except ValueError:
+                utilizzi = 0
+        elif mese:
             try:
                 inizio, fine = _mese_roma_estremi(mese)
                 utilizzi = await db.redemptions.count_documents({
@@ -3075,6 +3285,9 @@ async def merchant_archive(user: dict = Depends(require_merchant)):
             "archivio_id": d["archivio_id"], "title": d.get("title") or "",
             "original_price": d.get("original_price"), "discounted_price": d.get("discounted_price"),
             "image_url": d.get("image_url") or "", "mese": mese, "archived_at": d.get("archived_at"),
+            "valid_from": dal if d.get("approval_status") in ("approved", "expired") else None,
+            "valid_until": al if d.get("approval_status") in ("approved", "expired") else None,
+            "offer_type": d.get("offer_type") or "sconto",
             "stato": MOTIVI_ARCHIVIO.get(d.get("archive_reason"), "Archiviata"),
             "nota": (d.get("approval_note") or "") if d.get("archive_reason") == "rejected" else "",
             "utilizzi": utilizzi,
@@ -3084,11 +3297,18 @@ async def merchant_archive(user: dict = Depends(require_merchant)):
 
 @api.get("/merchants/me/archive/{archivio_id}")
 async def merchant_archive_item(archivio_id: str, user: dict = Depends(require_merchant)):
-    """Il contenuto di un'offerta archiviata, per riusarla nel modulo del mese prossimo."""
+    """Il contenuto di un'offerta archiviata, per riusarla nel modulo dell'offerta o della prossima."""
     d = await db.discounts_archive.find_one({"archivio_id": archivio_id, "merchant_id": user["id"]})
     if not d:
         raise HTTPException(404, "Offerta non trovata nell'archivio")
-    return {"offerta": {k: d.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in d}}
+    offerta = {k: d.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in d}
+    if offerta.get("end_date"):  # la data di fine di allora non vale più: resta la durata in giorni
+        try:
+            giorni = (date.fromisoformat(d["valid_until"]) - date.fromisoformat(d["valid_from"])).days + 1
+        except (KeyError, TypeError, ValueError):
+            giorni = DURATA_PREDEFINITA_GIORNI
+        offerta.update({"end_date": None, "duration_days": max(1, min(giorni, _durata_massima(offerta.get("offer_type"))))})
+    return {"offerta": offerta}
 
 
 @api.get("/merchants/me/stats")
@@ -3223,7 +3443,11 @@ async def public_config():
     """Impostazioni pubbliche lette dal sito all'avvio (nessun dato riservato)."""
     out = {"client_subscription_required": client_subscription_required(),
            # «Migliora foto» compare solo se la chiave Gemini è impostata su Render
-           "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip())}
+           "ai_enhance_enabled": bool((os.environ.get("GEMINI_API_KEY") or "").strip()),
+           # Durata dell'offerta: la sceglie il negozio (i numeri stanno solo qui, il modulo li legge)
+           "offer_duration": {"default_days": DURATA_PREDEFINITA_GIORNI,
+                              "max_days_sconto": DURATA_MAX_SCONTO_GIORNI,
+                              "max_days_omaggio": DURATA_MAX_OMAGGIO_GIORNI}}
     # Fine della prova gratuita dei commercianti: compare solo quando l'utente la imposta su Render.
     fine = (os.environ.get("TRIAL_END_DATE") or "").strip()
     if fine:
@@ -4164,6 +4388,8 @@ async def create_redemption(discount_id: str, user: dict = Depends(require_clien
         raise HTTPException(404, "Sconto non trovato")
     if d.get("approval_status") != "approved" or not d.get("active", True):
         raise HTTPException(403, "Offerta non disponibile")
+    if _offerta_finita(d):  # data di fine passata: vale anche se il cambio offerte della notte non è ancora passato
+        raise HTTPException(403, "Offerta terminata")
     if d.get("merchant_id") in await _merchant_sospesi():
         raise HTTPException(403, "Offerta non disponibile")
 
@@ -4448,6 +4674,23 @@ def _codice_di_mese_scaduto(r: dict) -> bool:
 
 
 MSG_CODICE_MESE_SCADUTO = "Codice scaduto: era del mese scorso, il cliente ne chiede uno nuovo"
+MSG_CODICE_OFFERTA_FINITA = "Codice scaduto: l'offerta è terminata"
+
+
+def _offerta_del_codice_finita(disc: Optional[dict]) -> bool:
+    """Vero se un codice non ancora usato non vale più perché l'offerta del negozio è arrivata alla sua data
+    di fine e non ne è partita un'altra (in quel caso la data è già quella nuova). Stessa tolleranza dei
+    codici di fine mese: chi è al tavolo a cavallo di mezzanotte può usarlo fino alle 02:00 (ora di Roma).
+    Offerte senza data di fine, o di prima della durata libera: resta solo la regola del mese."""
+    fine = (disc or {}).get("valid_until")
+    if not fine:
+        return False
+    try:
+        giorno_dopo = date.fromisoformat(fine) + timedelta(days=1)
+    except (TypeError, ValueError):
+        return False
+    ora = _rome_now()
+    return ora.date() > giorno_dopo or (ora.date() == giorno_dopo and ora.hour >= 2)
 
 
 async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
@@ -4470,6 +4713,9 @@ async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     if _codice_di_mese_scaduto(r):
         await _log_scan(False, "Codice del mese scorso scaduto", r)
         return None, MSG_CODICE_MESE_SCADUTO
+    if r.get("status") == "pending" and _offerta_del_codice_finita(await db.discounts.find_one({"id": r.get("discount_id")})):
+        await _log_scan(False, "Offerta terminata", r)
+        return None, MSG_CODICE_OFFERTA_FINITA
     return r, None
 
 
@@ -4623,6 +4869,8 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
         raise HTTPException(400, "Codice già utilizzato")
     if _codice_di_mese_scaduto(r):
         raise HTTPException(400, MSG_CODICE_MESE_SCADUTO)
+    if _offerta_del_codice_finita(await db.discounts.find_one({"id": r.get("discount_id")})):
+        raise HTTPException(400, MSG_CODICE_OFFERTA_FINITA)
     # LIMITE GIORNALIERO anche sulla verifica manuale del commerciante
     prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
     if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
@@ -5774,23 +6022,30 @@ async def _approva_offerta(discount_id: str, foto_scartate: Optional[list] = Non
     """Approva un'offerta: pubblica, segna la prima pubblicazione del negozio, avvisa il commerciante
     e i clienti interessati. Ritorna l'offerta aggiornata, o None se non esiste."""
     now = datetime.now(timezone.utc)
-    result = await db.discounts.update_one({"id": discount_id}, {"$set": {
+    d0 = await db.discounts.find_one({"id": discount_id})
+    if not d0:
+        return None
+    # La durata scelta dal negozio parte da oggi (giorno di Roma): è il giorno in cui l'offerta va online.
+    dal, al = _validita(d0, _oggi_roma())
+    await db.discounts.update_one({"id": discount_id}, {"$set": {
         "approval_status": "approved",
         "approved_at": now.isoformat(),
         "published_at": now.isoformat(),
         "locked_month": current_month_key(),
+        "valid_from": dal,
+        "valid_until": al,
+        "no_renew": False,
         "approval_note": "",
         "force_editable": False,
     }})
-    if result.matched_count == 0:
-        return None
     d = await db.discounts.find_one({"id": discount_id})
     await _segna_prima_pubblicazione(d.get("merchant_id"), now.isoformat())
     # Notifica il commerciante via email
     try:
         m = await db.users.find_one({"id": d.get("merchant_id")})
         if m and m.get("email"):
-            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio", d.get("title") or "", foto_scartate)
+            await send_merchant_approved(m["email"], m.get("name") or "commerciante", m.get("shop_name") or "il tuo negozio",
+                                         d.get("title") or "", foto_scartate, fino_al=_giorno_it(al) if al else "")
     except Exception as e:
         logging.warning(f"approve email failed: {e}")
     _push_esito_offerta(d.get("merchant_id"), d.get("title") or "", approvata=True)
@@ -5808,6 +6063,9 @@ async def admin_approve_discount(discount_id: str, payload: Optional[ApprovaIn] 
         via = await _approvazione_consentita(await db.users.find_one({"id": d0.get("merchant_id")}))
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
+        if d0.get("end_date") and d0["end_date"] < _oggi_roma().isoformat():
+            raise HTTPException(409, f"Il negozio aveva scelto come fine il {_giorno_it(d0['end_date'])}, che è già passato: "
+                                     "rifiuta l'offerta con il motivo, così sceglie una nuova data.")
     scartate = []
     if d0 and payload and payload.foto_scartate:
         restano, scartate = _prepara_foto_scartate(d0, payload.foto_scartate)
@@ -5851,6 +6109,8 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
         "approval_note": motivo,
         "approved_at": None,
         "locked_month": None,
+        "valid_from": None,
+        "valid_until": None,
     }})
     if result.matched_count == 0:
         raise HTTPException(404, "Sconto non trovato")
@@ -5871,7 +6131,8 @@ async def admin_reject_discount(discount_id: str, payload: RejectIn, user: dict 
 
 @api.post("/admin/discounts/{discount_id}/force-edit")
 async def admin_force_edit(discount_id: str, user: dict = Depends(require_admin_master)):
-    """Admin override: allow merchant to modify a locked offer this month."""
+    """Sblocco dell'admin: il negozio può modificare un'offerta online prima della sua data di fine
+    (errore nel testo, prodotto finito). L'offerta torna in revisione e non è più visibile."""
     d0 = await db.discounts.find_one({"id": discount_id}, {"approval_status": 1})
     if d0 and d0.get("approval_status") == STATO_ATTESA_NEGOZIO:
         raise HTTPException(409, "Il negozio non ha ancora confermato l'offerta preparata da noi.")
@@ -5882,27 +6143,30 @@ async def admin_force_edit(discount_id: str, user: dict = Depends(require_admin_
     return {"ok": True}
 
 
-# ---------- Admin: Offerte Mese Prossimo ----------
-class WindowOverrideIn(BaseModel):
-    open: Optional[bool] = None  # None = torna alla regola automatica (ultimi 7 giorni)
-
-
+# ---------- Admin: prossime offerte (preparate dai negozi mentre ne hanno una online) ----------
 @api.get("/admin/next-offers")
 async def admin_next_offers(user: dict = Depends(require_admin_master)):
-    window = await next_offer_window()
-    nm = window["next_month"]
+    """Una riga per negozio: l'offerta di adesso (con la data di fine) e, se c'è, la prossima da approvare."""
     merchants = await db.users.find({"role": "merchant"}).sort("shop_name", 1).to_list(1000)
-    next_by_mid = {d["merchant_id"]: d async for d in db.next_discounts.find({"target_month": nm})}
+    next_by_mid = {d["merchant_id"]: d async for d in db.next_discounts.find({})}
     curr_by_mid = {d["merchant_id"]: d async for d in db.discounts.find({})}
     rows = []
-    summary = {"total": 0, "approved": 0, "pending": 0, "rejected": 0, "missing": 0}
+    summary = {"total": 0, "approved": 0, "pending": 0, "rejected": 0, "missing": 0, "expiring": 0}
     for m in merchants:
         mid = m["id"]
         nd = next_by_mid.get(mid)
         cd = curr_by_mid.get(mid)
+        online = _offerta_online(cd)
+        if not nd and not online:
+            continue  # niente online e niente in arrivo: il negozio sta nella scheda «Commercianti»
         st = (nd.get("approval_status") if nd else "missing") or "pending"
+        rimasti = _giorni_rimasti(cd) if online else None
+        in_scadenza = bool(online and not nd and not cd.get("no_renew")
+                           and rimasti is not None and rimasti <= GIORNI_AVVISO_SCADENZA)
         summary["total"] += 1
         summary[st if st in summary else "missing"] += 1
+        summary["expiring"] += 1 if in_scadenza else 0
+        stato_prossima = await _stato_prossima(mid, cd)
         rows.append({
             "merchant_id": mid,
             "shop_name": m.get("shop_name") or m.get("name"),
@@ -5910,18 +6174,26 @@ async def admin_next_offers(user: dict = Depends(require_admin_master)):
             "category": m.get("category"),
             "email": m.get("email"),
             "merchant": _dati_negozio_admin(m),
-            "reminder_sent": m.get("next_offer_reminder_month") == nm,
+            "reminder_sent": bool(online and (cd.get("reminders") or {}).get("stages")),
             "current_offer": ({
                 "title": cd.get("title"),
                 "active": cd.get("active", True),
                 "approval_status": cd.get("approval_status", "approved"),
+                "online": online,
+                "valid_until": _fine_offerta(cd) if online else None,
+                "valid_until_label": stato_prossima["current_until_label"],
+                "days_left": rimasti,
+                "no_renew": bool(online and cd.get("no_renew")),
             } if cd else None),
             "next_offer": _enrich_next(nd) if nd else None,
             "next_status": st,
+            "starts_on_label": stato_prossima["starts_on_label"],
+            "expiring": in_scadenza,
         })
     order = {"pending": 0, "rejected": 1, "missing": 2, "approved": 3}
-    rows.sort(key=lambda r: order.get(r["next_status"], 4))
-    return {"window": window, "rows": rows, "summary": summary}
+    rows.sort(key=lambda r: (order.get(r["next_status"], 4), r["current_offer"]["days_left"]
+                             if r["current_offer"] and r["current_offer"]["days_left"] is not None else 9999))
+    return {"rows": rows, "summary": summary}
 
 
 @api.post("/admin/next-offers/{next_id}/approve")
@@ -5931,6 +6203,9 @@ async def admin_approve_next_offer(next_id: str, payload: Optional[ApprovaIn] = 
         via = await _approvazione_consentita(await db.users.find_one({"id": nd0.get("merchant_id")}), per_mese_dopo=True)
         if not via["ok"]:
             raise HTTPException(409, via["motivo"])
+        if nd0.get("end_date") and nd0["end_date"] < _oggi_roma().isoformat():
+            raise HTTPException(409, f"Il negozio aveva scelto come fine il {_giorno_it(nd0['end_date'])}, che è già passato: "
+                                     "rifiuta l'offerta con il motivo, così sceglie una nuova data.")
     scartate = []
     if nd0 and payload and payload.foto_scartate:
         restano, scartate = _prepara_foto_scartate(nd0, payload.foto_scartate)
@@ -5943,15 +6218,23 @@ async def admin_approve_next_offer(next_id: str, payload: Optional[ApprovaIn] = 
     if result.matched_count == 0:
         raise HTTPException(404, "Offerta non trovata")
     nd = await db.next_discounts.find_one({"id": next_id})
+    mid = nd.get("merchant_id")
+    # Se non c'è nulla da aspettare (l'offerta di adesso non ha scadenza, oppure è già finita) va online subito.
+    online_ora = await _cambia_offerta_negozio(mid, _oggi_roma(), now_iso) == "promossa"
+    attuale = await db.discounts.find_one({"merchant_id": mid}) or {}
+    st = await _stato_prossima(mid, attuale)
     try:
-        m = await db.users.find_one({"id": nd.get("merchant_id")})
+        m = await db.users.find_one({"id": mid})
         if m and m.get("email"):
+            fine = _fine_offerta(attuale) if online_ora else None
             await send_merchant_approved(m["email"], m.get("name") or "commerciante",
-                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "", scartate)
+                                         m.get("shop_name") or "il tuo negozio", nd.get("title") or "", scartate,
+                                         fino_al=_giorno_it(fine) if fine else "",
+                                         parte_il="" if online_ora else (st["starts_on_label"] or ""))
     except Exception as e:
         logging.warning(f"next-offer approve email failed: {e}")
-    _push_esito_offerta(nd.get("merchant_id"), nd.get("title") or "", approvata=True, mese_dopo=True)
-    return {"next_discount": _enrich_next(nd)}
+    _push_esito_offerta(mid, nd.get("title") or "", approvata=True, mese_dopo=not online_ora)
+    return {"next_discount": None if online_ora else _enrich_next(nd), "online": online_ora}
 
 
 @api.post("/admin/next-offers/{next_id}/reject")
@@ -5991,6 +6274,7 @@ class AdminNextOfferUpdate(BaseModel):
     additional_info: Optional[str] = None
     active: Optional[bool] = None
     max_uses_per_month: Optional[int] = Field(default=None, ge=1, le=10)
+    duration_days: Optional[int] = Field(default=None, ge=1, le=366)
 
 
 @api.put("/admin/next-offers/{next_id}")
@@ -6012,19 +6296,10 @@ async def admin_update_next_offer(next_id: str, payload: AdminNextOfferUpdate, u
     return {"next_discount": _enrich_next(nd)}
 
 
-@api.post("/admin/next-offers/window-override")
-async def admin_next_window_override(payload: WindowOverrideIn, user: dict = Depends(require_admin_master)):
-    if payload.open is None:
-        await db.settings.delete_one({"key": "next_offer_window_override"})
-    else:
-        await db.settings.update_one({"key": "next_offer_window_override"},
-                                     {"$set": {"value": bool(payload.open)}}, upsert=True)
-    return {"window": await next_offer_window()}
-
-
 @api.post("/admin/next-offers/run-rollover")
 async def admin_run_rollover(user: dict = Depends(require_admin_master)):
-    return await _run_month_rollover(force=True)
+    """«Esegui ora il cambio offerte»: fa scadere le offerte finite e mette online le prossime già approvate."""
+    return await _run_cambio_offerte(force=True)
 
 
 @api.post("/admin/next-offers/run-reminders")
@@ -6256,7 +6531,7 @@ CPN_TESTO_CONFERMA = ("Confermando dichiari che i dati dell'offerta sono corrett
 # revisione (l'ha inviata il negozio) o approvata (è online o bloccata per il mese).
 _CPN_SOSTITUIBILI = (STATO_ATTESA_NEGOZIO, "rejected", "expired")
 _CPN_CAMPI_OFFERTA = ("title", "description", "original_price", "discounted_price", "image_url", "image_urls",
-                      "terms", "plan_ahead", "validity_info", "additional_info", "max_uses_per_month")
+                      "terms", "plan_ahead", "validity_info", "additional_info", "max_uses_per_month", "duration_days")
 
 
 def _cpn_link(path: str) -> str:
@@ -6266,6 +6541,7 @@ def _cpn_link(path: str) -> str:
 def _cpn_offerta_pubblica(d: dict) -> dict:
     """Solo i campi dell'offerta da far vedere al negozio nella pagina di conferma."""
     out = {k: d.get(k) for k in _CPN_CAMPI_OFFERTA}
+    out["durata"] = _durata_in_parole(d)
     if not isinstance(out.get("image_urls"), list) or not out["image_urls"]:
         out["image_urls"] = [d["image_url"]] if d.get("image_url") else []
     try:
@@ -6346,6 +6622,7 @@ async def admin_cpn_prepara(merchant_id: str, payload: DiscountIn, user: dict = 
     data.update({
         "active": True, "updated_at": ora.isoformat(),
         "approval_status": STATO_ATTESA_NEGOZIO, "approval_note": "", "locked_month": None,
+        "valid_from": None, "valid_until": None, "no_renew": False,
         "approved_at": None, "published_at": None, "force_editable": False, "expired_at": None,
         "prepared_by_admin": True, "prepared_at": ora.isoformat(),
         "merchant_confirmed_at": None, "merchant_confirm_version": None, "merchant_confirm_via": None,
@@ -6572,163 +6849,186 @@ async def _run_grace_reminders() -> dict:
 
 
 # ============================================================
-# Offerta Mese Prossimo — rollover mensile + promemoria
+# Cambio offerte (ogni notte) + promemoria di scadenza
 # ============================================================
+# Fino al 14/11 le offerte erano mensili (passaggio il 1° alle 00:05). Ora ogni offerta ha la sua data di fine:
+# il controllo gira ogni notte e all'avvio del server, negozio per negozio.
 
-async def _run_month_rollover(force: bool = False) -> dict:
-    """Passaggio mese (1° alle 00:05 Europe/Rome):
-    - offerta mese prossimo APPROVATA → sostituisce quella corrente (attiva + locked)
-    - offerta mese prossimo pending/rejected → diventa la bozza in revisione del nuovo mese
-    - offerta corrente senza sostituzione → scade (negozio senza offerta finché non ne carica una)
-    Le versioni sostituite/scadute vengono archiviate in `discounts_archive`.
-    Idempotente via `rollover_runs` (bypass con force=True)."""
-    # Mese di Roma: con l'UTC il passaggio delle 00:05 del 1° veniva saltato.
-    month = current_month_key()
-    now_iso = datetime.now(timezone.utc).isoformat()
-    if force:
-        await db.rollover_runs.update_one({"month": month}, {"$set": {"ran_at": now_iso}}, upsert=True)
-    else:
-        # Il mese si «prenota» in un colpo solo (atomico): il job delle 00:05 e il recupero all'avvio, o due
-        # copie del server accese insieme, non possono passare entrambi (niente offerte archiviate o email doppie).
-        # `rollover_runs` dice «già fatto»; la prenotazione atomica passa da `_prenota` (indice unico).
-        if await db.rollover_runs.find_one({"month": month}) or not await _prenota(f"rollover_{month}", giorni=400):
-            return {"skipped": True, "month": month}
-        await db.rollover_runs.update_one(
-            {"month": month}, {"$setOnInsert": {"month": month, "ran_at": now_iso}}, upsert=True)
-    try:
-        return await _esegui_rollover(month, now_iso)
-    except Exception:
-        if not force:
-            await db.rollover_runs.delete_one({"month": month})  # si potrà ritentare (al riavvio o col job)
-            await _libera_prenotazione(f"rollover_{month}")
-        raise
-
-
-async def _esegui_rollover(month: str, now_iso: str) -> dict:
-    async def _archive(old: dict, reason: str):
-        await _archivia(old, reason)
-
-    handled = set()
-    promoted = migrated = expired = 0
-    # $lte: recupera anche eventuali offerte di mesi mai promossi (pod spento al 1°)
-    next_docs = await db.next_discounts.find({"target_month": {"$lte": month}}).to_list(None)
-    for nd in next_docs:
-        mid = nd["merchant_id"]
-        handled.add(mid)
+async def _cambia_offerta_negozio(mid: str, oggi: date, now_iso: str) -> Optional[str]:
+    """Per un negozio, quando l'offerta online è finita (o non c'è, o non ha scadenza):
+    - prossima offerta APPROVATA → va online al posto di quella di adesso, con la sua durata da oggi
+    - prossima offerta in revisione o rifiutata → diventa l'offerta in revisione del negozio
+    - nessuna prossima offerta e offerta finita → scade (negozio senza offerta finché non ne pubblica una)
+    Finché l'offerta online ha una data di fine non ancora passata non succede nulla: va rispettata.
+    Le versioni sostituite o scadute vanno nell'archivio. Ritorna «promossa», «in_revisione», «scaduta» o None."""
+    cur = await db.discounts.find_one({"merchant_id": mid})
+    nd = await db.next_discounts.find_one({"merchant_id": mid})
+    online = _offerta_online(cur, oggi)
+    if online and _fine_offerta(cur) is not None:
+        return None
+    if nd:
+        st = nd.get("approval_status") or "pending"
+        if online and st != "approved":
+            return None  # offerta senza scadenza: resta online finché la prossima non è approvata
         content = {k: nd.get(k) for k in DISCOUNT_CONTENT_FIELDS if k in nd}
         content.setdefault("offer_type", "sconto")  # offerte salvate prima del tipo «omaggio»
-        st = nd.get("approval_status") or "pending"
         if st == "approved":
+            dal, al = _validita(content, oggi)
             sets = {**content, "updated_at": now_iso, "approval_status": "approved",
-                    "approved_at": nd.get("approved_at") or now_iso, "locked_month": month,
-                    "approval_note": "", "force_editable": False, "expired_at": None}
-            promoted += 1
+                    "approved_at": nd.get("approved_at") or now_iso, "published_at": now_iso,
+                    "locked_month": oggi.strftime("%Y-%m"), "valid_from": dal, "valid_until": al,
+                    "no_renew": False, "reminders": None, "approval_note": "", "force_editable": False,
+                    "expired_at": None}
         else:
             sets = {**content, "updated_at": now_iso, "approval_status": st,
                     "approval_note": nd.get("approval_note", ""), "approved_at": None,
-                    "locked_month": None, "force_editable": False, "expired_at": None}
-            migrated += 1
-        existing = await db.discounts.find_one({"merchant_id": mid})
-        if existing:
-            await _archive(existing, "replaced_by_next_month")
-            await db.discounts.update_one({"id": existing["id"]}, {"$set": sets})
+                    "locked_month": None, "valid_from": None, "valid_until": None, "no_renew": False,
+                    "reminders": None, "force_editable": False, "expired_at": None}
+        if cur:
+            await _archivia(cur, "replaced_by_next_offer")
+            await db.discounts.update_one({"id": cur["id"]}, {"$set": sets})
         else:
             sets.update({"id": str(uuid.uuid4()), "merchant_id": mid, "created_at": now_iso})
             await db.discounts.insert_one(sets)
         await db.next_discounts.delete_one({"id": nd["id"]})
-        if st == "approved":  # l'offerta del mese è online: avviso a chi ha il negozio tra i preferiti
-            await _segna_prima_pubblicazione(mid, now_iso)
-            promossa = await db.discounts.find_one({"merchant_id": mid})
-            if promossa and promossa.get("active", True):
-                _avvisi_in_background(promossa)
+        if st != "approved":
+            return "in_revisione"
+        # La nuova offerta è online: avviso a chi ha il negozio tra i preferiti
+        await _segna_prima_pubblicazione(mid, now_iso)
+        promossa = await db.discounts.find_one({"merchant_id": mid})
+        if promossa and promossa.get("active", True):
+            _avvisi_in_background(promossa)
+        return "promossa"
+    if not cur or cur.get("approval_status") != "approved" or cur.get("active") is False or online:
+        return None
+    # Offerta finita senza una prossima: scade
+    await _archivia(cur, "expired_no_replacement")
+    await db.discounts.update_one({"id": cur["id"]}, {"$set": {
+        "active": False, "approval_status": "expired", "expired_at": now_iso,
+        "locked_month": None, "updated_at": now_iso}})
+    try:
+        m = await db.users.find_one({"id": mid})
+        if m and m.get("email"):
+            await send_offer_expired(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
+                                     no_renew=bool(cur.get("no_renew")))
+    except Exception as e:
+        logging.error(f"[cambio-offerte] email offerta scaduta non inviata merchant={mid[:8]}: {e}")
+    return "scaduta"
 
-    # Offerte del mese precedente senza sostituzione → scadono
-    stale = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
-    for d in stale:
-        if d["merchant_id"] in handled or d.get("locked_month") == month:
-            continue
-        await _archive(d, "expired_no_replacement")
-        await db.discounts.update_one({"id": d["id"]}, {"$set": {
-            "active": False, "approval_status": "expired", "expired_at": now_iso,
-            "locked_month": None, "updated_at": now_iso}})
-        expired += 1
+
+async def _run_cambio_offerte(force: bool = False) -> dict:
+    """Ogni notte alle 00:05 (ora di Roma) e all'avvio del server: fa scadere le offerte arrivate alla data di
+    fine e mette online le prossime già approvate. Una volta al giorno (prenotazione atomica: il lavoro delle
+    00:05 e il recupero all'avvio, o due copie del server, non passano entrambi); `force=True` lo ripete."""
+    oggi = _oggi_roma()
+    giorno = oggi.isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    chiave = f"cambio_offerte_{giorno}"
+    if not force and not await _prenota(chiave, giorni=40):
+        return {"skipped": True, "giorno": giorno}
+    conteggi = {"promossa": 0, "in_revisione": 0, "scaduta": 0}
+    errori = 0
+    negozi = set(await db.next_discounts.distinct("merchant_id"))
+    negozi |= set(await db.discounts.distinct("merchant_id", {"approval_status": "approved", "active": True}))
+    for mid in sorted(negozi):
         try:
-            m = await db.users.find_one({"id": d["merchant_id"]})
-            if m and m.get("email"):
-                await send_offer_expired(m["email"], m.get("name") or "", m.get("shop_name") or "il tuo negozio",
-                                         no_renew=m.get("no_renew_month") == month)
+            esito = await _cambia_offerta_negozio(mid, oggi, now_iso)
         except Exception as e:
-            logging.error(f"[rollover] email offerta scaduta non inviata merchant={d['merchant_id'][:8]}: {e}")
-    logging.info(f"[rollover] month={month} promoted={promoted} migrated={migrated} expired={expired}")
-    return {"skipped": False, "month": month, "promoted": promoted,
-            "migrated_pending": migrated, "expired": expired}
+            errori += 1
+            logging.error(f"[cambio-offerte] negozio={mid[:8]}: {type(e).__name__}: {e}")
+            continue
+        if esito:
+            conteggi[esito] += 1
+    if errori and not force:
+        await _libera_prenotazione(chiave)  # si potrà ritentare (al riavvio o con il pulsante dell'admin)
+    logging.info(f"[cambio-offerte] giorno={giorno} promosse={conteggi['promossa']} "
+                 f"in_revisione={conteggi['in_revisione']} scadute={conteggi['scaduta']} errori={errori}")
+    return {"skipped": False, "giorno": giorno, "promoted": conteggi["promossa"],
+            "migrated_pending": conteggi["in_revisione"], "expired": conteggi["scaduta"], "errors": errori}
 
 
-# Promemoria al commerciante negli ultimi 7 giorni del mese: (fase, giorni rimasti massimi).
-# Se il server era spento, parte solo la fase più vicina alla scadenza (niente raffiche).
+# Promemoria al commerciante prima della fine dell'offerta: (fase, giorni rimasti massimi, oggi compreso).
+# Se il server era spento, parte solo la fase più vicina alla scadenza (niente raffiche). Una fase non parte
+# se l'offerta dura quei giorni o meno (per un'offerta di una settimana niente promemoria «mancano 7 giorni»).
 NEXT_OFFER_REMINDER_STAGES = (("apertura", 7), ("tre_giorni", 3), ("ultimo_giorno", 1))
-ADMIN_SUMMARY_DAYS_LEFT = 4  # riepilogo admin: il 28 in un mese di 31 giorni
+ADMIN_SUMMARY_DAYS_LEFT = 4  # riepilogo per l'admin: offerte che finiscono entro 4 giorni
+
+
+def _durata_totale(d: dict) -> Optional[int]:
+    try:
+        return (date.fromisoformat(d["valid_until"]) - date.fromisoformat(d["valid_from"])).days + 1
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 async def _run_next_offer_reminders() -> dict:
-    """Promemoria «la tua offerta scade»: fino a 3 email (apertura finestra, 3 giorni prima,
-    ultimo giorno) ai commercianti con offerta attiva che non hanno caricato quella del mese
-    dopo e non hanno scelto «Non rinnovo». Poi un riepilogo all'admin. Idempotente."""
-    window = await next_offer_window()
-    if not window["open"]:
-        return {"window_open": False, "sent": 0}
-    nm = window["next_month"]
-    days_left = window["days_to_month_end"] + 1
-    stage = [st for st, mx in NEXT_OFFER_REMINDER_STAGES if days_left <= mx]
-    stage = stage[-1] if stage else "apertura"
-    uploaded = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
+    """Promemoria «la tua offerta sta per finire»: fino a 3 email (7 giorni prima, 3 giorni prima, ultimo
+    giorno) ai commercianti con l'offerta online che non hanno preparato la prossima e non hanno scelto
+    «Non rinnovo». Poi, al massimo una volta a settimana, un riepilogo all'admin. Idempotente."""
+    oggi = _oggi_roma()
+    uploaded = set(await db.next_discounts.distinct("merchant_id"))
     sent = checked = 0
+    in_scadenza = []
     actives = await db.discounts.find({"approval_status": "approved", "active": True}).to_list(None)
     for d in actives:
+        rimasti = _giorni_rimasti(d, oggi) if _offerta_online(d, oggi) else None
+        if rimasti is None or rimasti > GIORNI_AVVISO_SCADENZA:
+            continue
+        in_scadenza.append(d)
         mid = d["merchant_id"]
         checked += 1
-        if mid in uploaded:
+        if mid in uploaded or d.get("no_renew"):
+            continue
+        fine = _fine_offerta(d)
+        stage, giorni_fase = [(st, mx) for st, mx in NEXT_OFFER_REMINDER_STAGES if rimasti <= mx][-1]
+        totale = _durata_totale(d)
+        if totale is not None and totale <= giorni_fase:
+            continue
+        log = d.get("reminders") or {}
+        stages = list(log.get("stages", [])) if log.get("until") == fine else []
+        if stage in stages:
             continue
         m = await db.users.find_one({"id": mid})
-        if not m or not m.get("email") or m.get("no_renew_month") == nm:
-            continue
-        log = m.get("next_offer_reminders") or {}
-        stages = list(log.get("stages", [])) if log.get("month") == nm else []
-        if m.get("next_offer_reminder_month") == nm and "apertura" not in stages:
-            stages.append("apertura")  # promemoria unico della versione precedente
-        if stage in stages:
+        if not m or not m.get("email"):
             continue
         # «Prenotazione» atomica prima dell'invio: due copie del server accese insieme (per esempio durante un
         # aggiornamento) o due passaggi in parallelo non mandano la stessa email due volte.
-        if not await _prenota(f"offerta_{nm}_{mid}_{stage}"):
+        chiave = f"offerta_{d['id']}_{fine}_{stage}"
+        if not await _prenota(chiave):
             continue
         try:
+            inizio = d.get("valid_from")
+            massimo = _durata_massima(d.get("offer_type"))
+            prolungabile = bool(inizio and (date.fromisoformat(inizio) + timedelta(days=massimo - 1)).isoformat() > fine)
             await send_next_offer_reminder(m["email"], m.get("name") or "",
                                            m.get("shop_name") or "il tuo negozio",
-                                           window["next_month_label"], days_left)
+                                           _giorno_it(fine), rimasti, prolungabile=prolungabile)
             stages.append(stage)
-            await db.users.update_one({"id": mid}, {"$set": {
-                "next_offer_reminders": {"month": nm, "stages": stages},
-                "next_offer_reminder_month": nm}})
+            await db.discounts.update_one({"id": d["id"]}, {"$set": {"reminders": {"until": fine, "stages": stages}}})
             sent += 1
         except Exception as e:
-            await _libera_prenotazione(f"offerta_{nm}_{mid}_{stage}")  # si potrà ritentare
+            await _libera_prenotazione(chiave)  # si potrà ritentare
             logging.error(f"[next-offer-reminder] send failed merchant={mid[:8]}: {e}")
-    admin_summary = await _send_admin_month_summary(nm, window["next_month_label"], days_left, actives)
-    return {"window_open": True, "checked": checked, "sent": sent, "next_month": nm,
-            "stage": stage, "admin_summary": admin_summary}
+    admin_summary = await _send_admin_scadenze(oggi, in_scadenza)
+    return {"checked": checked, "sent": sent, "admin_summary": admin_summary}
 
 
-async def _send_admin_month_summary(nm: str, label: str, days_left: int, actives: list) -> bool:
-    """Una volta al mese, negli ultimi giorni: offerte da approvare, rifiutate, mancanti, «Non rinnovo»."""
-    if days_left > ADMIN_SUMMARY_DAYS_LEFT:
-        return False
-    key = f"admin_month_summary_{nm}"
-    if await db.settings.find_one({"key": key}):
+async def _send_admin_scadenze(oggi: date, in_scadenza: list) -> bool:
+    """Al massimo una volta ogni 7 giorni, quando c'è almeno un'offerta che finisce entro pochi giorni:
+    prossime offerte da approvare o rifiutate, offerte che finiscono senza una prossima, «Non rinnovo»."""
+    vicine = [d for d in in_scadenza if (_giorni_rimasti(d, oggi) or 99) <= ADMIN_SUMMARY_DAYS_LEFT]
+    if not vicine:
         return False
     to = os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
     if not to:
         return False
+    ultimo = await db.settings.find_one({"key": "admin_scadenze_ultimo"})
+    try:
+        if ultimo and (oggi - date.fromisoformat(ultimo.get("value") or "")).days < 7:
+            return False
+    except (TypeError, ValueError):
+        pass
+    key = f"admin_scadenze_{oggi.isoformat()}"
     names: dict = {}
 
     async def shop(mid):
@@ -6738,30 +7038,29 @@ async def _send_admin_month_summary(nm: str, label: str, days_left: int, actives
         return names[mid]
 
     pending, rejected = [], []
-    async for nd in db.next_discounts.find({"target_month": nm}):
+    async for nd in db.next_discounts.find({}):
         (pending if (nd.get("approval_status") or "pending") == "pending"
          else rejected if nd.get("approval_status") == "rejected" else []).append(await shop(nd["merchant_id"]))
-    uploaded = set(await db.next_discounts.distinct("merchant_id", {"target_month": nm}))
+    uploaded = set(await db.next_discounts.distinct("merchant_id"))
     missing, no_renew = [], []
-    for d in actives:
+    for d in vicine:
         mid = d["merchant_id"]
         if mid in uploaded:
             continue
-        m = await db.users.find_one({"id": mid}, {"no_renew_month": 1})
-        (no_renew if (m or {}).get("no_renew_month") == nm else missing).append(await shop(mid))
-    # Prenotazione atomica prima dell'invio (due passaggi insieme non mandano due email): passa da
-    # `_prenota`, perché `settings` non ha un indice unico e lì due `upsert` insieme inseriscono entrambi.
+        voce = f"{await shop(mid)} (fino al {_giorno_it(_fine_offerta(d))})"
+        (no_renew if d.get("no_renew") else missing).append(voce)
+    # Prenotazione atomica prima dell'invio (due passaggi insieme non mandano due email): passa da `_prenota`,
+    # perché `settings` non ha un indice unico. Il segno in `settings` tiene lontani i giorni successivi.
     if not await _prenota(key):
         return False
-    await db.settings.update_one({"key": key}, {"$setOnInsert": {"key": key}}, upsert=True)
+    await db.settings.update_one({"key": "admin_scadenze_ultimo"}, {"$set": {"value": oggi.isoformat()}}, upsert=True)
     try:
-        await send_admin_month_summary(to, label, pending, rejected, missing, no_renew)
+        await send_admin_month_summary(to, "", pending, rejected, missing, no_renew)
     except Exception as e:
-        logging.error(f"[admin-summary] send failed: {e}")
-        await db.settings.delete_one({"key": key})  # si potrà ritentare
+        await db.settings.delete_one({"key": "admin_scadenze_ultimo"})   # si potrà ritentare
         await _libera_prenotazione(key)
+        logging.error(f"[admin-summary] send failed: {e}")
         return False
-    await db.settings.update_one({"key": key}, {"$set": {"sent_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
     return True
 
 
@@ -6777,7 +7076,7 @@ def _start_scheduler() -> None:
         id="grace_reminders_daily",
         replace_existing=True,
     )
-    # Promemoria "carica offerta mese prossimo" — ogni giorno 09:30 (invia solo in finestra, idempotente)
+    # Promemoria «la tua offerta sta per finire» — ogni giorno 09:30 (solo negli ultimi 7 giorni, idempotente)
     _scheduler.add_job(
         _run_next_offer_reminders,
         CronTrigger(hour=9, minute=30, timezone="Europe/Rome"),
@@ -6800,11 +7099,11 @@ def _start_scheduler() -> None:
         misfire_grace_time=6 * 3600,
         coalesce=True,
     )
-    # Passaggio mese: il 1° alle 00:05 — promuove offerte approvate, fa scadere le altre
+    # Cambio offerte: ogni notte alle 00:05 — fa scadere le offerte finite, mette online le prossime approvate
     _scheduler.add_job(
-        _run_month_rollover,
-        CronTrigger(day=1, hour=0, minute=5, timezone="Europe/Rome"),
-        id="month_rollover",
+        _run_cambio_offerte,
+        CronTrigger(hour=0, minute=5, timezone="Europe/Rome"),
+        id="cambio_offerte",
         replace_existing=True,
         misfire_grace_time=6 * 3600,  # se il server è occupato o riparte dopo le 00:05 il passaggio parte comunque
         coalesce=True,
@@ -6826,7 +7125,7 @@ def _start_scheduler() -> None:
     _scheduler.add_job(_invia_coda_promozionale, CronTrigger(hour="9-20", minute="*/15", timezone="Europe/Rome"),
                        id="push_coda_promozionale", replace_existing=True, misfire_grace_time=600, coalesce=True)
     _scheduler.start()
-    logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, next-offer reminders 09:30, rollover 1° 00:05 Europe/Rome")
+    logging.info("[scheduler] AsyncIOScheduler avviato — grace 10:00, promemoria offerte 09:30, cambio offerte 00:05 Europe/Rome")
 
 
 def _stop_scheduler() -> None:
@@ -6922,14 +7221,14 @@ async def on_startup():
     except Exception as e:
         logging.error(f"[orfani] pulizia fallita: {e}")
     _start_scheduler()
-    # Catch-up rollover: se il pod era spento il 1° del mese alle 00:05, il job cron
-    # è andato perso. Idempotente via rollover_runs: gira solo se non già eseguito.
+    # Recupero del cambio offerte: se il server dormiva alle 00:05 il lavoro della notte è andato perso.
+    # Una volta al giorno (prenotazione atomica): gira solo se oggi non è già stato fatto.
     try:
-        res = await _run_month_rollover()
+        res = await _run_cambio_offerte()
         if not res.get("skipped"):
-            logging.info(f"[rollover:catchup] eseguito al riavvio: {res}")
+            logging.info(f"[cambio-offerte:recupero] eseguito al riavvio: {res}")
     except Exception as e:
-        logging.error(f"[rollover:catchup] failed: {e}")
+        logging.error(f"[cambio-offerte:recupero] failed: {e}")
     # Catch-up promemoria offerte: sul piano gratuito il server può dormire alle 9:30.
     # Idempotente per fase; mai di notte.
     try:

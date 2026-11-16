@@ -12,14 +12,14 @@ Regole sul contenuto (valide per tutto il documento):
 
 ## (a) Locandina da stampare per i negozi aderenti
 
-Coerente con `docs/STATO.md` (decisione del 07/10): sulla carta solo cose che non cambiano (nome del negozio e QR). L'offerta del mese si vede dalla pagina a cui porta il QR.
+Coerente con `docs/STATO.md` (decisione del 07/10): sulla carta solo cose che non cambiano (nome del negozio e QR). L'offerta di adesso si vede dalla pagina a cui porta il QR.
 
 ### Versione A4 (verticale)
 - **Titolo:** Qui trovi un'offerta con Sconti Roma
-- **Sottotitolo:** [NOME NEGOZIO] ti aspetta. Guarda l'offerta del mese nell'app.
+- **Sottotitolo:** [NOME NEGOZIO] ti aspetta. Guarda l'offerta nell'app.
 - **3 punti**
   1. Inquadra il QR con la fotocamera del telefono.
-  2. Guarda l'offerta del mese di [NOME NEGOZIO].
+  2. Guarda l'offerta di [NOME NEGOZIO].
   3. Quando vieni da noi, mostra il QR al banco.
 - **Spazio per il QR del negozio:** quadrato di almeno 8 × 8 cm, centrato sotto i 3 punti, con la scritta «Inquadra qui» sopra. Il QR è quello personale del negozio, dalla pagina Locandina dell'area commerciante: non va copiato né inventato.
 - **Piè di pagina:** «Sconti Roma · Roma e dintorni · Gratuita per i clienti nella fase di lancio · Solo per maggiorenni (18+)»
@@ -30,13 +30,13 @@ Coerente con `docs/STATO.md` (decisione del 07/10): sulla carta solo cose che no
 - **Sottotitolo:** [NOME NEGOZIO]
 - **3 punti (frasi più brevi)**
   1. Inquadra il QR.
-  2. Guarda l'offerta del mese.
+  2. Guarda l'offerta.
   3. Mostra il QR al banco.
 - **Spazio per il QR:** quadrato di almeno 6 × 6 cm.
 - **Piè di pagina:** «Sconti Roma · Roma e dintorni · 18+»
 
 ### Versione corta (adesivo o cartoncino da banco)
-- «[NOME NEGOZIO] su Sconti Roma. Inquadra il QR e guarda l'offerta del mese. 18+»
+- «[NOME NEGOZIO] su Sconti Roma. Inquadra il QR e guarda l'offerta. 18+»
 
 Note di stampa: il QR deve restare nero su fondo chiaro, senza scritte sopra; prima di stampare in serie provare la scansione da due telefoni diversi.
 
@@ -56,7 +56,7 @@ Note di stampa: il QR deve restare nero su fondo chiaro, senza scritte sopra; pr
 **[da far vedere al consulente]** queste regole d'uso (consenso, messaggi non richiesti).
 
 ### Testo del post (Facebook)
-> Ciao [ZONA]! Sconti Roma è un'app che raccoglie le offerte dei negozi sotto casa, a Roma e dintorni. Scegli la tua zona, guarda l'offerta del mese e, quando vai in negozio, mostri il QR al banco. È gratuita nella fase di lancio. Per maggiorenni (18+). Se ti va di provarla: [LINK APP].
+> Ciao [ZONA]! Sconti Roma è un'app che raccoglie le offerte dei negozi sotto casa, a Roma e dintorni. Scegli la tua zona, guarda le offerte e, quando vai in negozio, mostri il QR al banco. È gratuita nella fase di lancio. Per maggiorenni (18+). Se ti va di provarla: [LINK APP].
 > Se non vuoi vedere altri messaggi di questo tipo, scrivilo nei commenti e li togliamo.
 > Sconti Roma
 

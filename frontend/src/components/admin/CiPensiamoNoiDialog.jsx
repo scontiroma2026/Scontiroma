@@ -46,10 +46,12 @@ export default function CiPensiamoNoiDialog({ merchant, hdrs, onChiudi, onSalvat
       original_price: parseFloat(String(form.original_price).replace(",", ".")),
       discounted_price: parseFloat(String(form.discounted_price).replace(",", ".")),
       max_uses_per_month: parseInt(form.max_uses_per_month, 10) || 1,
+      duration_days: parseInt(form.duration_days, 10) || 30,
       image_url: form.image_urls[0] || "",
       active: true,
     };
     delete payload.percent_off;
+    delete payload.durata;
     if (isNaN(payload.original_price) || isNaN(payload.discounted_price) || payload.discounted_price >= payload.original_price) {
       toast.error("Verifica i prezzi (scontato più basso del pieno)");
       return;
@@ -129,6 +131,18 @@ export default function CiPensiamoNoiDialog({ merchant, hdrs, onChiudi, onSalvat
             <div>
               <Label htmlFor="cpn-extra" className="text-xs text-muted-foreground">Informazioni aggiuntive</Label>
               <Textarea id="cpn-extra" rows={2} value={form.additional_info} onChange={upd("additional_info")} className={CAMPO} />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Quanto dura (giorni dal giorno in cui va online)</div>
+              <div className="mt-2 grid grid-cols-5 gap-2">
+                {[7, 14, 30, 60, 90].map((n) => (
+                  <button key={n} type="button" data-testid={`cpn-durata-${n}`} aria-pressed={Number(form.duration_days || 30) === n}
+                    onClick={() => setForm((f) => ({ ...f, duration_days: n }))}
+                    className={`min-h-11 rounded-xl border-2 text-sm font-bold ${Number(form.duration_days || 30) === n ? "border-fucsia bg-fucsia text-white" : "border-border bg-white text-foreground"}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Utilizzi al mese per cliente</div>

@@ -20,7 +20,7 @@ Se dice «no, sono impegnato»: «Nessun problema, quando è meglio che richiami
 Se il titolare non c'è: «Quando posso trovarlo? Richiamo io, non si preoccupi.» Annotare giorno e ora. Non lasciare spiegazioni lunghe a chi risponde.
 
 ## 3. Come funziona, in 3 frasi (25 secondi)
-1. «Il negozio sceglie un prodotto o un servizio e decide lo sconto, i giorni in cui vale e quante volte al mese.»
+1. «Il negozio sceglie un prodotto o un servizio e decide lo sconto, quanto dura e quante volte ogni cliente può usarlo.»
 2. «Il cliente lo trova nell'app e, quando viene da voi, mostra un QR che voi inquadrate con il telefono.»
 3. «Nella fase di lancio è gratis, ed è una cosa che si prova in pochi minuti.»
 
@@ -29,7 +29,7 @@ Poi: «Le va se le mando un breve video su WhatsApp, o preferisce che passi a sp
 ## 4. Risposte alle 8 obiezioni più comuni
 
 **«Non ho tempo»**
-> «Capisco, sa quanto è. Per questo ci vogliono pochi minuti per iniziare e poi una sola offerta al mese. Posso richiamarla in un orario più tranquillo?»
+> «Capisco, sa quanto è. Per questo ci vogliono pochi minuti per iniziare, e quanto dura l'offerta lo decide lei. Posso richiamarla in un orario più tranquillo?»
 
 **«Quanto costa?»**
 > «Nella fase di lancio è gratis. Poi ve lo diciamo con largo anticipo e non paghi niente senza la tua conferma.»

@@ -77,6 +77,7 @@ export default function SchedaCompleta({ offerta, negozio, id }) {
             <Campo etichetta="Sconto" valore={o.percent_off != null ? `−${o.percent_off}%` : null} />
             </>)}
             <Campo etichetta="Usi al mese per cliente" valore={`${o.max_uses_per_month || 1}`} />
+            <Campo etichetta="Durata scelta dal negozio" valore={o.durata || "30 giorni"} />
             <div className="sm:col-span-2"><Campo etichetta="Termini e condizioni" valore={o.terms} id={`sc-termini-${id}`} /></div>
             <div className="sm:col-span-2"><Campo etichetta="Pianifica in anticipo" valore={o.plan_ahead} /></div>
             <div className="sm:col-span-2"><Campo etichetta="Inclusioni ed esclusioni (giorni e orari)" valore={o.validity_info} /></div>

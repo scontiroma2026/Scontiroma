@@ -130,7 +130,7 @@ export default function AdminDashboard() {
     ["subscribers", "Abbonati"],
     ["referrals", "Referral QR"],
     ["pending", `Offerte in attesa (${pending.length})`],
-    ["nextmonth", "Prossimo Mese"],
+    ["nextmonth", "Scadenze"],
     ["merchants", `Negozi (${merchants.length})`],
     ["fraud", "Registro Frodi"],
     ["reviews", "Feedback"],

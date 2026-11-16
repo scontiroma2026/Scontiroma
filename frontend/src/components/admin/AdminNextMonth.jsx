@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
-  Check, X, Mail, CalendarClock, RefreshCw, Send, ChevronDown, ChevronRight,
+  Check, X, Mail, CalendarClock, Send, ChevronDown, ChevronRight,
   Phone, MapPin, Edit3, Store,
 } from "lucide-react";
 import AdminSearchInput from "@/components/admin/AdminSearchInput";
@@ -20,10 +20,11 @@ const STATUS_BADGE = {
   approved: ["Approvata ✓", "bg-muted border-fucsia/40 text-fucsia"],
   pending: ["In revisione", "bg-neon/15 border-neon/40 text-neon"],
   rejected: ["Rifiutata", "bg-destructive/15 border-destructive/40 text-destructive"],
-  missing: ["Non caricata", "bg-muted border-border text-muted-foreground"],
+  missing: ["Nessuna prossima", "bg-muted border-border text-muted-foreground"],
 };
 
-/** Tab admin "Prossimo Mese": stato caricamento offerte di tutti i negozi + revisione completa. */
+/** Tab admin «Scadenze»: negozi con un'offerta online (e quando finisce) e prossime offerte da rivedere.
+ *  Dal 14/11 le offerte non sono più mensili: ognuna ha la data di fine scelta dal negozio. */
 export default function AdminNextMonth({ hdrs }) {
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -44,8 +45,8 @@ export default function AdminNextMonth({ hdrs }) {
 
   const approve = async (id, fotoScartate = []) => {
     try {
-      await api.post(`/admin/next-offers/${id}/approve`, fotoScartate.length ? { foto_scartate: fotoScartate } : {}, hdrs());
-      toast.success("Offerta mese prossimo approvata ✓ — attiva dal 1°");
+      const r = await api.post(`/admin/next-offers/${id}/approve`, fotoScartate.length ? { foto_scartate: fotoScartate } : {}, hdrs());
+      toast.success(r.data?.online ? "Prossima offerta approvata ✓ — è già online" : "Prossima offerta approvata ✓ — va online quando finisce quella di adesso");
       load();
     } catch (err) { toast.error(formatApiError(err)); }
   };
@@ -66,36 +67,26 @@ export default function AdminNextMonth({ hdrs }) {
     try {
       const r = await api.post("/admin/next-offers/run-reminders", {}, hdrs());
       const d = r.data;
-      toast.success(d.window_open ? `Promemoria inviati: ${d.sent} (controllati ${d.checked})` : "Finestra chiusa: nessun promemoria inviato");
+      toast.success(d.checked ? `Promemoria inviati: ${d.sent} (offerte in scadenza: ${d.checked})` : "Nessuna offerta finisce nei prossimi 7 giorni: nessun promemoria");
       load();
     } catch (err) { toast.error(formatApiError(err)); }
     finally { setBusy(false); }
   };
 
   const runRollover = async () => {
-    if (!window.confirm("Eseguire ORA il passaggio mese?\n\n• Le offerte approvate del mese prossimo sostituiranno quelle correnti\n• Le offerte correnti senza sostituzione SCADRANNO\n\nQuesta azione normalmente avviene in automatico il 1° del mese alle 00:05.")) return;
+    if (!window.confirm("Eseguire ORA il cambio offerte?\n\n• Le offerte arrivate alla data di fine SCADONO\n• Le prossime offerte già approvate vanno online al loro posto\n\nNormalmente avviene da solo ogni notte alle 00:05.")) return;
     setBusy(true);
     try {
       const r = await api.post("/admin/next-offers/run-rollover", {}, hdrs());
       const d = r.data;
-      toast.success(`Rollover eseguito: ${d.promoted} promosse, ${d.migrated_pending} in revisione, ${d.expired} scadute`);
+      toast.success(`Cambio offerte eseguito: ${d.promoted} online, ${d.migrated_pending} in revisione, ${d.expired} scadute`);
       load();
     } catch (err) { toast.error(formatApiError(err)); }
     finally { setBusy(false); }
   };
 
-  const toggleWindow = async () => {
-    const win = data?.window;
-    const payload = win?.overridden ? { open: null } : { open: !win?.open };
-    try {
-      await api.post("/admin/next-offers/window-override", payload, hdrs());
-      toast.success(win?.overridden ? "Finestra tornata alla regola automatica (ultimi 7 giorni)" : `Finestra forzata ${!win?.open ? "APERTA" : "CHIUSA"}`);
-      load();
-    } catch (err) { toast.error(formatApiError(err)); }
-  };
-
   if (!data) return <div className="py-10 text-muted-foreground">Caricamento…</div>;
-  const { window: win, rows, summary } = data;
+  const { rows, summary } = data;
 
   const needle = q.trim().toLowerCase();
   const filtered = needle
@@ -108,26 +99,23 @@ export default function AdminNextMonth({ hdrs }) {
     <Card className="border-border bg-muted p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="font-serif text-2xl">Offerte di {win.next_month_label}</h3>
+          <h3 className="font-serif text-2xl">Scadenze e prossime offerte</h3>
           <p className="text-xs text-muted-foreground mt-1">
-            Tutti i negozi dell'app: chi ha caricato l'offerta del mese prossimo e chi deve ancora farlo.
+            I negozi con un'offerta online: fino a quando vale e se hanno già preparato la prossima.
+            Ogni negozio sceglie la durata; la prossima offerta va online da sola quando finisce quella di adesso.
             Apri "Rivedi offerta" per vedere tutti i dettagli e i dati del commerciante prima di approvare.
           </p>
           <div data-testid="next-window-status" className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs">
-            <CalendarClock size={13} className={win.open ? "text-neon" : "text-gold"} />
-            Finestra caricamento: {win.open ? <strong className="text-neon">APERTA</strong> : <strong className="text-gold">CHIUSA (apre il {win.opens_on})</strong>}
-            {win.overridden && <span className="text-ciano">· override manuale</span>}
+            <CalendarClock size={13} className={summary.expiring ? "text-gold" : "text-neon"} />
+            Finiscono entro 7 giorni senza una prossima offerta: <strong className={summary.expiring ? "text-gold" : "text-neon"}>{summary.expiring || 0}</strong>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button data-testid="next-run-reminders-btn" size="sm" variant="outline" disabled={busy} onClick={runReminders} className="rounded-full border-border text-foreground hover:bg-muted">
             <Mail size={13} className="mr-1.5" /> Invia promemoria ora
           </Button>
-          <Button data-testid="next-window-override-btn" size="sm" variant="outline" disabled={busy} onClick={toggleWindow} className="rounded-full border-ciano/40 text-ciano hover:bg-ciano/10">
-            <RefreshCw size={13} className="mr-1.5" /> {win.overridden ? "Ripristina automatico" : win.open ? "Forza chiusura" : "Apri finestra ora"}
-          </Button>
           <Button data-testid="next-run-rollover-btn" size="sm" variant="outline" disabled={busy} onClick={runRollover} className="rounded-full border-destructive/40 text-destructive hover:bg-destructive/10">
-            <Send size={13} className="mr-1.5" /> Esegui passaggio mese
+            <Send size={13} className="mr-1.5" /> Esegui cambio offerte
           </Button>
         </div>
       </div>
@@ -137,7 +125,7 @@ export default function AdminNextMonth({ hdrs }) {
         <span className="rounded-full border border-neon/40 bg-neon/10 px-3 py-1 text-neon">In revisione: <strong>{summary.pending}</strong></span>
         <span className="rounded-full border border-fucsia/40 bg-muted px-3 py-1 text-fucsia">Approvate: <strong>{summary.approved}</strong></span>
         <span className="rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1 text-destructive">Rifiutate: <strong>{summary.rejected}</strong></span>
-        <span className="rounded-full border border-border bg-muted px-3 py-1 text-muted-foreground">Non caricate: <strong>{summary.missing}</strong></span>
+        <span className="rounded-full border border-border bg-muted px-3 py-1 text-muted-foreground">Senza prossima: <strong>{summary.missing}</strong></span>
         <div className="ml-auto">
           <AdminSearchInput value={q} onChange={setQ} placeholder="Cerca negozio, zona, offerta…" testId="next-search" />
         </div>
@@ -145,7 +133,7 @@ export default function AdminNextMonth({ hdrs }) {
 
       <div className="mt-5 space-y-3">
         {filtered.length === 0 && (
-          <div className="rounded-xl border border-border bg-muted p-8 text-center text-muted-foreground">Nessun negozio trovato per "{q}".</div>
+          <div className="rounded-xl border border-border bg-muted p-8 text-center text-muted-foreground">{needle ? `Nessun negozio trovato per "${q}".` : "Nessun negozio ha un'offerta online o una prossima offerta in arrivo."}</div>
         )}
         {filtered.map((r) => {
           const [label, cls] = STATUS_BADGE[r.next_status] || STATUS_BADGE.missing;
@@ -162,10 +150,16 @@ export default function AdminNextMonth({ hdrs }) {
                     {r.reminder_sent && <span className="text-xs text-ciano" title="Email promemoria inviata">📧 promemoria inviato</span>}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    Offerta corrente: {r.current_offer
-                      ? <span className="text-foreground/80">{r.current_offer.title} {r.current_offer.approval_status === "expired" ? "(scaduta)" : r.current_offer.active ? "" : "(disattivata)"}</span>
+                    Offerta di adesso: {r.current_offer
+                      ? <span className="text-foreground/80">{r.current_offer.title} {r.current_offer.approval_status === "expired" ? "(terminata)" : r.current_offer.active ? "" : "(disattivata)"}</span>
                       : <span className="text-muted-foreground">nessuna</span>}
-                    {nd && <span className="ml-3 text-muted-foreground">→ Nuova: <span className="text-ciano">{nd.title}</span></span>}
+                    {r.current_offer?.online && (
+                      <span data-testid={`nextoffer-fine-${r.merchant_id}`} className={`ml-2 font-semibold ${r.expiring ? "text-gold" : "text-foreground/80"}`}>
+                        · {r.current_offer.valid_until_label ? `fino al ${r.current_offer.valid_until_label} (${r.current_offer.days_left === 1 ? "ultimo giorno" : `${r.current_offer.days_left} giorni`})` : "senza scadenza"}
+                        {r.current_offer.no_renew ? " · non rinnova" : ""}
+                      </span>
+                    )}
+                    {nd && <span className="ml-3 text-muted-foreground">→ Prossima: <span className="text-ciano">{nd.title}</span>{r.starts_on_label ? ` (dal ${r.starts_on_label})` : ""}</span>}
                   </div>
                 </div>
                 {nd && (
@@ -186,7 +180,7 @@ export default function AdminNextMonth({ hdrs }) {
                 <NextOfferDetail
                   row={r}
                   nd={nd}
-                  monthLabel={win.next_month_label}
+                  quando={r.starts_on_label ? `dal ${r.starts_on_label}` : "online appena approvata"}
                   onApprove={(scartate) => approve(nd.id, scartate)}
                   onReject={() => setDaRifiutare({ id: nd.id, titolo: nd.title })}
                   onEdit={() => setEditRow(r)}
@@ -211,7 +205,7 @@ export default function AdminNextMonth({ hdrs }) {
 }
 
 /** Dettaglio completo: dati commerciante PRIMA, poi tutta l'offerta, poi i pulsanti di revisione. */
-function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
+function NextOfferDetail({ row, nd, quando, onApprove, onReject, onEdit }) {
   const m = row.merchant || {};
   const [scartate, setScartate] = useState([]);
   const images = Array.isArray(nd.image_urls) && nd.image_urls.length ? nd.image_urls : (nd.image_url ? [nd.image_url] : []);
@@ -232,7 +226,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
               <span className="text-foreground font-mono">{m.phone || <span className="text-muted-foreground">non fornito</span>}</span>
               {m.phone && (
                 <a
-                  href={`https://wa.me/${(m.phone || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Ciao ${m.name || "commerciante"}, ti scrivo da Sconti Roma per la tua offerta di ${monthLabel}...`)}`}
+                  href={`https://wa.me/${(m.phone || "").replace(/[^0-9+]/g, "")}?text=${encodeURIComponent(`Ciao ${m.name || "commerciante"}, ti scrivo da Sconti Roma per la tua prossima offerta...`)}`}
                   target="_blank" rel="noreferrer"
                   className="inline-flex items-center gap-1 rounded-full bg-emerald-700 hover:bg-emerald-800 px-2 py-0.5 text-[10px] font-medium text-white"
                 ><Phone size={9} /> WhatsApp</a>
@@ -248,7 +242,7 @@ function NextOfferDetail({ row, nd, monthLabel, onApprove, onReject, onEdit }) {
 
       {/* 2 — Offerta completa */}
       <div>
-        <div className="text-xs uppercase tracking-wider text-ciano">Offerta completa di {monthLabel}</div>
+        <div className="text-xs uppercase tracking-wider text-ciano">Prossima offerta · {quando} · dura {nd.durata || "30 giorni"}</div>
         {nd.approval_status !== "approved" && images.length > 0 && (
           <FotoControllo id={nd.id} urls={images} onChange={setScartate} />
         )}
@@ -348,7 +342,7 @@ function NextOfferEditModal({ row, hdrs, onClose, onSaved }) {
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="text-xs uppercase text-ciano tracking-wider">Modifica offerta mese prossimo</div>
+            <div className="text-xs uppercase text-ciano tracking-wider">Modifica prossima offerta</div>
             <h3 className="font-serif text-2xl text-foreground">{row.shop_name}</h3>
             <p className="text-xs text-neon mt-1">⚠ Salvando, l'offerta torna in revisione e va ri-approvata.</p>
           </div>

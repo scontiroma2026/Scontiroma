@@ -1,7 +1,7 @@
 // Controllo foto all'approvazione: ogni foto si ingrandisce e si approva o si scarta con un motivo.
 // La foto scartata sparisce dall'offerta; le altre restano e l'offerta si pubblica.
 const fs = require('fs');
-const { test, expect, chiama, registra, admin, loginNelBrowser, WEB } = require('../fixtures');
+const { test, expect, chiama, registra, admin, creaOffertaApprovata, loginNelBrowser, WEB } = require('../fixtures');
 const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_MASTER_PASSWORD } = require('../env');
 
 test.use({ viewport: { width: 390, height: 844 } });
@@ -46,35 +46,33 @@ test('admin: scarta una foto con un motivo e approva il resto dell\'offerta', as
   expect(pubblica.image_url).toBe(foto[1]);
 });
 
-test('admin «Prossimo Mese»: stesso controllo foto, la foto scartata esce dall\'offerta', async ({ page, request }) => {
+test('admin «Scadenze»: stesso controllo foto sulla prossima offerta, la foto scartata esce dall\'offerta', async ({ page, request }) => {
   const ids = fs.readdirSync(`${__dirname}/../../../frontend/public/esempi`).filter((f) => f.endsWith('.jpg')).slice(0, 2);
   const foto = ids.map((f) => `${WEB}/esempi/${f}`);
   const m = await registra(request, 'merchant');
-  const a = await admin(request);
-  const apri = await chiama(request, 'POST', '/admin/next-offers/window-override', { token: a.token, headers: a.headers, body: { open: true } });
-  expect(apri.status).toBe(200);
-  try {
-    const c = await chiama(request, 'POST', '/merchants/me/next-discount', { token: m.token, body: {
-      title: `Mese dopo e2e ${Date.now()}`, description: 'Descrizione di prova.', original_price: 30, discounted_price: 15,
-      image_url: foto[0], image_urls: foto } });
-    expect(c.status, JSON.stringify(c.data)).toBe(200);
-    const nid = c.data.next_discount.id;
+  // La prossima offerta si prepara con un'offerta online, in qualsiasi giorno (niente finestra)
+  await creaOffertaApprovata(request, m.token);
+  const c = await chiama(request, 'POST', '/merchants/me/next-discount', { token: m.token, body: {
+    title: `Prossima e2e ${Date.now()}`, description: 'Descrizione di prova.', original_price: 30, discounted_price: 15,
+    image_url: foto[0], image_urls: foto } });
+  expect(c.status, JSON.stringify(c.data)).toBe(200);
+  const nid = c.data.next_discount.id;
 
-    await loginNelBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto('/admin');
-    await page.getByTestId('master-pw').fill(ADMIN_MASTER_PASSWORD);
-    await page.getByTestId('master-submit').click();
-    await page.getByTestId('tab-nextmonth').click();
-    await page.getByTestId(`nextoffer-toggle-${m.user.id}`).click();
-    await expect(page.getByTestId(`foto-controllo-${nid}`)).toBeVisible();
-    page.once('dialog', (d) => d.accept('Marchio visibile sulla confezione'));
-    await page.getByTestId(`foto-scarta-${nid}-1`).click();
-    await expect(page.getByTestId(`foto-scartata-${nid}-1`)).toContainText('Marchio visibile');
-    await page.getByTestId(`nextoffer-approve-${nid}`).click();
-    await expect.poll(async () => (await chiama(request, 'GET', '/merchants/me/next-discount', { token: m.token })).data.next_discount.approval_status).toBe('approved');
-    const nd = (await chiama(request, 'GET', '/merchants/me/next-discount', { token: m.token })).data.next_discount;
-    expect(nd.image_urls).toEqual([foto[0]]);
-  } finally {
-    await chiama(request, 'POST', '/admin/next-offers/window-override', { token: a.token, headers: a.headers, body: { open: null } });
-  }
+  await loginNelBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+  await page.goto('/admin');
+  await page.getByTestId('master-pw').fill(ADMIN_MASTER_PASSWORD);
+  await page.getByTestId('master-submit').click();
+  await page.getByTestId('tab-nextmonth').click();
+  await expect(page.getByTestId(`nextoffer-fine-${m.user.id}`)).toContainText('fino al');
+  await page.getByTestId(`nextoffer-toggle-${m.user.id}`).click();
+  await expect(page.getByTestId(`foto-controllo-${nid}`)).toBeVisible();
+  page.once('dialog', (d) => d.accept('Marchio visibile sulla confezione'));
+  await page.getByTestId(`foto-scarta-${nid}-1`).click();
+  await expect(page.getByTestId(`foto-scartata-${nid}-1`)).toContainText('Marchio visibile');
+  await page.getByTestId(`nextoffer-approve-${nid}`).click();
+  await expect.poll(async () => (await chiama(request, 'GET', '/merchants/me/next-discount', { token: m.token })).data.next_discount.approval_status).toBe('approved');
+  const nd = (await chiama(request, 'GET', '/merchants/me/next-discount', { token: m.token })).data.next_discount;
+  expect(nd.image_urls).toEqual([foto[0]]);
+  // approvata, aspetta la fine dell'offerta di adesso: quella online resta la prima
+  expect((await chiama(request, 'GET', '/merchants/me/discount', { token: m.token })).data.discount.title).not.toContain('Prossima e2e');
 });

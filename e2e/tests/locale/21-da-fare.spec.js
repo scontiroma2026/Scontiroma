@@ -6,11 +6,10 @@ test.use({ viewport: { width: 390, height: 844 } });
 // Piccola foto (1 pixel) per l'offerta, così non manca la foto
 const FOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-const fineMese = () => {
-  // Data di oggi a Roma, come fa il server
-  const [g, m, a] = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date()).split('/');
-  const ultimo = new Date(Number(a), Number(m), 0).getDate();
-  return `${String(ultimo).padStart(2, '0')}/${m}`;
+// «2026-12-13» -> «13/12» (con l'anno se non è quello in corso), come la pillola della dashboard
+const breve = (iso) => {
+  const [a, m, g] = iso.split('-');
+  return Number(a) === new Date().getFullYear() ? `${g}/${m}` : `${g}/${m}/${a}`;
 };
 
 async function autenticatoreVirtuale(page) {
@@ -30,13 +29,14 @@ test('Da fare: negozio incompleto, voci con collegamento, poi scompare e resta i
   await autenticatoreVirtuale(page);
   await loginNelBrowser(page, m.email, m.password);
   await page.goto('/merchant/dashboard');
-  // Negli ultimi 7 giorni del mese si apre il caricamento dell'offerta del mese dopo: compare anche quella voce
-  const finestraAperta = (await chiama(request, 'GET', '/merchants/me/next-discount', { token: m.token })).data.window.open;
+  // L'offerta dura 30 giorni (durata predefinita) dal giorno dell'approvazione: la data arriva dal server
+  const offerta = (await chiama(request, 'GET', '/merchants/me/discount', { token: m.token })).data.discount;
+  expect(offerta.days_left).toBe(30);
 
-  // Pillola con la scadenza reale (fine del mese in corso)
-  await expect(page.getByTestId('stato-offerta')).toHaveText(`Offerta visibile ai clienti fino al ${fineMese()}`);
+  // Pillola con la scadenza reale
+  await expect(page.getByTestId('stato-offerta')).toHaveText(`Offerta visibile ai clienti fino al ${breve(offerta.valid_until)}`);
 
-  // Negozio incompleto: descrizione, orari, Face ID (la foto c'è, l'offerta del mese dopo non è ancora aperta)
+  // Negozio incompleto: descrizione, orari, Face ID (la foto c'è; mancano 30 giorni alla fine: nessun avviso di scadenza)
   const card = page.getByTestId('da-fare');
   await expect(card).toBeVisible();
   await expect(page.getByTestId('da-fare-descrizione')).toBeVisible();
@@ -44,11 +44,7 @@ test('Da fare: negozio incompleto, voci con collegamento, poi scompare e resta i
   await expect(page.getByTestId('da-fare-faceid')).toBeVisible();
   await expect(page.getByTestId('da-fare-foto')).toHaveCount(0);
   await expect(page.getByTestId('da-fare-ok')).toHaveCount(0);
-  if (finestraAperta) {
-    await expect(page.getByTestId('da-fare-mese-prossimo')).toHaveAttribute('href', '/merchant/discount?tab=next');
-  } else {
-    await expect(page.getByTestId('da-fare-mese-prossimo')).toHaveCount(0);
-  }
+  await expect(page.getByTestId('da-fare-prossima-offerta')).toHaveCount(0);
   expect(await troppoPiccoli(page, '[data-testid^=da-fare-]')).toEqual([]);
   await page.screenshot({ path: process.env.E2E_SHOT_DIR ? `${process.env.E2E_SHOT_DIR}/dopo-incompleto.png` : undefined, fullPage: true }).catch(() => {});
 
@@ -70,10 +66,6 @@ test('Da fare: negozio incompleto, voci con collegamento, poi scompare e resta i
   const completa = page.waitForResponse((r) => r.url().endsWith('/api/webauthn/register/complete'));
   await page.getByTestId('enroll-biometric-btn').click();
   expect((await completa).status()).toBe(200);
-  // Offerta del mese dopo (solo a fine mese): con «Non rinnovo» la voce sparisce
-  if (finestraAperta) {
-    expect((await chiama(request, 'POST', '/merchants/me/no-renew', { token: m.token, body: { no_renew: true } })).status).toBe(200);
-  }
   await page.goto('/merchant/dashboard');
 
   // Tutto a posto: messaggio positivo, nessun elenco
@@ -139,4 +131,18 @@ test('Da fare: «Non adesso» nasconde la voce facoltativa del Face ID', async (
   await page.reload();
   await expect(page.getByTestId('da-fare-descrizione')).toBeVisible();
   await expect(page.getByTestId('da-fare-faceid')).toHaveCount(0);
+});
+
+test('Da fare: negli ultimi giorni dell\'offerta compare «Prolunga o prepara la prossima»', async ({ page, request }) => {
+  const m = await registra(request, 'merchant');
+  await creaOffertaApprovata(request, m.token, { title: `In scadenza e2e ${Date.now()}`, image_url: FOTO, duration_days: 3 });
+  await loginNelBrowser(page, m.email, m.password);
+  await page.goto('/merchant/dashboard');
+  await expect(page.getByTestId('da-fare-prossima-offerta')).toHaveAttribute('href', '/merchant/discount?tab=next');
+  await expect(page.getByTestId('da-fare-prossima-offerta')).toContainText('finisce tra 3 giorni');
+  // con «Non rinnovo» la voce sparisce
+  expect((await chiama(request, 'POST', '/merchants/me/no-renew', { token: m.token, body: { no_renew: true } })).status).toBe(200);
+  await page.goto('/merchant/dashboard');
+  await expect(page.getByTestId('da-fare')).toBeVisible();
+  await expect(page.getByTestId('da-fare-prossima-offerta')).toHaveCount(0);
 });

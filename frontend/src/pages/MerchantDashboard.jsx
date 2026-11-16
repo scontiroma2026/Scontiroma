@@ -27,7 +27,7 @@ export default function MerchantDashboard() {
   const [stats, setStats] = useState({ total: 0, redeemed: 0, pending: 0 });
   const [discount, setDiscount] = useState(null);
   const [redemptions, setRedemptions] = useState([]);
-  const [next, setNext] = useState(null); // offerta del mese dopo (serve a NextOfferCard e a «Da fare»)
+  const [next, setNext] = useState(null); // prossima offerta (serve a NextOfferCard e a «Da fare»)
   const [stato, setStato] = useState("carica"); // carica | ok | errore
 
   const carica = useCallback(() => {
@@ -232,13 +232,13 @@ function StatoOfferta({ discount }) {
   if (discount) {
     if (discount.approval_status === "approved" && discount.active !== false) {
       tono = "verde";
-      const fino = dataBreve(discount.valid_until); // senza data (server vecchio o dato mancante) resta la frase di prima
-      testo = fino ? `Offerta visibile ai clienti fino al ${fino}` : "Offerta visibile ai clienti";
+      const fino = dataBreve(discount.valid_until); // senza data: offerta senza scadenza (o dato mancante)
+      testo = fino ? `Offerta visibile ai clienti fino al ${fino}` : discount.no_end ? "Offerta visibile ai clienti, senza scadenza" : "Offerta visibile ai clienti";
     }
     else if (discount.approval_status === "awaiting_merchant") { tono = "ambra"; testo = "Offerta preparata da noi: da confermare"; }
     else if (discount.approval_status === "pending") { tono = "ambra"; testo = "Offerta in revisione"; }
     else if (discount.approval_status === "rejected") { tono = "rosso"; testo = "Offerta rifiutata: da correggere"; }
-    else if (discount.approval_status === "expired") { tono = "ambra"; testo = "Offerta scaduta"; }
+    else if (discount.approval_status === "expired") { tono = "ambra"; testo = "Offerta terminata"; }
     else { tono = "ambra"; testo = "Offerta non visibile ai clienti"; }
   }
   return (

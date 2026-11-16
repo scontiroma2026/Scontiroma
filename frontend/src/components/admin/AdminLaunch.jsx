@@ -16,7 +16,7 @@ export default function AdminLaunch({ hdrs }) {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Box label="Clienti iscritti" valore={d.clienti} nota={`+${d.clienti_ultimi_7_giorni} negli ultimi 7 giorni`} testid="lancio-clienti" />
         <Box label="Commercianti" valore={d.commercianti} nota={`+${d.commercianti_ultimi_7_giorni} negli ultimi 7 giorni`} testid="lancio-commercianti" />
-        <Box label="Offerte da approvare" valore={d.offerte_da_approvare} nota="del mese e del mese prossimo" testid="lancio-da-approvare" evidenzia={d.offerte_da_approvare > 0} />
+        <Box label="Offerte da approvare" valore={d.offerte_da_approvare} nota="di adesso e prossime" testid="lancio-da-approvare" evidenzia={d.offerte_da_approvare > 0} />
         <Box label={`Sconti usati a ${d.mese}`} valore={d.utilizzi_mese} testid="lancio-utilizzi" />
       </div>
       <Card className="border-border bg-muted p-5">

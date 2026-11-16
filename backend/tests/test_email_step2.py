@@ -103,19 +103,27 @@ def test_offerta_da_approvare_una_sola_email_finche_resta_in_attesa(posta):
     assert nomi(posta) == ["send_admin_new_offer"]
 
 
-def test_offerta_mese_prossimo_avvisa_admin(posta, monkeypatch):
+def test_prossima_offerta_avvisa_admin(posta, monkeypatch):
     monkeypatch.setattr(server, "_rome_now", lambda: datetime(2026, 10, 27, 10, 0, tzinfo=ZoneInfo("Europe/Rome")))
 
     async def body(c):
         h = await iscrivi(c, "merchant")
+        # senza un'offerta online la prossima non si prepara
+        corpo = {"title": "Offerta di novembre", "description": "Descrizione.", "original_price": 30, "discounted_price": 15}
+        assert (await c.post("/api/merchants/me/next-discount", headers=h, json=corpo)).status_code == 423
+        me = (await c.get("/api/auth/me", headers=h)).json()
+        mid = (me.get("user") or me)["id"]
+        await server.db.discounts.insert_one({
+            "id": "offerta-online", "merchant_id": mid, "title": "Offerta di ottobre", "description": "x",
+            "original_price": 20.0, "discounted_price": 10.0, "active": True, "approval_status": "approved",
+            "valid_from": "2026-10-02", "valid_until": "2026-10-31"})
         posta.clear()
-        r = await c.post("/api/merchants/me/next-discount", headers=h,
-                         json={"title": "Offerta di novembre", "description": "Descrizione.", "original_price": 30, "discounted_price": 15})
+        r = await c.post("/api/merchants/me/next-discount", headers=h, json=corpo)
         assert r.status_code == 200, r.text
         await server.attendi_lavori_in_background()
     run(body)
     assert nomi(posta) == ["send_admin_new_offer"]
-    assert "novembre 2026" in posta[0][1]
+    assert "prossima offerta, dal 1 novembre" in posta[0][1]
 
 
 def test_conferma_cancellazione_account(posta):

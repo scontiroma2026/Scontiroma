@@ -139,6 +139,7 @@ test('commerciante: registrazione, offerta con foto, approvazione e «Non rinnov
   await expect(page.getByTestId('photo-tile-0').locator('img')).toHaveAttribute('src', /^data:image\/jpeg;base64,/);
   await page.getByTestId('disc-validity-info').fill('Solo mercoledì e venerdì');
   await page.getByTestId('disc-uses-1').click();
+  await page.getByTestId('disc-durata-7').click();   // dura una settimana: dopo l'approvazione è già negli ultimi 7 giorni
   const salvataggio = page.waitForResponse((r) => r.url().endsWith('/api/merchants/me/discount') && r.request().method() === 'POST');
   await page.getByTestId('disc-submit').click();
   const salvato = await salvataggio;
@@ -154,22 +155,18 @@ test('commerciante: registrazione, offerta con foto, approvazione e «Non rinnov
   expect(pubblica, 'offerta pubblicata').toBeTruthy();
   expect(pubblica.image_urls || [pubblica.image_url]).toHaveLength(1);
 
-  // «Non rinnovo» con la finestra del mese prossimo aperta; si può annullare
-  const apri = await chiama(request, 'POST', '/admin/next-offers/window-override', { token: a.token, headers: a.headers, body: { open: true } });
-  expect(apri.status).toBe(200);
-  try {
-    await loginNelBrowser(page, email, PASSWORD);
-    await page.goto('/merchant/dashboard');
-    const banner = page.getByTestId('renewal-banner');
-    await expect(banner).toHaveAttribute('data-state', 'expiring');
-    page.once('dialog', (d) => d.accept());
-    await page.getByTestId('renewal-no-renew-btn').click();
-    await expect(banner).toHaveAttribute('data-state', 'no-renew');
-    await page.getByTestId('renewal-undo-btn').click();
-    await expect(banner).toHaveAttribute('data-state', 'expiring');
-  } finally {
-    await chiama(request, 'POST', '/admin/next-offers/window-override', { token: a.token, headers: a.headers, body: { open: null } });
-  }
+  expect(pubblica.days_left, 'durata scelta dal negozio: una settimana').toBe(7);
+
+  // «Non rinnovo» negli ultimi giorni dell'offerta; si può annullare
+  await loginNelBrowser(page, email, PASSWORD);
+  await page.goto('/merchant/dashboard');
+  const banner = page.getByTestId('renewal-banner');
+  await expect(banner).toHaveAttribute('data-state', 'expiring');
+  page.once('dialog', (d) => d.accept());
+  await page.getByTestId('renewal-no-renew-btn').click();
+  await expect(banner).toHaveAttribute('data-state', 'no-renew');
+  await page.getByTestId('renewal-undo-btn').click();
+  await expect(banner).toHaveAttribute('data-state', 'expiring');
 });
 
 // ---------------------------------------------------------------------------------------------

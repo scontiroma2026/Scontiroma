@@ -79,7 +79,7 @@ export default function Discounts() {
       <div className="mb-8 max-w-2xl">
         <div className="text-xs uppercase tracking-[0.2em] text-gold">Sconti a Roma</div>
         <h1 className="mt-2 font-serif text-5xl leading-tight">Trova il tuo sconto</h1>
-        <p className="mt-3 text-muted-foreground">Filtra per zona o categoria. Le offerte cambiano ogni mese.</p>
+        <p className="mt-3 text-muted-foreground">Filtra per zona o categoria. Su ogni offerta trovi fino a quando vale.</p>
       </div>
 
       {puoPreferiti && (
