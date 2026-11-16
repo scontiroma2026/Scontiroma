@@ -295,7 +295,7 @@ async def send_next_offer_reminder(to: str, name: str, shop_name: str, fine_labe
     giorni = "oggi" if days_left <= 1 else f"tra {days_left} giorni"
     come = ("<strong style=\"color:#00E5FF\">Prolungala con un tocco</strong> (resta uguale, senza una nuova approvazione) "
             "oppure prepara la prossima offerta." if prolungabile else
-            "<strong style=\"color:#00E5FF\">Prepara la prossima offerta</strong>: puoi anche riusare la stessa.")
+            "<strong style=\"color:#00E5FF\">Prepara la prossima offerta</strong>.")
     inner = f"""
 <h2 style="margin:0 0 12px;font-family:Georgia,serif;font-size:24px;color:#fff">La tua offerta finisce {giorni} ⏳</h2>
 <p style="margin:0 0 16px;color:#d4d4d8">Ciao {name},</p>

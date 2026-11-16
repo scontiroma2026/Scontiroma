@@ -169,7 +169,7 @@ export default function Landing() {
               {[
                 { n: "Gratis", l: "fase di lancio" },
                 { n: "16", l: "zone tra Roma e dintorni" },
-                { n: "1", l: "offerta al mese" },
+                { n: "Tu", l: "scegli quanto dura l'offerta" },
                 { n: "1 clic", l: "per pubblicare" },
               ].map((s) => (
                 <div key={s.l} className="rounded-2xl border border-white bg-white p-5">
@@ -193,7 +193,7 @@ export default function Landing() {
             { q: "Quanto costa Sconti Roma?", a: "Per ora Sconti Roma è gratuito per chi usa gli sconti: registrarti e usare le offerte non costa nulla e non ti chiediamo dati di pagamento. Se in futuro cambiasse qualcosa te lo diremo con almeno 30 giorni di anticipo, e nessun pagamento partirà senza la tua conferma." },
             { q: "Come funziona uno sconto?", a: "Registrati, scegli un negozio, apri l'offerta e premi «Mostra QR Code». Mostri il QR al banco, il commerciante lo scansiona e paghi il prezzo scontato." },
             { q: "Perché il QR cambia ogni 20 secondi?", a: "Per evitare screenshot e usi scorretti: il codice è unico e vale solo per pochi secondi, così il commerciante sa che lo sconto è davvero tuo." },
-            { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta al mese. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
+            { q: "Quante volte posso usare uno sconto?", a: "Ogni negozio ha un'offerta alla volta e decide quanto dura: su ogni offerta trovi fino a quando vale. Di solito la puoi usare una volta al mese; alcuni negozi permettono 2, 3, 5 o 10 utilizzi. Lo vedi nella pagina del negozio, con un contatore degli utilizzi rimasti (per esempio «2 / 3 · 1 rimasto»). In ogni negozio puoi usare lo sconto al massimo una volta al giorno." },
             { q: "Le offerte cambiano?", a: "Sì: ogni negozio decide quanto dura la sua offerta e quando cambiarla. Su ogni offerta trovi scritto fino a quando vale. Prima di comparire, ogni offerta viene controllata da noi." },
             { q: "In quali zone funziona?", a: "In tutta Roma, dal centro alla periferia, e nelle zone appena fuori città. Se nella tua zona ci sono ancora poche offerte, ricontrolla più avanti: i commercianti ne pubblicano di nuove ogni mese." },
             { q: "Come accedo all'app?", a: "Con email e password: il telefono può ricordarle per te. Se vuoi, attiva il Face ID dalla sezione «Sicurezza» del tuo account ed entri con un tocco. Dopo 5 tentativi sbagliati l'accesso si blocca per 15 minuti; se hai dimenticato la password usa «Password dimenticata?»." },

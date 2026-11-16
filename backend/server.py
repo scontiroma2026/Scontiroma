@@ -3102,7 +3102,7 @@ async def merchant_extend_discount(payload: ProlungaIn, user: dict = Depends(req
     if nuova > ultimo:
         if date.fromisoformat(fine) >= ultimo:
             raise HTTPException(409, f"Questa offerta è già online da {massimo} giorni, il massimo: "
-                                     "per continuare prepara la prossima offerta (puoi riusare la stessa).")
+                                     "per continuare prepara la prossima offerta.")
         raise HTTPException(409, f"Puoi prolungarla al massimo fino al {_giorno_it(ultimo)} "
                                  f"({massimo} giorni in tutto).")
     nd = await db.next_discounts.find_one({"merchant_id": user["id"]})
