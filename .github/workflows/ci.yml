@@ -11,7 +11,7 @@ on:
 jobs:
   backend:
     name: Server (FastAPI)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -38,7 +38,7 @@ jobs:
 
   frontend:
     name: Sito (React)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
@@ -58,7 +58,7 @@ jobs:
 
   e2e:
     name: Test end-to-end
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     services:
       mongo:
