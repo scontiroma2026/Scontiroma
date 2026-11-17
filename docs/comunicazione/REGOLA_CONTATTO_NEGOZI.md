@@ -19,6 +19,7 @@ Vale per tutti: titolare, Claude, chiunque scriva a nome di Sconti Roma. Va insi
 3. Chi risponde STOP o NO: una sola risposta di saluto («Va bene, non ti scriviamo più. Grazie.») e poi **mai più** contatti, su nessun canale. Va nell'elenco «non ricontattare».
 4. Testi dei messaggi solo da `MESSAGGI_COMMERCIANTI.md`: «Roma e dintorni», nessuna percentuale, nessuna promessa, frase sulla disdetta uguale ai Termini.
 5. Si usano solo i canali pubblici dell'attività; non si cercano numeri personali dei titolari.
+6. **Le email ai negozi non partono mai da Resend** (aggiunta del 14/11). Resend è il servizio delle email dell'app (conferma account, password, avvisi) e le sue regole d'uso vietano le email a chi non le ha chieste, anche a indirizzi pubblici raccolti dai siti: rischieremmo la sospensione e il blocco delle email dell'app. Il primo contatto via email lo manda il titolare, uno per volta, da una casella normale (la casella `info@scontiroma.it` del fornitore di posta, non Resend). Claude prepara il testo e l'elenco, non invia.
 
 ## 3. Elenco privato (fuori dal repository)
 Un foglio privato, mai nel repository, con **solo**:
