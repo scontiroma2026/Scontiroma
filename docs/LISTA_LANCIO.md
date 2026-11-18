@@ -25,7 +25,7 @@ Divisione (richiesta del titolare, 24/10): in ogni parte prima **ciò che fa Cla
 10. ⬜ **Video corto per i negozi** (circa 55 s, copione del 23/10): aspetta l'OK sul copione; voce con crediti ElevenLabs solo con il permesso. → Claude
 11. ⏳ **Materiali per i negozi da chiudere:** #146 e #218, da allineare ai testi legali (#148 chiusa il 31/10). → agente `legale`, dopo il punto 7
 12. ⏳ **Bozza grafica** in attesa di OK: animazioni (#226). La nuova pagina «Per i commercianti» è online dall'1/11. → Claude
-13. ⏳ **Riordino delle PR vecchie** (quasi tutte testi legali: #40, #80, #81, #92, #95, #100, #102, #114, #116, #127, #128, #134, #147): proposta di chiusura di quelle superate, sempre con l'OK del titolare. Video e immagini vecchi chiusi il 31/10. → agente `general-purpose` (sola lettura)
+13. ⏳ **Riordino delle PR vecchie:** proposta pronta il 18/11 (agente `general-purpose`, sola lettura). Da chiudere con l'OK del titolare: #40, #80, #81, #92, #100, #116, #134, #147; #102 se l'eliminazione dell'account resta immediata. Da aggiornare: #95 (banner cookie senza «Marketing», non è superata: entra nella PR dei testi legali del punto 5), #114 (cancellazioni automatiche, aspetta la scelta delle durate), #127 e #128 (solo criteri di approvazione e piano emergenze), #146 con #218 (dopo il punto 7), #195. Da tenere: #169, #226, #244. Video e immagini vecchi chiusi il 31/10. → agente `general-purpose`
 14. ⏳ **Controlli:** controllo giornaliero e CI verde su `main`. Il 17/11 GitHub è passato a Ubuntu 26.04 e i test end-to-end non partivano: macchine fissate a Ubuntu 24.04 (PR #256). → Claude
 15. ⬜ **Con circa 10 negozi con un'offerta nella stessa zona:** contare negozi e offerte e proporre al titolare se farci conoscere ai clienti in quella zona (prende il posto del «27/10: lanciare o no»). → Claude
 
@@ -76,7 +76,7 @@ Divisione (richiesta del titolare, 24/10): in ogni parte prima **ciò che fa Cla
 43. ⏸️ In sospeso per decisione del titolare (14/10): periodo di grazia per la prossima offerta non approvata in tempo; marchio «Sconti Roma» (nome più distintivo, ricerche, deposito).
 
 ## Decisioni del titolare (riferimento)
-Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e si paga sempre il 1° del mese (prima offerta entro l'11 → primo pagamento il 1° di due mesi dopo, dal 12 → tre mesi dopo: prova da 49 a 81 giorni, «circa due mesi»); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.
+Niente prezzo bloccato; 4,99 € al mese + IVA; la prova parte dalla prima pubblicazione e dura almeno 60 giorni: il primo pagamento è il primo 1° del mese che cade almeno 60 giorni dopo (decisione del 31/10; prima era «entro l'11 / dal 12», prova da 49 a 81 giorni); pagamento dal 1° al 5; approvazione sempre manuale e solo con pagamento in regola; addebito automatico con una sola conferma del commerciante; disdetta a fine mese con lo sconto da rispettare; mese pagato non rimborsabile; Gemini spento fino al lancio; data di lancio D lasciata vuota.
 
 Altre decisioni del 14/10: prima i negozi, ai clienti niente data fissa («stiamo arrivando»); tono neutro (niente Halloween); nessuna pubblicità a pagamento; prova gratuita ripetuta rimandata; un abbonamento per commerciante a prescindere dai punti vendita; chiave anti-abuso «Partita IVA + indirizzo» da fare dopo la partenza.
 
