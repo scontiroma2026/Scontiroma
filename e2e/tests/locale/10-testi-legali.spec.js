@@ -80,3 +80,14 @@ test('iscrizione commerciante: seconda casella per le clausole specifiche', asyn
   await page.goto('/register');
   await expect(page.getByTestId('legal-specific')).toHaveCount(0);
 });
+
+test('privacy: lista d\'attesa tolta il 02/11 (nessun trattamento attivo, iscrizioni cancellate)', async ({ page }) => {
+  await page.goto('/privacy');
+  const p = page.getByTestId('privacy-policy-page');
+  await expect(p).toContainText('Lista d\'attesa pre-lancio (chiusa)');
+  await expect(p).toContainText('sono state cancellate dal nostro database');
+  const testo = await p.innerText();
+  for (const v of [/elenco di esclusione/i, /avviso di lancio/i, /conferma dell'iscrizione/i, /iscrizione alla lista d'attesa/i]) {
+    expect(testo, `Privacy contiene ${v}`).not.toMatch(v);
+  }
+});

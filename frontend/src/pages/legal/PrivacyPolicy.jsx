@@ -6,7 +6,7 @@ export default function PrivacyPolicy() {
       <LegalLayout
         kicker="Documento legale"
         title="Privacy Policy"
-        updatedAt="Ottobre 2026"
+        updatedAt="Novembre 2026"
       >
         <p>
           La presente Privacy Policy descrive come <strong>Sconti Roma</strong> (di
@@ -112,17 +112,6 @@ export default function PrivacyPolicy() {
             <a href="/cookies" className="text-fucsia hover:underline">Cookie Policy</a>).
           </li>
           <li>
-            <strong>Lista d'attesa (prima del lancio)</strong>: se ti iscrivi
-            per ricevere un avviso quando Sconti Roma è online, conserviamo la
-            tua <strong>email</strong>, la data e la versione del consenso, lo
-            stato dell'iscrizione (da confermare, confermata, annullata) e la
-            fonte generica da cui sei arrivato (per esempio «volantino» o
-            «instagram»). Nel nostro database <strong>non salviamo
-            l'indirizzo IP</strong> e non usiamo cookie per questa iscrizione.
-            Ti scriviamo una prima email per confermare l'iscrizione e, a
-            lancio avvenuto, un avviso; l'email non viene usata per altro.
-          </li>
-          <li>
             <strong>Log tecnici</strong>: indirizzo IP, tipo di browser, sistema
             operativo, timestamp delle richieste — utilizzati esclusivamente per
             sicurezza e prevenzione frodi. Possono contenere l'indirizzo IP
@@ -134,7 +123,7 @@ export default function PrivacyPolicy() {
           Per creare l'account servono i dati di registrazione: senza non
           possiamo fornire il servizio. La posizione, gli avvisi via email, le
           comunicazioni promozionali, le statistiche di visita, le valutazioni
-          sull'app e l'iscrizione alla lista d'attesa sono invece <strong>facoltativi</strong>.
+          sull'app sono invece <strong>facoltativi</strong>.
         </p>
 
         <h2 className="font-serif text-2xl text-foreground mt-8">3. Finalità e basi giuridiche</h2>
@@ -172,14 +161,6 @@ export default function PrivacyPolicy() {
                 <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), revocabile dall'app con «Non avvisarmi più»</td>
               </tr>
               <tr>
-                <td className="border border-border p-2">Lista d'attesa: conferma dell'iscrizione e un avviso quando Sconti Roma è online</td>
-                <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), dato con la casella nel modulo e confermato dal link ricevuto per email; revocabile in ogni momento</td>
-              </tr>
-              <tr>
-                <td className="border border-border p-2">Lista d'attesa: elenco di esclusione (non riscrivere a chi ha annullato)</td>
-                <td className="border border-border p-2">Legittimo interesse (art. 6.1.f GDPR) a rispettare la scelta di chi ha detto no</td>
-              </tr>
-              <tr>
                 <td className="border border-border p-2">Statistiche anonime di visita</td>
                 <td className="border border-border p-2">Consenso (art. 6.1.a GDPR), tramite banner cookie</td>
               </tr>
@@ -202,10 +183,8 @@ export default function PrivacyPolicy() {
         </p>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Resend Inc.</strong> (USA) — Invio delle email del servizio,
-            comprese quelle della lista d'attesa (conferma dell'iscrizione e
-            avviso di lancio). I server di invio si trovano in Irlanda
-            (eu-west-1).
+            <strong>Resend Inc.</strong> (USA) — Invio delle email del servizio.
+            I server di invio si trovano in Irlanda (eu-west-1).
           </li>
           <li>
             <strong>MongoDB Atlas</strong> (MongoDB, Inc.) — Archiviazione dei
@@ -302,14 +281,18 @@ export default function PrivacyPolicy() {
             contestazioni. Base giuridica: legittimo interesse (art. 6.1.f
             GDPR).
           </li>
+          {/* [PROPOSTA - DA VALIDARE dal consulente] 02/11/2026: lista d'attesa pre-lancio tolta (PR #243); all'avvio il server cancella tutte le iscrizioni (collezione `waitlist`). Tolte finalità, basi giuridiche, email e conservazione della lista. */}
           <li>
-            <strong>Lista d'attesa</strong>: se non confermi l'iscrizione con il
-            link ricevuto per email (valido 48 ore), cancelliamo l'email dopo 7
-            giorni. Se confermi, la conserviamo al massimo 12 mesi dalla
-            iscrizione. Se annulli, teniamo solo la tua email per altri 12 mesi
-            dall'annullamento, come elenco di esclusione, per non riscriverti
-            per errore; poi la cancelliamo. Puoi annullare con il link in ogni
-            email o scrivendo a privacy@scontiroma.it.
+            <strong>Lista d'attesa pre-lancio (chiusa)</strong>: la lista per
+            ricevere un avviso quando Sconti Roma sarebbe stato online è stata
+            chiusa il 2 novembre 2026. Tutte le iscrizioni raccolte (email,
+            data e versione del consenso, stato e provenienza generica) sono
+            state cancellate dal nostro database e non ti scriveremo per
+            questo motivo. Le copie di sicurezza (backup) del database e i
+            registri di invio delle email che possono ancora contenerle si
+            cancellano da soli alla loro scadenza e non vengono usati per
+            altro. Per qualunque domanda puoi scrivere a
+            privacy@scontiroma.it.
           </li>
         </ul>
 
