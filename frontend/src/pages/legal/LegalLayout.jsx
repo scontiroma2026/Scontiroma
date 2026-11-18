@@ -31,7 +31,7 @@ export default function LegalLayout({ title, kicker, updatedAt, children }) {
         {children}
       </article>
 
-      <div className="mt-12 rounded-xl border border-border bg-muted p-4 text-xs text-muted-foreground">
+      <div data-testid="legal-contatti" className="legal-contatti mt-12 rounded-xl border border-border bg-muted p-4 text-xs text-muted-foreground">
         Hai domande? Scrivi a{" "}
         <a
           href="mailto:info@scontiroma.it"

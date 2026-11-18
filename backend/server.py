@@ -6855,6 +6855,13 @@ async def on_startup():
     await db.scansioni_locandina.create_index([("merchant_id", 1), ("giorno", 1)], unique=True)
     await db.users.create_index("qr_code", unique=True, sparse=True)
     await db.webauthn_challenges.create_index("expires_at", expireAfterSeconds=0)
+    await db.consent_logs.create_index("expires_at", expireAfterSeconds=0)  # registro del banner cookie: 24 mesi
+    try:
+        cancellate = await _pulisci_registro_consenso()
+        if cancellate:
+            logging.info(f"[registro-consenso] cancellate {cancellate} righe oltre i 24 mesi")
+    except Exception as e:  # la pulizia non deve mai bloccare l'avvio
+        logging.warning(f"[registro-consenso] pulizia non riuscita: {type(e).__name__}")
     await db.segnalazioni.create_index("expires_at", expireAfterSeconds=0)
     await db.sospensioni.create_index("expires_at", expireAfterSeconds=0)  # storico sospensioni: 24 mesi
     await db.reminder_claims.create_index("key", unique=True)
@@ -7659,6 +7666,22 @@ class CookieConsentIn(BaseModel):
     prefs: dict
 
 
+# Registro delle scelte del banner cookie: si cancella dopo 24 mesi, come dice la Cookie Policy
+# (correzione della PR #95, rifatta il 18/11). Solo le righe del banner: le righe dei consensi alle
+# notifiche (azioni push_*) restano finché c'è l'account, come prova del consenso ancora valido.
+CONSENT_LOG_RETENTION = timedelta(days=730)  # 24 mesi
+AZIONI_BANNER_COOKIE = ("accept_all", "reject_all", "custom")
+
+
+async def _pulisci_registro_consenso() -> int:
+    """Cancella le righe del banner più vecchie di 24 mesi, anche quelle salvate prima che esistesse
+    `expires_at` (hanno solo `timestamp` in testo ISO, UTC). Ritorna quante righe ha cancellato."""
+    limite = datetime.now(timezone.utc) - CONSENT_LOG_RETENTION
+    res = await db.consent_logs.delete_many({"action": {"$in": list(AZIONI_BANNER_COOKIE)},
+                                             "timestamp": {"$lt": limite.isoformat()}})
+    return res.deleted_count
+
+
 @api.post("/gdpr/consent-log")
 async def gdpr_consent_log(payload: CookieConsentIn, request: Request):
     """Log del consenso cookie come prova legale (art. 7 GDPR).
@@ -7679,6 +7702,8 @@ async def gdpr_consent_log(payload: CookieConsentIn, request: Request):
         "ip": request.client.host if request.client else None,
         "user_agent": request.headers.get("user-agent", "")[:300],
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        # Cancellazione automatica dopo 24 mesi (indice TTL creato all'avvio), come nella Cookie Policy
+        "expires_at": datetime.now(timezone.utc) + CONSENT_LOG_RETENTION,
     }
     await db.consent_logs.insert_one(doc)
     return {"ok": True, "id": doc["id"]}

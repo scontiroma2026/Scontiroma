@@ -73,3 +73,30 @@
   min-height: 44px;
   min-width: 44px;
 }
+
+/* Pagine legali (Privacy, Cookie, Termini, Recesso), 18/11: i link sono sempre sottolineati e in grassetto,
+   così si riconoscono anche senza vedere i colori (WCAG 1.4.1). Al passaggio e con la tastiera la
+   sottolineatura si ispessisce; i link che aprono un'altra scheda hanno la freccia ↗. */
+.legal-article a,
+.legal-contatti a {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.legal-article a:hover,
+.legal-contatti a:hover,
+.legal-article a:focus-visible,
+.legal-contatti a:focus-visible {
+  text-decoration-thickness: 2px;
+}
+.legal-article a:focus-visible,
+.legal-contatti a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.legal-article a[target="_blank"]::after {
+  content: " \2197";
+  font-weight: 400;
+}
