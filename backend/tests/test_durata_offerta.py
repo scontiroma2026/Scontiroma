@@ -425,6 +425,39 @@ def test_codice_resta_valido_se_parte_la_prossima_offerta(monkeypatch, posta):
     run(body)
 
 
+
+def test_codice_non_vale_se_l_offerta_non_e_piu_online(monkeypatch, posta):
+    async def body(c):
+        n = await negozio()
+        cl = await cliente()
+        giorno(monkeypatch, 2026, 11, 14)
+        d = await invia_e_approva(c, n, duration_days=30)
+        codice = (await c.post(f"/api/redemptions/create/{d['id']}", headers=cl["h"])).json()["redemption"]["code"]
+
+        async def esito():
+            slot = server.current_slot()
+            return (await c.get("/api/qr/verify", params={"token": f"{codice}.{slot}.{server._rotating_hmac(codice, slot)}"})).json()
+
+        assert (await esito())["valid"] is True
+        # L'offerta torna in revisione (o viene rifiutata): il codice preso prima non vale più
+        for stato in ("pending", "rejected"):
+            await server.db.discounts.update_one({"id": d["id"]}, {"$set": {"approval_status": stato}})
+            r = await esito()
+            assert r["valid"] is False and "non è più online" in r["reason"], (stato, r)
+            v = await c.post("/api/redemptions/verify", json={"code": codice}, headers=n["h"])
+            assert v.status_code == 400 and "non è più online" in v.json()["detail"]
+        # Di nuovo approvata: il codice torna valido
+        await server.db.discounts.update_one({"id": d["id"]}, {"$set": {"approval_status": "approved"}})
+        assert (await esito())["valid"] is True
+        # Spenta: non vale
+        await server.db.discounts.update_one({"id": d["id"]}, {"$set": {"active": False}})
+        assert (await esito())["valid"] is False
+        # Tolta del tutto: non vale
+        await server.db.discounts.delete_one({"id": d["id"]})
+        v = await c.post("/api/redemptions/verify", json={"code": codice}, headers=n["h"])
+        assert v.status_code == 400 and "non è più online" in v.json()["detail"]
+    run(body)
+
 # ---------- Archivio ----------
 
 def test_riuso_dall_archivio_senza_la_vecchia_data(monkeypatch, posta):

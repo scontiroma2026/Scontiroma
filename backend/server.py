@@ -4693,6 +4693,21 @@ def _offerta_del_codice_finita(disc: Optional[dict]) -> bool:
     return ora.date() > giorno_dopo or (ora.date() == giorno_dopo and ora.hour >= 2)
 
 
+MSG_CODICE_OFFERTA_NON_ONLINE = "Codice non valido: l'offerta non è più online"
+
+
+def _offerta_del_codice_ritirata(disc: Optional[dict]) -> bool:
+    """Vero se un codice non ancora usato non vale perché l'offerta non è più online per un motivo diverso
+    dalla data di fine: tolta, tornata in revisione, rifiutata o spenta. Un'offerta scaduta nella notte
+    («expired») qui non conta: la tolleranza fino alle 02:00 la decide `_offerta_del_codice_finita`."""
+    if not disc:
+        return True
+    stato = disc.get("approval_status")  # le offerte più vecchie possono non avere lo stato: valgono come approvate
+    if stato == "expired":
+        return False
+    return stato in ("pending", "rejected") or disc.get("active") is False
+
+
 async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     """Controlla il QR (formato, finestra di 20 s, firma, esistenza). Ritorna (redemption, None) oppure (None, motivo).
     Con `ignora_finestra` (permesso breve valido) salta solo il controllo dei 20 secondi: la firma resta."""
@@ -4713,9 +4728,14 @@ async def _qr_find_redemption(token: str, ignora_finestra: bool = False):
     if _codice_di_mese_scaduto(r):
         await _log_scan(False, "Codice del mese scorso scaduto", r)
         return None, MSG_CODICE_MESE_SCADUTO
-    if r.get("status") == "pending" and _offerta_del_codice_finita(await db.discounts.find_one({"id": r.get("discount_id")})):
-        await _log_scan(False, "Offerta terminata", r)
-        return None, MSG_CODICE_OFFERTA_FINITA
+    if r.get("status") == "pending":
+        disc = await db.discounts.find_one({"id": r.get("discount_id")})
+        if _offerta_del_codice_finita(disc):
+            await _log_scan(False, "Offerta terminata", r)
+            return None, MSG_CODICE_OFFERTA_FINITA
+        if _offerta_del_codice_ritirata(disc):
+            await _log_scan(False, "Offerta non più online", r)
+            return None, MSG_CODICE_OFFERTA_NON_ONLINE
     return r, None
 
 
@@ -4869,8 +4889,11 @@ async def verify_redemption(payload: RedeemVerifyIn, user: dict = Depends(requir
         raise HTTPException(400, "Codice già utilizzato")
     if _codice_di_mese_scaduto(r):
         raise HTTPException(400, MSG_CODICE_MESE_SCADUTO)
-    if _offerta_del_codice_finita(await db.discounts.find_one({"id": r.get("discount_id")})):
+    disc = await db.discounts.find_one({"id": r.get("discount_id")})
+    if _offerta_del_codice_finita(disc):
         raise HTTPException(400, MSG_CODICE_OFFERTA_FINITA)
+    if _offerta_del_codice_ritirata(disc):
+        raise HTTPException(400, MSG_CODICE_OFFERTA_NON_ONLINE)
     # LIMITE GIORNALIERO anche sulla verifica manuale del commerciante
     prev = await _last_redeemed(r["user_id"], r["merchant_id"], exclude_id=r["id"])
     if prev and _rome_day(prev.get("redeemed_at")) == _rome_day():
