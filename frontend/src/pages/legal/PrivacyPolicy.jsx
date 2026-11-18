@@ -444,7 +444,9 @@ export default function PrivacyPolicy() {
             <strong>Dati account, codici QR, riscatti, recensioni</strong>:
             finché l'account è attivo. Quando elimini l'account vengono
             cancellati subito, insieme alle offerte del commerciante e al loro
-            archivio.
+            archivio. Oggi non cancelliamo in automatico gli account che non
+            vengono più usati: restano finché non li elimini tu o non ce lo
+            chiedi.
           </li>
           {/* [PROPOSTA][DA VALIDARE] 18/11: durate scritte come le applica oggi il codice di `main` (nessuna durata nuova nel codice: aspetta la scelta del titolare, PR #114 non riportata). Prima c'era «Log di sicurezza: 12 mesi», che non corrispondeva: il registro delle scansioni non ha scadenza automatica e i log dei fornitori seguono i loro piani. */}
           <li>
