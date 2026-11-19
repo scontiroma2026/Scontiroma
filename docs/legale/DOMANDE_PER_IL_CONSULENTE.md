@@ -21,7 +21,7 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 12. 🟢 Recesso di 14 giorni: tenere nel Recesso la sezione sui servizi a pagamento futuri per i consumatori o toglierla (come propone #116)?
 
 ## 3. Privacy, Cookie e dati (dettagli: #160, #147 sezioni 4 e 8, #95)
-13. 🟠 **Lista d'attesa:** un solo consenso («un'email quando Sconti Roma è online») basta per conferma e avviso di lancio? Serve una riga breve sotto il modulo (informativa a strati)? Il titolare ha scelto **12 mesi** di conservazione per confermate e annullate: va bene? Si può tenere l'email di chi annulla come elenco di esclusione per 12 mesi?
+13. 🟢 ~~**Lista d'attesa:** un solo consenso («un'email quando Sconti Roma è online») basta per conferma e avviso di lancio? Serve una riga breve sotto il modulo (informativa a strati)? Il titolare ha scelto **12 mesi** di conservazione per confermate e annullate: va bene? Si può tenere l'email di chi annulla come elenco di esclusione per 12 mesi?~~ **Superato il 02/11:** lista tolta e iscrizioni cancellate (PR #243); restano solo i dubbi in `LISTA_PER_AVVOCATO.md`, sezione «Lista d'attesa tolta (02/11)».
 14. 🔴 **LocationIQ** (mappa e indirizzi): ragione sociale, sede, contratto sul trattamento dei dati (DPA) e tempi di conservazione: da verificare e citare nella Privacy.
 15. 🟠 **Fornitori e trasferimenti extra-UE:** Resend, Render, MongoDB Atlas: ruoli e frasi proposte nella Privacy (art. 4 e 5). I contratti (DPA) sono in sospeso per scelta del titolare.
 16. 🟠 Log del server (con indirizzi email e IP): durata di conservazione e se vanno citati.
@@ -57,5 +57,5 @@ Legenda priorità: 🔴 prima del lancio · 🟠 da valutare · 🟢 di conferma
 
 ## Cosa serve da parte del titolare prima dell'incontro
 - Visura camerale (punto 3 della lista) e dati dell'azienda.
-- Scelte già fatte da riportare: Stripe e PayPal titolari autonomi; 12 mesi per la lista d'attesa; Partita IVA obbligatoria; nessuna spunta foto per ora; «disdici quando vuoi» con effetto a fine mese.
+- Scelte già fatte da riportare: Stripe e PayPal titolari autonomi; lista d'attesa tolta il 02/11; Partita IVA obbligatoria; nessuna spunta foto per ora; «disdici quando vuoi» con effetto a fine mese.
 - Decisione sul nome e sul logo (punto 15 della lista), per non pagare un deposito sul nome sbagliato.

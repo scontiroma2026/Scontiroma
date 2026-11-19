@@ -6,7 +6,7 @@ export default function Termini() {
       <LegalLayout
         kicker="Documento legale"
         title="Termini e Condizioni d'Uso"
-        updatedAt="Ottobre 2026"
+        updatedAt="Novembre 2026"
       >
         <p>
           I presenti Termini e Condizioni ("Termini") disciplinano l'accesso e
@@ -29,9 +29,18 @@ export default function Termini() {
           Sconti Roma è una piattaforma digitale che mette in contatto{" "}
           <strong>utenti registrati</strong> ("Clienti") con{" "}
           <strong>esercenti locali</strong> ("Commercianti") di Roma e
-          dintorni, permettendo ai primi di accedere a sconti esclusivi presso i
+          dintorni, permettendo ai primi di accedere a offerte esclusive presso i
           punti vendita dei secondi mediante l'esposizione di codici QR
           dinamici.
+        </p>
+        {/* [PROPOSTA][DA VALIDARE] 18/11: l'offerta «Omaggio» è nel codice dal 14/11 (PR #248, campo `offer_type`). Le regole sulla durata e sugli omaggi negli artt. 4 e 5 sono nella PR #255: qui solo la definizione. */}
+        <p>
+          Un'<strong>offerta</strong> può essere uno <strong>sconto</strong> su
+          un prodotto o un servizio oppure un <strong>omaggio</strong>: un
+          regalo o un'esperienza offerti dal Commerciante, senza prezzi, che
+          nell'app si riconosce dalla scritta «In omaggio». Dove questi Termini
+          parlano di sconti, le regole valgono anche per gli omaggi, salvo
+          quelle sui prezzi.
         </p>
         <p>
           <strong>Sconti Roma non vende beni o servizi propri</strong>: agisce
@@ -85,6 +94,13 @@ export default function Termini() {
           <li>
             Un solo account per persona. Account multipli o fittizi possono
             essere chiusi.
+          </li>
+          {/* [PROPOSTA][DA VALIDARE] 18/11: Partita IVA obbligatoria per i negozi (decisione del titolare del 15/10, `register`: solo controllo formale); frase ripresa dalla PR #147. */}
+          <li>
+            Per registrare un negozio servono un numero di telefono e una{" "}
+            <strong>Partita IVA</strong> valida (11 cifre, controllata solo nel
+            formato): per i Commercianti Sconti Roma è riservato a imprese e
+            professionisti.
           </li>
           {/* [PROPOSTA - DA VALIDARE] Punto 26: sostituisce «sospendere o chiudere account che violano i Termini, ai sensi dell'art. 1456 c.c.» (art. 1456 c.c. non verificato sul testo ufficiale). */}
           <li>
@@ -319,6 +335,27 @@ export default function Termini() {
           </p>
         </div>
 
+        {/* [PROPOSTA][DA VALIDARE] 18/11: servizio «Ci pensiamo noi» attivo dal 22/10 ma non scritto nei Termini (proposta in `docs/legale/PROPOSTA_CI_PENSIAMO_NOI.md`, rischio alto). Codice: offerta `awaiting_merchant` invisibile e non approvabile senza conferma; link monouso di 7 giorni (`CPN_SCADENZA_GIORNI`); prova della conferma in `conferme_offerta` (data, ora, versione del testo, nessun IP), cancellata con l'account. La prova gratuita parte comunque dalla prima pubblicazione. Scelta prudente: prova conservata solo finché c'è l'account (come fa il codice). */}
+        <h3 className="font-serif text-xl text-foreground mt-6">Offerta inserita da noi («Ci pensiamo noi»)</h3>
+        <p data-testid="termini-ci-pensiamo-noi">
+          Se ce lo chiedi (per esempio su WhatsApp o per email), possiamo
+          inserire noi la tua offerta. Il servizio è gratuito. L'offerta
+          inserita da noi non è visibile ai Clienti finché non la confermi: ti
+          mandiamo un'email con il riepilogo e un link valido 7 giorni, che si
+          può usare una sola volta. Puoi anche modificarla dalla tua area prima
+          di confermarla.{" "}
+          <strong>Confermando dichiari che i dati dell'offerta sono corretti e
+          te ne assumi la responsabilità, come se l'avessi inserita tu</strong>:
+          da quel momento valgono tutte le regole di questi Termini sulle
+          offerte (contenuti, prezzi, foto, rispetto dell'offerta). Dopo la
+          conferma l'offerta passa comunque dal nostro controllo prima della
+          pubblicazione. I testi e le foto che ci mandi devono essere tuoi o
+          comunque utilizzabili. L'inserimento da parte nostra non fa partire
+          la prova gratuita: la prova parte, come sempre, dalla prima
+          pubblicazione. Conserviamo la prova della tua conferma (data, ora e
+          versione del testo accettato) finché c'è il tuo account.
+        </p>
+
         <h2 className="font-serif text-2xl text-foreground mt-8">6. Recesso e cancellazione</h2>
         <p>
           Puoi eliminare il tuo account in qualsiasi momento dal profilo
@@ -440,9 +477,10 @@ export default function Termini() {
         </p>
         <ul className="list-disc pl-6 space-y-2">
           <li>Ti confermiamo la ricezione entro 5 giorni lavorativi.</li>
+          {/* [PROPOSTA][DA VALIDARE] 18/11: se chi segnala ha fatto l'accesso, il codice salva l'email dell'account (`_crea_segnalazione`). */}
           <li>
             Ti diamo l'esito con una motivazione scritta, se ci lasci
-            un'email.
+            un'email (se hai fatto l'accesso, usiamo quella del tuo account).
           </li>
           <li>Non salviamo il tuo indirizzo IP.</li>
           <li>

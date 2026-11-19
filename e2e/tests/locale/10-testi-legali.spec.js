@@ -80,3 +80,85 @@ test('iscrizione commerciante: seconda casella per le clausole specifiche', asyn
   await page.goto('/register');
   await expect(page.getByTestId('legal-specific')).toHaveCount(0);
 });
+
+test('privacy: lista d\'attesa tolta il 02/11 (nessun trattamento attivo, iscrizioni cancellate)', async ({ page }) => {
+  await page.goto('/privacy');
+  const p = page.getByTestId('privacy-policy-page');
+  await expect(p).toContainText('Lista d\'attesa pre-lancio (chiusa)');
+  await expect(p).toContainText('sono state cancellate dal nostro database');
+  const testo = await p.innerText();
+  for (const v of [/elenco di esclusione/i, /avviso di lancio/i, /conferma dell'iscrizione/i, /iscrizione alla lista d'attesa/i]) {
+    expect(testo, `Privacy contiene ${v}`).not.toMatch(v);
+  }
+});
+
+// ---------- Testi legali allineati al codice (agente legale, 18/11) ----------
+
+test('privacy 18/11: fornitori e dati allineati al codice (Cloudflare, Aruba, WhatsApp, Partita IVA)', async ({ page }) => {
+  await page.goto('/privacy');
+  const p = page.getByTestId('privacy-policy-page');
+  for (const t of ['Cloudflare, Inc.', 'Fornitori dei nostri fornitori', 'Aruba S.p.A.', 'WhatsApp Business', '352 247 3526',
+    'non ricontattare', 'Partita IVA', 'Oggi questa funzione è spenta', '4.2 Pagine social', 'Ci pensiamo noi',
+    'Segnalazioni e reclami', 'cancelliamo l\'account dopo 7 giorni', 'Ultimo aggiornamento: Novembre 2026']) {
+    await expect(p, `Privacy senza «${t}»`).toContainText(t);
+  }
+  // la regione di Render non si tocca finché il titolare non la verifica
+  await expect(p).toContainText('Hosting');
+  const testo = await p.innerText();
+  for (const v of [/Log di sicurezza: 12 mesi/, /Statistiche anonime/i]) {
+    expect(testo, `Privacy contiene ${v}`).not.toMatch(v);
+  }
+});
+
+test('cookie policy 18/11: memoria del browser completa, identificativo non «anonimo», Cloudflare, registro a 24 mesi', async ({ page }) => {
+  await page.goto('/cookies');
+  const c = page.getByTestId('cookie-policy-page');
+  for (const t of ['referral_captured_at', 'fonte_iscrizione', 'sr_interesse_zona', 'sr_codice_negozio_v1',
+    'sr_da_fare_non_adesso_v1', 'sr_bozza_v1', 'qr_scansione_', 'sr_dispositivo_admin', 'Cloudflare',
+    'si cancella in automatico']) {
+    await expect(c, `Cookie Policy senza «${t}»`).toContainText(t);
+  }
+  await expect(c).not.toContainText('Identificativo anonimo');
+});
+
+test('termini 18/11: omaggio, Partita IVA dei negozi e «Ci pensiamo noi»', async ({ page }) => {
+  await page.goto('/termini');
+  const t = page.getByTestId('termini-page');
+  await expect(t).toContainText('oppure un omaggio');
+  await expect(t).toContainText('In omaggio');
+  await expect(t).toContainText('per i Commercianti Sconti Roma è riservato a imprese e professionisti');
+  await expect(page.getByTestId('termini-ci-pensiamo-noi')).toContainText('come se l\'avessi inserita tu');
+  await expect(page.getByTestId('termini-ci-pensiamo-noi')).toContainText('valido 7 giorni');
+});
+
+test('pagine legali: tutti i link sono sottolineati', async ({ page }) => {
+  for (const path of ['/privacy', '/cookies', '/termini', '/recesso']) {
+    await page.goto(path);
+    await expect(page.getByTestId('legal-content')).toBeVisible();
+    const link = await page.locator('[data-testid="legal-content"] a, [data-testid="legal-contatti"] a').evaluateAll(
+      (els) => els.map((a) => ({ testo: a.textContent.trim(), linea: getComputedStyle(a).textDecorationLine })));
+    expect(link.length, `${path}: nessun link trovato`).toBeGreaterThan(1);
+    for (const l of link) expect(l.linea, `${path}: link «${l.testo}» non sottolineato`).toContain('underline');
+  }
+});
+
+test('banner cookie: niente «Marketing», «Accetta tutti» lo lascia spento (correzione della #95)', async ({ page }) => {
+  // scelta vecchia di 200 giorni: il banner ricompare (la scelta vale 6 mesi)
+  await page.addInitScript(() => localStorage.setItem('sr_cookie_consent', JSON.stringify({
+    version: 1, action: 'reject_all', prefs: { essential: true, functional: false, marketing: false },
+    timestamp: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString() })));
+  await page.goto('/');
+  await expect(page.getByTestId('cookie-banner')).toBeVisible();
+  await expect(page.getByTestId('cookie-banner')).not.toContainText('geolocalizzazione');
+  await page.getByTestId('cookie-customize').click();
+  await expect(page.getByTestId('pref-functional')).toBeVisible();
+  await expect(page.getByTestId('pref-marketing')).toHaveCount(0);
+  await page.getByTestId('cookie-close').click();
+  const registro = page.waitForRequest((r) => r.url().includes('/gdpr/consent-log') && r.method() === 'POST');
+  await page.getByTestId('cookie-accept-all').click();
+  const inviato = (await registro).postDataJSON();
+  expect(inviato.prefs.marketing).toBe(false);
+  expect(inviato.prefs.functional).toBe(true);
+  const salvato = await page.evaluate(() => JSON.parse(localStorage.getItem('sr_cookie_consent')));
+  expect(salvato.prefs.marketing).toBe(false);
+});
