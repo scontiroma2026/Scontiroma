@@ -94,10 +94,10 @@ test('privacy: lista d\'attesa tolta il 02/11 (nessun trattamento attivo, iscriz
 
 // ---------- Testi legali allineati al codice (agente legale, 18/11) ----------
 
-test('privacy 18/11: fornitori e dati allineati al codice (Cloudflare, AWS, Aruba, WhatsApp, Partita IVA)', async ({ page }) => {
+test('privacy 18/11: fornitori e dati allineati al codice (Cloudflare, Aruba, WhatsApp, Partita IVA)', async ({ page }) => {
   await page.goto('/privacy');
   const p = page.getByTestId('privacy-policy-page');
-  for (const t of ['Cloudflare, Inc.', 'Amazon Web Services', 'Aruba S.p.A.', 'WhatsApp Business', '352 247 3526',
+  for (const t of ['Cloudflare, Inc.', 'Fornitori dei nostri fornitori', 'Aruba S.p.A.', 'WhatsApp Business', '352 247 3526',
     'non ricontattare', 'Partita IVA', 'Oggi questa funzione è spenta', '4.2 Pagine social', 'Ci pensiamo noi',
     'Segnalazioni e reclami', 'cancelliamo l\'account dopo 7 giorni', 'Ultimo aggiornamento: Novembre 2026']) {
     await expect(p, `Privacy senza «${t}»`).toContainText(t);

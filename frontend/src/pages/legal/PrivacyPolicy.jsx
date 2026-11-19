@@ -298,7 +298,7 @@ export default function PrivacyPolicy() {
             dell'applicazione, con server a Francoforte (Germania, Unione
             Europea).
           </li>
-          {/* [PROPOSTA][DA VALIDARE] 18/11: Cloudflare e AWS verificati nel codice e sul sito (sola lettura): le risposte di scontiroma.it e api.scontiroma.it arrivano da «server: cloudflare» insieme a Render; il server legge CF-Connecting-IP (`_ip_richiesta`). Nessun account Cloudflare della società risulta (DNS su Aruba, verso indirizzi di Render): Cloudflare è indicato come sub-responsabile di Render, scelta prudente. AWS: cluster Atlas AWS Francoforte (scheda DPA Atlas), invio Resend con Amazon SES in Irlanda (record del dominio `send`). Aruba: dominio, DNS e caselle (nomina a responsabile da verificare). La frase su Render qui sopra NON è stata toccata (regione da verificare). */}
+          {/* [PROPOSTA][DA VALIDARE] 18/11: Cloudflare verificato nel codice e sul sito (sola lettura): le risposte di scontiroma.it e api.scontiroma.it arrivano da «server: cloudflare» insieme a Render; il server legge CF-Connecting-IP (`_ip_richiesta`). Nessun account Cloudflare della società risulta (DNS su Aruba, verso indirizzi di Render): Cloudflare è indicato come sub-responsabile di Render, scelta prudente. Amazon Web Services non è un nostro fornitore diretto (decisione del titolare, 19/11): è l'infrastruttura di Atlas e Resend, coperta dai loro contratti; resta la riga generale sui sub-responsabili. Aruba: dominio, DNS e caselle (nomina a responsabile da verificare). La frase su Render qui sopra NON è stata toccata (regione da verificare). */}
           <li>
             <strong>Cloudflare, Inc.</strong> (USA) — Rete usata dal nostro
             fornitore di hosting (Render) per consegnare le pagine del sito e le
@@ -309,11 +309,11 @@ export default function PrivacyPolicy() {
             profilazione.
           </li>
           <li>
-            <strong>Amazon Web Services</strong> (gruppo Amazon, USA) —
-            Infrastruttura su cui lavorano alcuni nostri fornitori: il database
-            di MongoDB Atlas (centro dati di Francoforte, Germania) e l'invio
-            delle email di Resend (Amazon SES, Irlanda). Tratta i dati come
-            sub-responsabile di questi fornitori.
+            <strong>Fornitori dei nostri fornitori</strong> — Alcuni fornitori
+            elencati qui lavorano a loro volta su infrastrutture di altre
+            società (per esempio centri dati), che trattano i dati solo per
+            loro conto, come sub-responsabili, con le garanzie dei rispettivi
+            contratti.
           </li>
           <li>
             <strong>Aruba S.p.A.</strong> (Italia) — Registrazione del dominio
@@ -422,8 +422,7 @@ export default function PrivacyPolicy() {
 
         <h2 className="font-serif text-2xl text-foreground mt-8">5. Trasferimenti extra-UE</h2>
         <p>
-          Alcuni fornitori (Resend, MongoDB Atlas, Render, Cloudflare, Amazon
-          Web Services, Google, WhatsApp e Meta, TikTok, Anthropic, LocationIQ,
+          Alcuni fornitori (Resend, MongoDB Atlas, Render, Cloudflare, Google, WhatsApp e Meta, TikTok, Anthropic, LocationIQ,
           OpenStreetMap Foundation e, quando saranno attivi, Stripe e PayPal)
           possono elaborare dati
           anche al di fuori dell'UE. In tal caso il trasferimento è protetto,
